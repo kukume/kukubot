@@ -4,7 +4,7 @@
 
 1、下载安装[jdk](http://8rr.co/8Kbk)，一直默认下一步即可
 
-2、下载[压缩包]()，解压，打开`conf/YuQ.properties`按提示更改需要登录的机器人QQ号和密码
+2、下载[压缩包](https://u.iheit.com/kuku/bot/yuq.zip)，解压，打开`conf/YuQ.properties`按提示更改需要登录的机器人QQ号和密码
 
 3、打开Start.bat即可
 
@@ -28,11 +28,11 @@ source /etc/profile
 2)、通过宝塔安装
 安装[宝塔](http://bt.cn)，在面板程序中找到`tomcat9`安装即可。
 
-2、下载[压缩包，解压，
+2、下载压缩包，解压
 ```shell script
 cd ~ && mkdir yuq && cd yuq
-wget 
-unzip .zip
+wget https://u.iheit.com/kuku/bot/yuq.zip
+unzip yuq.zip
 ```
 打开`conf/YuQ.properties`按提示更改需要登录的机器人QQ号和密码
 

@@ -11,6 +11,7 @@ data class QQEntity(
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         var id: Int? = null,
         var qq: Long = 0L,
+        var qqGroup: Long = 0L,
         var password: String = "",
         var sKey: String = "",
         var psKey: String = "",

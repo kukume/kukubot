@@ -1,2 +1,7 @@
 # Project exclude paths
 /target/
+/idea/
+/dependency-reduced-pom.xml/
+/device.json/
+/yuq.iml/
+/src/main/resources/conf/YuQ.properties

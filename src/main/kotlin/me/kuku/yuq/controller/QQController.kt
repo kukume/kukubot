@@ -3,9 +3,7 @@ package me.kuku.yuq.controller
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Before
 import com.icecreamqaq.yuq.YuQ
-import com.icecreamqaq.yuq.annotation.GroupController
-import com.icecreamqaq.yuq.annotation.PathVar
-import com.icecreamqaq.yuq.annotation.QMsg
+import com.icecreamqaq.yuq.annotation.*
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.message.*
 import me.kuku.yuq.dao.QQDao
@@ -19,6 +17,7 @@ import me.kuku.yuq.utils.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.concurrent.thread
+
 @GroupController
 class QQController {
     @Inject
@@ -49,7 +48,7 @@ class QQController {
     }
 
     @Action("qq")
-    fun bindQQ(@PathVar(0) str: String, group: Long, qq: Long): Message{
+    fun bindQQ(group: Long, qq: Long): Message{
         val map = QQQrCodeLoginUtils.getQrCode()
         val bytes = map.getValue("qrCode") as ByteArray
         thread {
@@ -62,7 +61,7 @@ class QQController {
             }while (commonResult.code == 0)
             msg = if (commonResult.code == 200){
                 //登录成功
-                QQUtils.saveOrUpdate(qqDao, commonResult.t, qq)
+                QQUtils.saveOrUpdate(qqDao, commonResult.t, qq, group = group)
                 "绑定或更新成功！"
             }else{
                 commonResult.msg
@@ -92,10 +91,10 @@ class QQController {
     fun queryVip(qqEntity: QQEntity) = qqService.queryVip(qqEntity)
 
     @Action("昵称")
-    fun modifyNickname(qqEntity: QQEntity, @PathVar(0) name: String?): String{
-        return if (name != null)
-            qqService.modifyNickname(qqEntity, name)
-        else "缺少参数，需要修改的昵称！"
+    fun modifyNickname(@PathVar(1) str: String?, qqEntity: QQEntity): String{
+        return if (str != null){
+            qqService.modifyNickname(qqEntity, str)
+        }else qqService.modifyNickname(qqEntity, " ")
     }
 
     @Action("头像")
@@ -112,12 +111,12 @@ class QQController {
     @Action("送花")
     fun sendFlower(qqEntity: QQEntity, message: Message, group: Long): String{
         val singleBody = message.body.getOrNull(1)
-        val qq =  if (singleBody != null){
+        val qq: String =  if (singleBody != null){
             if (singleBody is At){
-                singleBody.user
+                singleBody.user.toString()
             }else singleBody.toPath()
         }else return "缺少参数，送花的对象！"
-        return qqService.sendFlower(qqEntity, qq.toString().toLong(), group)
+        return qqService.sendFlower(qqEntity, qq.toLong(), group)
     }
 
     @Action("拒绝添加")

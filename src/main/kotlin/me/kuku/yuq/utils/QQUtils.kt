@@ -89,12 +89,13 @@ object QQUtils {
         return this.getKey("https://$domain/check_sig?uin=$qq&ptsigx=$pt$suffixUrl")
     }
 
-    fun saveOrUpdate(qqDao: QQDao, map: Map<String, String>, qq: Long, password: String = ""){
+    fun saveOrUpdate(qqDao: QQDao, map: Map<String, String>, qq: Long, password: String = "", group: Long = 0L){
         var qqEntity = qqDao.findByQQ(qq) ?: QQEntity()
         qqEntity = this.convertQQEntity(map, qqEntity)
         qqEntity.qq = qq
+        if (group != 0L) qqEntity.qqGroup = group
         if (password != "") qqEntity.password = password
-        qqDao.singleSaveOrUpdate(qqEntity)
+        qqDao.singleSave(qqEntity)
     }
 
 }

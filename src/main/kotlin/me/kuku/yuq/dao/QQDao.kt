@@ -12,12 +12,11 @@ class QQDao: HibernateDao<QQEntity, Int>() {
         return if (result == null) null else result as QQEntity
     }
 
-    fun singleSaveOrUpdate(entity: QQEntity) {
+    fun singleSave(entity: QQEntity) {
         val session = this.getSession()
         val transaction = session.beginTransaction()
-        super.saveOrUpdate(entity)
+        session.save(entity)
         transaction.commit()
-        session.close()
     }
 
     fun findAll(): MutableList<Any?>? {

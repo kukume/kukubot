@@ -11,7 +11,6 @@ import com.icecreamqaq.yuq.message.MessageItemFactory
 import javax.inject.Inject
 import javax.inject.Named
 
-/*
 @EventListener
 class RecallMonitor {
 
@@ -35,4 +34,4 @@ class RecallMonitor {
         yuq.sendMessage(rm.newMessage() + "群成员：" + mif.at(rm.qq!!) + "\n妄图撤回一条消息。\n消息内容为：\n" + rm)
     }
 
-}*/
+}

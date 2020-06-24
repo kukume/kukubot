@@ -33,20 +33,21 @@ class QQJob {
             val qqEntity = it as QQEntity
             if (qqEntity.status){
                 val result = qqService.qqSign(qqEntity)
-                if ("失败" in result) qqEntity.status = false
-                if (qqEntity.password == "") {
-                    qqDao.singleSaveOrUpdate(qqEntity)
-                    yuq.sendMessage(mf.newTemp(qqEntity.qqGroup, qqEntity.qq).plus(mif.at(qqEntity.qq)).plus("您的QQ已失效。"))
-                }
-            }
-            if (!qqEntity.status && qqEntity.password != ""){
-                val commonResult = QQPasswordLoginUtils.login(qq = qqEntity.qq.toString(), password = qqEntity.password)
-                if (commonResult.code == 200){
-                    QQUtils.saveOrUpdate(qqDao, commonResult.t, qqEntity.qq, qqEntity.password)
-                } else {
-                    qqEntity.status = false
-                    qqDao.singleSaveOrUpdate(qqEntity)
-                    yuq.sendMessage(mf.newPrivate(qqEntity.qq).plus("您的QQ自动更新失败，${commonResult.msg}"))
+                if ("失败" in result){
+                    if (qqEntity.password == "") {
+                        qqEntity.status = false
+                        qqDao.singleSaveOrUpdate(qqEntity)
+                        yuq.sendMessage(mf.newTemp(qqEntity.qqGroup, qqEntity.qq).plus(mif.at(qqEntity.qq)).plus("您的QQ已失效。"))
+                    }else{
+                        val commonResult = QQPasswordLoginUtils.login(qq = qqEntity.qq.toString(), password = qqEntity.password)
+                        if (commonResult.code == 200){
+                            QQUtils.saveOrUpdate(qqDao, commonResult.t, qqEntity.qq, qqEntity.password)
+                        } else {
+                            qqEntity.status = false
+                            qqDao.singleSaveOrUpdate(qqEntity)
+                            yuq.sendMessage(mf.newTemp(qqEntity.qq, qqEntity.qqGroup).plus("您的QQ自动更新失败，${commonResult.msg}"))
+                        }
+                    }
                 }
             }
         }

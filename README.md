@@ -54,3 +54,10 @@ screen -dmS yuq java -jar yuq-1.0-SNAPSHOT.jar
 * 发送的图片保存在`~/.kuku/images`
 * `~`表示用户目录下，`windows`为`C:\Users\您的用户名`，`linux`非root用户为`/home/用户名/`，root用户为`/root/`
 * 步数修改使用乐心运动的接口，需要使用手机号注册乐心运动，并绑定数据来源
+* 配置文件需要修改的地方
+```properties
+# 登录的 QQ 号
+YuQ.Mirai.user.qq=
+# 登录的 QQ 号的密码
+YuQ.Mirai.user.pwd=
+```

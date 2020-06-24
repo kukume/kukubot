@@ -1,6 +1,7 @@
 package me.kuku.yuq.service.impl
 
 import com.alibaba.fastjson.JSONObject
+import kotlinx.coroutines.delay
 import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.service.SuperCuteService
 import me.kuku.yuq.utils.OkHttpClientUtils
@@ -115,7 +116,7 @@ class SuperCuteServiceImpl: SuperCuteService {
                             OkHttpClientUtils.addJson("{\"ad\":true,\"userId\":\"${map.getValue("userId")}\"}"), this.addHeader(token))
                     val thirdJsonObject = OkHttpClientUtils.getJson(thirdResponse)
                     num = thirdJsonObject.getInteger("count") ?: 0
-                } while (jsonObject.getInteger("countdown") != null)
+                } while (thirdJsonObject.getInteger("countdown") != null)
             }
             "您的宠物已成功喂食，并且获得了${num}元气"
         }else "您的宠物不需要喂食！"

@@ -5,6 +5,7 @@ import me.kuku.yuq.entity.QQEntity
 import me.kuku.yuq.pojo.CommonResult
 import org.jsoup.internal.StringUtil
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 object QQUtils {
 
@@ -95,7 +96,18 @@ object QQUtils {
         qqEntity.qq = qq
         if (group != 0L) qqEntity.qqGroup = group
         if (password != "") qqEntity.password = password
-        qqDao.singleSave(qqEntity)
+        qqDao.singleSaveOrUpdate(qqEntity)
+    }
+
+    fun qrCodeLoginVerify(sig: String, appId: String = "", daId: String = "", url: String = ""): CommonResult<Map<String, String>>{
+        var commonResult: CommonResult<Map<String, String>>
+        do {
+            TimeUnit.SECONDS.sleep(3)
+            commonResult = if (appId != "")
+                QQQrCodeLoginUtils.checkQrCode(appId, daId, url, sig)
+            else QQQrCodeLoginUtils.checkQrCode(sig = sig)
+        }while (commonResult.code == 0)
+        return commonResult
     }
 
 }

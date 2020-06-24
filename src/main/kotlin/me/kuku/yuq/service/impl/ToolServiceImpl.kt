@@ -130,36 +130,6 @@ class ToolServiceImpl: ToolService {
                 "s", BotUtils.randomStr(32), "user-agent", "okhttp/3.11.0")
     }
 
-    override fun questionLogin(username: String, password: String): String?{
-        val response = OkHttpClientUtils.post("https://app.51xuexiaoyi.com/api/v1/login",
-                OkHttpClientUtils.addJson("{\"username\":\"$username\",\"password\":\"$password\"}"),
-                this.questionHeader(""))
-        val jsonObject = OkHttpClientUtils.getJson(response)
-        return if (jsonObject.getInteger("code") == 200) {
-            val token = jsonObject.getJSONObject("data").getString("api_token")
-            for (i in 0 until 2)
-                OkHttpClientUtils.post("https://app.51xuexiaoyi.com/api/v1/userInfo",
-                    OkHttpClientUtils.addJson("{}"), this.questionHeader(token)).close()
-            OkHttpClientUtils.post("https://app.51xuexiaoyi.com/api/v1/registerDeviceToken",
-                    OkHttpClientUtils.addJson("{\"deviceToken\":\"Ai0M8k-sbuyxRyJFmiSEmoAuu9wr8u1MKLeCrJDTZ9Qe\"}"),
-                    this.questionHeader(token)).close()
-            token
-        } else null
-    }
-
-    override fun queryQuestion(question: String, token: String?): String {
-        val response = OkHttpClientUtils.post("https://app.51xuexiaoyi.com/api/v1/searchQuestion",
-                OkHttpClientUtils.addJson("{\"keyword\":\"$question\"}"),
-                this.questionHeader(token!!))
-        val jsonObject = OkHttpClientUtils.getJson(response)
-        val jsonArray = jsonObject.getJSONArray("data") ?: return jsonObject.getString("msg")
-        return if (jsonArray.size == 0) "没有搜到题目！"
-        else {
-            val json = jsonArray.getJSONObject(0)
-            "${json.getString("q")}\n答案：${json.getString("a")}"
-        }
-    }
-
     override fun zhiHuDaily(): String {
         val response = OkHttpClientUtils.get("https://v1.alapi.cn/api/zhihu/latest")
         val jsonObject = OkHttpClientUtils.getJson(response)

@@ -1,6 +1,7 @@
 package me.kuku.yuq.utils
 
 import me.kuku.yuq.pojo.CommonResult
+import java.net.URLEncoder
 
 /**
  * qq空间： appId 549000912 daId 5
@@ -24,8 +25,8 @@ object QQQrCodeLoginUtils {
      * 68  被拒绝
      * 65  已失效
      */
-    fun checkQrCode(appId: String = "549000912", daId: String = "5", url: String = "https%3A%2F%2Fqzs.qzone.qq.com%2Fqzone%2Fv5%2Floginsucc.html%3Fpara%3Dizone", sig: String): CommonResult<Map<String, String>>{
-        val response = OkHttpClientUtils.get("https://ssl.ptlogin2.qq.com/ptqrlogin?u1=$url&ptqrtoken=${this.getPtGrToken(sig)}&ptredirect=0&h=1&t=1&g=1&from_ui=1&ptlang=2052&action=0-0-1591074900575&js_ver=20032614&js_type=1&login_sig=&pt_uistyle=40&aid=$appId&daid=$daId&",
+    fun checkQrCode(appId: String = "549000912", daId: String = "5", url: String = "https://qzs.qzone.qq.com/qzone/v5/loginsucc.html?para=izone", sig: String): CommonResult<Map<String, String>>{
+        val response = OkHttpClientUtils.get("https://ssl.ptlogin2.qq.com/ptqrlogin?u1=${URLEncoder.encode(url, "utf-8")}&ptqrtoken=${this.getPtGrToken(sig)}&ptredirect=0&h=1&t=1&g=1&from_ui=1&ptlang=2052&action=0-0-1591074900575&js_ver=20032614&js_type=1&login_sig=&pt_uistyle=40&aid=$appId&daid=$daId&",
                 OkHttpClientUtils.addCookie("qrsig=$sig"))
         val str = OkHttpClientUtils.getStr(response)
         return when (BotUtils.regex("'", "','", str)?.toInt()){

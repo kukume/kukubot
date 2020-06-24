@@ -4,14 +4,14 @@ import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.message.MessageItemFactory
 import org.apache.commons.io.FileUtils
 import java.io.File
+import java.net.URLEncoder
 import kotlin.random.Random
 
 object BotUtils {
 
     fun shortUrl(url: String): String{
-        val response = OkHttpClientUtils.post("https://create.ft12.com/go.php?m=index&a=urlCreate",
-                OkHttpClientUtils.addForms("url", url, "type", "rrd", "random", randomNum(16)))
-        return OkHttpClientUtils.getJson(response).getString("list")
+        val response = OkHttpClientUtils.get("https://sohu.gg/api/?key=pimRuFeT7vKK&url=${URLEncoder.encode(url, "utf-8")}")
+        return OkHttpClientUtils.getStr(response)
     }
 
     fun randomStr(len: Int): String{

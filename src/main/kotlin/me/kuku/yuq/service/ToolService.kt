@@ -15,8 +15,6 @@ interface ToolService {
     fun queryIp(ip: String): String
     fun queryWhois(domain: String): String
     fun queryIcp(domain: String): String
-    fun questionLogin(username: String, password: String): String?
-    fun queryQuestion(question: String, token: String?): String
     fun zhiHuDaily(): String
     fun qqGodLock(qq: Long): String
     fun convertPinYin(word: String): String

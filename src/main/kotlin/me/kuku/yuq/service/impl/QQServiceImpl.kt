@@ -589,7 +589,7 @@ class QQServiceImpl: QQService {
     override fun like(qqEntity: QQEntity, qq: Long): String {
         var msg = ""
         val commonResult = QQSuperLoginUtils.vipLogin(qqEntity)
-        if (commonResult.code != 200) return "点赞失败，"
+        if (commonResult.code != 200) return "点赞失败，登录已失效！！"
         for (i in 0 until 20) {
             val response = OkHttpClientUtils.get("https://club.vip.qq.com/visitor/like?g_tk=${QQUtils.getGtk(commonResult.t)}&nav=0&uin=$qq&t=${Date().time}", OkHttpClientUtils.addHeaders(
                     "cookie", qqEntity.getCookie(commonResult.t),

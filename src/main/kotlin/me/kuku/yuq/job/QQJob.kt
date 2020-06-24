@@ -35,7 +35,7 @@ class QQJob {
                 val result = qqService.qqSign(qqEntity)
                 if ("失败" in result) qqEntity.status = false
                 if (qqEntity.password == "") {
-                    qqDao.singleSave(qqEntity)
+                    qqDao.singleSaveOrUpdate(qqEntity)
                     yuq.sendMessage(mf.newTemp(qqEntity.qqGroup, qqEntity.qq).plus(mif.at(qqEntity.qq)).plus("您的QQ已失效。"))
                 }
             }
@@ -43,7 +43,11 @@ class QQJob {
                 val commonResult = QQPasswordLoginUtils.login(qq = qqEntity.qq.toString(), password = qqEntity.password)
                 if (commonResult.code == 200){
                     QQUtils.saveOrUpdate(qqDao, commonResult.t, qqEntity.qq, qqEntity.password)
-                } else yuq.sendMessage(mf.newPrivate(qqEntity.qq).plus("您的QQ自动更新失败，${commonResult.msg}"))
+                } else {
+                    qqEntity.status = false
+                    qqDao.singleSaveOrUpdate(qqEntity)
+                    yuq.sendMessage(mf.newPrivate(qqEntity.qq).plus("您的QQ自动更新失败，${commonResult.msg}"))
+                }
             }
         }
     }
@@ -73,7 +77,7 @@ class QQJob {
                 qqService.weiYunSign(qqEntity)
             } else{
                 qqEntity.status = false
-                qqDao.singleSave(qqEntity)
+                qqDao.singleSaveOrUpdate(qqEntity)
             }
         }
     }
@@ -86,7 +90,7 @@ class QQJob {
             if (qqEntity.status) qqService.sVipMornClock(qqEntity)
             else {
                 qqEntity.status = false
-                qqDao.singleSave(qqEntity)
+                qqDao.singleSaveOrUpdate(qqEntity)
             }
         }
     }

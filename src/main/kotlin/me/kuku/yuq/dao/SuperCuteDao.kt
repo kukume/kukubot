@@ -10,14 +10,16 @@ class SuperCuteDao: HibernateDao<SuperCuteEntity, Int>() {
         val query = session.createQuery("from SuperCuteEntity where qq = :qq")
         query.setLong("qq", qq)
         val result = query.uniqueResult()
+        session.close()
         return if (result == null) null else result as SuperCuteEntity
     }
 
-    fun singleSave(entity: SuperCuteEntity) {
+    fun singSaveOrUpdate(entity: SuperCuteEntity) {
         val session = this.getSession()
         val transaction = session.beginTransaction()
         super.saveOrUpdate(entity)
         transaction.commit()
+        session.close()
     }
 
 }

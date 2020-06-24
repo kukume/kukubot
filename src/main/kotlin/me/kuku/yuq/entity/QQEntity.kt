@@ -15,6 +15,7 @@ data class QQEntity(
         var password: String = "",
         var sKey: String = "",
         var psKey: String = "",
+        var groupPsKey: String? = null,
         var superKey: String = "",
         var superToken: String = "",
         var pt4Token: String = "",
@@ -26,11 +27,15 @@ data class QQEntity(
     @Transient
     fun cookieWithQQZone() = OkHttpClientUtils.addCookie(this.getCookieWithQQZone())
     @Transient
+    fun cookieWithGroup() = OkHttpClientUtils.addCookie(this.getCookieWithGroup())
+    @Transient
     fun getCookie() = "pt2gguin=o0$qq; uin=o0$qq; skey=$sKey; "
     @Transient
     fun getCookie(psKey: String) = "${this.getCookie()}p_skey=$psKey; p_uin=o0$qq;"
     @Transient
     fun getCookieWithQQZone() = "${this.getCookie()}p_skey=$psKey; p_uin=o0$qq; "
+    @Transient
+    fun getCookieWithGroup() = "${this.getCookie()}p_skey=$groupPsKey; p_uin=o0$qq; "
     @Transient
     fun getCookieWithSuper() = "superuin=o0$qq; superkey=$superKey; supertoken=$superToken; "
     @Transient

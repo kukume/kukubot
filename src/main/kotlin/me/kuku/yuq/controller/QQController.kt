@@ -52,14 +52,8 @@ class QQController {
         val map = QQQrCodeLoginUtils.getQrCode()
         val bytes = map.getValue("qrCode") as ByteArray
         thread {
-            val msg: String
-            val sig = map.getValue("sig").toString()
-            var commonResult: CommonResult<Map<String, String>>
-            do {
-                TimeUnit.SECONDS.sleep(3)
-                commonResult = QQQrCodeLoginUtils.checkQrCode(sig = sig)
-            }while (commonResult.code == 0)
-            msg = if (commonResult.code == 200){
+            val commonResult = QQUtils.qrCodeLoginVerify(map.getValue("sig").toString())
+            val msg = if (commonResult.code == 200){
                 //登录成功
                 QQUtils.saveOrUpdate(qqDao, commonResult.t, qq, group = group)
                 "绑定或更新成功！"
@@ -69,6 +63,25 @@ class QQController {
             yuq.sendMessage(mf.newGroup(group).plus(msg))
         }
         return mif.image(bytes).plus("扫码登录它来了！！！")
+    }
+
+    @Action("group")
+    fun groupLogin(group: Long, qqEntity: QQEntity): Message{
+        val map = QQQrCodeLoginUtils.getQrCode("715030901", "73")
+        val bytes = map.getValue("qrCode") as ByteArray
+        thread {
+            val commonResult = QQUtils.qrCodeLoginVerify(map.getValue("sig").toString(), "715030901", "73", "https://qun.qq.com")
+            val msg = if (commonResult.code == 200){
+                //登录成功
+                qqEntity.groupPsKey = commonResult.t.getValue("p_skey")
+                qqDao.singleSaveOrUpdate(qqEntity)
+                "绑定或更新成功！"
+            }else{
+                commonResult.msg
+            }
+            yuq.sendMessage(mf.newGroup(group).plus(msg))
+        }
+        return mif.image(bytes).plus("qun.qq.com的扫码登录")
     }
 
     @Action("签到")
@@ -185,6 +198,7 @@ class QQController {
 
     @Action("中转站")
     fun mailFile(qqEntity: QQEntity, group: Long): String {
+        if (qqEntity.password == "") return "获取QQ邮箱文件中转站分享链接，需要使用密码登录QQ！"
         yuq.sendMessage(mf.newGroup(group).plus("正在获取中，请稍后~~~~~"))
         val commonResult = qqMailService.getFile(qqEntity)
         return if (commonResult.code == 200){
@@ -202,8 +216,18 @@ class QQController {
 
     @Action("续期")
     fun renew(qqEntity: QQEntity, group: Long): String{
+        if (qqEntity.password == "") return "续期QQ邮箱中转站文件失败！！，需要使用密码登录QQ！"
         yuq.sendMessage(mf.newGroup(group).plus("正在获取中，请稍后~~~~~"))
         return qqMailService.fileRenew(qqEntity)
+    }
+
+    @Action("好友")
+    fun addFriend(qqEntity: QQEntity, @PathVar(1) qqStr: String?, @PathVar(2) msg: String?, @PathVar(3) realName: String?, @PathVar(4) groupName: String?): String{
+        return if (qqStr != null){
+            var qMsg = ""
+            if (msg != null) qMsg = msg
+            qqZoneService.addFriend(qqEntity, qqStr.toLong(), qMsg, realName, groupName)
+        }else "缺少参数，[qq号]"
     }
 
 }

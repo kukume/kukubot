@@ -75,7 +75,7 @@ class MotionController {
             val map = commonResult.t
             val motion = MotionEntity(null, qq, phone, map.getValue("cookie"), map.getValue("userId"), map.getValue("accessToken"))
             if (motionEntity != null) motion.id = motionEntity.id
-            motionDao.singleSave(motion)
+            motionDao.singleSaveOrUpdate(motion)
         }else throw mif.text(commonResult.msg).toMessage()
     }
 
@@ -108,7 +108,7 @@ class MotionController {
     @ContextTip("请输入需要每天定时修改的步数")
     fun nextStepTask(@PathVar(0) step: String, motionEntity: MotionEntity): String {
         motionEntity.step = step.toInt()
-        motionDao.singleSave(motionEntity)
+        motionDao.singleSaveOrUpdate(motionEntity)
         return "添加修改步数定时任务成功！！"
     }
 }

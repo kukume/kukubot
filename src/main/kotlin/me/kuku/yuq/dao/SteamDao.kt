@@ -10,14 +10,16 @@ class SteamDao: HibernateDao<SteamEntity, Int>() {
         val query = session.createQuery("from SteamEntity where qq = :qq")
         query.setLong("qq", qq)
         val result = query.uniqueResult()
+        session.close()
         return if (result == null) null else result as SteamEntity
     }
 
-    fun singleSave(entity: SteamEntity) {
+    fun singleSaveOrUpdate(entity: SteamEntity) {
         val session = this.getSession()
         val transaction = session.beginTransaction()
-        session.save(entity)
+        session.saveOrUpdate(entity)
         transaction.commit()
+        session.close()
     }
 
 }

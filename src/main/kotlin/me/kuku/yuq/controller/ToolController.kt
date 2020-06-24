@@ -27,10 +27,6 @@ class ToolController {
     @Config("YuQ.Mirai.user.qq")
     private lateinit var qq: String
 
-    private var token: String? = ""
-    private val username = "17673373494"
-    private val password = "haha6666"
-
     @Action("百度")
     fun teachYouBaidu(@PathVar(1) content: String?) =
         if (content != null)
@@ -69,19 +65,6 @@ class ToolController {
 
     @Action("icp")
     fun queryIcp(@PathVar(1) params: String?) = if (params != null) toolService.queryIcp(params) else "缺少参数，需要查询的域名"
-
-    @Action("搜")
-    fun queryQuestion(@PathVar(1) params: String?): String {
-        return if (params != null) {
-            if (token == "") token = toolService.questionLogin(username, password)
-            if (token == null) return "密码错误，请重新配置！"
-            val answer = toolService.queryQuestion(params, token)
-            if ("登录后可显示答案" in answer) {
-                token = toolService.questionLogin(username, password)
-                "登录已失效，已成功重新登录，重新查询吧！"
-            } else answer
-        } else "请输入需要查询的题目"
-    }
 
     @Action("知乎日报")
     fun zhiHuDaily() = toolService.zhiHuDaily()
@@ -192,5 +175,5 @@ class ToolController {
     }*/
 
     @Action("菜单")
-    fun menu() = "菜单如下：http://8rr.co/8MZS"
+    fun menu() = "菜单如下：https://sohu.gg/eJRM5U"
 }

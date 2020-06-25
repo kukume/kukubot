@@ -9,6 +9,7 @@ import me.kuku.yuq.utils.OkHttpClientUtils
 import me.kuku.yuq.utils.QQSuperLoginUtils
 import me.kuku.yuq.utils.QQUtils
 import okhttp3.MultipartBody
+import org.jsoup.Jsoup
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -341,10 +342,13 @@ class QQServiceImpl: QQService {
 
     override fun qqMusicSign(qqEntity: QQEntity): String {
         val url = "https://u.y.qq.com/cgi-bin/musicu.fcg"
-        var response = OkHttpClientUtils.post(url, OkHttpClientUtils.addJson("{\"req_0\":{\"module\":\"UserGrow.UserGrowScore\",\"method\":\"receive_score\",\"param\":{\"musicid\":\"${qqEntity.getQZoneToken()}\",\"type\":15}},\"comm\":{\"g_tk\":${qqEntity.getGtkP()},\"uin\":${qqEntity.qq},\"format\":\"json\",\"ct\":23,\"cv\":0}}"), OkHttpClientUtils.addHeaders(
-                "cookie", qqEntity.getCookieWithQQZone(),
+        val headers = OkHttpClientUtils.addHeaders(
+                "cookie", qqEntity.getCookie(),
                 "referer", url
-        ))
+        )
+        val gtk = qqEntity.getGtk()
+        var response = OkHttpClientUtils.post(url, OkHttpClientUtils.addJson("{\"req_0\":{\"module\":\"UserGrow.UserGrowScore\",\"method\":\"receive_score\",\"param\":{\"musicid\":\"${qqEntity.qq}\",\"type\":15}},\"comm\":{\"g_tk\":${qqEntity.getGtk()},\"uin\":${qqEntity.qq},\"format\":\"json\",\"ct\":23,\"cv\":0}}"),
+                headers)
         var jsonObject = OkHttpClientUtils.getJson(response)
         val reqJsonObject = jsonObject.getJSONObject("req_0") ?: return "签到失败"
         jsonObject = reqJsonObject.getJSONObject("data")
@@ -354,10 +358,32 @@ class QQServiceImpl: QQService {
             -13004 -> "QQ音乐签到失败！请更新QQ！"
             else -> "QQ音乐签到失败！${jsonObject.getString("errMsg")}！"
         }
-        response = OkHttpClientUtils.post(url, OkHttpClientUtils.addJson("{\"req_0\":{\"module\":\"Radio.RadioLucky\",\"method\":\"clockIn\",\"param\":{\"platform\":2}},\"comm\":{\"g_tk\":${qqEntity.getGtkP()},\"uin\":${qqEntity.qq},\"format\":\"json\"}}"), OkHttpClientUtils.addHeaders(
-                "cookie", qqEntity.getCookieWithQQZone(),
-                "referer", url
-        ))
+
+        response = OkHttpClientUtils.post(url,
+                OkHttpClientUtils.addJson("{\"comm\":{\"g_tk\":$gtk,\"uin\":${qqEntity.qq},\"format\":\"json\",\"inCharset\":\"utf-8\",\"outCharset\":\"utf-8\",\"notice\":0,\"platform\":\"h5\",\"needNewCode\":1,\"ct\":23,\"cv\":0},\"req_0\":{\"module\":\"music.activeCenter.ActiveCenterSignSvr\",\"method\":\"DoSignIn\",\"param\":{}}}"),
+                headers)
+        jsonObject = OkHttpClientUtils.getJson(response).getJSONObject("req_0").getJSONObject("data")
+        result += when (jsonObject.getInteger("retCode")){
+            0 -> "QQ音乐活动签到成功！已连续签到${jsonObject.getJSONObject("signInfo").getString("continuousDays")}天，累计签到${jsonObject.getJSONObject("signInfo").getString("totalDays")}天"
+            40004 -> "QQ音乐活动今日已签到！"
+            -13004 -> "QQ音乐签到失败！请更新QQ！"
+            else -> "QQ音乐签到失败！${jsonObject.getString("errMsg")}！"
+        }
+
+        response = OkHttpClientUtils.post(url,
+                OkHttpClientUtils.addJson("{\"req_0\":{\"module\":\"UserGrow.UserGrowScore\",\"method\":\"receive_score\",\"param\":{\"musicid\":\"'.$this->uin.'\",\"type\":1}},\"comm\":{\"g_tk\":$gtk,\"uin\":${qqEntity.qq},\"format\":\"json\",\"ct\":23,\"cv\":0}}"),
+                headers)
+        jsonObject = OkHttpClientUtils.getJson(response).getJSONObject("req_0").getJSONObject("data")
+        result += when (jsonObject.getInteger("retCode")){
+            0 -> "QQ音乐分享成功！获得积分：${jsonObject.getString("todayScore")}天，签到天数：${jsonObject.getString("totalDays")}天，总积分:${jsonObject.getString("totalScore")}"
+            40001 -> "QQ音乐今日已分享！"
+            40002 -> "QQ音乐今日分享未完成！"
+            -13004 -> "QQ音乐分享失败！请更新QQ！"
+            else -> "QQ音乐分享失败！${jsonObject.getString("errMsg")}！"
+        }
+
+        response = OkHttpClientUtils.post(url, OkHttpClientUtils.addJson("{\"req_0\":{\"module\":\"Radio.RadioLucky\",\"method\":\"clockIn\",\"param\":{\"platform\":2}},\"comm\":{\"g_tk\":${qqEntity.getGtkP()},\"uin\":${qqEntity.qq},\"format\":\"json\"}}"),
+                headers)
         jsonObject = OkHttpClientUtils.getJson(response).getJSONObject("req_0").getJSONObject("data")
         result += when (jsonObject.getInteger("retCode")){
             0 -> "QQ音乐电台锦鲤打卡成功！积分+${jsonObject.getString("score")}"
@@ -365,6 +391,7 @@ class QQServiceImpl: QQService {
             -13004 -> "QQ音乐电台锦鲤打卡失败！请更新QQ！"
             else -> "QQ音乐电台锦鲤打卡失败！${jsonObject.getString("errMsg")}"
         }
+        OkHttpClientUtils.get("https://service-n157vbwh-1252343050.ap-beijing.apigateway.myqcloud.com/release/lzz_qqmusic?qq=${qqEntity.qq}&hour=2").close()
         return result
     }
 
@@ -813,5 +840,69 @@ class QQServiceImpl: QQService {
             }
             else -> "群活跃数据获取失败，请更新QQ！"
         }
+    }
+
+    override fun weiShiSign(qqEntity: QQEntity): String {
+        val response = OkHttpClientUtils.get("https://h5.qzone.qq.com/weishi/jifen/main?_proxy=1&_wv=3&navstyle=2&titleh=55.0&statush=20.0",
+                OkHttpClientUtils.addHeaders(
+                        "cookie", qqEntity.getCookie(),
+                        "user-agent", OkHttpClientUtils.MOBILE_UA
+                ))
+        val str = OkHttpClientUtils.getStr(response)
+        return if ("错误提示" != Jsoup.parse(str).getElementsByTag("title").first().text()){
+            val gtk = qqEntity.getGtk()
+            var result = ""
+            var cookie = OkHttpClientUtils.getCookie(response)
+            cookie += qqEntity.getCookie()
+            val secondResponse = OkHttpClientUtils.post("https://h5.qzone.qq.com/proxy/domain/activity.qzone.qq.com/fcg-bin/fcg_weishi_task_report_login?t=0${Date().time}030444&g_tk=$gtk", OkHttpClientUtils.addForms(
+                    "task_appid", "weishi",
+                    "task_id", "SignIn",
+                    "qua", "_placeholder",
+                    "format", "json",
+                    "uin", qqEntity.qq.toString(),
+                    "inCharset", "utf-8",
+                    "outCharset", "utf-8"
+            ), OkHttpClientUtils.addCookie(cookie))
+            val secondJsonObject = OkHttpClientUtils.getJson(secondResponse)
+            if (secondJsonObject.getInteger("code") == 0)
+                result += "微视签到成功!!"
+            else result += "微视签到失败！${secondJsonObject.getString("message")}!!"
+            val headers = OkHttpClientUtils.addHeaders(
+                    "wesee_fe_map_ext", "{\"deviceInfoHeader\":\"i=undefined\",\"qimei\":\"7e8454fad0148911\",\"imei\":\"\"}",
+                    "referer", "https://isee.weishi.qq.com/ws/app-pages/task_center/index.html?h5from=center&offlineMode=1&h5_data_report={%22navstyle%22:%222%22,%22needlogin%22:%221%22,%22_wv%22:%224096%22}&titleh=55.0&statush=27.272728",
+                    "cookie", cookie,
+                    "user-agent", "V1_AND_WEISHI_6.8.0_590_435013001_D/Mozilla/5.0 (Linux; Android 10; MI 9 Build/QKQ1.190825.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/77.0.3865.92 Mobile Safari/537.36 QQJSSDK/1.3"
+            )
+            val thirdResponse = OkHttpClientUtils.post("https://api.weishi.qq.com/trpc.weishi.weishi_h5_proxy.weishi_h5_proxy/GetUserTaskList?g_tk=$gtk",
+                    OkHttpClientUtils.addJson("{\"msg\":\"{\\\"sceneId\\\":1003,\\\"extInfo\\\":{}}\"}"),
+                    headers
+            )
+            val thirdJsonObject = OkHttpClientUtils.getJson(thirdResponse)
+            if (thirdJsonObject.getInteger("ret") == 0){
+                val jsonObject = JSON.parseObject(thirdJsonObject.getString("msg"))
+                val taskJsonObject = jsonObject.getJSONObject("taskInfoMp")
+                var id = 0
+                for (i in taskJsonObject){
+                    val singleJsonObject = i.value as JSONObject
+                    val taskInfoJsonObject = singleJsonObject.getJSONObject("taskInfoCfg")
+                    if (taskInfoJsonObject.getString("taskName") == "QQ等级加速"){
+                        id = taskInfoJsonObject.getInteger("taskId")
+                        break
+                    }
+                }
+                val forthResponse = OkHttpClientUtils.post("https://api.weishi.qq.com/trpc.weishi.weishi_h5_proxy.weishi_h5_proxy/ObtainTaskReward?g_tk=$gtk",
+                        OkHttpClientUtils.addJson("{\"msg\":\"{\\\"taskId\\\":$id}\"}"), headers)
+                val forthJsonObject = OkHttpClientUtils.getJson(forthResponse)
+                result += when (forthJsonObject.getInteger("ret")){
+                    0 -> "微视服务加速成功！成长值+0.5天"
+                    2007 -> "微视服务今天已完成加速！"
+                    else -> "微视领取任务奖励失败！${forthJsonObject.getString("err_msg")}"
+                }
+                result
+            }else {
+                result += "QQ微视获取任务详情失败！${thirdJsonObject.getString("err_msg")}"
+                result
+            }
+        }else "微视签到失败，请更新QQ！"
     }
 }

@@ -8,6 +8,7 @@ import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageItemFactory
 import me.kuku.yuq.dao.SteamDao
 import me.kuku.yuq.entity.SteamEntity
+import me.kuku.yuq.service.impl.DaoServiceImpl
 import me.kuku.yuq.service.impl.SteamServiceImpl
 import javax.inject.Inject
 
@@ -15,14 +16,14 @@ import javax.inject.Inject
 class SteamController{
 
     @Inject
-    private lateinit var steamDao: SteamDao
+    private lateinit var daoService: DaoServiceImpl
     @Inject
     private lateinit var mif: MessageItemFactory
     @Inject
     private lateinit var steamService: SteamServiceImpl
 
     @Before
-    fun checkBind(qq: Long) = steamDao.findByQQ(qq) ?: throw mif.text("您还没有绑定steam账号").toMessage()
+    fun checkBind(qq: Long) = daoService.findSteamByQQ(qq) ?: throw mif.text("您还没有绑定steam账号").toMessage()
 
     @Action("更名")
     fun changeName(steamEntity: SteamEntity, message: Message): String{
@@ -40,7 +41,7 @@ class SteamController{
         val commonResult = steamService.loginToBuff(steamEntity)
         return if (commonResult.code == 200){
             steamEntity.buffCookie = commonResult.t
-            steamDao.singleSaveOrUpdate(steamEntity)
+            daoService.saveOrUpdateSteam(steamEntity)
             "绑定网易buff的cookie成功"
         }else commonResult.msg
     }

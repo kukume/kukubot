@@ -9,10 +9,7 @@ import com.icecreamqaq.yuq.message.*
 import me.kuku.yuq.dao.QQDao
 import me.kuku.yuq.entity.QQEntity
 import me.kuku.yuq.pojo.CommonResult
-import me.kuku.yuq.service.impl.QQMailServiceImpl
-import me.kuku.yuq.service.impl.QQServiceImpl
-import me.kuku.yuq.service.impl.QQZoneServiceImpl
-import me.kuku.yuq.service.impl.ToolServiceImpl
+import me.kuku.yuq.service.impl.*
 import me.kuku.yuq.utils.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -29,7 +26,7 @@ class QQController {
     @Inject
     private lateinit var qqZoneService: QQZoneServiceImpl
     @Inject
-    private lateinit var qqDao: QQDao
+    private lateinit var daoService: DaoServiceImpl
     @Inject
     private lateinit var mif: MessageItemFactory
     @Inject
@@ -39,7 +36,7 @@ class QQController {
 
     @Before
     fun checkBind(@PathVar(0) str: String, qq: Long, actionContext: BotActionContext){
-        val qqEntity = qqDao.findByQQ(qq)
+        val qqEntity = daoService.findQQByQQ(qq)
         when {
             qqEntity != null -> actionContext.session["qqEntity"] = qqEntity
             str == "qq" -> return
@@ -55,7 +52,7 @@ class QQController {
             val commonResult = QQUtils.qrCodeLoginVerify(map.getValue("sig").toString())
             val msg = if (commonResult.code == 200){
                 //登录成功
-                QQUtils.saveOrUpdate(qqDao, commonResult.t, qq, group = group)
+                QQUtils.saveOrUpdate(daoService, commonResult.t, qq, group = group)
                 "绑定或更新成功！"
             }else{
                 commonResult.msg
@@ -74,7 +71,7 @@ class QQController {
             val msg = if (commonResult.code == 200){
                 //登录成功
                 qqEntity.groupPsKey = commonResult.t.getValue("p_skey")
-                qqDao.singleSaveOrUpdate(qqEntity)
+                daoService.saveOrUpdateQQ(qqEntity)
                 "绑定或更新成功！"
             }else{
                 commonResult.msg
@@ -149,7 +146,7 @@ class QQController {
             val str6 = qqService.qqVideoSign1(qqEntity)
             val str7 = qqService.qqVideoSign2(qqEntity)
             val str8 = qqService.bigVipSign(qqEntity)
-            val str9 = qqService.qqMusicSign(qqEntity)
+            val str9 = if ("成功" in qqService.qqMusicSign(qqEntity)) "签到成功" else "签到失败"
             val str10 = if ("成功" in qqService.gameSign(qqEntity)) "签到成功" else "签到失败"
             val str11 = qqService.qPetSign(qqEntity)
             val str12 = qqService.tribeSign(qqEntity)
@@ -157,6 +154,7 @@ class QQController {
             val str14 = if ("成功" in qqService.blueSign(qqEntity)) "签到成功" else "签到失败"
             val str15 = qqService.sVipMornSign(qqEntity)
             val str16 = qqService.weiYunSign(qqEntity)
+            val str17 = qqService.weiShiSign(qqEntity)
             sb.appendln("手机打卡：$str1")
                     .appendln("群等级抽奖：$str2")
                     .appendln("会员签到：$str3")
@@ -172,7 +170,8 @@ class QQController {
                     .appendln("运动签到：$str13")
                     .appendln("蓝钻签到：$str14")
                     .appendln("svip打卡报名：$str15")
-                    .append("微云签到：$str16")
+                    .appendln("微云签到：$str16")
+                    .append("微视签到：$str17")
             sb.toString()
         }else "超级签到失败，请更新QQ！"
     }
@@ -217,7 +216,7 @@ class QQController {
     @Action("续期")
     fun renew(qqEntity: QQEntity, group: Long): String{
         if (qqEntity.password == "") return "续期QQ邮箱中转站文件失败！！，需要使用密码登录QQ！"
-        yuq.sendMessage(mf.newGroup(group).plus("正在获取中，请稍后~~~~~"))
+        yuq.sendMessage(mf.newGroup(group).plus("正在续期中，请稍后~~~~~"))
         return qqMailService.fileRenew(qqEntity)
     }
 
@@ -227,7 +226,7 @@ class QQController {
             var qMsg = ""
             if (msg != null) qMsg = msg
             qqZoneService.addFriend(qqEntity, qqStr.toLong(), qMsg, realName, groupName)
-        }else "缺少参数，[qq号]"
+        }else "缺少参数，[qq号][验证消息（可选）][备注（可选）][分组名（可选）]"
     }
 
 }

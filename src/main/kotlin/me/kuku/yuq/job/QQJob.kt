@@ -7,6 +7,7 @@ import com.icecreamqaq.yuq.message.MessageFactory
 import com.icecreamqaq.yuq.message.MessageItemFactory
 import me.kuku.yuq.dao.QQDao
 import me.kuku.yuq.entity.QQEntity
+import me.kuku.yuq.service.impl.DaoServiceImpl
 import me.kuku.yuq.service.impl.QQServiceImpl
 import me.kuku.yuq.utils.QQPasswordLoginUtils
 import me.kuku.yuq.utils.QQUtils
@@ -16,7 +17,7 @@ import javax.inject.Inject
 class QQJob {
 
     @Inject
-    private lateinit var qqDao: QQDao
+    private lateinit var daoService: DaoServiceImpl
     @Inject
     private lateinit var qqService: QQServiceImpl
     @Inject
@@ -28,7 +29,7 @@ class QQJob {
 
     @Cron("1h")
     fun checkAndUpdate(){
-        val list = qqDao.findAll()
+        val list = daoService.findQQByAll()
         list?.forEach {
             val qqEntity = it as QQEntity
             if (qqEntity.status){
@@ -36,15 +37,15 @@ class QQJob {
                 if ("失败" in result){
                     if (qqEntity.password == "") {
                         qqEntity.status = false
-                        qqDao.singleSaveOrUpdate(qqEntity)
+                        daoService.saveOrUpdateQQ(qqEntity)
                         yuq.sendMessage(mf.newTemp(qqEntity.qqGroup, qqEntity.qq).plus(mif.at(qqEntity.qq)).plus("您的QQ已失效。"))
                     }else{
                         val commonResult = QQPasswordLoginUtils.login(qq = qqEntity.qq.toString(), password = qqEntity.password)
                         if (commonResult.code == 200){
-                            QQUtils.saveOrUpdate(qqDao, commonResult.t, qqEntity.qq, qqEntity.password)
+                            QQUtils.saveOrUpdate(daoService, commonResult.t, qqEntity.qq, qqEntity.password)
                         } else {
                             qqEntity.status = false
-                            qqDao.singleSaveOrUpdate(qqEntity)
+                            daoService.saveOrUpdateQQ(qqEntity)
                             yuq.sendMessage(mf.newTemp(qqEntity.qq, qqEntity.qqGroup).plus("您的QQ自动更新失败，${commonResult.msg}"))
                         }
                     }
@@ -55,7 +56,7 @@ class QQJob {
 
     @Cron("6h")
     fun qqSign(){
-        val list = qqDao.findAll()
+        val list = daoService.findQQByAll()
         list?.forEach {
             val qqEntity = it as QQEntity
             if (qqEntity.status) {
@@ -76,22 +77,23 @@ class QQJob {
                 qqService.blueSign(qqEntity)
                 qqService.sVipMornSign(qqEntity)
                 qqService.weiYunSign(qqEntity)
+                qqService.weiShiSign(qqEntity)
             } else{
                 qqEntity.status = false
-                qqDao.singleSaveOrUpdate(qqEntity)
+                daoService.saveOrUpdateQQ(qqEntity)
             }
         }
     }
 
     @Cron("At::h::7")
     fun sVipMorn() {
-        val list = qqDao.findAll()
+        val list = daoService.findQQByAll()
         list?.forEach {
             val qqEntity = it as QQEntity
             if (qqEntity.status) qqService.sVipMornClock(qqEntity)
             else {
                 qqEntity.status = false
-                qqDao.singleSaveOrUpdate(qqEntity)
+                daoService.saveOrUpdateQQ(qqEntity)
             }
         }
     }

@@ -11,6 +11,7 @@ import com.icecreamqaq.yuq.message.MessageItemFactory
 import io.ktor.client.HttpClient
 import me.kuku.yuq.dao.MotionDao
 import me.kuku.yuq.entity.MotionEntity
+import me.kuku.yuq.service.impl.DaoServiceImpl
 import me.kuku.yuq.service.impl.LeXinMotionServiceImpl
 import me.kuku.yuq.utils.image
 import java.io.File
@@ -20,7 +21,7 @@ import javax.inject.Inject
 @ContextController
 class MotionController {
     @Inject
-    private lateinit var motionDao: MotionDao
+    private lateinit var daoService: DaoServiceImpl
     @Inject
     private lateinit var motionService: LeXinMotionServiceImpl
     @Inject
@@ -32,7 +33,7 @@ class MotionController {
 
     @Action("步数")
     fun login(qq: Long, actionContext: BotActionContext){
-        val motionEntity = motionDao.findByQQ(qq)
+        val motionEntity = daoService.findMotionByQQ(qq)
         if (motionEntity == null){
             throw NextActionContext("bindPhone")
         }else {
@@ -75,14 +76,14 @@ class MotionController {
             val map = commonResult.t
             val motion = MotionEntity(null, qq, phone, map.getValue("cookie"), map.getValue("userId"), map.getValue("accessToken"))
             if (motionEntity != null) motion.id = motionEntity.id
-            motionDao.singleSaveOrUpdate(motion)
+            daoService.saveOrUpdateMotion(motion)
         }else throw mif.text(commonResult.msg).toMessage()
     }
 
     @Action("step")
     @ContextTip("请输入需要修改的步数")
     fun step(motionEntity: MotionEntity?, qq: Long, @PathVar(0) step: String, actionContext: BotActionContext, group: Long): String{
-        val motion = motionEntity ?: motionDao.findByQQ(qq)
+        val motion = motionEntity ?: daoService.findMotionByQQ(qq)
         val msg = motionService.modifyStepCount(step.toInt(), motion!!)
         return if ("成功" in msg) msg
         else {
@@ -98,7 +99,7 @@ class MotionController {
     @Action("步数任务")
     @NextContext("nextStepTask")
     fun stepTask(qq: Long, actionContext: BotActionContext) {
-        val motionEntity = motionDao.findByQQ(qq)
+        val motionEntity = daoService.findMotionByQQ(qq)
         if (motionEntity != null) {
             actionContext.session["motionEntity"] = motionEntity
         }else throw mif.text("您还没有绑定乐心运动账号！如需要绑定，请发送<步数>").toMessage()
@@ -108,7 +109,7 @@ class MotionController {
     @ContextTip("请输入需要每天定时修改的步数")
     fun nextStepTask(@PathVar(0) step: String, motionEntity: MotionEntity): String {
         motionEntity.step = step.toInt()
-        motionDao.singleSaveOrUpdate(motionEntity)
+        daoService.saveOrUpdateMotion(motionEntity)
         return "添加修改步数定时任务成功！！"
     }
 }

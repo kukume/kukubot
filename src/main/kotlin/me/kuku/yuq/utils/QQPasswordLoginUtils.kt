@@ -57,8 +57,11 @@ object QQPasswordLoginUtils {
 
     fun login(appId: String = "549000912", daId: String = "5", qq: String, password: String, url: String = "https://qzs.qzone.qq.com/qzone/v5/loginsucc.html?para=izone&specifyurl=http://user.qzone.qq.com"): CommonResult<Map<String, String>>{
         val map1 = this.checkVc(appId, daId, url, qq)
-        val map2 = if (map1.getValue("code") != "0")
-            TenCentCaptchaUtils.identify(appId, map1["sig"].toString(), qq.toLong())
+        val map2 = if (map1.getValue("code") != "0") {
+            val commonResult = TenCentCaptchaUtils.identify(appId, map1["sig"].toString(), qq.toLong())
+            if (commonResult.code == 200) commonResult.t
+            else return commonResult
+        }
         else map1
         return this.login(appId, daId, qq, password, url, map1, map2)
     }

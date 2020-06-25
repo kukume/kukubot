@@ -7,7 +7,7 @@ import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.message.MessageFactory
 import com.icecreamqaq.yuq.message.MessageItemFactory
-import me.kuku.yuq.dao.SuperCuteDao
+import me.kuku.yuq.service.impl.DaoServiceImpl
 import me.kuku.yuq.service.impl.SuperCuteServiceImpl
 import javax.inject.Inject
 
@@ -16,7 +16,7 @@ class SuperCuteController {
     @Inject
     private lateinit var superCuteService: SuperCuteServiceImpl
     @Inject
-    private lateinit var superCuteDao: SuperCuteDao
+    private lateinit var daoService: DaoServiceImpl
     @Inject
     private lateinit var mif: MessageItemFactory
     @Inject
@@ -26,7 +26,7 @@ class SuperCuteController {
 
     @Before
     fun checkBind(qq: Long, actionContext: BotActionContext){
-        val superCuteEntity = superCuteDao.findByQQ(qq)
+        val superCuteEntity = daoService.findSuperCuteByQQ(qq)
         if (superCuteEntity == null) throw mif.text("没有绑定超级萌宠的token").toMessage()
         else {
             val commonResult = superCuteService.getInfo(superCuteEntity.token)

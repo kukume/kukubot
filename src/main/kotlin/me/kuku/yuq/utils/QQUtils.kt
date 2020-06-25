@@ -1,8 +1,8 @@
 package me.kuku.yuq.utils
 
-import me.kuku.yuq.dao.QQDao
 import me.kuku.yuq.entity.QQEntity
 import me.kuku.yuq.pojo.CommonResult
+import me.kuku.yuq.service.impl.DaoServiceImpl
 import org.jsoup.internal.StringUtil
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -90,13 +90,13 @@ object QQUtils {
         return this.getKey("https://$domain/check_sig?uin=$qq&ptsigx=$pt$suffixUrl")
     }
 
-    fun saveOrUpdate(qqDao: QQDao, map: Map<String, String>, qq: Long, password: String = "", group: Long = 0L){
-        var qqEntity = qqDao.findByQQ(qq) ?: QQEntity()
+    fun saveOrUpdate(daoService: DaoServiceImpl, map: Map<String, String>, qq: Long, password: String = "", group: Long = 0L){
+        var qqEntity = daoService.findQQByQQ(qq) ?: QQEntity()
         qqEntity = this.convertQQEntity(map, qqEntity)
         qqEntity.qq = qq
         if (group != 0L) qqEntity.qqGroup = group
         if (password != "") qqEntity.password = password
-        qqDao.singleSaveOrUpdate(qqEntity)
+        daoService.saveOrUpdateQQ(qqEntity)
     }
 
     fun qrCodeLoginVerify(sig: String, appId: String = "", daId: String = "", url: String = ""): CommonResult<Map<String, String>>{

@@ -13,14 +13,6 @@ class QQDao: HibernateDao<QQEntity, Int>() {
         return if (result == null) null else result as QQEntity
     }
 
-    fun singleSaveOrUpdate(entity: QQEntity) {
-        val session = this.getSession()
-        val transaction = session.beginTransaction()
-        session.saveOrUpdate(entity)
-        transaction.commit()
-        session.close()
-    }
-
     fun findAll(): MutableList<Any?>? {
         val session = this.getSession()
         val query = session.createQuery("from QQEntity")

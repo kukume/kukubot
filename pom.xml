@@ -24,13 +24,13 @@
         <dependency>
             <groupId>com.IceCreamQAQ.Yu</groupId>
             <artifactId>Yu-DB</artifactId>
-            <version>0.0.1.4-SNAPSHOT</version>
+            <version>0.0.1.5-SNAPSHOT</version>
         </dependency>
-        <!--<dependency>
+        <dependency>
             <groupId>com.IceCreamQAQ</groupId>
             <artifactId>Yu-Core</artifactId>
-            <version>0.1.0.3-SNAPSHOT</version>
-        </dependency>-->
+            <version>0.1.0.8-SNAPSHOT</version>
+        </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib-jdk8</artifactId>
@@ -58,16 +58,25 @@
             <version>1.4.200</version>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.7</version>
+        </dependency>
     </dependencies>
 
     <repositories>
-        <repository>
-            <id>IceCream</id>
+<!--        <repository>-->
+<!--            <id>IceCream</id>-->
 <!--            <url>https://maven.kuku.me/repository/ice-cream/</url>-->
-            <url>https://maven.icecreamqaq.com/repository/maven-public/</url>
-        </repository>
+<!--            <url>https://maven.icecreamqaq.com/repository/maven-public/</url>-->
+<!--        </repository>-->
         <repository>
             <id>myMaven</id>
+            <url>https://maven.kuku.me/repository/maven-public/</url>
+        </repository>
+        <repository>
+            <id>proxyMaven</id>
             <url>https://maven.kuku.me/repository/maven-central/</url>
         </repository>
         <repository>

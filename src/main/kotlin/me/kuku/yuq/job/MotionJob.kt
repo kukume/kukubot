@@ -4,6 +4,7 @@ import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
 import me.kuku.yuq.dao.MotionDao
 import me.kuku.yuq.entity.MotionEntity
+import me.kuku.yuq.service.impl.DaoServiceImpl
 import me.kuku.yuq.service.impl.LeXinMotionServiceImpl
 import javax.inject.Inject
 
@@ -11,13 +12,13 @@ import javax.inject.Inject
 class MotionJob {
 
     @Inject
-    private lateinit var motionDao: MotionDao
+    private lateinit var daoService: DaoServiceImpl
     @Inject
     private lateinit var motionService: LeXinMotionServiceImpl
 
     @Cron("At::h::8")
     fun motion(){
-        val list = motionDao.findAll()
+        val list = daoService.findMotionByAll()
         list?.forEach {
             val motionEntity = it as MotionEntity
             if (motionEntity.step != 0){

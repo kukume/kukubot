@@ -14,12 +14,4 @@ class SteamDao: HibernateDao<SteamEntity, Int>() {
         return if (result == null) null else result as SteamEntity
     }
 
-    fun singleSaveOrUpdate(entity: SteamEntity) {
-        val session = this.getSession()
-        val transaction = session.beginTransaction()
-        session.saveOrUpdate(entity)
-        transaction.commit()
-        session.close()
-    }
-
 }

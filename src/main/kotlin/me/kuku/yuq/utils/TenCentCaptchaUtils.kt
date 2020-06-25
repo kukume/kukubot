@@ -1,10 +1,10 @@
 package me.kuku.yuq.utils
 
-import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
-import okhttp3.FormBody
+import me.kuku.yuq.pojo.CommonResult
 import java.awt.image.BufferedImage
 import java.net.URL
+import java.net.URLDecoder
 import java.util.*
 import javax.imageio.ImageIO
 import kotlin.math.abs
@@ -18,6 +18,47 @@ object TenCentCaptchaUtils {
     private fun getCaptchaPictureUrl(
             appId: String, qq: String, imageId: String?, sig: String, sess: String?, sid: String, index: Int
     ) = "https://t.captcha.qq.com/hycdn?index=$index&image=$imageId?aid=$appId&captype=&curenv=inner&protocol=https&clientype=1&disturblevel=&apptype=2&noheader=0&color=&showtype=&fb=1&theme=&lang=2052&ua=$UA&enableDarkMode=0&grayscale=1&subsid=3&sess=$sess&fwidth=0&sid=$sid&forcestyle=undefined&wxLang=&tcScale=1&uid=$qq&cap_cd=$sig&rnd=${Random.nextInt(100000, 999999)}&TCapIframeLoadTime=60&prehandleLoadTime=135&createIframeStart=${Date().time}487&rand=${Random.nextInt(100000, 999999)}&websig=&vsig=&img_index=$index"
+
+    private fun getCollect(width: Int, sid: String): Map<String, String> {
+        val token: String = Random.nextLong(2067831491, 5632894513).toString()
+        var sx: Int = Random.nextInt(700, 730)
+        val sy: Int = Random.nextInt(295, 300)
+        val ex = sx + (width - 55) / 2
+        var sTime: Int = Random.nextInt(100, 300)
+        val res = StringBuilder("[$sx,$sy,$sTime],")
+        val randy = intArrayOf(0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 3, -1, -1, -1, -2)
+        while (sx < ex) {
+            val x: Int = Random.nextInt(3, 9)
+            sx += x
+            val y = randy[Random.nextInt(randy.size)]
+            val time: Int = Random.nextInt(9, 18)
+            sTime += time
+            res.append("[$x,$y,$time],")
+        }
+        res.append("[0,0,${Random.nextInt(10, 25)}]")
+        val jsResponse = OkHttpClientUtils.get("https://t.captcha.qq.com/tdc.js?app_data=$sid&t=${Date().time}")
+        val js = OkHttpClientUtils.getStr(jsResponse)
+        val base64Str = Base64.getEncoder().encodeToString(js.toByteArray())
+        val response = OkHttpClientUtils.post("http://collect.qqzzz.net", OkHttpClientUtils.addForms(
+                "script", base64Str,
+                "tokenid", token,
+                "slideValue", res.toString()
+        ), OkHttpClientUtils.addUA("Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36"))
+        val collectData: String
+        val eks: String
+        val length: String
+        if (response.code == 200){
+            val jsonObject = OkHttpClientUtils.getJson(response)
+            collectData = URLDecoder.decode(jsonObject.getString("collectdata"), "utf-8")
+            eks = jsonObject.getString("eks")
+            length = collectData.length.toString()
+        }else{
+            collectData = "nIXLBDdHYhKzs/DpuAKh/q/xncVi259oy lhhF6ZZj NNILYRaA/ddVcg7XNV3vCVTrbqZmE9W oFhcOKrFqRFsrfocYSan2U EVz2etrit89QbKQcLm8SI/Z9meICCwYeiZkPo8OBf7RhLvsJaRVL7asZTh9CYuFI4PpiEcNzArOdoM2QtOHXBboMfQEqItUbqI4YseKYQKgEv0pjL9GUh8KU3Da2qjhArZWm5CBjzSn9hLqlPcBSxpOfzcpAos7DIV/cNZjqNewnobJsc3miRgiKant7B1sI6EKgFEgvdyWzpHL6NmPqPHHRLkp22USYBV3veSrmAHp hvhs1bUnovmFgsdTtcksyc8zCETiE9BKRR0nAWRd8oWOfW2lau7yEsba70gD3aKR/yL6fMxI6dQn2/lmgIl5TQYGWSBzNfaHGG7vwdE1U//9HO zVSKSiUXWmQTJP2FjZLQSUia6/xncVi259oFI4PpiEcNzDMwXM1gr2hoYeOYVEIUmcjapH56k9ykKZDMy7 IoDBMhDxhW6yAmgqU2uPrKq mNxr6NzjoqHW26/xncVi259o xLbqRK95Ikxtlii7eY0A8vvyY6u4DK9bfx4Gy9vG5tUMHU1eiRo8yBK5WKBYlFOKWYOMxJZSraq0hEM7ZurpaH0xi fZ8BLvcoO9RCbMR1KmQINEnrix//AzurahzS9jARAshgPILp bkOjnkfhuoJqdU5Y90g/AqniuToChF5vJC0r8BEhlm1ix88Xaxi4AY9hBCCo8Sc5A  VloOosyxpOfzcpAos C30FEfypkeyEIN5HVFbvMlVAezZaZhOMDLOYUWulr6GpwWmhGYMJK/xncVi259ob9G0HSGpInrL2O/5B3Yrc35eW2eKVr2dGIh7lG8FSce wdLUSsynjcjWj35 VDOl2E2NKeewBU7Rqlp5NAcBQPvAH245/lhAUr8 BkbjSlU7IzdBUlTepfZ2pIPeoUSslwbf1FfKmR6oAUlm6WBeZ4Tn5l2A0F7HTVm8mns pfjv1y2BlRf0mp68/WsFx9VD6RSs4iw1hL83jrMgxlCUwBDWSLdjMv8o2db8wsrRwrVsbmsp4kXYc4Tn5l2A0F7HQtO2/095TWUvU/ig26uXqBsoXRVivN Iw1cg5jrO/ ho2JLG0qeQzY7NwUfo5HuWBtyIXnjb78MOIE7tVxMQfFW7X /XltgehOfmXYDQXsdquBPxb3G53O/XLYGVF/SaRuJKob592HJHUJsseZ4TquCJuHPF9lUWjDhf/3putkSnlJt8VM 8dlYwNLjm/EasudZWFzWNuUtu47gcvUcMxcjWj35 VDOlZCtQnImNPqceOFouTvK/GTWJtKANPYFVw1cg5jrO/ juxeQWYnGmoM/yzIAh6dHCudZWFzWNuUteV61qeHu8zQGZ8JZh9XQYiGHzoWU9t0HI1o9 flQzpfGFFQaNDxzYZCtQnImNPqcvU/ig26uXqBsoXRVivN I8f1p7ijswxUxdPahSfcpJow4X/96brZEDhRTuNYTtGbsXk1/pxpdoFW7X /Xltgecjajn3lGQKHI1o9 flQzpWQrUJyJjT6nL1P4oNurl6hG4kqhvn3YchK6vPZFTfkZTh1dstLeIB3uxeQWYnGmoHTxYtD2lQrAX7HOMsSAXilWgpqdCVySFRxPM/C9ICFuyNaPfn5UM6VkK1CciY0 py9T KDbq5eoRuJKob592HISurz2RU35GU4dXbLS3iAdbR84SHIhvp3uxeQWYnGmoAafJWm4kt2h1WaDuPW4A1cBmfCWYfV0GFW7X /XltgeyNaPfn5UM6WK1tDDEOzW8Q2KNavPBklYymItofZtRSQq0P6zBpcKjztbblAdkucTeA6uOgWZoh/mFLoweZz1ZYyQQ0D5Pe7BBp8labiS3aFfsc4yxIBeKWA3bbheW1Zw/fqyFa8aDUadIBnWivxtAGQrUJyJjT6nymItofZtRSSZLQ 1Z4IRG0biSqG fdhyErq89kVN RnmFLoweZz1Ze7F5BZicaag2Um2K/ JlTjVZoO49bgDVw3Z5 Ht0OvfdqIaaJNBEDtj9M07Ucycy2QrUJyJjT6nymItofZtRSRlKrjENjo5rM jm/ooPHNdud6pxLUnw2ZtHzhIciG nW0fOEhyIb6dtlXYHALckMYNZOMI8XUwovy8c/EF/ZVLX7HOMsSAXinBYr r5LQdi/CiK5JMQMgeajgP8oNlPdc6tJC0/SNqPK8IBVeQjebewA8XNwcz9KegdrqbQDYzzTsjN0FSVN6lDWTjCPF1MKLZSbYr/4mVONjB/2Sofv0dfhQQ 4bwJ71fsc4yxIBeKQ3Z5 Ht0OvfY/TNO1HMnMtqOA/yg2U91y3COtRGyl7uLcI61EbKXu6ZLQ 1Z4IRG70f2gIDmGFZ5PX6/XMW1L4g8DofrsPo  MJZGO6voSh/Fh/0NrR4MvVZoO49bgDV0Dm1B39ep5SDdnn4e3Q69 dIBnWivxtADO11nFRqMuSLcI61EbKXu6ZLQ 1Z4IRG4KyPpYbFQE7ud6pxLUnw2bqO mAcc2gKdlJtiv/iZU4fhQQ 4bwJ73Ywf9kqH79HX4UEPuG8Ce91WaDuPW4A1cN2efh7dDr32P0zTtRzJzLDp3/OPM3UDtkK1CciY0 pxynVbXN4gQUcMkSZ6usdMwtNN1ZkOA11ReCMIy9GOk4ud6pxLUnw2bNTxIj0qjesOMJZGO6voShlblrTfk7eLFfsc4yxIBeKd5tzOIuCTQrnuGPLklRYbDI1o9 flQzpTO11nFRqMuSDtD043HUMpl3PBKyHwBxTQ25Q7RWKUBG1y0QXy51bOQNZOMI8XUwonF2SLSzVZyGX7HOMsSAXiklQk6QoR7Uc7rDoT6PBufWE3rDuzAbVI7f6qxotQfIvTSVY2so00rUOTzdA/c2YmU2IyUt/GJV11GAibQEF6An Q/iEw9USJpfsc4yxIBeKZ656vcV0wcnyNaPfn5UM6Whfg7ejneEOHDJEmerrHTMPmLGZ2tRB9653qnEtSfDZuX1GpeUPA9PkgOtc5i3VTZcOPL06Le0tCFnH1mpK /DszxgXIsaMRWLVUhHdjj148APFzcHM/Sn31dd/i5NMOHXLRBfLnVs5M66tkZFyOuxX7HOMsSAXikC9ftNMYQQtxdUOakhfgmE7AFqo1s1NP2Soz8C7JP2qY2oTEO0eXZZWlaKOw/VgngfoTXqR7nyqaz/w/JydWcdmrgzsNeRCV2JpGdE VoXsGdNLdS/ipWV6lyWrsBPsqnuEPscFXUaIKCLQdebWOlbFLRU28NAqoljVZzeRMJHTihw 3VPhI2oD81Lg0lnLny/JzN3G4mua4rbZPKzpi8PURwI6zjQYOav8Z3FYtufaK/xncVi259oD1fXd/sGWEyap2GmBZbNST0XE4Sy5oj7vPXABjrvl YtpQp1E38EbamrJHk6bzxyZzI7iJhLPoO14nlDvP6stKpILUbd2kzNYY94QeuIEk5jXUFMjkMagWPSzQxr0bxRQyGj53KvJO81YY1Wt4auWOK71o1lZsv6I2/YgkynBKeEssai 8EFGAlvUZbG5ApgAJSUmkzVvoQAlJSaTNW hAabOrL3pxOzAJSUmkzVvoTNTVUjioOGQEhROMdqlLywBps6svenE7MqSqxbUnqDHVvwmm0dqMQGHvGaX8i/EgzKdtJZsOgZOFsr9LTmvyrOWCd2Nxp/S8hXUBp20JsksgjdkzRP99sRiBnpOHE1Bmc4NhDyXddu4wRgUXNh7FeM9/naZHOWr4xCngEpRC830Dg2EPJd127jtK7AnceQVqceqmY/u0Ur9dErq8QdR MN0SurxB1H4w3RK6vEHUfjDXXGajcmulzLLs6sg6MqRx11xmo3Jrpcy/a4jDumertH55f  ZvVIHgeqmY/u0Ur9dErq8QdR MNp2UEXT2giPceqmY/u0Ur9XXGajcmulzLcYE5X5yT3yb2uIw7pnq7Rx6qZj 7RSv1kq/5BOMXRMX2uIw7pnq7R eX/vmb1SB4HqpmP7tFK/Xnl/75m9UgeB6qZj 7RSv1HqpmP7tFK/V1xmo3Jrpcy eX/vmb1SB40SurxB1H4w0eqmY/u0Ur9eeX/vmb1SB40SurxB1H4w0eqmY/u0Ur9eeX/vmb1SB455f  ZvVIHgeqmY/u0Ur9YwMeyIZfLJ755f  ZvVIHj2uIw7pnq7R eX/vmb1SB455f  ZvVIHhxgTlfnJPfJueX/vmb1SB49riMO6Z6u0cG3IheeNvvw eX/vmb1SB49riMO6Z6u0dxgTlfnJPfJu7v/b6Fzr0D7u/9voXOvQPu7/2 hc69A4wrTJg0mI53cYE5X5yT3yZxgTlfnJPfJva4jDumertHcYE5X5yT3yZxgTlfnJPfJnGBOV ck98muK5xZl9Ckh/RK6vEHUfjDe7v/b6Fzr0DY66dcoWy4gNsq9rN3dG6Pva4jDumertHwq9iKQ40iiZxO7ivjoDR6qmXWnAy ZjX8t4RlQU6occGWGqoZ3N5OuLjWbi0CUW93UL5i1AOsZkGWGqoZ3N5OvLeEZUFOqHHH1KyCOpB2nTt8YyToWjk4OX1GpeUPA9Pjs3BR jke5Zfsc4yxIBeKVw48vTot7S0Y/TNO1HMnMvf6qxotQfIveYw1EOqjmsTz6Ob ig8c13k9fr9cxbUvjsjN0FSVN6l Q/iEw9USJpfsc4yxIBeKVw48vTot7S0sMzLLcz3EnMqeSJzxzJajHDJEmerrHTMggpx9qQmt3gNuUO0VilARjN7sZbZLkrKX7HOMsSAXimnLTdMzOQWmKfxgV3Y54PqN1pinUwcUtHGR/LOq4KB wqA9ORqjUIQectpkzIuK3JUoLWfEVwGGyFgkD7tQms5"
+            eks = "UKFp ryeZvXggx5kqYFMxvFv1zcMpCQpR/tNmmmUNeu7ItF6nMPVbcUXkZ0S bjoElJtNAE5conKhyyrXXcU/Yq8jLa92FDkEmgD/ASlHFjFQI2wnJcTZ83mHayjhmXUpXAxjPaVTZF9ZasX8zLpBzxSayJIAlrb4PAwk6HTIvYBWMwVrfIXDW67ZLqR5cIH9mE1Gjkc49v2yuKvuhZ4Asl4ELSlKP6h27S8c5ZRz3JYl5tBH5Gh5kj6lbf/K9BMHCQDv67q4dtU4kZklOnjxsqy48qT/E7C"
+            length = "4928"
+        }
+        return mapOf("collectData" to collectData, "eks" to eks, "length" to length)
+    }
 
     private fun getWidth(imageAUrl: String, imageBUrl: String): Int{
         val imageA: BufferedImage = ImageIO.read(URL(imageAUrl))
@@ -42,7 +83,8 @@ object TenCentCaptchaUtils {
     private fun getCaptcha(appId: String, sig: String, qq: String): Map<String, String> {
         val firstResponse = OkHttpClientUtils.get("https://t.captcha.qq.com/cap_union_prehandle?aid=$appId&captype=&curenv=inner&protocol=https&clientype=2&disturblevel=&apptype=2&noheader=&color=&showtype=embed&fb=1&theme=&lang=2052&ua=$UA&enableDarkMode=0&grayscale=1&cap_cd=$sig&uid=$qq&wxLang=&subsid=1&callback=_aq_103418&sess=")
         val jsonObject = OkHttpClientUtils.getJson(firstResponse, "\\{.*\\}")
-        val secondResponse = OkHttpClientUtils.get("https://t.captcha.qq.com/cap_union_new_show?aid=$appId&captype=&curenv=inner&protocol=https&clientype=2&disturblevel=&apptype=2&noheader=&color=&showtype=embed&fb=1&theme=&lang=2052&ua=$UA&enableDarkMode=0&grayscale=1&subsid=2&sess=${jsonObject.getString("sess")}&fwidth=0&sid=${jsonObject.getString("sid")}&forcestyle=undefined&wxLang=&tcScale=1&noBorder=noborder&uid=$qq&cap_cd=$sig&rnd=${BotUtils.randomNum(6)}&TCapIframeLoadTime=14&prehandleLoadTime=74&createIframeStart=${Date().time}")
+        val url = "https://t.captcha.qq.com/cap_union_new_show?aid=$appId&captype=&curenv=inner&protocol=https&clientype=2&disturblevel=&apptype=2&noheader=&color=&showtype=embed&fb=1&theme=&lang=2052&ua=$UA&enableDarkMode=0&grayscale=1&subsid=2&sess=${jsonObject.getString("sess")}&fwidth=0&sid=${jsonObject.getString("sid")}&forcestyle=undefined&wxLang=&tcScale=1&noBorder=noborder&uid=$qq&cap_cd=$sig&rnd=${BotUtils.randomNum(6)}&TCapIframeLoadTime=14&prehandleLoadTime=74&createIframeStart=${Date().time}"
+        val secondResponse = OkHttpClientUtils.get(url)
         val html = OkHttpClientUtils.getStr(secondResponse)
         val height = BotUtils.regex("(?<=spt:\\\")(\\d+)(?=\\\")", html)
         val collectName = BotUtils.regex("(?<=collectdata:\\\")([0-9a-zA-Z]+)(?=\\\")", html)
@@ -52,13 +94,16 @@ object TenCentCaptchaUtils {
         val imageBUrl = this.getCaptchaPictureUrl(appId, qq, imageId, sig, sess, jsonObject.getString("sid"), 0)
         val width = this.getWidth(imageAUrl, imageBUrl)
         val ans = "$width,$height;"
-        return mapOf("sess" to sess!!, "sid" to jsonObject.getString("sid"),
+        val collect = this.getCollect(width, jsonObject.getString("sid"))
+        val map = mutableMapOf("sess" to sess!!, "sid" to jsonObject.getString("sid"),
                 "qq" to qq, "sig" to sig, "ans" to ans, "collectName" to collectName!!,
-                "cdata" to "0", "width" to width.toString())
+                "cdata" to "0", "width" to width.toString(), "url" to url)
+        map.putAll(collect)
+        return map
     }
 
-    private fun identifyCaptcha(appId: String, map: Map<String, String?>): Map<String, String>{
-        val firstResponse = OkHttpClientUtils.get("https://ssl.captcha.qq.com/dfpReg?0=Mozilla%2F5.0%20(Windows%20NT%2010.0%3B%20Win64%3B%20x64)%20AppleWebKit%2F537.36%20(KHTML%2C%20like%20Gecko)%20Chrome%2F83.0.4103.116%20Safari%2F537.36&1=zh-CN&2=1.8&3=1.9&4=24&5=8&6=-480&7=1&8=1&9=1&10=u&11=function&12=u&13=Win32&14=0&15=9dcc2da81f0e59e03185ad3db82acb72&16=b845fd62efae6732b958d2b9c29e7145&17=a1835c959081afa32e01bd14786db9b3&18=0&19=76cd47f4e5fcb3f96d6c57addb5498fd&20=824153624864153624&21=1.25%3B&22=1%3B1%3B1%3B1%3B1%3B1%3B1%3B0%3B1%3Bobject0UTF-8&23=0&24=0%3B0&25=31fc8c5fca18c5c1d5acbe2d336b9a63&26=48000_2_1_0_2_explicit_speakers&27=c8205b36aba2b1f3b581d8170984e918&28=ANGLE(AMDRadeon(TM)RXVega10GraphicsDirect3D11vs_5_0ps_5_0)&29=3331cb2359a3c1aded346ac2e279d401&30=a23a38527a38dcea2f63d5d078443f78&31=0&32=0&33=0&34=0&35=0&36=0&37=0&38=0&39=0&40=0&41=0&42=0&43=0&44=0&45=0&46=0&47=0&48=0&49=0&50=0&fesig=15341077811401570658&ut=1066&appid=0&refer=https%3A%2F%2Ft.captcha.qq.com%2Fcap_union_new_show&domain=t.captcha.qq.com&fph=1100805BC31DAAEC6C4B4A686CC8F312CD98DA4D6F7ADB1CE8619BDEB0EA580DE88363A57C65F3A76B2D6D905F49E70266EB&fpv=0.0.15&ptcz=0d372124ed637aa9210ef7ebe9af2ee8e09a1e8919d4b5349e6cf34f21ed2d31&callback=_fp_091990")
+    private fun identifyCaptcha(appId: String, map: Map<String, String>): CommonResult<Map<String, String>>{
+        val firstResponse = OkHttpClientUtils.get("https://ssl.captcha.qq.com/dfpReg?0=Mozilla%2F5.0%20(Windows%20NT%2010.0%3B%20Win64%3B%20x64)%20AppleWebKit%2F537.36%20(KHTML%2C%20like%20Gecko)%20Chrome%2F83.0.4103.116%20Safari%2F537.36&1=zh-CN&2=1.8&3=1.9&4=24&5=8&6=-480&7=1&8=1&9=1&10=u&11=function&12=u&13=Win32&14=0&15=9dcc2da81f0e59e03185ad3db82acb72&16=b845fd62efae6732b958d2b9c29e7145&17=a1835c959081afa32e01bd14786db9b3&18=0&19=76cd47f4e5fcb3f96d6c57addb5498fd&20=824153624864153624&21=1.25%3B&22=1%3B1%3B1%3B1%3B1%3B1%3B1%3B0%3B1%3Bobject0UTF-8&23=0&24=0%3B0&25=31fc8c5fca18c5c1d5acbe2d336b9a63&26=48000_2_1_0_2_explicit_speakers&27=c8205b36aba2b1f3b581d8170984e918&28=ANGLE(AMDRadeon(TM)RXVega10GraphicsDirect3D11vs_5_0ps_5_0)&29=3331cb2359a3c1aded346ac2e279d401&30=a23a38527a38dcea2f63d5d078443f78&31=0&32=0&33=0&34=0&35=0&36=0&37=0&38=0&39=0&40=0&41=0&42=0&43=0&44=0&45=0&46=0&47=0&48=0&49=0&50=0&fesig=15341077811401570658&ut=1066&appid=0&refer=https%3A%2F%2Ft.captcha.qq.com%2Fcap_union_new_show&domain=t.captcha.qq.com&fph=1100805BC31DAAEC6C4B4A686CC8F312CD98DA4D6F7ADB1CE8619BDEB0EA580DE88363A57C65F3A76B2D6D905F49E70266EB&fpv=0.0.15&ptcz=0d372124ed637aa9210ef7ebe9af2ee8e09a1e8919d4b5349e6cf34f21ed2d31&callback=_fp_091990", OkHttpClientUtils.addReferer(map.getValue("url")))
         val fpSig = OkHttpClientUtils.getJson(firstResponse, "\\{.*\\}").getString("fpsig")
         val secondResponse = OkHttpClientUtils.post("https://t.captcha.qq.com/cap_union_new_verify", OkHttpClientUtils.addForms(
                 "aid", appId,
@@ -78,39 +123,42 @@ object TenCentCaptchaUtils {
                 "enableDarkMode", "0",
                 "grayscale", "1",
                 "subsid", "2",
-                "sess", map["sess"].toString(),
+                "sess", map.getValue("sess"),
                 "fwidth", "0",
-                "sid", map["sid"].toString(),
+                "sid", map.getValue("sid"),
                 "forcestyle", "undefined",
                 "wxLang", "",
                 "tcScale", "1",
                 "noBorder", "noborder",
-                "uid", map["qq"].toString(),
-                "cap_cd", map["sig"].toString(),
+                "uid", map.getValue("qq"),
+                "cap_cd", map.getValue("sig"),
                 "rnd", Random.nextInt(100000, 999999).toString(),
                 "TCapIframeLoadTime", "19",
                 "prehandleLoadTime", "93",
                 "createIframeStart", Date().time.toString(),
                 "cdata", "0",
-                "ans", map["ans"] ?: "",
+                "ans", map.getValue("ans"),
                 "vsig", "",
                 "websig", "",
                 "subcapclass", "",
-                map["collectName"].toString(), "uRrIF0FEZOCezVjDjLhfhqvHWSdyLnIq WxEQDM6hgwpsmkQK3rYwgyUAntA 3QjvOdOkNd8CosRtnj iqxvXlyGrv2SOpYxG65Sx6LZXW8XCLV2DU4uF2kWiOWv3OTl8GqZmcoeUgeJIRf8j3rwBlhD2FV2uLXDa79hgibJHpzZAoID3c61vWixWFow0q/9RpnlmL8qEv2sAV3DkERSzH2UTXR9wnMsKBSxrxlgryyigPp2LVQ3Kok6cP9nz3IEpBaxueYPG6828zvpN2Tg1myKSOosOsx/xh0XvGdZ8eAv4wplbPVDrV2sgWGIB1h8KyHLUDc 1uZj6nc3vR5Hgt5qLtwmVKZKC9E6LjyQzA6jaTLyNcUbqsoQ0luuOSDxeGep3iCjf gCBmy7hKDdvLnfx6yS0TgQJRSmKZ/yQVGt4O014jihCE4igBgmBjalgaJWq76qe4/XRKWamxaMke24S6lNxmSu8AhPnkQ4N8btWG/Mudn0Ms2Oim/XnTXydgP56sMJRBAQ6Kp5QiaGcDEhqwyhgoRQbPnSwBEt5zGFVwdoa5d4XgRfVyGhkcxuWl5QTTMNIyIrkew0APXevhcMH HC/6Serk4KfZ9XhYAR0aAWbXneyYUgeKEA1 WXje6o/aSL5rE6pshXsFYekDjln4Pz 3jVipDoZ6HvP87/jO2ev8DacP M7Z6/wNpwEaLGP1lyV3Z2qkyFrHJJR7aH/5XgqmFUqtl86h8F/7erlyPTgRGTI6V4ogx7CtxCAT0AN2D4/iBLmqiRiqzfm/UQ9648FDWp4qgDJKl/90sFvVLC EgsrDgvw1NiRp5liq7KoFGnhiRXCZdZbuT8iAW9UsL4SCysX4CWC2ZBq46I5V62GiHgrV AlgtmQauOOC/DU2JGnmWKrsqgUaeGJMuodO98T9BLBb1SwvhILKwhX5ALTZFOw5rzPEj mRSMxOEZEGUwiukbIs7nIiN2NJeJaCmlxlrYOC/DU2JGnmVfgJYLZkGrjjgvw1NiRp5lOC/DU2JGnmWa8zxI/pkUjDgvw1NiRp5ly6h073xP0EshX5ALTZFOwzgvw1NiRp5lmvM8SP6ZFIxfgJYLZkGrjuR/atoedX9qiOVethoh4K31EPeuPBQ1qTgvw1NiRp5lIV QC02RTsPkf2raHnV/akI1jAHFtdCOiq7KoFGnhiRk3aJKzd67PuXI 7kidWNEy6h073xP0EsaDnIcJdDrE1ELuW49JJ4oiHfvoN91zmOBDmDkN/0jHKYb y5OdQ2UPk jrW83wVoomqS5qOw3MlqNZ 3kqn iN0gpoacHq5kaDnIcJdDrE1ELuW49JJ4oiHfvoN91zmOBDmDkN/0jHBwOah62e2hEjo R7M34Zbg8aCoARWb7ehj60OEWLiMBC22heIjHKQKFQxAzDN jsDizSxpCXPJ/iHfvoN91zmOBDmDkN/0jHKYb y5OdQ2Ujo R7M34ZbgomqS5qOw3Mhj60OEWLiMBmvM8SP6ZFIxYBHqDYKYrAegJxW1z9qadxnoU4Cpl0 qBDmDkN/0jHBPcYAkmmo5rqU9xObqZJZJwosnzddE mSiapLmo7DcyAkRGfdl7pIZ 20osWJXux1gEeoNgpisBOLNLGkJc8n Id  g33XOY8SLHKJ4JTaGsvNtW4YUJ1EcDmoetntoRI6PkezN GW4aSnPdGqnMhuo7DYH8O6ul4quyqBRp4YkWx sjnmiwco4s0saQlzyf9SIMLZ olgrtF5lM4VjoHmBDmDkN/0jHKYb y5OdQ2UjD9bGjbYSGSOj5HszfhluCiapLmo7DcyIqP6mgA7vIOISgC6zprgbVcJl1lu5PyI23zcvrTL3XB6ZOE18wNmd3f8W4v TUjYJtbFikktgAsvz3Em9Z uoLZwPzD/LdMCgQ5g5Df9Ixx8mHdKDVCwdhwOah62e2hEqpsQVeeKZuiOj5HszfhluGkpz3RqpzIb1OoqisChwsqISgC6zprgbcuodO98T9BLvSzutcsL6mNYBHqDYKYrAbZqVXaNf tFVzwnla2Kln7EixyieCU2hvpWZ7U0bKIvgIg6869XOv9iVy8b9BR8nZyK8zaQsUB2iq7KoFGnhiSine81GfkzcFELuW49JJ4oX1F3JbYv6d20XmUzhWOgeYEOYOQ3/SMcphv7Lk51DZRiVbdPXgahZ0rl7cJ8 Gte4V8Didf1Qhaa8zxI/pkUjEU T45/xaH7tmpVdo1/60V6hr9ENG2VQcSLHKJ4JTaGCI1b0cMRfYaOj5HszfhluGJXLxv0FHydOmDaJd1f6TNjwBbk8T1TOFgEeoNgpisBdzBeCPtnKJpQZaQi2n89Sd2COJfXF7lLgQ5g5Df9Ixyvxy9ZBFYlioCIOvOvVzr/1xbSQHnA1gZiVy8b9BR8nVqNZ 3kqn iJW1oGgU7tolfgJYLZkGrjgW9UsL4SCysyipjmsFDj6DcMH3oOMRBbVELuW49JJ4oVzwnla2Kln7dgjiX1xe5S/MeNhipYwl CiQs6jmCh qOj5HszfhluGJXLxv0FHyd90pVWFa426FCNYwBxbXQjmnnyTy3t fgyU1OBiyjMfuId  g33XOY8SLHKJ4JTaGoav/B6xQVGSpT3E5upklko6PkezN GW4rvFx6QZKKdxiVy8b9BR8najsNgfw7q6XOC/DU2JGnmWine81GfkzcLwkrpj6N7sFtmpVdo1/60WA7btzmVh3xwDLchhRfJAMgQ5g5Df9IxwKJCzqOYKH6ow/Wxo22EhkqU9xObqZJZKOj5HszfhluErl7cJ8 Gte8dK6miJxrcH3SlVYVrjboTgvw1NiRp5lzDSTJlA0sOa/HIaCQQgDDFhtzhtnkxv5bFqw UrIfVdfUXclti/p3bOLK2AWCKAO22LMU54oioAKJCzqOYKH6u BXOFuCu1OjD9bGjbYSGSMP1saNthIZI6PkezN GW4SuXtwnz4a17qsNT32eDc9vdKVVhWuNuhQjWMAcW10I4FvVLC EgsrGgfnDABB4UAVgtBZ1uya6dmP3ngNgvyv/ M7Z6/wNpw8mWiDxF0RZwTENDtLXSJ9TGDxCCeeqqqBLOS7n 8JsRpTPxaBnODyCVJj/8qDRsMjAmdbEsNLBSwhIJeNvgUU1bBRIsbAMDb5cDQ JW3jl37gvkDvhmUpSe5 qS t6C0LCFOLVrZERdwW46Cu8JVRvmvJHmFslZ7 XKmuGuTPMcH8oDN0B437P M7Z6/wNpwTRouf0kLTIWZ6HpLG0kXVy3HBbCtR2DVU6CibUR6kwMX417kVxYpiXFu9Orj4CaXb6cUgzFKmwwp7MRXATBWxVlKWQ6H Hdt9JKKldpg05D/jO2ev8DacP M7Z6/wNpw00nBNJrnpgBIKsRLisjxXV97OaJn7/L6gU0Ur xWf817pG7 DVz7MQlod1LcvJ4VK/QhbEYbqCapiJbEhPHp8rQ7Mb/bzbhrNOW61Uv0aGHE9V4VVNA6SifMyFmCRpmzPFo9FV7JMTY3F/YZAFwRhscbh5X9llbj4vE/AlkPQI8xBkTpgXzWrDEGROmBfNasCHf4utnyrqXWNP8OJynVkQh3 LrZ8q6l1jT/Dicp1ZGFHDDlHUlBx LxPwJZD0CPFgrM0u576QbWNP8OJynVkRYKzNLue kG1jT/Dicp1ZGyF5pOzCP8KjEGROmBfNashRww5R1JQceyF5pOzCP8KhYKzNLue kG1jT/Dicp1ZEWCszS7nvpBo9RWl0eTH81MQZE6YF81qyFHDDlHUlBxwh3 LrZ8q6lFgrM0u576QayF5pOzCP8Kgh3 LrZ8q6lCHf4utnyrqXi8T8CWQ9AjwPysJkIUr8aFgrM0u576QbWNP8OJynVkRYKzNLue kGFgrM0u576QbWNP8OJynVkTEGROmBfNasFgrM0u576QbWNP8OJynVkdXtlSUxdWNdFgrM0u576QYWCszS7nvpBoUcMOUdSUHHFgrM0u576QYWCszS7nvpBgZV1pmO DJrs4yqeHRM08oWCszS7nvpBhYKzNLue kGsheaTswj/CoxBkTpgXzWrDEGROmBfNassheaTswj/CoId/i62fKupdY0/w4nKdWR1jT/Dicp1ZEMMeltKaY2mBSsHnk 5YKEsheaTswj/CqFHDDlHUlBx9Y0/w4nKdWRhRww5R1JQcf/x/FICzdfnpB9KPpvCz1Rs4yqeHRM08rWNP8OJynVkRYKzNLue kG1jT/Dicp1ZHWNP8OJynVkY9RWl0eTH81Pzwak/gGedAId/i62fKupRYKzNLue kG1jT/Dicp1ZHWNP8OJynVkY9RWl0eTH81MQZE6YF81qwWCszS7nvpBhYKzNLue kGFgrM0u576QYWCszS7nvpBtY0/w4nKdWRFgrM0u576QbJmXdOWP0KYBYKzNLue kG4vE/AlkPQI8xBkTpgXzWrOLxPwJZD0CPCHf4utnyrqWRzIWkmCPgBuLxPwJZD0CPz17AhkOf8dizTohyjdQMSxw7gsoTmDBU1BooIJFhtb/UGiggkWG1v2wWtrPOCMVfvwqz4vlTVpsTXjfKrwwiPBNeN8qvDCI83DB96DjEQW1JLCwX3C2gQ972wleneon3kno 8/UslzYTXjfKrwwiPNQaKCCRYbW/RrlCmHdEdBoZRS1LcM9oprUPfeQj/kC0q/nMr1vqnk49PZ uBkw6I0INT6GzLAcmD/pynj9gU5D0Fcn1ASdGj/tjdCbnjGwcXIQ0g3PAtToLbMktWdY0/dEFyAaWWo7I9BXJ9QEnRo8ndHHQ gMQ vQVyfUBJ0aP9BXJ9QEnRo/bYsxTniiKgA/6cp4/YFOQ9ZjOey42zQAndHHQ gMQ vtjdCbnjGwc 2N0JueMbBwndHHQ gMQ mEgbGPPckydnRQOJUT0R6XddjCZigTtt7SSCo5VO1ESBtTU6R4rRSTe9sJXp3qJ96tSS0VMLiFzZhYN5dX/5qcChvZmYQmn Uxoy8yPUHCNtc8vCtjj6qw=",
+                map.getValue("collectName"), map.getValue("collectData"),
                 "fpinfo", "fpsig=$fpSig",
-                "eks", "C UMpn82w3lWu7tuZnFNDlczKiwTMsoKGjqv1TwJn 7sZO4fCvAvG2MyJ4o7L/mUxhRBvSWw 3MmlMUxpuvtqyHaD1GeRTT30kAgLR4XHE8Nzuj3fM/DNVHQaJyS4OtsZX723q1Cas1QVw46HfDgJje yVmh7mm0mTnBErZzjmHO2NkZeMPmYZB/n3Dh09Tr vV0eOr9RVYpgM7ZCmqVN21jrdMyOoFdktnPR/Bg5 Ar0dU/Nz9BGLNpiQPbBYY7LtNfZY3hcwHWZik9N5yE5Q==",
-                "tlg", "5036",
-                "vlg", "0_1_1"
+                "eks", map.getValue("eks"),
+                "tlg", map.getValue("collectData").length.toString(),
+                "vlg", "0_0_1"
         ))
         val jsonObject = OkHttpClientUtils.getJson(secondResponse)
-        return mapOf("ticket" to jsonObject.getString("ticket"), "randStr" to jsonObject.getString("randstr"))
+        return when (jsonObject.getInteger("errorCode")){
+            0 -> CommonResult(200, "成功", mapOf("ticket" to jsonObject.getString("ticket"), "randStr" to jsonObject.getString("randstr")))
+            else -> CommonResult(500, "验证码识别失败，请稍后重试！！")
+        }
     }
 
     /**
      * qq空间pc版 ： 549000912
      * qq空间手机版： 549000929
      */
-    fun identify(appId: String, sig: String = "", qq: Long = 0L): Map<String, String>{
+    fun identify(appId: String, sig: String = "", qq: Long = 0L): CommonResult<Map<String, String>>{
         val map = this.getCaptcha(appId, sig, qq.toString())
         return this.identifyCaptcha(appId, map)
     }

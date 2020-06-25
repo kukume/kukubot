@@ -33,4 +33,5 @@ interface QQService {
     fun publishNotice(qqEntity: QQEntity, group: Long, text: String): String
     fun getGroupLink(qqEntity: QQEntity, group: Long): String
     fun groupActive(qqEntity: QQEntity, group: Long, page: Int): String
+    fun weiShiSign(qqEntity: QQEntity): String
 }

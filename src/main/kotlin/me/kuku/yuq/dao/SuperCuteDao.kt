@@ -14,12 +14,4 @@ class SuperCuteDao: HibernateDao<SuperCuteEntity, Int>() {
         return if (result == null) null else result as SuperCuteEntity
     }
 
-    fun singSaveOrUpdate(entity: SuperCuteEntity) {
-        val session = this.getSession()
-        val transaction = session.beginTransaction()
-        super.saveOrUpdate(entity)
-        transaction.commit()
-        session.close()
-    }
-
 }

@@ -31,4 +31,6 @@ interface ToolService {
     fun hiToKoTo(): Map<String, String>
     fun songByQQ(name: String): String
     fun songBy163(name: String): CommonResult<String>
+    fun creatQr(content: String): String
+    fun girlImage(): String
 }

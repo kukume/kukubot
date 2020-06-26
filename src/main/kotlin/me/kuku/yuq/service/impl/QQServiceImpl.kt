@@ -3,6 +3,7 @@ package me.kuku.yuq.service.impl
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
 import me.kuku.yuq.entity.QQEntity
+import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.service.QQService
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.OkHttpClientUtils
@@ -10,6 +11,7 @@ import me.kuku.yuq.utils.QQSuperLoginUtils
 import me.kuku.yuq.utils.QQUtils
 import okhttp3.MultipartBody
 import org.jsoup.Jsoup
+import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -141,7 +143,7 @@ class QQServiceImpl: QQService {
                         .appendln("到期日期：${vipJsonObject.getString("end_time")}")
                         .appendln("------------")
             }
-            sb.toString()
+            sb.removeSuffix("\r\n").toString()
         }else "业务查询失败，请更新QQ！"
     }
 
@@ -746,8 +748,7 @@ class QQServiceImpl: QQService {
         val response = OkHttpClientUtils.post("https://ti.qq.com/hybrid-h5/api/json/daily_attendance/SignIn", OkHttpClientUtils.addForms(
                 "uin", qqEntity.qq.toString(),
                 "type", "1",
-                "sld", "",
-                "qua", "V1_AND_SQ_8.3.9_1424_YYB_D"
+                "sld", ""
         ), qqEntity.cookie())
         val jsonObject = OkHttpClientUtils.getJson(response)
         return if (jsonObject.getInteger("ret") == 0) "打卡成功" else "打卡失败，请更新QQ！"
@@ -864,9 +865,9 @@ class QQServiceImpl: QQService {
                     "outCharset", "utf-8"
             ), OkHttpClientUtils.addCookie(cookie))
             val secondJsonObject = OkHttpClientUtils.getJson(secondResponse)
-            if (secondJsonObject.getInteger("code") == 0)
-                result += "微视签到成功!!"
-            else result += "微视签到失败！${secondJsonObject.getString("message")}!!"
+            result += if (secondJsonObject.getInteger("code") == 0)
+                "微视签到成功!!"
+            else "微视签到失败！${secondJsonObject.getString("message")}!!"
             val headers = OkHttpClientUtils.addHeaders(
                     "wesee_fe_map_ext", "{\"deviceInfoHeader\":\"i=undefined\",\"qimei\":\"7e8454fad0148911\",\"imei\":\"\"}",
                     "referer", "https://isee.weishi.qq.com/ws/app-pages/task_center/index.html?h5from=center&offlineMode=1&h5_data_report={%22navstyle%22:%222%22,%22needlogin%22:%221%22,%22_wv%22:%224096%22}&titleh=55.0&statush=27.272728",
@@ -904,5 +905,71 @@ class QQServiceImpl: QQService {
                 result
             }
         }else "微视签到失败，请更新QQ！"
+    }
+
+    private fun getGroupFileList(qqEntity: QQEntity, group: Long, folderName: String?, folderId: String?): CommonResult<List<Map<String, String>>>{
+        val response = OkHttpClientUtils.get("https://pan.qun.qq.com/cgi-bin/group_file/get_file_list?gc=$group&bkn=${qqEntity.getGtk()}&start_index=0&cnt=30&filter_code=0&folder_id=${folderId ?: "%2F"}",
+                qqEntity.cookie())
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return when (jsonObject.getInteger("ec")){
+            0 -> {
+                val filesJsonArray = jsonObject.getJSONArray("file_list")
+                //获取成功
+                val list = mutableListOf<Map<String, String>>()
+                var id: String? = null
+                for (i in filesJsonArray.indices){
+                    val fileJsonObject = filesJsonArray.getJSONObject(i)
+                    if (folderName == null) {
+                        if (fileJsonObject.getInteger("type") == 1) {
+                            val map = mapOf(
+                                    "busId" to fileJsonObject.getString("bus_id"),
+                                    "id" to fileJsonObject.getString("id"),
+                                    "name" to fileJsonObject.getString("name")
+                            )
+                            list.add(map)
+                        }
+                    }else{
+                        if (fileJsonObject.getInteger("type") == 2){
+                            if (fileJsonObject.getString("name") == folderName){
+                                id = URLEncoder.encode(fileJsonObject.getString("id"), "utf-8")
+                                break
+                            }
+                        }
+                    }
+                }
+                if (id != null) {
+                    return this.getGroupFileList(qqEntity, group, null, id)
+                }
+                if (folderName != null) return CommonResult(500, "没有找到该文件夹")
+                CommonResult(200, "", list)
+            }
+            -107 -> CommonResult(500, "获取群文件失败，您还没有加入该群！！")
+            4 -> CommonResult(500, "获取群文件失败，请更新QQ！")
+            else -> CommonResult(500, "获取群文件失败，${jsonObject.getString("em")}")
+        }
+    }
+
+    private fun getGroupFileUrl(qqEntity: QQEntity, group: Long, busId: String, id: String): String{
+        val response = OkHttpClientUtils.get("https://pan.qun.qq.com/cgi-bin/group_share_get_downurl?uin=${qqEntity.qq}&groupid=$group&pa=${URLEncoder.encode("/$busId$id", "utf-8")}&r=0.${BotUtils.randomNum(16)}&charset=utf-8&g_tk=${qqEntity.getGtk()}&callback=_Callback",
+                qqEntity.cookie())
+        val jsonObject = OkHttpClientUtils.getJsonp(response)
+        return if (jsonObject.getInteger("code") == 0){
+            jsonObject.getJSONObject("data").getString("url")
+        }else "获取链接失败！！！"
+    }
+
+    override fun groupFileUrl(qqEntity: QQEntity, group: Long, folderName: String?): String {
+        val commonResult = this.getGroupFileList(qqEntity, group, folderName, null)
+        return if (commonResult.code == 200){
+            val sb = StringBuilder("本群的目录<${folderName?: "/"}>的群文件如下：\r\n")
+            val list = commonResult.t
+            for (map in list){
+                val url = this.getGroupFileUrl(qqEntity, group, map.getValue("busId"), map.getValue("id"))
+                sb.appendln("文件名：${map.getValue("name")}")
+                sb.appendln("链接：${BotUtils.shortUrl(url)}")
+                sb.appendln("--------------")
+            }
+            sb.removeSuffix("\r\n").toString()
+        }else commonResult.msg
     }
 }

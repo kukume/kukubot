@@ -3,10 +3,7 @@ package me.kuku.yuq.controller
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Before
 import com.IceCreamQAQ.Yu.annotation.Config
-import com.icecreamqaq.yuq.annotation.ContextController
-import com.icecreamqaq.yuq.annotation.GroupController
-import com.icecreamqaq.yuq.annotation.NextContext
-import com.icecreamqaq.yuq.annotation.PathVar
+import com.icecreamqaq.yuq.annotation.*
 import com.icecreamqaq.yuq.message.At
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageItemFactory
@@ -125,4 +122,7 @@ class BotController {
             mif.at(map.getValue("qq")).plus(mif.image(bytes)).plus("龙王（已蝉联${map.getValue("day")}天）快喷水！")
         }else mif.text(commonResult.msg).toMessage()
     }
+
+    @Action("群文件")
+    fun groupFile(@PathVar(1) fileName: String?, group: Long) = qqService.groupFileUrl(qqEntity!!, group, fileName)
 }

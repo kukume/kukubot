@@ -34,4 +34,5 @@ interface QQService {
     fun getGroupLink(qqEntity: QQEntity, group: Long): String
     fun groupActive(qqEntity: QQEntity, group: Long, page: Int): String
     fun weiShiSign(qqEntity: QQEntity): String
+    fun groupFileUrl(qqEntity: QQEntity, group: Long, folderName: String?): String
 }

@@ -45,7 +45,4 @@ class DaoServiceImpl: DaoService {
     fun findQQByAll() = qqDao.findAll()
 
     fun findMotionByAll() = motionDao.findAll()
-
-
-
 }

@@ -152,6 +152,7 @@ class QQZoneServiceImpl: QQZoneService {
             val builder = FormBody.Builder()
                     .add("sid", "3")
                     .add("ouin", qq.toString())
+                    .add("uin", qqEntity.qq.toString())
                     .add("fuin", qq.toString())
                     .add("sourceId", "1")
                     .add("fupdate", "1")

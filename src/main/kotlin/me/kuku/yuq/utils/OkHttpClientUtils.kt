@@ -103,7 +103,7 @@ object OkHttpClientUtils {
 
     fun getJson(response: Response, regex: String): JSONObject = JSON.parseObject(this.getStr(response, regex))
 
-    fun getJsonp(response: Response) = this.getJson(response, "\\{.*\\}")
+    fun getJsonp(response: Response) = this.getJson(response, "\\{[\\s\\S]*\\}")
 
     fun getBytes(response: Response) = response.body!!.bytes()
 

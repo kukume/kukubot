@@ -2,6 +2,7 @@ package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Config
+import com.IceCreamQAQ.Yu.annotation.Path
 import com.icecreamqaq.yuq.YuQ
 import com.icecreamqaq.yuq.annotation.*
 import com.icecreamqaq.yuq.message.*
@@ -143,7 +144,7 @@ class ToolController {
     @Action("nextXml")
     fun nextXml(message: Message): Message{
         val xmlStr = message.body[0].toPath()
-        return mif.xmlEx(xmlStr).toMessage()
+        return mif.xmlEx(1, xmlStr).toMessage()
     }
 
     @Action("json")
@@ -176,4 +177,21 @@ class ToolController {
 
     @Action("菜单")
     fun menu() = "菜单如下：https://sohu.gg/eJRM5U"
+
+    @Action("qr")
+    fun creatQrCode(@PathVar(1) content: String?): Message{
+        return if (content != null){
+            val url = toolService.creatQr(content)
+            mif.image(url).toMessage()
+        }else mif.text("缺少参数[需要生产二维码的内容]").toMessage()
+    }
+
+    @Action("看美女")
+    fun girl() = mif.image(toolService.girlImage())
+
+    @Action("\\发个.包\\")
+    fun sendEnvelope(/*color: String,*/ @PathVar(0) content: String): JsonEx {
+        val color = content[2]
+        return mif.jsonEx("{\"app\":\"com.tencent.cmshow\",\"desc\":\"\",\"view\":\"game_redpacket\",\"ver\":\"1.0.3.5\",\"prompt\":\"QQ${color}包\",\"appID\":\"\",\"sourceName\":\"\",\"actionData\":\"\",\"actionData_A\":\"\",\"sourceUrl\":\"\",\"meta\":{\"redPacket\":{\"destUrl\":\".2.15844517927 .com\",\"msg\":\"QQ${color}包\",\"posterUrl\":\"\\/qqshow\\/admindata\\/comdata\\/vipActTpl_mobile_zbltyxn\\/dddb247a4a9c6d34757c160f9e0b6669.gif\"}},\"config\":{\"forward\":1},\"text\":\"\",\"sourceAd\":\"\"}")
+    }
 }

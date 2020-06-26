@@ -5,13 +5,11 @@ import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.service.ToolService
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.OkHttpClientUtils
-import okhttp3.Headers
 import org.jsoup.Jsoup
 import java.lang.NullPointerException
 import java.net.URLEncoder
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.*
 import kotlin.random.Random
 
 class ToolServiceImpl: ToolService {
@@ -122,12 +120,6 @@ class ToolServiceImpl: ToolService {
                     .append("审核时间：${data.getString("review_time")}")
             sb.toString()
         }
-    }
-
-    private fun questionHeader(token: String): Headers{
-        return OkHttpClientUtils.addHeaders("token", token, "device", "Ai0M8k-sbuyxRyJFmiSEmoAuu9wr8u1MKLeCrJDTZ9Qe",
-                "platform", "android", "app-version", "1.0.6", "t", Date().time.toString() + "",
-                "s", BotUtils.randomStr(32), "user-agent", "okhttp/3.11.0")
     }
 
     override fun zhiHuDaily(): String {
@@ -361,5 +353,18 @@ class ToolServiceImpl: ToolService {
                 CommonResult(200, "成功", "{\"app\":\"com.tencent.structmsg\",\"desc\":\"音乐\",\"view\":\"music\",\"ver\":\"0.0.0.1\",\"prompt\":\"[分享]$songName\",\"appID\":\"\",\"sourceName\":\"\",\"actionData\":\"\",\"actionData_A\":\"\",\"sourceUrl\":\"\",\"meta\":{\"music\":{\"action\":\"\",\"android_pkg_name\":\"\",\"app_type\":1,\"appid\":100497308,\"desc\":\"$author\",\"jumpUrl\":\"${"https://music.163.com/song?id=$id"}\",\"musicUrl\":\"$url\",\"preview\":\"$imageUrl\",\"sourceMsgId\":\"0\",\"source_icon\":\"\",\"source_url\":\"\",\"tag\":\"网易云音乐\",\"title\":\"$songName\"}},\"config\":{\"autosize\":true,\"ctime\":1592152029,\"forward\":true,\"token\":\"00a77c3ec88562b6e75b6202ede77f54\",\"type\":\"normal\"},\"text\":\"\",\"sourceAd\":\"\",\"extra\":\"\"}")
             }else CommonResult(500, "可能该歌曲没有版权或者无法下载！")
         }else CommonResult(500, "未找到该歌曲！！")
+    }
+
+    override fun creatQr(content: String): String {
+        val response = OkHttpClientUtils.get("$url/qrcode/create/single?content=你好&size=500&type=0$params")
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return jsonObject.getJSONObject("data").getString("qrCodeUrl")
+    }
+
+    override fun girlImage(): String {
+        val response = OkHttpClientUtils.get("$url/image/girl/list/random?$params")
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        val jsonArray = jsonObject.getJSONArray("data")
+        return jsonArray.getJSONObject(Random.nextInt(jsonArray.size)).getString("imageUrl")
     }
 }

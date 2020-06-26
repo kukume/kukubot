@@ -1,7 +1,8 @@
 # Project exclude paths
 /target/
-/idea/
+/.idea/
 /log/
+/tmp/
 /dependency-reduced-pom.xml
 /device.json
 /yuq.iml

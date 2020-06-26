@@ -1,4 +1,8 @@
-**基于[YuQ](https://github.com/YuQWorks/YuQ-Mirai)-[Marai](https://github.com/mamoe/mirai)的机器人**
+**基于`YuQ-Mirai`的机器人**
+* [YuQ](https://github.com/YuQWorks/YuQ)
+* [YuQ-Mirai](https://github.com/YuQWorks/YuQ-Mirai)
+* [YuQ-Mirai-Demo](https://github.com/YuQWorks/YuQ-Mirai-Demo)
+* [Mirai](https://github.com/mamoe/mirai)
 
 ## 安装
 

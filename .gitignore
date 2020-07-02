@@ -3,6 +3,7 @@
 /.idea/
 /log/
 /tmp/
+/db/
 /dependency-reduced-pom.xml
 /device.json
 /yuq.iml

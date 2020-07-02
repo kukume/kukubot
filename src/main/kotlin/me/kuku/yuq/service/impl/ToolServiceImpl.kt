@@ -78,12 +78,20 @@ class ToolServiceImpl: ToolService {
     }
 
     override fun queryIp(ip: String): String {
-        val response = OkHttpClientUtils.get("https://v1.alapi.cn/api/ip?ip=$ip")
-        val jsonObject = OkHttpClientUtils.getJson(response)
-        return if (jsonObject.getInteger("code") == 200) {
-            val data = jsonObject.getJSONObject("data")
-            "$ip-${data.getString("pos")} ${data.getString("isp")}"
-        } else jsonObject.getString("msg")
+        val response = OkHttpClientUtils.get("https://www.ipip.net/ip.html",
+                OkHttpClientUtils.addUA(OkHttpClientUtils.PC_UA))
+        val cookie = OkHttpClientUtils.getCookie(response)
+        val htm = OkHttpClientUtils.getStr(response)
+        val token = Jsoup.parse(htm).select("input[name=csrf_token]").first().attr("value")
+        val resultResponse = OkHttpClientUtils.post("https://www.ipip.net/ip.html", OkHttpClientUtils.addForms(
+                "ip", ip,
+                "csrf_token", token
+        ), OkHttpClientUtils.addHeaders(
+                "cookie", cookie,
+                "user-agent", OkHttpClientUtils.PC_UA
+        ))
+        val html = OkHttpClientUtils.getStr(resultResponse)
+        return ip + "-" + Jsoup.parse(html).select(".ipSearch .fixWidth tr td")[1].text()
     }
 
     override fun queryWhois(domain: String): String {
@@ -356,7 +364,7 @@ class ToolServiceImpl: ToolService {
     }
 
     override fun creatQr(content: String): String {
-        val response = OkHttpClientUtils.get("$url/qrcode/create/single?content=你好&size=500&type=0$params")
+        val response = OkHttpClientUtils.get("$url/qrcode/create/single?content=${URLEncoder.encode(content, "utf-8")}&size=500&type=0$params")
         val jsonObject = OkHttpClientUtils.getJson(response)
         return jsonObject.getJSONObject("data").getString("qrCodeUrl")
     }

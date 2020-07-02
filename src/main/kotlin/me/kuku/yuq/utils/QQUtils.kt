@@ -2,7 +2,7 @@ package me.kuku.yuq.utils
 
 import me.kuku.yuq.entity.QQEntity
 import me.kuku.yuq.pojo.CommonResult
-import me.kuku.yuq.service.impl.DaoServiceImpl
+import me.kuku.yuq.service.DaoService
 import org.jsoup.internal.StringUtil
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -90,7 +90,7 @@ object QQUtils {
         return this.getKey("https://$domain/check_sig?uin=$qq&ptsigx=$pt$suffixUrl")
     }
 
-    fun saveOrUpdate(daoService: DaoServiceImpl, map: Map<String, String>, qq: Long, password: String = "", group: Long = 0L){
+    fun saveOrUpdate(daoService: DaoService, map: Map<String, String>, qq: Long, password: String = "", group: Long = 0L){
         var qqEntity = daoService.findQQByQQ(qq) ?: QQEntity()
         qqEntity = this.convertQQEntity(map, qqEntity)
         qqEntity.qq = qq

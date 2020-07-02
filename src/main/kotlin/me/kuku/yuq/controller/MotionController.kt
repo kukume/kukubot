@@ -8,22 +8,19 @@ import com.icecreamqaq.yuq.controller.NextActionContext
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageFactory
 import com.icecreamqaq.yuq.message.MessageItemFactory
-import io.ktor.client.HttpClient
-import me.kuku.yuq.dao.MotionDao
 import me.kuku.yuq.entity.MotionEntity
-import me.kuku.yuq.service.impl.DaoServiceImpl
-import me.kuku.yuq.service.impl.LeXinMotionServiceImpl
+import me.kuku.yuq.service.DaoService
+import me.kuku.yuq.service.LeXinMotionService
 import me.kuku.yuq.utils.image
-import java.io.File
 import javax.inject.Inject
 
 @GroupController
 @ContextController
 class MotionController {
     @Inject
-    private lateinit var daoService: DaoServiceImpl
+    private lateinit var daoService: DaoService
     @Inject
-    private lateinit var motionService: LeXinMotionServiceImpl
+    private lateinit var motionService: LeXinMotionService
     @Inject
     private lateinit var mif: MessageItemFactory
     @Inject

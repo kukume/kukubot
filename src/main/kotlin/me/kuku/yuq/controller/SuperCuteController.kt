@@ -7,16 +7,16 @@ import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.message.MessageFactory
 import com.icecreamqaq.yuq.message.MessageItemFactory
-import me.kuku.yuq.service.impl.DaoServiceImpl
-import me.kuku.yuq.service.impl.SuperCuteServiceImpl
+import me.kuku.yuq.service.DaoService
+import me.kuku.yuq.service.SuperCuteService
 import javax.inject.Inject
 
 @GroupController
 class SuperCuteController {
     @Inject
-    private lateinit var superCuteService: SuperCuteServiceImpl
+    private lateinit var superCuteService: SuperCuteService
     @Inject
-    private lateinit var daoService: DaoServiceImpl
+    private lateinit var daoService: DaoService
     @Inject
     private lateinit var mif: MessageItemFactory
     @Inject

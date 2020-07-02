@@ -6,27 +6,24 @@ import com.icecreamqaq.yuq.YuQ
 import com.icecreamqaq.yuq.annotation.*
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.message.*
-import me.kuku.yuq.dao.QQDao
 import me.kuku.yuq.entity.QQEntity
-import me.kuku.yuq.pojo.CommonResult
-import me.kuku.yuq.service.impl.*
+import me.kuku.yuq.service.*
 import me.kuku.yuq.utils.*
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.concurrent.thread
 
 @GroupController
 class QQController {
     @Inject
-    private lateinit var toolService: ToolServiceImpl
+    private lateinit var toolService: ToolService
     @Inject
-    private lateinit var qqMailService: QQMailServiceImpl
+    private lateinit var qqMailService: QQMailService
     @Inject
-    private lateinit var qqService: QQServiceImpl
+    private lateinit var qqService: QQService
     @Inject
-    private lateinit var qqZoneService: QQZoneServiceImpl
+    private lateinit var qqZoneService: QQZoneService
     @Inject
-    private lateinit var daoService: DaoServiceImpl
+    private lateinit var daoService: DaoService
     @Inject
     private lateinit var mif: MessageItemFactory
     @Inject
@@ -45,6 +42,7 @@ class QQController {
     }
 
     @Action("qq")
+    @QMsg(at = true)
     fun bindQQ(group: Long, qq: Long): Message{
         val map = QQQrCodeLoginUtils.getQrCode()
         val bytes = map.getValue("qrCode") as ByteArray
@@ -57,9 +55,9 @@ class QQController {
             }else{
                 commonResult.msg
             }
-            yuq.sendMessage(mf.newGroup(group).plus(msg))
+            yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus(msg))
         }
-        return mif.image(bytes).plus("扫码登录它来了！！！")
+        return mif.image(bytes).plus("qzone.qq.com的扫码登录")
     }
 
     @Action("group")
@@ -81,7 +79,7 @@ class QQController {
         return mif.image(bytes).plus("qun.qq.com的扫码登录")
     }
 
-    @Action("签到")
+    @Action("群签到")
     @QMsg(at = true)
     fun groupSign(qqEntity: QQEntity, group: Long): String{
         val arr = arrayOf(178, 124, 120, 180, 181, 127, 125, 126)
@@ -188,7 +186,7 @@ class QQController {
                 }
             }
             if (sb.toString() == "") "没有要赞的说说"
-            else sb.toString()
+            else sb.removeSuffix("\r\n").toString()
         }else "赞说说失败，请更新QQ！"
     }
 
@@ -227,6 +225,39 @@ class QQController {
             if (msg != null) qMsg = msg
             qqZoneService.addFriend(qqEntity, qqStr.toLong(), qMsg, realName, groupName)
         }else "缺少参数，[qq号][验证消息（可选）][备注（可选）][分组名（可选）]"
+    }
+
+    @Action("复制")
+    fun copyAvatar(@PathVar(1) qqStr: String?, message: Message, qqEntity: QQEntity): Any{
+        val toQQ = if (qqStr != null) qqStr.toLong()
+        else{
+            val body = message.body[1]
+            if (body is At) body.user
+            else null
+        }
+        return if (toQQ != null){
+            val url = "https://q.qlogo.cn/g?b=qq&nk=$toQQ&s=640"
+            qqService.modifyAvatar(qqEntity, url)
+        }else "缺少参数[QQ号]"
+    }
+
+    @Action("删除qq")
+    fun delQQ(qqEntity: QQEntity): String{
+        daoService.delQQ(qqEntity)
+        return "删除QQ成功！！！"
+    }
+
+    @Action("群列表")
+    fun groupList(qqEntity: QQEntity): String{
+        val commonResult = qqZoneService.queryGroup(qqEntity)
+        return if (commonResult.code == 200){
+            val list = commonResult.t
+            val sb = StringBuilder("群号        群名\n")
+            list.forEach {
+                sb.appendln("${it.getValue("groupName")}\t\t${it.getValue("group")}")
+            }
+            sb.removeSuffix("\r\n").toString()
+        }else "获取群列表失败，请更新QQ！！"
     }
 
 }

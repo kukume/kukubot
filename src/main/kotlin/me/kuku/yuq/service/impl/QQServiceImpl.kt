@@ -47,9 +47,12 @@ class QQServiceImpl: QQService {
                 "text", text
         ), qqEntity.cookie())
         val jsonObject = OkHttpClientUtils.getJson(response)
-        return if (jsonObject.getInteger("cgicode") == 0)
-            "qq群${group}签到成功"
-        else "qq群签到失败，请更新QQ！"
+        return when (jsonObject.getInteger("retcode")){
+            0 -> "qq群${group}签到成功"
+            10013,10001 -> "qq群签到失败，已被禁言！"
+            10016 -> "群签到一次性只能签到5个群，请10分钟后再试！"
+            else -> "qq群签到失败，请更新QQ！"
+        }
     }
 
     override fun groupLottery(qqEntity: QQEntity, group: Long): String {
@@ -64,7 +67,7 @@ class QQServiceImpl: QQService {
         return if (jsonObject.getInteger("ec") == 0){
             when {
                 jsonObject.getInteger("lucky_code") == 7779 -> "抱歉，等级不够5级，无法抽礼物"
-                "" == jsonObject.getString("name") -> "抱歉，没有抽到礼物"
+                "" == jsonObject.getString("name") || jsonObject.getString("name") == null -> "抱歉，没有抽到礼物"
                 else -> "抽礼物成功，抽到了${jsonObject.getString("name")}"
             }
         }else "抽礼物失败，请更新QQ！"
@@ -776,8 +779,10 @@ class QQServiceImpl: QQService {
                     140 -> "节日签到"
                     -9999 -> "每日成长值"
                     169 -> "QQ会员官方账号每日签到"
-                    664 -> "早期走运"
-                    697 -> singleJsonObject.getString("actname")
+                    664 -> "早起走运"
+                    697,703 -> singleJsonObject.getString("actname")
+                    26 -> "活动赠送"
+                    136 -> "超级会员每月礼包"
                     else -> "其他活动"
                 }
                 val add = singleJsonObject.getInteger("finaladd")
@@ -971,5 +976,23 @@ class QQServiceImpl: QQService {
             }
             sb.removeSuffix("\r\n").toString()
         }else commonResult.msg
+    }
+
+    override fun allShutUp(qqEntity: QQEntity, group: Long, isShutUp: Boolean): String {
+        val response = OkHttpClientUtils.post("https://qinfo.clt.qq.com/cgi-bin/qun_info/set_group_shutup", OkHttpClientUtils.addForms(
+                "src", "qinfo_v3",
+                "gc", group.toString(),
+                "bkn", qqEntity.getGtk(),
+                "all_shutup", if (isShutUp) "4294967295" else "0"
+        ), qqEntity.cookie())
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        println(jsonObject.toString())
+        return when (jsonObject.getInteger("ec")){
+            0 -> if (isShutUp) "全体禁言成功" else "解除全体禁言成功"
+            7 -> "权限不够，我无法执行！！"
+            -100005 -> "群号不存在！！"
+            4 -> "执行失败，请更新QQ！！"
+            else -> "执行失败，${jsonObject.getString("em")}"
+        }
     }
 }

@@ -129,7 +129,7 @@ class SuperCuteServiceImpl: SuperCuteService {
         return jsonObject.getInteger("collected") ?: 0
     }
 
-    fun receiveCoin(map: Map<String, String>) = this.receiveCoin(map, map.getValue("userId"))
+    override fun receiveCoin(map: Map<String, String>) = this.receiveCoin(map, map.getValue("userId"))
 
     override fun finishTask(map: Map<String, String>): String {
         val response = OkHttpClientUtils.get("https://qqpet.jwetech.com/api/daily_missions", this.addHeader(map.getValue("token")))

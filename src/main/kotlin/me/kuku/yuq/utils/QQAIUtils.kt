@@ -1,8 +1,6 @@
 package me.kuku.yuq.utils
 
 import okhttp3.FormBody
-import org.apache.commons.io.FileUtils
-import java.io.File
 import java.net.URLEncoder
 import java.util.*
 
@@ -37,7 +35,6 @@ class QQAIUtils {
     private fun imageUrlToBase64(imageUrl: String): String{
         val response = OkHttpClientUtils.get(imageUrl)
         val bytes = OkHttpClientUtils.getBytes(response)
-        FileUtils.writeByteArrayToFile(File("C:\\Users\\kuku\\.kuku\\images\\daasd.jpg"), bytes)
         return Base64.getEncoder().encodeToString(bytes)
     }
 

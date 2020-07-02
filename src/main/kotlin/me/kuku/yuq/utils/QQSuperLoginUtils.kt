@@ -29,8 +29,4 @@ object QQSuperLoginUtils {
     fun weiYunLogin(qqEntity: QQEntity): CommonResult<String>{
         return this.login(qqEntity, "527020901", "372", "ssl.ptlogin2.weiyun.com", "&s_url=https%3A%2F%2Fh5.weiyun.com%2Fsign_in&f_url=&ptlang=2052&ptredirect=101&aid=527020901&daid=372&j_later=0&low_login_hour=720&regmaster=0&pt_login_type=1&pt_aid=0&pt_aaid=0&pt_light=0&pt_3rd_aid=0&service=login&nodirect=0")
     }
-
-    fun qunLogin(qqEntity: QQEntity): CommonResult<String>{
-        return this.login(qqEntity, "715030901", "5", "ptlogin2.qun.qq.com", "&s_url=https%3A%2F%2Fqun.qq.com%2F&f_url=&ptlang=2052&ptredirect=101&aid=715030901&daid=5&j_later=0&low_login_hour=0&regmaster=0&pt_login_type=3&pt_aid=0&pt_aaid=16&pt_light=0&pt_3rd_aid=0&service=ptqrlogin&nodirect=0")
-    }
 }

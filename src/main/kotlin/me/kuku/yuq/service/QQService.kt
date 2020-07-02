@@ -1,7 +1,10 @@
 package me.kuku.yuq.service
 
+import com.IceCreamQAQ.Yu.annotation.AutoBind
 import me.kuku.yuq.entity.QQEntity
+import me.kuku.yuq.pojo.CommonResult
 
+@AutoBind
 interface QQService {
     fun groupSign(qqEntity: QQEntity, group: Long, place: String, text: String, info: String): String
     fun groupLottery(qqEntity: QQEntity, group: Long): String
@@ -35,4 +38,5 @@ interface QQService {
     fun groupActive(qqEntity: QQEntity, group: Long, page: Int): String
     fun weiShiSign(qqEntity: QQEntity): String
     fun groupFileUrl(qqEntity: QQEntity, group: Long, folderName: String?): String
+    fun allShutUp(qqEntity: QQEntity, group: Long, isShutUp: Boolean): String
 }

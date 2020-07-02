@@ -1,8 +1,10 @@
 package me.kuku.yuq.service
 
+import com.IceCreamQAQ.Yu.annotation.AutoBind
 import me.kuku.yuq.entity.QQEntity
 import me.kuku.yuq.pojo.CommonResult
 
+@AutoBind
 interface QQZoneService {
     //取好友说说
     fun friendTalk(qqEntity: QQEntity): List<Map<String, String?>>?
@@ -24,4 +26,6 @@ interface QQZoneService {
     fun queryGroup(qqEntity: QQEntity): CommonResult<List<Map<String, String>>>
     //获取群人数
     fun queryGroupMember(qqEntity: QQEntity, group: String): CommonResult<List<Map<String, String>>>
+    //留言
+    fun leaveMessage(qqEntity: QQEntity, qq: Long, content: String): String
 }

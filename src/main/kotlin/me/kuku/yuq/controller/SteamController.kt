@@ -3,24 +3,22 @@ package me.kuku.yuq.controller
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Before
 import com.icecreamqaq.yuq.annotation.GroupController
-import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageItemFactory
-import me.kuku.yuq.dao.SteamDao
 import me.kuku.yuq.entity.SteamEntity
-import me.kuku.yuq.service.impl.DaoServiceImpl
-import me.kuku.yuq.service.impl.SteamServiceImpl
+import me.kuku.yuq.service.DaoService
+import me.kuku.yuq.service.SteamService
 import javax.inject.Inject
 
 @GroupController
 class SteamController{
 
     @Inject
-    private lateinit var daoService: DaoServiceImpl
+    private lateinit var daoService: DaoService
     @Inject
     private lateinit var mif: MessageItemFactory
     @Inject
-    private lateinit var steamService: SteamServiceImpl
+    private lateinit var steamService: SteamService
 
     @Before
     fun checkBind(qq: Long) = daoService.findSteamByQQ(qq) ?: throw mif.text("您还没有绑定steam账号").toMessage()

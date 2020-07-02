@@ -11,9 +11,11 @@ data class SteamEntity(
         val qq:Long = 0L,
         var username: String = "",
         var password: String = "",
-        @Column(length = 400)
+        @Lob
+        @Column(columnDefinition="text")
         var cookie: String = "",
-        @Column(length = 500)
+        @Lob
+        @Column(columnDefinition="text")
         var buffCookie: String = "",
         var steamId: String = ""
 )

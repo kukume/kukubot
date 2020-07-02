@@ -10,7 +10,8 @@ data class MotionEntity(
         var id: Int? = null,
         var qq: Long = 0L,
         var phone: String = "",
-        @Column(length = 1400)
+        @Lob
+        @Column(columnDefinition="text")
         var cookie: String = "",
         var userId: String = "",
         var accessToken: String = "",

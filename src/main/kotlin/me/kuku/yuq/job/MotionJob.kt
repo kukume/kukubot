@@ -2,19 +2,18 @@ package me.kuku.yuq.job
 
 import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
-import me.kuku.yuq.dao.MotionDao
 import me.kuku.yuq.entity.MotionEntity
-import me.kuku.yuq.service.impl.DaoServiceImpl
-import me.kuku.yuq.service.impl.LeXinMotionServiceImpl
+import me.kuku.yuq.service.DaoService
+import me.kuku.yuq.service.LeXinMotionService
 import javax.inject.Inject
 
 @JobCenter
 class MotionJob {
 
     @Inject
-    private lateinit var daoService: DaoServiceImpl
+    private lateinit var daoService: DaoService
     @Inject
-    private lateinit var motionService: LeXinMotionServiceImpl
+    private lateinit var motionService: LeXinMotionService
 
     @Cron("At::h::8")
     fun motion(){

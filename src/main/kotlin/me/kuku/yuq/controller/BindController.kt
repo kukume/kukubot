@@ -1,40 +1,26 @@
 package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.Action
-import com.icecreamqaq.yuq.YuQ
 import com.icecreamqaq.yuq.annotation.ContextController
 import com.icecreamqaq.yuq.annotation.NextContext
 import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.annotation.PrivateController
 import com.icecreamqaq.yuq.message.Message
-import com.icecreamqaq.yuq.message.MessageFactory
-import com.icecreamqaq.yuq.message.MessageItemFactory
 import me.kuku.yuq.entity.SteamEntity
 import me.kuku.yuq.entity.SuperCuteEntity
-import me.kuku.yuq.service.impl.DaoServiceImpl
-import me.kuku.yuq.service.impl.SteamServiceImpl
+import me.kuku.yuq.service.DaoService
+import me.kuku.yuq.service.SteamService
 import me.kuku.yuq.utils.QQPasswordLoginUtils
-import me.kuku.yuq.utils.QQQrCodeLoginUtils
 import me.kuku.yuq.utils.QQUtils
-import me.kuku.yuq.utils.image
 import javax.inject.Inject
-import kotlin.concurrent.thread
 
 @PrivateController
 @ContextController
 class BindController {
     @Inject
-    private lateinit var daoService: DaoServiceImpl
+    private lateinit var daoService: DaoService
     @Inject
-    private lateinit var steamService: SteamServiceImpl
-    @Inject
-    private lateinit var botController: BotController
-    @Inject
-    private lateinit var mif: MessageItemFactory
-    @Inject
-    private lateinit var yuq: YuQ
-    @Inject
-    private lateinit var mf: MessageFactory
+    private lateinit var steamService: SteamService
 
     @Action("qq")
     fun bindQQ(@PathVar(1) password: String?, qq: Long): Any? {
@@ -84,26 +70,4 @@ class BindController {
             } else commonResult.msg
         }else "缺少参数[账号 密码 二次验证码（令牌）]"
     }
-
-    @Action("group")
-    fun addGroupCookie(qq: Long): Message{
-        val qqEntity = botController.qqEntity
-        return if (qqEntity != null) {
-            val map = QQQrCodeLoginUtils.getQrCode("715030901", "73")
-            val bytes = map.getValue("qrCode") as ByteArray
-            thread {
-                val commonResult = QQUtils.qrCodeLoginVerify(map.getValue("sig").toString(), "715030901", "73", "https://qun.qq.com")
-                val msg = if (commonResult.code == 200) {
-                    //登录成功
-                    qqEntity.groupPsKey = commonResult.t.getValue("p_skey")
-                    "绑定或更新成功！"
-                } else {
-                    commonResult.msg
-                }
-                yuq.sendMessage(mf.newPrivate(qq).plus(msg))
-            }
-            mif.image(bytes).plus("将为机器人更新qun.qq.com的cookie")
-        }else mif.text("获取失败").toMessage()
-    }
-
 }

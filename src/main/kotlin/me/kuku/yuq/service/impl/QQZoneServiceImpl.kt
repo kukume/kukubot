@@ -228,4 +228,19 @@ class QQZoneServiceImpl: QQZoneService {
             return CommonResult(200, "", list)
         }else CommonResult(500, jsonObject.getString("message"))
     }
+
+    override fun leaveMessage(qqEntity: QQEntity, qq: Long, content: String): String {
+        val response = OkHttpClientUtils.post("https://mobile.qzone.qq.com/msgb/fcg_add_msg?g_tk=${qqEntity.getGtkP()}", OkHttpClientUtils.addForms(
+                "res_uin", qq.toString(),
+                "format", "json",
+                "content", content,
+                "opr_type", "add_comment"
+        ), qqEntity.cookieWithQQZone())
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return when (jsonObject.getInteger("code")){
+            0 -> "留言成功"
+            -3000 -> "留言失败，请更新QQ！"
+            else -> "留言失败，${jsonObject.getString("message")}"
+        }
+    }
 }

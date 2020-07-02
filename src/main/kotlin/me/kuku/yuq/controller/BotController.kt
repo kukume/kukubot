@@ -67,10 +67,16 @@ class BotController {
     }
 
     @Action("群文件")
-    fun groupFile(@PathVar(1) fileName: String?, group: Long) = qqService.groupFileUrl(qqEntity!!, group, fileName)
-
+    fun groupFile(@PathVar(1) fileName: String?, group: Long): String {
+        val str = qqService.groupFileUrl(qqEntity!!, group, fileName)
+        if ("更新" in str) qqEntity?.status = false
+        return str
+    }
 
     @Action("\\全体禁言(开|关)\\")
-    fun allShutUp(group: Long, @PathVar(0) content: String) =
-            qqService.allShutUp(qqEntity!!, group,content[4] == '开')
+    fun allShutUp(group: Long, @PathVar(0) content: String): String {
+        val str = qqService.allShutUp(qqEntity!!, group, content[4] == '开')
+        if ("更新" in str) qqEntity?.status = false
+        return str
+    }
 }

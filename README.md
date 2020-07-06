@@ -4,6 +4,12 @@
 * [YuQ-Mirai-Demo](https://github.com/YuQWorks/YuQ-Mirai-Demo)
 * [Mirai](https://github.com/mamoe/mirai)
 
+## 功能
+* QQ自动签到
+* 超级萌宠快速养成
+* 自动修改步数
+* 一些小工具
+
 ## 安装
 
 ### Windows
@@ -120,3 +126,4 @@ YuQ.Mirai.user.qq=
 # 登录的 QQ 号的密码
 YuQ.Mirai.user.pwd=
 ```
+* 本程序仅供内部学习和交流使用，并倡导富强、民主、文明、和谐,倡导、平等、公正、法治,倡导爱、敬业、信、友善,积极培育和践行社会主义核心价值观。

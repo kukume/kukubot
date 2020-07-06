@@ -169,7 +169,7 @@ class ToolController {
     }*/
 
     @Action("菜单")
-    fun menu() = "菜单如下：https://sohu.gg/eJRM5U"
+    fun menu() = "菜单如下：https://z6c.cn/lnecrr"
 
     @Action("qr/{content}")
     @QMsg(at = true)

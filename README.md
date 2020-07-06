@@ -10,6 +10,8 @@
 * 自动修改步数
 * 一些小工具
 
+指令：[https://u.iheit.com/kuku/bot/menu.html](https://u.iheit.com/kuku/bot/menu.html)
+
 ## 安装
 
 ### Windows
@@ -24,12 +26,12 @@
 
 1、安装jdk
 
-1)、手动安装
+* 手动安装
 ```shell script
 mkdir /usr/java
 wget https://u.iheit.com/kuku/jdk/jdk-8u251-linux-x64.tar.gz
 tar -zxvf jdk-8u251-linux-x64.tar.gz -C /usr/java
-
+# 配置环境变量
 cat >> /etc/profile <<EOF
 export JAVA_HOME=/usr/java/jdk1.8.0_251
 export CLASSPATH=\$JAVA_HOME/lib/tools.jar:\$JAVA_HOME/lib/dt.jar:\$JAVA_HOME/lib
@@ -38,7 +40,7 @@ EOF
 
 source /etc/profile
 ```
-2)、通过宝塔安装
+* 或者通过宝塔安装
 
 安装 [宝塔](http://bt.cn) ，在面板程序中找到`tomcat9`安装即可。
 

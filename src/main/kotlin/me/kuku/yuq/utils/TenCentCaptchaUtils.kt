@@ -133,8 +133,8 @@ object TenCentCaptchaUtils {
                 "uid", map.getValue("qq"),
                 "cap_cd", map.getValue("sig"),
                 "rnd", Random.nextInt(100000, 999999).toString(),
-                "TCapIframeLoadTime", "19",
-                "prehandleLoadTime", "93",
+                "TCapIframeLoadTime", "426",
+                "prehandleLoadTime", "293",
                 "createIframeStart", Date().time.toString(),
                 "cdata", "0",
                 "ans", map.getValue("ans"),
@@ -146,11 +146,11 @@ object TenCentCaptchaUtils {
                 "eks", map.getValue("eks"),
                 "tlg", map.getValue("collectData").length.toString(),
                 "vlg", "0_0_1"
-        ))
+        ), OkHttpClientUtils.addUA(OkHttpClientUtils.PC_UA))
         val jsonObject = OkHttpClientUtils.getJson(secondResponse)
         return when (jsonObject.getInteger("errorCode")){
             0 -> CommonResult(200, "成功", mapOf("ticket" to jsonObject.getString("ticket"), "randStr" to jsonObject.getString("randstr")))
-            else -> CommonResult(500, "验证码识别失败，请稍后重试！！")
+            else -> CommonResult(400, "验证码识别失败，请稍后重试！！")
         }
     }
 

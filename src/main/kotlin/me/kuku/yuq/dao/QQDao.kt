@@ -24,7 +24,9 @@ class QQDao: HibernateDao<QQEntity, Int>() {
     fun findActivity(): MutableList<Any?>?{
         val session = this.getSession()
         val query = session.createQuery("from QQEntity where status = true")
-        return query.list()
+        val resultList =  query.list()
+        session.close()
+        return resultList
     }
 
 }

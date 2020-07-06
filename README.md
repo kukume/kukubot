@@ -12,7 +12,7 @@
 
 2、下载 [压缩包](https://u.iheit.com/kuku/bot/yuq.zip) ，解压，打开`conf/YuQ.properties`按提示更改需要登录的机器人QQ号和密码
 
-3、打开Start.bat即可
+3、打开`start.bat`即可
 
 ### Linux
 
@@ -46,13 +46,19 @@ unzip yuq.zip
 
 3、运行
 ```shell script
+### 安装screen
 #centos
 yum install screen -y
-screen -dmS yuq java -jar yuq-1.0-SNAPSHOT.jar
-
 #debian/ubuntu
 apt-get install screen -y
-screen -dmS yuq java -jar yuq-1.0-SNAPSHOT.jar
+# 运行
+bash start.sh
+# 停止
+bash stop.sh
+```
+如需查看运行日志：
+```shell script
+screen -R yuq
 ```
 
 ### Android

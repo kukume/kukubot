@@ -39,4 +39,6 @@ interface QQService {
     fun weiShiSign(qqEntity: QQEntity): String
     fun groupFileUrl(qqEntity: QQEntity, group: Long, folderName: String?): String
     fun allShutUp(qqEntity: QQEntity, group: Long, isShutUp: Boolean): String
+    fun changeName(qqEntity: QQEntity, qq: Long, group: Long, name: String): String
+    fun setGroupAdmin(qqEntity: QQEntity, qq: Long, group: Long, isAdmin: Boolean): String
 }

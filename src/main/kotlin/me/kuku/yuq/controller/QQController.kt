@@ -144,10 +144,10 @@ class QQController {
             val str6 = qqService.qqVideoSign1(qqEntity)
             val str7 = qqService.qqVideoSign2(qqEntity)
             val str8 = qqService.bigVipSign(qqEntity)
-            val str9 = if ("成功" in qqService.qqMusicSign(qqEntity)) "签到成功" else "签到失败"
+            val str9 = if ("失败" in qqService.qqMusicSign(qqEntity)) "签到失败" else "签到成功"
             val str10 = if ("成功" in qqService.gameSign(qqEntity)) "签到成功" else "签到失败"
-            val str11 = qqService.qPetSign(qqEntity)
-            val str12 = qqService.tribeSign(qqEntity)
+            val str11 = if ("失败" in qqService.qPetSign(qqEntity)) "领取失败" else "领取成功"
+            val str12 = if ("成功" in qqService.tribeSign(qqEntity)) "领取成功" else "领取失败"
             val str13 = qqService.motionSign(qqEntity)
             val str14 = if ("成功" in qqService.blueSign(qqEntity)) "签到成功" else "签到失败"
             val str15 = qqService.sVipMornSign(qqEntity)

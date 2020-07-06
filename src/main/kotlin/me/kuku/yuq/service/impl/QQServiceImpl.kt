@@ -629,7 +629,7 @@ class QQServiceImpl: QQService {
             ))
             val jsonObject = OkHttpClientUtils.getJson(response)
             when (jsonObject.getInteger("retcode")){
-                20003 -> return "已点名片赞${i}次，点赞已超过上限！"
+                20003 -> return jsonObject.getString("error").replace("他", "你")
                 10003 -> return "点名片赞失败，权限异常！"
                 -400 -> return "点名片赞失败，机器人登录已失效！"
                 0 -> msg = "点名片赞成功"
@@ -986,11 +986,46 @@ class QQServiceImpl: QQService {
                 "all_shutup", if (isShutUp) "4294967295" else "0"
         ), qqEntity.cookie())
         val jsonObject = OkHttpClientUtils.getJson(response)
-        println(jsonObject.toString())
         return when (jsonObject.getInteger("ec")){
             0 -> if (isShutUp) "全体禁言成功" else "解除全体禁言成功"
             7 -> "权限不够，我无法执行！！"
             -100005 -> "群号不存在！！"
+            4 -> "执行失败，请更新QQ！！"
+            else -> "执行失败，${jsonObject.getString("em")}"
+        }
+    }
+
+    override fun changeName(qqEntity: QQEntity, qq: Long, group: Long, name: String): String {
+        val response = OkHttpClientUtils.post("https://qinfo.clt.qq.com/cgi-bin/qun_info/set_group_card", OkHttpClientUtils.addForms(
+                "u", qq.toString(),
+                "name", name,
+                "gc", group.toString(),
+                "bkn", qqEntity.getGtk(),
+                "src", "qinfo_v3"
+        ), qqEntity.cookie())
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return when (jsonObject.getInteger("ec")){
+            0 -> "改名片成功"
+            3 -> "权限不够，我无法执行！！"
+            2,-100005 -> "群号不存在！！"
+            4 -> "执行失败，请更新QQ！！"
+            else -> "执行失败，${jsonObject.getString("em")}"
+        }
+    }
+
+    override fun setGroupAdmin(qqEntity: QQEntity, qq: Long, group: Long, isAdmin: Boolean): String {
+        val response = OkHttpClientUtils.post("https://qinfo.clt.qq.com/cgi-bin/qun_info/set_group_admin", OkHttpClientUtils.addForms(
+                "u", qq.toString(),
+                "op", if (isAdmin) "1" else "0",
+                "gc", group.toString(),
+                "bkn", qqEntity.getGtk(),
+                "src", "qinfo_v3"
+        ), qqEntity.cookie())
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return when (jsonObject.getInteger("ec")){
+            0 -> if (isAdmin) "添加管理员成功" else "取消管理员成功"
+            7 -> "权限不够，我无法执行！！"
+            2,-100005 -> "群号不存在！！"
             4 -> "执行失败，请更新QQ！！"
             else -> "执行失败，${jsonObject.getString("em")}"
         }

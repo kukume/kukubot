@@ -72,7 +72,7 @@ class SteamServiceImpl: SteamService {
                 "primary_group_steamid", "35272541"
         ), OkHttpClientUtils.addCookie(steamEntity.cookie + "sessionid=$randomStr; "))
         response.close()
-        return "提交成功，若修改未生效即为cookie已失效"
+        return "steam更名提交成功，若修改未生效即为cookie已失效"
     }
 
     override fun loginToBuff(steamEntity: SteamEntity): CommonResult<String> {

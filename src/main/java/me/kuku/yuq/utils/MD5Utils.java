@@ -26,8 +26,8 @@ public class MD5Utils {
         byte[] md5Bytes = md5.digest(byteArray);
         StringBuilder hexValue = new StringBuilder();
 
-        for(int i = 0; i < md5Bytes.length; ++i) {
-            int val = md5Bytes[i] & 255;
+        for (byte md5Byte : md5Bytes) {
+            int val = md5Byte & 255;
             if (val < 16) {
                 hexValue.append("0");
             }

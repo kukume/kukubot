@@ -30,21 +30,35 @@ class ToolServiceImpl: ToolService {
 
     override fun baiKe(text: String): String {
         val encodeText = URLEncoder.encode(text, "utf-8")
-        var url = "https://baike.baidu.com/item/$encodeText"
+        val url = "https://baike.baidu.com/item/$encodeText"
+        val commonResult = this.baiKeByUrl(url)
+        return when (commonResult.code) {
+            200 -> {
+                commonResult.t + "\n查看详情：" + BotUtils.shortUrl(url)
+            }
+            210 -> {
+                val resultUrl = commonResult.t
+                baiKeByUrl(resultUrl).t + "\n查看详情：" + BotUtils.shortUrl(resultUrl)
+            }
+            else -> "抱歉，没有找到与“$text”相关的百科结果。"
+        }
+    }
+
+    private fun baiKeByUrl(url: String): CommonResult<String>{
         var response = OkHttpClientUtils.get(url)
         if (response.code == 302){
             response.close()
             val location = response.header("Location")
-            if ("https://baike.baidu.com/error.html" == location) return "抱歉，没有找到与“$text”相关的百科结果。"
-            url = "https://baike.baidu.com$location"
-            response = OkHttpClientUtils.get(url)
+            if ("https://baike.baidu.com/error.html" == location) return CommonResult(500, "")
+            val resultUrl = "https://baike.baidu.com$location"
+            response = OkHttpClientUtils.get(resultUrl)
         }
         val html = OkHttpClientUtils.getStr(response)
         val doc = Jsoup.parse(html)
-        return try {
-            doc.select(".lemma-summary .para").first().text() + "\n查看详情：" + BotUtils.shortUrl(url)
-        }catch (e : NullPointerException){
-            "查询失败，链接：$url"
+        val result = doc.select(".lemma-summary .para")?.first()?.text()
+        return if (result != null) CommonResult(200, "", result)
+        else {
+            CommonResult(210, "", "https://baike.baidu.com" + doc.select("li[class=list-dot list-dot-paddingleft]").first().getElementsByTag("a").first().attr("href"))
         }
     }
 
@@ -78,20 +92,11 @@ class ToolServiceImpl: ToolService {
     }
 
     override fun queryIp(ip: String): String {
-        val response = OkHttpClientUtils.get("https://www.ipip.net/ip.html",
-                OkHttpClientUtils.addUA(OkHttpClientUtils.PC_UA))
-        val cookie = OkHttpClientUtils.getCookie(response)
-        val htm = OkHttpClientUtils.getStr(response)
-        val token = Jsoup.parse(htm).select("input[name=csrf_token]").first().attr("value")
-        val resultResponse = OkHttpClientUtils.post("https://www.ipip.net/ip.html", OkHttpClientUtils.addForms(
-                "ip", ip,
-                "csrf_token", token
-        ), OkHttpClientUtils.addHeaders(
-                "cookie", cookie,
-                "user-agent", OkHttpClientUtils.PC_UA
-        ))
-        val html = OkHttpClientUtils.getStr(resultResponse)
-        return ip + "-" + Jsoup.parse(html).select(".ipSearch .fixWidth tr td")[1].text()
+        val response = OkHttpClientUtils.get("$url/ip/aim_ip?ip=$ip$params")
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return if (jsonObject.getInteger("code") == 1){
+            jsonObject.getJSONObject("data").getString("desc")
+        }else jsonObject.getString("msg")
     }
 
     override fun queryWhois(domain: String): String {
@@ -296,26 +301,14 @@ class ToolServiceImpl: ToolService {
             var text = Jsoup.parse(str).select("#form1 .form-group .col-sm-12 pre").first().text()
             text = BotUtils.regex("(?<=平均\\s\\=\\s).*", text)
             sb.appendln("延迟：$text")
-            sb.append("位置：${ipMsg.split("-")[1]}")
+            sb.append("位置：$ipMsg")
             sb.toString()
         }else "无法解析域名！"
     }
 
     override fun colorPic(): ByteArray {
-        val page = Random.nextInt(11)
-        val day = LocalDate.now().minusDays(Random.nextLong(12))
-        val date = day.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        var response = OkHttpClientUtils.get("https://api.imjad.cn/pixiv/v2/?type=rank&mode=day_male&page=$page&date=$date")
-        val jsonObject = OkHttpClientUtils.getJson(response)
-        val jsonArray = jsonObject.getJSONArray("illusts")
-        val singleJsonObject = jsonArray.getJSONObject(Random.nextInt(jsonArray.size))
-        val id = singleJsonObject.getString("id")
-        response = OkHttpClientUtils.get("https://www.pixivdl.net/api/pixiv/info?zid=$id")
-        val json = OkHttpClientUtils.getJson(response).getJSONObject("result").getJSONObject("info").getJSONArray("urls").getJSONObject(0)
-        var url = json.getJSONObject("urls").getString("regular")
-        url = url.replace("i.pximg.net", "www.pixivdl.net")
-        val imageResponse = OkHttpClientUtils.get(url)
-        return OkHttpClientUtils.getBytes(imageResponse)
+        val response = OkHttpClientUtils.get("https://api.iheit.com/pixiv/bookmarks")
+        return OkHttpClientUtils.getBytes(response)
     }
 
     override fun hiToKoTo(): Map<String, String> {

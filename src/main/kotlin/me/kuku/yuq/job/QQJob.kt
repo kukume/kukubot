@@ -41,10 +41,10 @@ class QQJob {
                     val commonResult = QQPasswordLoginUtils.login(qq = qqEntity.qq.toString(), password = qqEntity.password)
                     if (commonResult.code == 200){
                         QQUtils.saveOrUpdate(daoService, commonResult.t, qqEntity.qq, qqEntity.password)
-                    } else {
+                    } else if (commonResult.code != 400) {
                         qqEntity.status = false
                         daoService.saveOrUpdateQQ(qqEntity)
-                        yuq.sendMessage(mf.newTemp(qqEntity.qq, qqEntity.qqGroup).plus("您的QQ自动更新失败，${commonResult.msg}"))
+                        yuq.sendMessage(mf.newPrivate(qqEntity.qq).plus("您的QQ自动更新失败，${commonResult.msg}"))
                     }
                 }
             }

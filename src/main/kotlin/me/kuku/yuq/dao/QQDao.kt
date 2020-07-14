@@ -4,29 +4,14 @@ import com.icecreamqaq.yudb.jpa.hibernate.HibernateDao
 import me.kuku.yuq.entity.QQEntity
 
 class QQDao: HibernateDao<QQEntity, Int>() {
-    fun findByQQ(qq: Long): QQEntity? {
-        val session = this.getSession()
-        val query = session.createQuery("from QQEntity where qq = :qq")
-        query.setLong("qq", qq)
-        val result = query.uniqueResult()
-        session.close()
-        return if (result == null) null else result as QQEntity
-    }
+    fun findByQQ(qq: Long) = this.search("from QQEntity where qq = ?", qq)
 
-    fun findAll(): MutableList<Any?>? {
-        val session = this.getSession()
-        val query = session.createQuery("from QQEntity")
-        val resultList = query.list()
-        session.close()
-        return resultList
-    }
+    fun findAll() = this.searchList("from QQEntity")
 
-    fun findActivity(): MutableList<Any?>?{
-        val session = this.getSession()
-        val query = session.createQuery("from QQEntity where status = true")
-        val resultList =  query.list()
-        session.close()
-        return resultList
-    }
+    fun findByActivity() = this.searchList("from QQEntity where status = true")
 
+    fun delByQQ(qq: Long) {
+        val query = this.query("delete from QQEntity where qq = ?", qq)
+        query.executeUpdate()
+    }
 }

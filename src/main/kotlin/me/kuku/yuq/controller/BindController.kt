@@ -6,10 +6,12 @@ import com.icecreamqaq.yuq.annotation.NextContext
 import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.annotation.PrivateController
 import com.icecreamqaq.yuq.message.Message
+import me.kuku.yuq.dao.SteamDao
 import me.kuku.yuq.entity.SteamEntity
 import me.kuku.yuq.entity.SuperCuteEntity
-import me.kuku.yuq.service.DaoService
-import me.kuku.yuq.service.SteamService
+import me.kuku.yuq.logic.SteamLogic
+import me.kuku.yuq.service.QQService
+import me.kuku.yuq.service.SuperCuteService
 import me.kuku.yuq.utils.QQPasswordLoginUtils
 import me.kuku.yuq.utils.QQUtils
 import javax.inject.Inject
@@ -18,19 +20,23 @@ import javax.inject.Inject
 @ContextController
 class BindController {
     @Inject
-    private lateinit var daoService: DaoService
+    private lateinit var qqService: QQService
     @Inject
-    private lateinit var steamService: SteamService
+    private lateinit var superCuteService: SuperCuteService
+    @Inject
+    private lateinit var steamDao: SteamDao
+    @Inject
+    private lateinit var steamLogic: SteamLogic
 
     @Action("qq")
     fun bindQQ(@PathVar(1) password: String?, qq: Long): Any? {
-        val qqEntity = daoService.findQQByQQ(qq)
+        val qqEntity = qqService.findByQQ(qq)
         val pwd = password ?: qqEntity?.password
         return if (pwd != null){
             val commonResult = QQPasswordLoginUtils.login(qq = qq.toString(), password = pwd)
             if (commonResult.code == 200){
                 val map = commonResult.t
-                QQUtils.saveOrUpdate(daoService, map, qq, pwd)
+                QQUtils.saveOrUpdate(qqService, map, qq, pwd)
                 "绑定或者更新成功！"
             }else commonResult.msg
         }else "缺少参数[密码]"
@@ -42,11 +48,11 @@ class BindController {
 
     @Action("nextBindSuperCute")
     fun nextBindSuperCute(qq: Long, message: Message): String{
-        val superCuteEntity = daoService.findSuperCuteByQQ(qq) ?: SuperCuteEntity(qq = qq)
+        val superCuteEntity = superCuteService.findByQQ(qq) ?: SuperCuteEntity(qq = qq)
         var token = message.body[0].toPath()
         if (token.startsWith("Bearer")) token = token.removePrefix("Bearer ")
         superCuteEntity.token = token
-        daoService.saveOrUpdateSuperCute(superCuteEntity)
+        superCuteService.save(superCuteEntity)
         return "绑定或者更新超级萌宠token成功"
     }
 
@@ -57,15 +63,15 @@ class BindController {
     @Action("nextBindSteam")
     fun nextBindSteam(@PathVar(0) username: String?, @PathVar(1) password: String?, @PathVar(2) code: String, qq: Long): String{
         return if (username != null && password != null) {
-            val commonResult = steamService.login(username, password, code)
+            val commonResult = steamLogic.login(username, password, code)
             if (commonResult.code == 200){
                 val map = commonResult.t
-                val steamEntity = daoService.findSteamByQQ(qq) ?: SteamEntity(null, qq)
+                val steamEntity = steamDao.findByQQ(qq) ?: SteamEntity(null, qq)
                 steamEntity.cookie = map.getValue("cookie")
                 steamEntity.steamId = map.getValue("steamId")
                 steamEntity.username = username
                 steamEntity.password = password
-                daoService.saveOrUpdateSteam(steamEntity)
+                steamDao.saveOrUpdate(steamEntity)
                 "绑定或者更新成功"
             } else commonResult.msg
         }else "缺少参数[账号 密码 二次验证码（令牌）]"

@@ -1,9 +1,9 @@
-package me.kuku.yuq.service.impl
+package me.kuku.yuq.logic.impl
 
-import me.kuku.yuq.service.WeiboService
+import me.kuku.yuq.logic.WeiboLogic
 import org.jsoup.Jsoup
 
-class WeiboServiceImpl: WeiboService {
+class WeiboLogicImpl: WeiboLogic {
     override fun hotSearch(): String {
         val doc = Jsoup.connect("https://s.weibo.com/top/summary").get()
         val elements = doc.getElementById("pl_top_realtimehot").getElementsByTag("tbody").first()

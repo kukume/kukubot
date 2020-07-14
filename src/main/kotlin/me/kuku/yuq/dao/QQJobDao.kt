@@ -5,29 +5,16 @@ import me.kuku.yuq.entity.QQJobEntity
 
 class QQJobDao: HibernateDao<QQJobEntity, Int>() {
 
-    fun findByQQAndType(qq: Long, type: String): QQJobEntity?{
-        val session = this.getSession()
-        val query = session.createQuery("from QQJobEntity where qq = :qq and type = :type")
-        query.setLong("qq", qq)
-        query.setString("type", type)
-        val result = query.uniqueResult()
-        session.close()
-        return if (result == null) null else result as QQJobEntity
+    fun findByQQAndType(qq: Long, type: String) = this.search("from QQJobEntity where qq = ? and type = ?", qq, type)
+
+    fun findByQQ(qq: Long) = this.searchList("from QQJobEntity where qq = ?", null,  qq)
+
+    fun findByType(type: String) = this.searchList("from QQJobEntity where type = ?", null, type)
+
+    fun delByQQ(qq: Long) {
+        val query = this.query("delete from QQJobEntity where qq = ?", qq)
+        query.executeUpdate()
     }
 
-    fun findByQQ(qq: Long): MutableList<Any?>? {
-        val session = this.getSession()
-        val query = session.createQuery("from QQJobEntity where qq = :qq")
-        query.setLong("qq", qq)
-        val list = query.list()
-        return list
-    }
-
-    fun findByType(type: String): MutableList<Any?>? {
-        val session = this.getSession()
-        val query = session.createQuery("from QQJobEntity where type = :type")
-        query.setString("type", type)
-        return query.list()
-    }
 
 }

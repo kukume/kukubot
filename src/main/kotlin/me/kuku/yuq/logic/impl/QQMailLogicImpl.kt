@@ -1,14 +1,14 @@
-package me.kuku.yuq.service.impl
+package me.kuku.yuq.logic.impl
 
 import me.kuku.yuq.entity.QQEntity
 import me.kuku.yuq.pojo.CommonResult
-import me.kuku.yuq.service.QQMailService
+import me.kuku.yuq.logic.QQMailLogic
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.OkHttpClientUtils
 import me.kuku.yuq.utils.QQPasswordLoginUtils
 import okhttp3.FormBody
 
-class QQMailServiceImpl: QQMailService {
+class QQMailLogicImpl: QQMailLogic {
 
     fun login(qqEntity: QQEntity): CommonResult<Map<String, String>>{
         val commonResult = QQPasswordLoginUtils.login("522005705", "4", qqEntity.qq.toString(), qqEntity.password, "https://mail.qq.com/cgi-bin/readtemplate?check=false&t=loginpage_new_jump&vt=passport&vm=wpt&ft=loginpage&target=")

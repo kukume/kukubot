@@ -5,13 +5,12 @@ import me.kuku.yuq.entity.SteamEntity
 
 class SteamDao: HibernateDao<SteamEntity, Int>() {
 
-    fun findByQQ(qq: Long): SteamEntity? {
-        val session = this.getSession()
-        val query = session.createQuery("from SteamEntity where qq = :qq")
-        query.setLong("qq", qq)
-        val result = query.uniqueResult()
-        session.close()
-        return if (result == null) null else result as SteamEntity
+    fun findByQQ(qq: Long) = this.search("from SteamEntity where qq = ?", qq)
+
+    fun delByQQ(qq: Long) {
+        val query = this.query("delete from SteamEntity where qq = ?", qq)
+        query.executeUpdate()
     }
+
 
 }

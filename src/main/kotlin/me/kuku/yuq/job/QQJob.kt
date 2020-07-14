@@ -5,8 +5,7 @@ import com.IceCreamQAQ.Yu.annotation.JobCenter
 import com.icecreamqaq.yuq.YuQ
 import com.icecreamqaq.yuq.message.MessageFactory
 import com.icecreamqaq.yuq.message.MessageItemFactory
-import me.kuku.yuq.entity.QQEntity
-import me.kuku.yuq.service.DaoService
+import me.kuku.yuq.logic.QQLogic
 import me.kuku.yuq.service.QQService
 import me.kuku.yuq.utils.QQPasswordLoginUtils
 import me.kuku.yuq.utils.QQUtils
@@ -16,9 +15,9 @@ import javax.inject.Inject
 class QQJob {
 
     @Inject
-    private lateinit var daoService: DaoService
-    @Inject
     private lateinit var qqService: QQService
+    @Inject
+    private lateinit var qqLogic: QQLogic
     @Inject
     private lateinit var yuq: YuQ
     @Inject
@@ -26,24 +25,24 @@ class QQJob {
     @Inject
     private lateinit var mif: MessageItemFactory
 
-    @Cron("1h")
+    @Cron("30m")
     fun checkAndUpdate(){
-        val list = daoService.findQQByActivity()
-        list?.forEach {
-            val qqEntity = it as QQEntity
-            val result = qqService.qqSign(qqEntity)
+        val list = qqService.findByActivity()
+        list.forEach {
+            val qqEntity = it
+            val result = qqLogic.qqSign(qqEntity)
             if ("失败" in result){
                 if (qqEntity.password == "") {
                     qqEntity.status = false
-                    daoService.saveOrUpdateQQ(qqEntity)
+                    qqService.save(qqEntity)
                     yuq.sendMessage(mf.newTemp(qqEntity.qqGroup, qqEntity.qq).plus(mif.at(qqEntity.qq)).plus("您的QQ已失效。"))
                 }else{
                     val commonResult = QQPasswordLoginUtils.login(qq = qqEntity.qq.toString(), password = qqEntity.password)
                     if (commonResult.code == 200){
-                        QQUtils.saveOrUpdate(daoService, commonResult.t, qqEntity.qq, qqEntity.password)
+                        QQUtils.saveOrUpdate(qqService, commonResult.t, qqEntity.qq, qqEntity.password)
                     } else if (commonResult.code != 400) {
                         qqEntity.status = false
-                        daoService.saveOrUpdateQQ(qqEntity)
+                        qqService.save(qqEntity)
                         yuq.sendMessage(mf.newPrivate(qqEntity.qq).plus("您的QQ自动更新失败，${commonResult.msg}"))
                     }
                 }
@@ -51,41 +50,46 @@ class QQJob {
         }
     }
 
-    @Cron("6h")
+    @Cron("4h")
     fun qqSign(){
-        val list = daoService.findQQByActivity()
-        list?.forEach {
-            val qqEntity = it as QQEntity
-            val str = qqService.qqSign(qqEntity)
-            if ("成功" in str){
-                qqService.anotherSign(qqEntity)
-                qqService.groupLottery(qqEntity, 1132123L)
-                qqService.vipSign(qqEntity)
-                qqService.phoneGameSign(qqEntity)
-                qqService.yellowSign(qqEntity)
-                qqService.qqVideoSign1(qqEntity)
-                qqService.qqVideoSign2(qqEntity)
-                qqService.bigVipSign(qqEntity)
-                qqService.qqMusicSign(qqEntity)
-                qqService.gameSign(qqEntity)
-                qqService.qPetSign(qqEntity)
-                qqService.tribeSign(qqEntity)
-                qqService.motionSign(qqEntity)
-                qqService.blueSign(qqEntity)
-                qqService.sVipMornSign(qqEntity)
-                qqService.weiYunSign(qqEntity)
-                qqService.weiShiSign(qqEntity)
+        val list = qqService.findByActivity()
+        list.forEach {
+            try {
+                val str = qqLogic.qqSign(it)
+                if (!str.contains("更新QQ")){
+                    qqLogic.anotherSign(it)
+                    qqLogic.groupLottery(it, 1132123L)
+                    qqLogic.vipSign(it)
+                    qqLogic.phoneGameSign(it)
+                    qqLogic.yellowSign(it)
+                    qqLogic.qqVideoSign1(it)
+                    qqLogic.qqVideoSign2(it)
+                    qqLogic.bigVipSign(it)
+                    qqLogic.qqMusicSign(it)
+                    qqLogic.gameSign(it)
+                    qqLogic.qPetSign(it)
+                    qqLogic.tribeSign(it)
+                    qqLogic.motionSign(it)
+                    qqLogic.blueSign(it)
+                    qqLogic.sVipMornSign(it)
+                    qqLogic.weiYunSign(it)
+                    qqLogic.weiShiSign(it)
+                }
+            }catch (e: Exception){
+                e.printStackTrace()
             }
         }
     }
 
-    @Cron("At::d::07")
+    @Cron("At::d::07:00")
     fun sVipMorn() {
-        val list = daoService.findQQByActivity()
-        list?.forEach {
-            val qqEntity = it as QQEntity
-            qqService.sVipMornClock(qqEntity)
+        val list = qqService.findByActivity()
+        list.forEach {
+            try {
+                qqLogic.sVipMornClock(it)
+            }catch (e: Exception){
+                e.printStackTrace()
+            }
         }
     }
-
 }

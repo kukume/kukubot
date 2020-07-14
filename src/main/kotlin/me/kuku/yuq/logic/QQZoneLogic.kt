@@ -1,11 +1,11 @@
-package me.kuku.yuq.service
+package me.kuku.yuq.logic
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind
 import me.kuku.yuq.entity.QQEntity
 import me.kuku.yuq.pojo.CommonResult
 
 @AutoBind
-interface QQZoneService {
+interface QQZoneLogic {
     //取好友说说
     fun friendTalk(qqEntity: QQEntity): List<Map<String, String?>>?
     //取自己说说

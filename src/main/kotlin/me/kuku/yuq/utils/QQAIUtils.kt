@@ -1,30 +1,32 @@
 package me.kuku.yuq.utils
 
+import com.alibaba.fastjson.JSONObject
+import me.kuku.yuq.pojo.CommonResult
 import okhttp3.FormBody
 import java.net.URLEncoder
 import java.util.*
 
-class QQAIUtils {
+object QQAIUtils {
 
-    private val appId = ""
-    private val appKey = ""
+    private const val APP_ID = "2139033099"
+    private const val APP_KEY = "wcHGRr6YMWfGfs6B"
 
-    private fun getSign(map: Map<String, String>, key: String): String{
+    private fun getSign(map: Map<String, String>): String{
         val treeMap = TreeMap<String, String>()
         treeMap.putAll(map)
         var str = ""
         for ((k, v) in treeMap){
             str += "$k=${URLEncoder.encode(v, "utf-8")}&"
         }
-        str += "app_key=$key"
+        str += "app_key=$APP_KEY"
         return MD5Utils.toMD5(str).toUpperCase()
     }
 
     private fun addParams(otherParams: Map<String, String>): FormBody {
-        val map = mutableMapOf("app_id" to appId, "time_stamp" to (Date().time / 1000).toString(), "nonce_str" to BotUtils.randomStr(16))
+        val map = mutableMapOf("app_id" to APP_ID, "time_stamp" to (Date().time / 1000).toString(), "nonce_str" to BotUtils.randomStr(16))
         val builder = FormBody.Builder()
         map.putAll(otherParams)
-        val sign = this.getSign(map, appKey)
+        val sign = this.getSign(map)
         map["sign"] = sign
         for ((k , v) in map){
             builder.add(k, v)
@@ -38,12 +40,18 @@ class QQAIUtils {
         return Base64.getEncoder().encodeToString(bytes)
     }
 
-    fun pornIdentification(imageUrl: String){
+    fun pornIdentification(imageUrl: String): Boolean{
         val baseStr = this.imageUrlToBase64(imageUrl)
         val response = OkHttpClientUtils.post("https://api.ai.qq.com/fcgi-bin/vision/vision_porn",
                 addParams(mapOf("image" to baseStr)))
         val jsonObject = OkHttpClientUtils.getJson(response)
-        println(jsonObject)
+        return if (jsonObject.getInteger("ret") == 0){
+            val jsonArray = jsonObject.getJSONObject("data").getJSONArray("tag_list")
+            /*val normal = jsonArray.getJSONObject(0).getInteger("tag_confidence")
+            val hot = jsonArray.getJSONObject(1).getInteger("tag_confidence")*/
+            val porn = jsonArray.getJSONObject(2).getInteger("tag_confidence")
+            porn > 83/* || hot > normal*/
+        }else false
     }
 
     fun generalOCR(imageUrl: String){
@@ -54,6 +62,22 @@ class QQAIUtils {
         println(jsonObject)
     }
 
-
-
+    fun generalOCRToMotion(byteArray: ByteArray): CommonResult<String>{
+        val b64 = Base64.getEncoder().encodeToString(byteArray)
+        val response = OkHttpClientUtils.post("https://api.ai.qq.com/fcgi-bin/ocr/ocr_generalocr",
+                addParams(mapOf("image" to b64)))
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return if (jsonObject.getInteger("ret") == 0){
+            val itemJsonArray = jsonObject.getJSONObject("data").getJSONArray("item_list")
+            if (itemJsonArray.size < 1) return CommonResult(200, "", "")
+            val jsonArray = itemJsonArray.getJSONObject(0).getJSONArray("words")
+            var code = ""
+            jsonArray.forEach {
+                val wordJsonObject = it as JSONObject
+                val cha = wordJsonObject.getString("character")
+                if (cha != "" &&( cha[0].isLetter() || cha[0].isDigit())) code += cha
+            }
+            CommonResult(200, "", code)
+        }else CommonResult(500, jsonObject.getString("msg"))
+    }
 }

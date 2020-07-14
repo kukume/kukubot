@@ -1,16 +1,15 @@
-package me.kuku.yuq.service.impl
+package me.kuku.yuq.logic.impl
 
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
 import me.kuku.yuq.entity.QQEntity
 import me.kuku.yuq.pojo.CommonResult
-import me.kuku.yuq.service.QQZoneService
+import me.kuku.yuq.logic.QQZoneLogic
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.OkHttpClientUtils
 import okhttp3.FormBody
-import java.util.ArrayList
 
-class QQZoneServiceImpl: QQZoneService {
+class QQZoneLogicImpl: QQZoneLogic {
 
     override fun friendTalk(qqEntity: QQEntity): List<Map<String, String?>>? {
         val response = OkHttpClientUtils.post("https://h5.qzone.qq.com/webapp/json/mqzone_feeds/getActiveFeeds?g_tk=${qqEntity.getGtkP()}",

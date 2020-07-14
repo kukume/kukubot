@@ -5,13 +5,11 @@ import me.kuku.yuq.entity.SuperCuteEntity
 
 class SuperCuteDao: HibernateDao<SuperCuteEntity, Int>() {
 
-    fun findByQQ(qq: Long): SuperCuteEntity? {
-        val session = this.getSession()
-        val query = session.createQuery("from SuperCuteEntity where qq = :qq")
-        query.setLong("qq", qq)
-        val result = query.uniqueResult()
-        session.close()
-        return if (result == null) null else result as SuperCuteEntity
+    fun findByQQ(qq: Long) = this.search("from SuperCuteEntity where qq = ?", qq)
+
+    fun delByQQ(qq: Long) {
+        val query = this.query("delete from SuperCuteEntity where qq = ?", qq)
+        query.executeUpdate()
     }
 
 }

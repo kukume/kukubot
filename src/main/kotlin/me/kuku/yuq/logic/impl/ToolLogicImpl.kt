@@ -1,24 +1,21 @@
-package me.kuku.yuq.service.impl
+package me.kuku.yuq.logic.impl
 
 import com.alibaba.fastjson.JSONObject
 import me.kuku.yuq.pojo.CommonResult
-import me.kuku.yuq.service.ToolService
+import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.OkHttpClientUtils
 import org.jsoup.Jsoup
-import java.lang.NullPointerException
 import java.net.URLEncoder
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import kotlin.random.Random
 
-class ToolServiceImpl: ToolService {
+class ToolLogicImpl: ToolLogic {
     private val url = "https://www.mxnzp.com/api"
     private val appId = "ghpgtsokjvkjdmlk"
     private val appSecret = "N2hNMC93empxb0twUW1jd1FRbVVtQT09"
     private val params = "&app_id=$appId&app_secret=$appSecret"
 
-    private val neTeaseUrl = "https://netease.kuku.me"
+    private val neTeaseUrl = "https://netease.iheit.com"
 
     override fun dogLicking() : String {
         val response = OkHttpClientUtils.get("http://api.yyhy.me/tg.php?type=api")
@@ -241,50 +238,35 @@ class ToolServiceImpl: ToolService {
         return response.header("Location") ?: "该链接不能再跳转了！"
     }
 
-    override fun weather(local: String): String {
-        //获取经纬度
-        val firstResponse = OkHttpClientUtils.get("https://apis.map.qq.com/jsapi?qt=geoc&addr=$local&key=UGMBZ-CINWR-DDRW5-W52AK-D3ENK-ZEBRC&output=jsonp&pf=jsapi&ref=jsapi&cb=qq.maps._svcb3.geocoder0")
-        val firstJsonObject = OkHttpClientUtils.getJson(firstResponse, "\\{[\\s\\S]*\\}")
-        val detailJsonObject = firstJsonObject.getJSONObject("detail")
-        return if (!detailJsonObject.containsKey("errmsg")){
-            //查询天气
-            val secondResponse = OkHttpClientUtils.get("https://api.caiyunapp.com/v2.5/4QaAKiWJ8eof2Oux/${detailJsonObject.getString("pointx")},${detailJsonObject.getString("pointy")}/hourly.json")
-            val secondJsonObject = OkHttpClientUtils.getJson(secondResponse)
-            val hourlyJsonObject = secondJsonObject.getJSONObject("result").getJSONObject("hourly")
-            val sb = StringBuilder("${local}的天气如下：\n自然语言描述：${hourlyJsonObject.getString("description")}\n")
-            //本地降水强度  降水量(mm/h)
-            val precipitation = hourlyJsonObject.getJSONArray("precipitation")
-            //温度
-            val temperature = hourlyJsonObject.getJSONArray("temperature")
-            //风  风向：direction    风速：speed
-            val wind = hourlyJsonObject.getJSONArray("wind")
-            //相对湿度  相对湿度(%)
-            val humidity = hourlyJsonObject.getJSONArray("humidity")
-            //云量  云量(0.0-1.0)
-            val cloudRate = hourlyJsonObject.getJSONArray("cloudrate")
-            //天气状况
-            val skyCon = hourlyJsonObject.getJSONArray("skycon")
-            //气压 气压(Pa)
-            val pressure = hourlyJsonObject.getJSONArray("pressure")
-            //能见度
-            val visibility = hourlyJsonObject.getJSONArray("visibility")
-            //短波辐射  向下短波辐射通量(W/M2)
-            val dsWrf = hourlyJsonObject.getJSONArray("dswrf")
-            for (i in 0 until 2){
-                sb.appendln("--------------")
-                sb.appendln("时间：${precipitation.getJSONObject(i).getString("datetime")}")
-                sb.appendln("温度${temperature.getJSONObject(i).getString("value")}℃，" +
-                        "气压${pressure.getJSONObject(i).getString("value")}Pa，" +
-                        "相对湿度${humidity.getJSONObject(i).getString("value")}%，" +
-                        "风向${wind.getJSONObject(i).getString("direction")}°，风速${wind.getJSONObject(i).getString("speed")}，" +
-                        "降水量${precipitation.getJSONObject(i).getString("value")}mm/h，" +
-                        "云量${cloudRate.getJSONObject(i).getString("value")}，" +
-                        "短波辐射${dsWrf.getJSONObject(i).getString("value")}，" +
-                        "能见度${visibility.getJSONObject(i).getString("value")}，" +
-                        "天气现象${skyCon.getJSONObject(i).getString("value")}")
+    override fun weather(local: String, cookie: String): CommonResult<String> {
+        val cityResponse = OkHttpClientUtils.get("https://ti.qq.com/v2/city-selector/index?star=8&redirect=true")
+        val cityHtml = OkHttpClientUtils.getStr(cityResponse)
+        val elements = Jsoup.parse(cityHtml).getElementsByTag("li")
+        var code: String? = null
+        var id: String? = null
+        for (ele in elements){
+            if (ele.text() == local){
+                code = ele.attr("data-adcode")
+                id = ele.attr("data-areaid")
+                break
             }
-            sb.removeSuffix("\n").toString()
-        }else detailJsonObject.getString("errmsg")
+        }
+        return if (code != null) {
+            val url = "https://weather.mp.qq.com/?city=${URLEncoder.encode(local, "utf-8")}&areaid=$id&adcode=$code&star=8"
+            val response = OkHttpClientUtils.get(url, OkHttpClientUtils.addHeaders(
+                    "cookie", cookie,
+                    "user-agent", OkHttpClientUtils.QQ_UA2
+            ))
+            if (response.code == 302) return CommonResult(500, "Cookie已失效！！")
+            val html = OkHttpClientUtils.getStr(response)
+            val doc = Jsoup.parse(html)
+            val city = doc.getElementById("s_city").text()
+            val temperature = doc.select(".cur-weather-info .date span").first().text()
+            val air = doc.select("._val").first().text()
+            val xmlStr = "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID=\"146\" templateID=\"1\" action=\"web\" brief=\"[分享] $city  \" sourcePublicUin=\"2658655094\" sourceMsgId=\"0\" url=\"https://weather.mp.qq.com/?city=${URLEncoder.encode(city, "utf-8")}&amp;areaid=$id&amp;adcode=$code&amp;st=0&amp;_wv=1\" flag=\"0\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"2\" advertiser_id=\"0\" aid=\"0\"><picture cover=\"https://imgcache.qq.com/ac/qqweather/image/share_icon/cloud.png\" w=\"0\" h=\"0\" /><title>$city  </title><summary>$temperature\n" +
+                    "空气质量:$air</summary></item><source name=\"QQ天气\" icon=\"https://url.cn/JS8oE7\" action=\"plugin\" a_actionData=\"mqqapi://app/action?pkg=com.tencent.mobileqq&amp;cmp=com.tencent.biz.pubaccount.AccountDetailActivity&amp;uin=2658655094\" i_actionData=\"mqqapi://card/show_pslcard?src_type=internal&amp;card_type=public_account&amp;uin=2658655094&amp;version=1\" appid=\"-1\" /></msg>"
+            CommonResult(200, "", xmlStr)
+        }else CommonResult(500, "没有找到这个城市")
     }
 
     override fun ping(domain: String): String {

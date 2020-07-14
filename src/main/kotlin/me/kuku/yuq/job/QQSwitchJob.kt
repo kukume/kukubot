@@ -3,30 +3,32 @@ package me.kuku.yuq.job
 import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
 import com.alibaba.fastjson.JSONArray
-import me.kuku.yuq.entity.QQJobEntity
-import me.kuku.yuq.service.DaoService
+import me.kuku.yuq.logic.QQLogic
+import me.kuku.yuq.logic.QQZoneLogic
+import me.kuku.yuq.service.QQJobService
 import me.kuku.yuq.service.QQService
-import me.kuku.yuq.service.QQZoneService
 import javax.inject.Inject
 
 @JobCenter
 class QQSwitchJob {
     @Inject
-    private lateinit var daoService: DaoService
+    private lateinit var qqJobService: QQJobService
     @Inject
     private lateinit var qqService: QQService
     @Inject
-    private lateinit var qqZoneService: QQZoneService
+    private lateinit var qqLogic: QQLogic
+    @Inject
+    private lateinit var qqZoneLogic: QQZoneLogic
 
     @Cron("30m")
     fun groupSign(){
-        val list = daoService.findQQJobByType("groupSign")
-        list?.forEach {
-            val qqJobEntity = it as QQJobEntity
+        val list = qqJobService.findByType("groupSign")
+        list.forEach {
+            val qqJobEntity = it
             val jsonObject = qqJobEntity.getJsonObject()
             if (jsonObject.getBoolean("status")){
                 //如果开启了群签到
-                val qqEntity = daoService.findQQByQQ(qqJobEntity.qq)!!
+                val qqEntity = qqService.findByQQ(qqJobEntity.qq)!!
                 if (qqEntity.status){
                     //如果cookie没过期
                     val groupList = jsonObject.getJSONArray("group")
@@ -37,11 +39,11 @@ class QQSwitchJob {
                             val excludeJsonArray = jsonObject.getJSONArray("exclude")
                             var result: String? = null
                             if (!excludeJsonArray.contains(group))
-                                result = qqService.groupSign(qqEntity, group.toLong(), "火星", "签到", "{\"category_id\":9,\"page\":0,\"pic_id\":125}")
+                                result = qqLogic.groupSign(qqEntity, group.toLong(), "火星", "签到", "{\"category_id\":9,\"page\":0,\"pic_id\":125}")
                         } while (num < groupList.size &&(result == null || "签到成功" in result || "已被禁言" in result))
                         jsonObject["num"] = num
                         qqJobEntity.data = jsonObject.toString()
-                        daoService.saveOrUpdateQQJob(qqJobEntity)
+                        qqJobService.save(qqJobEntity)
                     }
                 }
             }
@@ -50,13 +52,13 @@ class QQSwitchJob {
 
     @Cron("At::d::00:01")
     fun resetGroup(){
-        val list = daoService.findQQJobByType("groupSign")
-        list?.forEach {
-            val qqJobEntity = it as QQJobEntity
+        val list = qqJobService.findByType("groupSign")
+        list.forEach {
+            val qqJobEntity = it
             val qq = qqJobEntity.qq
-            val qqEntity = daoService.findQQByQQ(qq)!!
+            val qqEntity = qqService.findByQQ(qq)!!
             if (qqEntity.status) {
-                val commonResult = qqZoneService.queryGroup(qqEntity)
+                val commonResult = qqZoneLogic.queryGroup(qqEntity)
                 if (commonResult.code == 200) {
                     val jsonObject = qqJobEntity.getJsonObject()
                     jsonObject["num"] = 0
@@ -65,10 +67,10 @@ class QQSwitchJob {
                     groupList.forEach { jsonArray.add(it.getValue("group")) }
                     jsonObject["group"] = jsonArray
                     qqJobEntity.data = jsonObject.toString()
-                    daoService.saveOrUpdateQQJob(qqJobEntity)
+                    qqJobService.save(qqJobEntity)
                 }else{
                     qqEntity.status = false
-                    daoService.saveOrUpdateQQ(qqEntity)
+                    qqService.save(qqEntity)
                 }
             }
         }
@@ -76,17 +78,30 @@ class QQSwitchJob {
 
     @Cron("1m")
     fun mz(){
-        val list = daoService.findQQJobByType("mz")
-        list?.forEach {
-            val qqJobEntity = it as QQJobEntity
+        val list = qqJobService.findByType("mz")
+        list.forEach {
+            val qqJobEntity = it
             if (qqJobEntity.getJsonObject().getBoolean("status")){
-                val qqEntity = daoService.findQQByQQ(qqJobEntity.qq)!!
+                val qqEntity = qqService.findByQQ(qqJobEntity.qq)!!
                 if (qqEntity.status){
-                    qqZoneService.friendTalk(qqEntity)?.forEach { map ->
+                    qqZoneLogic.friendTalk(qqEntity)?.forEach { map ->
                         if (map["like"] == null || map["like"] != "1") {
-                            qqZoneService.likeTalk(qqEntity, map)
+                            qqZoneLogic.likeTalk(qqEntity, map)
                         }
                     }
+                }
+            }
+        }
+    }
+
+    @Cron("30s")
+    fun bubble(){
+        val list = qqJobService.findByType("bubble")
+        list.forEach {
+            if (it.getJsonObject().getBoolean("status")){
+                val qqEntity = qqService.findByQQ(it.qq)!!
+                if (qqEntity.status){
+                    qqLogic.diyBubble(qqEntity, it.getJsonObject().getString("text"), null)
                 }
             }
         }

@@ -1,65 +1,27 @@
 package me.kuku.yuq.service.impl
 
 import com.icecreamqaq.yudb.jpa.annotation.Transactional
-import me.kuku.yuq.dao.*
-import me.kuku.yuq.entity.*
-import me.kuku.yuq.service.DaoService
+import me.kuku.yuq.service.*
 import javax.inject.Inject
 
 class DaoServiceImpl: DaoService {
     @Inject
-    private lateinit var qqDao: QQDao
+    private lateinit var qqJobService: QQJobService
     @Inject
-    private lateinit var motionDao: MotionDao
+    private lateinit var qqService: QQService
     @Inject
-    private lateinit var superCuteDao: SuperCuteDao
+    private lateinit var motionService: MotionService
     @Inject
-    private lateinit var steamDao: SteamDao
+    private lateinit var superCuteService: SuperCuteService
     @Inject
-    private lateinit var qqJobDao: QQJobDao
+    private lateinit var steamService: SteamService
 
     @Transactional
-    override fun saveOrUpdateQQ(entity: QQEntity) = qqDao.saveOrUpdate(entity)
-
-    @Transactional
-    override fun saveOrUpdateMotion(entity: MotionEntity) = motionDao.saveOrUpdate(entity)
-
-    @Transactional
-    override fun saveOrUpdateSuperCute(entity: SuperCuteEntity) = superCuteDao.saveOrUpdate(entity)
-
-    @Transactional
-    override fun saveOrUpdateSteam(entity: SteamEntity) = steamDao.saveOrUpdate(entity)
-
-    @Transactional
-    override fun saveOrUpdateQQJob(entity: QQJobEntity) = qqJobDao.saveOrUpdate(entity)
-
-    @Transactional
-    override fun delQQ(qqEntity: QQEntity) {
-        qqDao.delete(qqEntity.id!!)
-        val list = this.findQQJobByQQ(qqEntity.qq)
-        list?.forEach {
-            val qqJobEntity = it as QQJobEntity
-            qqJobDao.delete(qqJobEntity.id!!)
-        }
+    override fun delQQ(qq: Long) {
+        qqJobService.delByQQ(qq)
+        qqService.delByQQ(qq)
+        motionService.delByQQ(qq)
+        superCuteService.delByQQ(qq)
+        steamService.delByQQ(qq)
     }
-
-    override fun findQQByQQ(qq: Long) = qqDao.findByQQ(qq)
-
-    override fun findQQJobByQQAndType(qq: Long, type: String) = qqJobDao.findByQQAndType(qq, type)
-
-    override fun findMotionByQQ(qq: Long) = motionDao.findByQQ(qq)
-
-    override fun findSuperCuteByQQ(qq: Long) = superCuteDao.findByQQ(qq)
-
-    override fun findSteamByQQ(qq: Long) = steamDao.findByQQ(qq)
-
-    override fun findQQJobByQQ(qq: Long) = qqJobDao.findByQQ(qq)
-
-    override fun findQQByActivity(): MutableList<Any?>? = qqDao.findActivity()
-
-    override fun findQQByAll() = qqDao.findAll()
-
-    override fun findMotionByAll() = motionDao.findAll()
-
-    override fun findQQJobByType(type: String) = qqJobDao.findByType(type)
 }

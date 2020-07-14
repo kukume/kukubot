@@ -2,7 +2,7 @@ package me.kuku.yuq.utils
 
 import me.kuku.yuq.entity.QQEntity
 import me.kuku.yuq.pojo.CommonResult
-import me.kuku.yuq.service.DaoService
+import me.kuku.yuq.service.QQService
 import org.jsoup.internal.StringUtil
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -37,12 +37,22 @@ object QQUtils {
     }
 
     fun getToken(token: String): Long{
-        val len: Int = token.length
+        val len = token.length
         var hash = 0L
         for (i in 0 until len) {
             hash = (hash * 33 + token[i].toInt()) % 4294967296L
         }
         return hash
+    }
+
+    fun getToken2(token: String): Long{
+        val len = token.length
+        var hash = 0L
+        for (i in 0 until len){
+            hash += (hash shl 5) + (token[i].toInt() and 2147483647)
+            hash = hash and 2147483647
+        }
+        return hash and 2147483647
     }
 
     fun convertQQEntity(map: Map<String, String>, qqEntity: QQEntity = QQEntity()): QQEntity{
@@ -65,7 +75,9 @@ object QQUtils {
                 val url = BotUtils.regex(",'0','", "','", str) ?: BotUtils.regex("','", "'", str)
                 if (url != null) return CommonResult(200, "成功", url) else ""
             }
-            1 -> "superKey已失效，请更新QQ！"
+            1,-1,7 -> "superKey已失效，请更新QQ！"
+            /*-1 -> "登录失败，请稍后再试！！"
+            7 -> "提交参数错误，请检查！！"*/
             else -> BotUtils.regex(",'0','", "', ' '", str)
         }
         return CommonResult(500, msg)
@@ -90,13 +102,13 @@ object QQUtils {
         return this.getKey("https://$domain/check_sig?uin=$qq&ptsigx=$pt$suffixUrl")
     }
 
-    fun saveOrUpdate(daoService: DaoService, map: Map<String, String>, qq: Long, password: String = "", group: Long = 0L){
-        var qqEntity = daoService.findQQByQQ(qq) ?: QQEntity()
+    fun saveOrUpdate(qqService: QQService, map: Map<String, String>, qq: Long, password: String = "", group: Long = 0L){
+        var qqEntity = qqService.findByQQ(qq) ?: QQEntity()
         qqEntity = this.convertQQEntity(map, qqEntity)
         qqEntity.qq = qq
         if (group != 0L) qqEntity.qqGroup = group
         if (password != "") qqEntity.password = password
-        daoService.saveOrUpdateQQ(qqEntity)
+        qqService.save(qqEntity)
     }
 
     fun qrCodeLoginVerify(sig: String, appId: String = "", daId: String = "", url: String = ""): CommonResult<Map<String, String>>{

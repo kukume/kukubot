@@ -1,8 +1,8 @@
-package me.kuku.yuq.service
+package me.kuku.yuq.logic
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind
 
 @AutoBind
-interface WeiboService {
+interface WeiboLogic {
     fun hotSearch(): String
 }

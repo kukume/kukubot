@@ -1,12 +1,13 @@
 package me.kuku.yuq.utils
 
+import com.icecreamqaq.yuq.controller.BotActionContext
 import java.net.URLEncoder
 import kotlin.random.Random
 
 object BotUtils {
 
     fun shortUrl(url: String): String{
-        val response = OkHttpClientUtils.get("https://www.fanghong.net/cbfh.php?cb=4&lb=0&sturl=1&longurl=${URLEncoder.encode(url, "utf-8")}")
+        val response = OkHttpClientUtils.get("https://sohu.gg/api/?key=pimRuFeT7vKK&url=${URLEncoder.encode(url, "utf-8")}")
         return OkHttpClientUtils.getStr(response)
     }
 
@@ -37,4 +38,7 @@ object BotUtils {
         return this.regex(regex, text)
     }
 
+    fun addAt(actionContext: BotActionContext){
+        actionContext.reMessage!!.at=true
+    }
 }

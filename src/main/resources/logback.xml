@@ -41,6 +41,10 @@
         <appender-ref ref="STDOUT" />
     </logger>
 
+    <logger name="me.kuku.yuq" level="INFO" additivity="false">
+        <appender-ref ref="FILE" />
+    </logger>
+
     <root level="INFO">
         <appender-ref ref="STDOUT" />
     </root>

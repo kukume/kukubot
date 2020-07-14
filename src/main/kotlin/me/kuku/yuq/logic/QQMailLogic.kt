@@ -1,11 +1,11 @@
-package me.kuku.yuq.service
+package me.kuku.yuq.logic
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind
 import me.kuku.yuq.entity.QQEntity
 import me.kuku.yuq.pojo.CommonResult
 
 @AutoBind
-interface QQMailService {
+interface QQMailLogic {
 
     fun getFile(qqEntity: QQEntity): CommonResult<List<Map<String, String>>>
 

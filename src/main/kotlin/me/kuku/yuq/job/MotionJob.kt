@@ -2,26 +2,24 @@ package me.kuku.yuq.job
 
 import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
-import me.kuku.yuq.entity.MotionEntity
-import me.kuku.yuq.service.DaoService
-import me.kuku.yuq.service.LeXinMotionService
+import me.kuku.yuq.logic.LeXinMotionLogic
+import me.kuku.yuq.service.MotionService
 import javax.inject.Inject
 
 @JobCenter
 class MotionJob {
 
     @Inject
-    private lateinit var daoService: DaoService
+    private lateinit var motionService: MotionService
     @Inject
-    private lateinit var motionService: LeXinMotionService
+    private lateinit var leXinMotionLogic: LeXinMotionLogic
 
-    @Cron("At::h::8")
+    @Cron("At::d::08")
     fun motion(){
-        val list = daoService.findMotionByAll()
-        list?.forEach {
-            val motionEntity = it as MotionEntity
-            if (motionEntity.step != 0){
-                motionService.modifyStepCount(motionEntity.step, motionEntity)
+        val list = motionService.findAll()
+        list.forEach {
+            if (it.step != 0){
+                leXinMotionLogic.modifyStepCount(it.step, it)
             }
         }
     }

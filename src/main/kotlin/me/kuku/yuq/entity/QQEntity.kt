@@ -15,7 +15,7 @@ data class QQEntity(
         var password: String = "",
         var sKey: String = "",
         var psKey: String = "",
-        var groupPsKey: String? = null,
+        var groupPsKey: String? = "",
         var superKey: String = "",
         var superToken: String = "",
         var pt4Token: String = "",

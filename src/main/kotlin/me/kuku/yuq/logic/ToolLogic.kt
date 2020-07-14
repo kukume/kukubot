@@ -1,10 +1,10 @@
-package me.kuku.yuq.service
+package me.kuku.yuq.logic
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind
 import me.kuku.yuq.pojo.CommonResult
 
 @AutoBind
-interface ToolService {
+interface ToolLogic {
     fun dogLicking() : String
     fun baiKe(text: String): String
     fun mouthOdor(): String
@@ -25,7 +25,7 @@ interface ToolService {
     fun convertTranslate(content: String, from: String, to: String): String
     fun parseVideo(url: String): String
     fun restoreShortUrl(url: String): String
-    fun weather(local: String): String
+    fun weather(local: String, cookie: String): CommonResult<String>
     fun ping(domain: String): String
     fun colorPic(): ByteArray
     fun hiToKoTo(): Map<String, String>

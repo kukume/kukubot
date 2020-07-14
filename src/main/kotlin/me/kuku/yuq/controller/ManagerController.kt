@@ -126,7 +126,7 @@ class ManagerController {
         return sb.removeSuffix("\r\n").toString()
     }
 
-    @Action("涩图 {status}")
+    @Action("#涩图 {status}")
     fun colorPicSwitch(status: Boolean, qqGroupEntity: QQGroupEntity): String?{
         qqGroupEntity.colorPic = status
         qqGroupService.save(qqGroupEntity)

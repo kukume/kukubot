@@ -6,10 +6,10 @@ import me.kuku.yuq.pojo.CommonResult
 
 @AutoBind
 interface QQZoneLogic {
-    //取好友说说
+    //取所有好友说说
     fun friendTalk(qqEntity: QQEntity): List<Map<String, String?>>?
-    //取自己说说
-    fun myTalk(qqEntity: QQEntity): List<Map<String, String?>>?
+    //取某人说说
+    fun talkByQQ(qqEntity: QQEntity, qq: Long): List<Map<String, String?>>?
     //转发说说
     fun forwardTalk(qqEntity: QQEntity, id: String, qq: String, text: String = ""): String
     //发布说说

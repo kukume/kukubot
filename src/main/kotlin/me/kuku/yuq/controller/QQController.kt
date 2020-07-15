@@ -3,6 +3,7 @@ package me.kuku.yuq.controller
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.After
 import com.IceCreamQAQ.Yu.annotation.Before
+import com.IceCreamQAQ.Yu.annotation.Synonym
 import com.icecreamqaq.yuq.YuQ
 import com.icecreamqaq.yuq.annotation.*
 import com.icecreamqaq.yuq.controller.BotActionContext
@@ -14,6 +15,7 @@ import me.kuku.yuq.logic.*
 import me.kuku.yuq.service.MotionService
 import me.kuku.yuq.service.QQService
 import me.kuku.yuq.utils.*
+import java.util.*
 import javax.inject.Inject
 import kotlin.concurrent.thread
 import kotlin.random.Random
@@ -47,7 +49,7 @@ class QQController {
     fun checkBind(@PathVar(0) str: String, qq: Long, actionContext: BotActionContext){
         val qqEntity = qqService.findByQQ(qq)
         when {
-            str == "qq" -> return
+            str.toLowerCase() == "qq" -> return
             qqEntity?.status == false -> throw  mif.at(qq).plus("您的QQ已失效，请更新QQ！！")
             qqEntity != null -> actionContext.session["qqEntity"] = qqEntity
             else -> throw mif.at(qq).plus("没有绑定QQ！，请先发送qq进行扫码登录绑定，如需密码登录绑定请私聊机器人发送qq")
@@ -55,6 +57,7 @@ class QQController {
     }
 
     @Action("qq")
+    @Synonym(["QQ", "qQ", "Qq"])
     fun bindQQ(group: Long, qq: Long): Message{
         val map = QQQrCodeLoginUtils.getQrCode()
         val bytes = map.getValue("qrCode") as ByteArray
@@ -293,6 +296,15 @@ class QQController {
             val map = commonResult.t
             mif.at(map.getValue("qq")).plus(mif.image(url)).plus("龙王（已蝉联${map.getValue("day")}天）快喷水！")
         }else mif.text(commonResult.msg).toMessage()
+    }
+
+    @Action("互赞")
+    fun like(qq: Long): String{
+        val list = qqService.findByActivity()
+        list.forEach {
+            qqLogic.like(it, qq)
+        }
+        return "点名片赞成功！！"
     }
 
     @Action("#步数/{step}")

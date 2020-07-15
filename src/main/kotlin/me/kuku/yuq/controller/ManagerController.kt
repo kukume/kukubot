@@ -161,7 +161,7 @@ class ManagerController {
         }else null
     }
 
-    @Action("撤回通知 {s}")
+    @Action("撤回通知 {b}")
     fun recall(qqGroupEntity: QQGroupEntity, b: Boolean): String?{
         qqGroupEntity.recall = b
         qqGroupService.save(qqGroupEntity)

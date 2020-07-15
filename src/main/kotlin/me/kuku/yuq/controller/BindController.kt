@@ -28,7 +28,7 @@ class BindController {
     @Inject
     private lateinit var steamLogic: SteamLogic
 
-    @Action("qq")
+    @Action("\\(q|Q)(q|Q)\\")
     fun bindQQ(@PathVar(1) password: String?, qq: Long): Any? {
         val qqEntity = qqService.findByQQ(qq)
         val pwd = password ?: qqEntity?.password

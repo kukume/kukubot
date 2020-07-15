@@ -37,8 +37,8 @@ class QQZoneLogicImpl: QQZoneLogic {
         }else null
     }
 
-    override fun myTalk(qqEntity: QQEntity): List<Map<String, String?>>? {
-        val response = OkHttpClientUtils.get("https://mobile.qzone.qq.com/get_feeds?g_tk=${qqEntity.getGtkP()}&hostuin=${qqEntity.qq}&res_type=2&res_attach=&refresh_type=2&format=json",
+    override fun talkByQQ(qqEntity: QQEntity, qq: Long): List<Map<String, String?>>? {
+        val response = OkHttpClientUtils.get("https://mobile.qzone.qq.com/get_feeds?g_tk=${qqEntity.getGtkP()}&hostuin=$qq&res_type=2&res_attach=&refresh_type=2&format=json",
                 OkHttpClientUtils.addCookie(qqEntity.getCookieWithQQZone()))
         val jsonObject = OkHttpClientUtils.getJson(response)
         return if (jsonObject.getInteger("code") == 0){

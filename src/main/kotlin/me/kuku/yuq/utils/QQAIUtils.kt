@@ -14,12 +14,12 @@ object QQAIUtils {
     private fun getSign(map: Map<String, String>): String{
         val treeMap = TreeMap<String, String>()
         treeMap.putAll(map)
-        var str = ""
+        val sb = StringBuilder()
         for ((k, v) in treeMap){
-            str += "$k=${URLEncoder.encode(v, "utf-8")}&"
+            sb.append("$k=${URLEncoder.encode(v, "utf-8")}&")
         }
-        str += "app_key=$APP_KEY"
-        return MD5Utils.toMD5(str).toUpperCase()
+        sb.append("app_key=$APP_KEY")
+        return MD5Utils.toMD5(sb.toString()).toUpperCase()
     }
 
     private fun addParams(otherParams: Map<String, String>): FormBody {

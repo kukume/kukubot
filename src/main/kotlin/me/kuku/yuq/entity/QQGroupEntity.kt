@@ -27,7 +27,8 @@ data class QQGroupEntity(
         var colorPic: Boolean? = false,
         var status: Boolean? = false,
         var recall: Boolean? = false,
-        var pic: Boolean? = false
+        var pic: Boolean? = false,
+        var leaveGroupBlack: Boolean? = false
 ){
         @Transient
         fun getQaJsonArray(): JSONArray = JSON.parseArray(qa) ?: JSON.parseArray("[]")

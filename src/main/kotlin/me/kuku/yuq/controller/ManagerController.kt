@@ -40,6 +40,13 @@ class ManagerController {
         return if (status) "机器人开启成功" else "机器人关闭成功"
     }
 
+    @Action("退群拉黑 {status}")
+    fun leaveGroupBlack(qqGroupEntity: QQGroupEntity, status: Boolean): String{
+        qqGroupEntity.leaveGroupBlack = status
+        qqGroupService.save(qqGroupEntity)
+        return if (status) "退群拉黑已开启！！" else "退群拉黑已关闭！！"
+    }
+
     @Action("鉴黄 {open}")
     fun pic(qqGroupEntity: QQGroupEntity, open: Boolean): String{
         qqGroupEntity.pic = open
@@ -80,32 +87,29 @@ class ManagerController {
         }else null
     }
 
-    @Action("{act}黑 {member}")
-    fun black(member: Member, act: String, qqGroupEntity: QQGroupEntity, group: Long): String?{
-        var keyword = qqGroupEntity.blackList
-        val msg = when (act) {
-            "加" -> {
-                keyword = this.add(keyword, member.id.toString())
-                this.kick(member, group)
-                "加黑名单成功！！"
-            }
-            "去" -> {
-                keyword = this.del(keyword, member.id.toString())
-                "去黑名单成功"
-            }
-            else -> null
-        }
-        return if (msg != null) {
-            qqGroupEntity.blackList = keyword
-            qqGroupService.save(qqGroupEntity)
-            msg
-        }else null
+    @Action("加黑 {member}")
+    fun addBlack(member: Member, qqGroupEntity: QQGroupEntity, group: Long): String{
+        var black = qqGroupEntity.blackList
+        black = this.add(black, member.id.toString())
+        qqGroupEntity.blackList = black
+        qqGroupService.save(qqGroupEntity)
+        this.kick(member, group)
+        return "加黑名单成功！！"
+    }
+
+    @Action("去黑 {qqStr}")
+    fun delBlack(qqStr: String, qqGroupEntity: QQGroupEntity): String{
+        var black = qqGroupEntity.blackList
+        black = this.del(black, qqStr)
+        qqGroupEntity.blackList = black
+        qqGroupService.save(qqGroupEntity)
+        return "删除黑名单成功！！"
     }
 
     @Action("黑名单")
     fun blackList(qqGroupEntity: QQGroupEntity): String{
         val keyword = qqGroupEntity.blackList.split("|")
-        val sb = StringBuilder("本群黑名单如下：\n")
+        val sb = StringBuilder("本群黑名单如下：\r\n")
         keyword.forEach {
             if (it != ""){
                 sb.appendln(it)
@@ -140,7 +144,7 @@ class ManagerController {
         return sb.toString()
     }
 
-    @Action("点歌切换{type}")
+    @Action("点歌切换 {type}")
     fun song(type: String, qqGroupEntity: QQGroupEntity): String?{
         var musicType = qqGroupEntity.musicType
         val msg = when (type){

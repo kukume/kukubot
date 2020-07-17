@@ -10,9 +10,11 @@ import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.message.*
 import me.kuku.yuq.entity.MotionEntity
+import me.kuku.yuq.entity.NeTeaseEntity
 import me.kuku.yuq.entity.QQEntity
 import me.kuku.yuq.logic.*
 import me.kuku.yuq.service.MotionService
+import me.kuku.yuq.service.NeTeaseService
 import me.kuku.yuq.service.QQService
 import me.kuku.yuq.utils.*
 import java.util.*
@@ -44,6 +46,10 @@ class QQController {
     private lateinit var yuq: YuQ
     @Inject
     private lateinit var mf: MessageFactory
+    @Inject
+    private lateinit var neTeaseLogic: NeTeaseLogic
+    @Inject
+    private lateinit var neTeaseService: NeTeaseService
 
     @Before
     fun checkBind(@PathVar(0) str: String, qq: Long, actionContext: BotActionContext){
@@ -145,7 +151,7 @@ class QQController {
     fun refuseAdd(qqEntity: QQEntity) = qqLogic.refuseAdd(qqEntity)
 
     @Action("超级签到")
-    fun allSign(qqEntity: QQEntity, group: Long, qq: Long): String{
+    @Synchronized fun allSign(qqEntity: QQEntity, group: Long, qq: Long): String{
         yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("请稍后！！！正在为您签到中~~~"))
         val str1 = qqLogic.qqSign(qqEntity)
         return if (!str1.contains("更新QQ")){
@@ -238,9 +244,9 @@ class QQController {
         }else "缺少参数，[qq号][验证消息（可选）][备注（可选）][分组名（可选）]"
     }
 
-    @Action("复制 {member}")
-    fun copyAvatar(member: Member, qqEntity: QQEntity): String{
-        val url = "https://q.qlogo.cn/g?b=qq&nk=${member.id}&s=640"
+    @Action("复制 {qqStr}")
+    fun copyAvatar(qqStr: String, qqEntity: QQEntity): String{
+        val url = "https://q.qlogo.cn/g?b=qq&nk=${qqStr}&s=640"
         return qqLogic.modifyAvatar(qqEntity, url)
     }
 
@@ -309,7 +315,7 @@ class QQController {
 
     @Action("#步数/{step}")
     fun step(qqEntity: QQEntity, qq: Long, step: Int, group: Long): String{
-        var motionEntity = motionService.findByQQ(qq)
+        val motionEntity = motionService.findByQQ(qq)
         if (motionEntity != null){
             val msg = leXinMotionLogic.modifyStepCount(step, motionEntity)
             if ("成功" in msg) return msg
@@ -317,14 +323,25 @@ class QQController {
         }
         val commonResult = leXinMotionLogic.loginByQQ(qqEntity)
         return if (commonResult.code == 200){
-            val map = commonResult.t
-            motionEntity = motionService.findByQQ(qq) ?: MotionEntity(null, qq, "")
-            motionEntity.userId = map.getValue("userId")
-            motionEntity.accessToken = map.getValue("accessToken")
-            motionEntity.cookie = map.getValue("cookie")
-            motionService.save(motionEntity)
-            leXinMotionLogic.modifyStepCount(step, motionEntity)
+            val newMotionEntity = commonResult.t
+            newMotionEntity.id = motionEntity?.id
+            newMotionEntity.qq = qq
+            motionService.save(newMotionEntity)
+            leXinMotionLogic.modifyStepCount(step, newMotionEntity)
         }else commonResult.msg
+    }
+
+    @Action("网易")
+    fun neTeaseLogin(qqEntity: QQEntity, qq: Long): String{
+        val commonResult = neTeaseLogic.loginByQQ(qqEntity)
+        return if (commonResult.code == 200){
+            val neTeaseEntity = neTeaseService.findByQQ(qq) ?: NeTeaseEntity(null)
+            val newNeTeaseEntity = commonResult.t
+            newNeTeaseEntity.id = neTeaseEntity.id
+            newNeTeaseEntity.qq = qq
+            neTeaseService.save(newNeTeaseEntity)
+            "绑定成功"
+        }else "绑定失败！！${commonResult.msg}"
     }
 
     @After

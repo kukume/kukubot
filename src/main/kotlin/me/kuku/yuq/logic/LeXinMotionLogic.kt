@@ -12,9 +12,9 @@ interface LeXinMotionLogic {
 
     fun getCaptchaCode(phone: String, captchaImageCode: String): CommonResult<String>
 
-    fun loginByPhoneCaptcha(phone: String, captchaPhoneCode: String): CommonResult<Map<String, String>>
+    fun loginByPhoneCaptcha(phone: String, captchaPhoneCode: String): CommonResult<MotionEntity>
 
-    fun loginByQQ(qqEntity: QQEntity): CommonResult<Map<String, String>>
+    fun loginByQQ(qqEntity: QQEntity): CommonResult<MotionEntity>
 
     fun modifyStepCount(step: Int, motionEntity: MotionEntity): String
 

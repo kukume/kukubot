@@ -1,5 +1,6 @@
 package me.kuku.yuq.logic.impl
 
+import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
 import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.logic.ToolLogic
@@ -349,5 +350,33 @@ class ToolLogicImpl: ToolLogic {
         val jsonObject = OkHttpClientUtils.getJson(response)
         val jsonArray = jsonObject.getJSONArray("data")
         return jsonArray.getJSONObject(Random.nextInt(jsonArray.size)).getString("imageUrl")
+    }
+
+    override fun lolFree(): String {
+        val response = OkHttpClientUtils.get("http://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js")
+        val jsonArray = OkHttpClientUtils.getJson(response).getJSONArray("hero")
+        val sb = StringBuilder("LOL本周周免英雄如下：\r\n")
+        for (i in jsonArray.indices){
+            val jsonObject = jsonArray.getJSONObject(i)
+            if (jsonObject.getInteger("isWeekFree") == 1){
+                sb.appendln("${jsonObject.getString("name")}-${jsonObject.getString("title")}")
+            }
+        }
+        return sb.removeSuffix("\r\n").toString()
+    }
+
+    override fun abbreviation(content: String): String {
+        val response = OkHttpClientUtils.post("https://lab.magiconch.com/api/nbnhhsh/guess",
+                OkHttpClientUtils.addJson("{\"text\": \"$content\"}"))
+        val str = OkHttpClientUtils.getStr(response)
+        val jsonArray = JSON.parseArray(str)
+        return if (jsonArray.size > 0){
+            val transJsonArray = jsonArray.getJSONObject(0).getJSONArray("trans")
+            val sb = StringBuilder("缩写${content}的含义如下：\r\n")
+            for (i in 0 until transJsonArray.size){
+                sb.appendln(transJsonArray.getString(i))
+            }
+            sb.removeSuffix("\r\n").toString()
+        }else "没有查询到结果"
     }
 }

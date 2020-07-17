@@ -114,6 +114,7 @@ class ToolController {
     fun ping(domain: String) = toolLogic.ping(domain)
 
     @Action("\\.*\\")
+    @QMsg(reply = true)
     fun js(message: Message): String?{
         val body = message.body
         val at = body[0]
@@ -165,8 +166,13 @@ class ToolController {
     fun girl() = mif.image(toolLogic.girlImage())
 
     @Action("蓝奏/{url}")
-    @QMsg(at = true)
     fun lanZou(url: String) = BotUtils.shortUrl("https://api.iheit.com/lanZou?url=${url.encodeURLPath()}")
+
+    @Action("lol周免")
+    fun lolFree() = toolLogic.lolFree()
+
+    @Action("缩写/{content}")
+    fun abbreviation(content: String) = toolLogic.abbreviation(content)
 
     @After
     fun finally(actionContext: BotActionContext) = BotUtils.addAt(actionContext)

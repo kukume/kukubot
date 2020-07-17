@@ -33,4 +33,6 @@ interface ToolLogic {
     fun songBy163(name: String): CommonResult<String>
     fun creatQr(content: String): String
     fun girlImage(): String
+    fun lolFree(): String
+    fun abbreviation(content: String): String
 }

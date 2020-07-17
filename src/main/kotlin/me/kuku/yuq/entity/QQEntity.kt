@@ -48,7 +48,5 @@ data class QQEntity(
     fun getGtkP() = QQUtils.getGtk(psKey).toString()
     @Transient
     fun getToken() = QQUtils.getToken(superToken).toString()
-    @Transient
-    fun getQZoneToken() = ""
 
 }

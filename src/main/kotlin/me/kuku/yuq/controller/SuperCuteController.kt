@@ -82,7 +82,7 @@ class SuperCuteController {
     fun profile(map: Map<String, String>) = superCuteLogic.getProfile(map)
 
     @Action("萌宠一键")
-    fun all(map: Map<String, String>, group: Long, qq: Long): String{
+    @Synchronized fun all(map: Map<String, String>, group: Long, qq: Long): String{
         yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("正在为您的萌宠完成任务~~~时间会很长~~~请稍后~~~"))
         val str1 = superCuteLogic.findCute(map)
         val str2 = superCuteLogic.dailySign(map)

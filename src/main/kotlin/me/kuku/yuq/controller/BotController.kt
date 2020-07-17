@@ -6,6 +6,7 @@ import com.IceCreamQAQ.Yu.annotation.Before
 import com.IceCreamQAQ.Yu.annotation.Config
 import com.icecreamqaq.yuq.annotation.*
 import com.icecreamqaq.yuq.controller.BotActionContext
+import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.mf
@@ -19,7 +20,6 @@ import me.kuku.yuq.utils.QQUtils
 import javax.inject.Inject
 
 @GroupController
-@ContextController
 class BotController {
     @Config("YuQ.Mirai.user.qq")
     private lateinit var qq: String
@@ -49,13 +49,11 @@ class BotController {
     fun like(qq : Long) = qqLogic.like(qqEntity!!, qq)
 
     @Action("公告")
-    @NextContext("nextPublishNotice")
-    fun publishNotice() = "请输入需要发送的公告内容！"
-
-    @Action("nextPublishNotice")
-    fun nextPublishNotice(message: Message, group: Long): String{
-        val content = message.body[0].toPath()
-        return qqLogic.publishNotice(qqEntity!!, group, content)
+    fun publishNotice(group: Long, qq: Long, session: ContextSession): String {
+        yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("请输入需要发送的公告内容！"))
+        val noticeMessage = session.waitNextMessage(30 * 1000)
+        val notice = noticeMessage.body[0].toPath()
+        return qqLogic.publishNotice(qqEntity!!, group, notice)
     }
 
     @Action("群链接")
@@ -67,8 +65,8 @@ class BotController {
     @Action("群文件")
     fun groupFile(@PathVar(1) fileName: String?, group: Long) =  qqLogic.groupFileUrl(qqEntity!!, group, fileName)
 
-    @Action("\\全体禁言(开|关)\\")
-    fun allShutUp(group: Long, @PathVar(0) content: String) = qqLogic.allShutUp(qqEntity!!, group, content[4] == '开')
+    @Action("全体禁言 {status}")
+    fun allShutUp(group: Long, status: Boolean) = qqLogic.allShutUp(qqEntity!!, group, status)
 
     @Action("改 {member} {name}")
     fun changeName(member: Member, group: Long, name: String) = qqLogic.changeName(qqEntity!!, member.id, group, name)

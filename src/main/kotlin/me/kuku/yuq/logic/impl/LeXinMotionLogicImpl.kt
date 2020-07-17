@@ -29,18 +29,22 @@ class LeXinMotionLogicImpl: LeXinMotionLogic {
         }
     }
 
-    override fun loginByPhoneCaptcha(phone: String, captchaPhoneCode: String): CommonResult<Map<String, String>> {
+    override fun loginByPhoneCaptcha(phone: String, captchaPhoneCode: String): CommonResult<MotionEntity> {
         val response: Response = OkHttpClientUtils.post("https://sports.lifesense.com/sessions_service/loginByAuth?screenHeight=2267&screenWidth=1080&systemType=2&version=4.5",
                 OkHttpClientUtils.addJson("{\"clientId\": \"${BotUtils.randomStr(32)}\",\"authCode\": \"$captchaPhoneCode\",\"appType\": \"6\",\"loginName\": \"$phone\"}"))
         val jsonObject = OkHttpClientUtils.getJson(response)
-        return if (jsonObject.getInteger("code") == 200) {
-            CommonResult(200, "登录成功", mapOf("cookie" to OkHttpClientUtils.getCookie(response),
-                    "userId" to jsonObject.getJSONObject("data").getString("userId"),
-                    "accessToken" to jsonObject.getJSONObject("data").getString("accessToken")))
-        } else CommonResult(500, jsonObject.getString("msg"))
+        return when {
+            jsonObject.getInteger("code") == 200 -> {
+                CommonResult(200, "登录成功", MotionEntity(null , 0L, "", OkHttpClientUtils.getCookie(response),
+                        jsonObject.getJSONObject("data").getString("userId"),
+                        jsonObject.getJSONObject("data").getString("accessToken")))
+            }
+            jsonObject.getInteger("code") == 412 -> CommonResult(412, "验证码错误！！")
+            else -> CommonResult(500, jsonObject.getString("msg"))
+        }
     }
 
-    override fun loginByQQ(qqEntity: QQEntity): CommonResult<Map<String, String>> {
+    override fun loginByQQ(qqEntity: QQEntity): CommonResult<MotionEntity> {
         val firstResponse = OkHttpClientUtils.get("https://xui.ptlogin2.qq.com/cgi-bin/xlogin?appid=716027609&pt_3rd_aid=1101774620&daid=381&pt_skey_valid=1&style=35&s_url=http://connect.qq.com&refer_cgi=m_authorize&ucheck=1&fall_to_wv=1&status_os=9.3.2&redirect_uri=auth://www.qq.com&client_id=1104904286&response_type=token&scope=all&sdkp=i&sdkv=2.9&state=test&status_machine=iPhone8,1&switch=1", OkHttpClientUtils.addCookie(qqEntity.getCookieWithSuper()))
         firstResponse.close()
         val addCookie = OkHttpClientUtils.getCookie(firstResponse)
@@ -60,9 +64,9 @@ class LeXinMotionLogicImpl: LeXinMotionLogic {
             val jsonObject = OkHttpClientUtils.getJson(response)
             val cookie = OkHttpClientUtils.getCookie(response)
             if (jsonObject.getInteger("code") == 200) {
-                CommonResult(200, "登录成功", mapOf("cookie" to cookie,
-                        "userId" to jsonObject.getJSONObject("data").getString("userId"),
-                        "accessToken" to jsonObject.getJSONObject("data").getString("accessToken")))
+                CommonResult(200, "登录成功", MotionEntity(null , 0L, "", cookie,
+                        jsonObject.getJSONObject("data").getString("userId"),
+                        jsonObject.getJSONObject("data").getString("accessToken")))
             } else CommonResult(500, "您没有使用qq绑定lexin运动，登录失败！！")
         }else CommonResult(500, "您的QQ已失效，请更新QQ！！")
     }

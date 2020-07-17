@@ -881,8 +881,8 @@ class QQLogicImpl: QQLogic {
             ), OkHttpClientUtils.addCookie(cookie))
             val secondJsonObject = OkHttpClientUtils.getJson(secondResponse)
             result += if (secondJsonObject.getInteger("code") == 0)
-                "微视签到成功!!"
-            else "微视签到失败！${secondJsonObject.getString("message")}!!"
+                "微视签到成功！！"
+            else "微视签到失败！${secondJsonObject.getString("message")}！！"
             val headers = OkHttpClientUtils.addHeaders(
                     "wesee_fe_map_ext", "{\"deviceInfoHeader\":\"i=undefined\",\"qimei\":\"7e8454fad0148911\",\"imei\":\"\"}",
                     "referer", "https://isee.weishi.qq.com/ws/app-pages/task_center/index.html?h5from=center&offlineMode=1&h5_data_report={%22navstyle%22:%222%22,%22needlogin%22:%221%22,%22_wv%22:%224096%22}&titleh=55.0&statush=27.272728",

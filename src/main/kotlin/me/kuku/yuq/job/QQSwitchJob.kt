@@ -28,7 +28,7 @@ class QQSwitchJob {
             val jsonObject = qqJobEntity.getJsonObject()
             if (jsonObject.getBoolean("status")){
                 //如果开启了群签到
-                val qqEntity = qqService.findByQQ(qqJobEntity.qq)!!
+                val qqEntity = qqService.findByQQ(qqJobEntity.qq) ?: return@forEach
                 if (qqEntity.status){
                     //如果cookie没过期
                     val groupList = jsonObject.getJSONArray("group")
@@ -56,7 +56,7 @@ class QQSwitchJob {
         list.forEach {
             val qqJobEntity = it
             val qq = qqJobEntity.qq
-            val qqEntity = qqService.findByQQ(qq)!!
+            val qqEntity = qqService.findByQQ(qq)?: return@forEach
             if (qqEntity.status) {
                 val commonResult = qqZoneLogic.queryGroup(qqEntity)
                 if (commonResult.code == 200) {
@@ -82,7 +82,7 @@ class QQSwitchJob {
         list.forEach {
             val qqJobEntity = it
             if (qqJobEntity.getJsonObject().getBoolean("status")){
-                val qqEntity = qqService.findByQQ(qqJobEntity.qq)!!
+                val qqEntity = qqService.findByQQ(qqJobEntity.qq)?: return@forEach
                 if (qqEntity.status){
                     qqZoneLogic.friendTalk(qqEntity)?.forEach { map ->
                         if (map["like"] == null || map["like"] != "1") {
@@ -99,7 +99,7 @@ class QQSwitchJob {
         val list = qqJobService.findByType("bubble")
         list.forEach {
             if (it.getJsonObject().getBoolean("status")){
-                val qqEntity = qqService.findByQQ(it.qq)!!
+                val qqEntity = qqService.findByQQ(it.qq)?: return@forEach
                 if (qqEntity.status){
                     qqLogic.diyBubble(qqEntity, it.getJsonObject().getString("text"), null)
                 }

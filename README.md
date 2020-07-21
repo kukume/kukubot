@@ -1,5 +1,5 @@
 **基于`YuQ-Mirai`的机器人**
-* [YuQ](https://github.com/YuQWorks/YuQ) ：yuq开发群（不是机器人群）：696129128
+* [YuQ](https://github.com/YuQWorks/YuQ)
 * [YuQ-Mirai](https://github.com/YuQWorks/YuQ-Mirai)
 * [YuQ-Mirai-Demo](https://github.com/YuQWorks/YuQ-Mirai-Demo)
 * [Mirai](https://github.com/mamoe/mirai)

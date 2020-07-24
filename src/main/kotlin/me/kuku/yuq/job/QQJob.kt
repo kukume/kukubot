@@ -74,6 +74,7 @@ class QQJob {
                     qqLogic.sVipMornSign(it)
                     qqLogic.weiYunSign(it)
                     qqLogic.weiShiSign(it)
+                    qqLogic.growthLike(it)
                 }
             }catch (e: Exception){
                 e.printStackTrace()

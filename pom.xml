@@ -21,12 +21,7 @@
         <dependency>
             <groupId>com.IceCreamQAQ.YuQ</groupId>
             <artifactId>YuQ-Mirai</artifactId>
-            <version>0.0.5.2</version>
-        </dependency>
-        <dependency>
-            <groupId>com.IceCreamQAQ</groupId>
-            <artifactId>Yu-Core</artifactId>
-            <version>0.1.4.1</version>
+            <version>0.0.5.3</version>
         </dependency>
         <dependency>
             <groupId>com.IceCreamQAQ.Yu</groupId>
@@ -47,7 +42,6 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>1.4.200</version>
-            <scope>runtime</scope>
         </dependency>
     </dependencies>
 
@@ -57,7 +51,7 @@
             <url>https://repo1.maven.org/maven2/</url>
         </repository>
         <repository>
-            <id>jcenter</id>
+            <id>jCenter</id>
             <url>https://jcenter.bintray.com/</url>
         </repository>
     </repositories>
@@ -126,7 +120,7 @@
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.2.4</version>
                 <configuration>
-<!--                    <finalName>yuq</finalName>-->
+                    <finalName>kukubot</finalName>
                     <filters>
                         <filter>
                             <artifact>*:*</artifact>

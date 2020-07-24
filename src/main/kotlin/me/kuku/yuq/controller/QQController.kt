@@ -7,20 +7,20 @@ import com.IceCreamQAQ.Yu.annotation.Synonym
 import com.icecreamqaq.yuq.YuQ
 import com.icecreamqaq.yuq.annotation.*
 import com.icecreamqaq.yuq.controller.BotActionContext
+import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.entity.Member
+import com.icecreamqaq.yuq.firstString
 import com.icecreamqaq.yuq.message.*
-import me.kuku.yuq.entity.MotionEntity
 import me.kuku.yuq.entity.NeTeaseEntity
 import me.kuku.yuq.entity.QQEntity
 import me.kuku.yuq.logic.*
 import me.kuku.yuq.service.MotionService
 import me.kuku.yuq.service.NeTeaseService
+import me.kuku.yuq.service.QQGroupService
 import me.kuku.yuq.service.QQService
 import me.kuku.yuq.utils.*
-import java.util.*
 import javax.inject.Inject
 import kotlin.concurrent.thread
-import kotlin.random.Random
 
 @GroupController
 class QQController {
@@ -35,8 +35,6 @@ class QQController {
     @Inject
     private lateinit var qqLogic: QQLogic
     @Inject
-    private lateinit var qqGroupLogic: QQGroupLogic
-    @Inject
     private lateinit var qqZoneLogic: QQZoneLogic
     @Inject
     private lateinit var qqService: QQService
@@ -50,16 +48,21 @@ class QQController {
     private lateinit var neTeaseLogic: NeTeaseLogic
     @Inject
     private lateinit var neTeaseService: NeTeaseService
+    @Inject
+    private lateinit var qqGroupService: QQGroupService
 
     @Before
-    fun checkBind(@PathVar(0) str: String, qq: Long, actionContext: BotActionContext){
-        val qqEntity = qqService.findByQQ(qq)
-        when {
-            str.toLowerCase() == "qq" -> return
-            qqEntity?.status == false -> throw  mif.at(qq).plus("您的QQ已失效，请更新QQ！！")
-            qqEntity != null -> actionContext.session["qqEntity"] = qqEntity
-            else -> throw mif.at(qq).plus("没有绑定QQ！，请先发送qq进行扫码登录绑定，如需密码登录绑定请私聊机器人发送qq")
-        }
+    fun checkBind(@PathVar(0) str: String, qq: Long, actionContext: BotActionContext, group: Long){
+        val qqGroupEntity = qqGroupService.findByGroup(group)
+        if (qqGroupEntity?.qqStatus == true) {
+            val qqEntity = qqService.findByQQ(qq)
+            when {
+                str.toLowerCase() == "qq" -> return
+                qqEntity?.status == false -> throw  mif.at(qq).plus("您的QQ已失效，请更新QQ！！")
+                qqEntity != null -> actionContext.session["qqEntity"] = qqEntity
+                else -> throw mif.at(qq).plus("没有绑定QQ！，请先发送qq进行扫码登录绑定，如需密码登录绑定请私聊机器人发送qq")
+            }
+        }else throw mif.at(qq).plus("QQ功能已关闭！！请联系管理员开启！！")
     }
 
     @Action("qq")
@@ -81,27 +84,14 @@ class QQController {
         return mif.image(bytes).plus("qzone.qq.com的扫码登录")
     }
 
-    @Action("group")
-    fun groupLogin(group: Long, qqEntity: QQEntity): Message{
-        val map = QQQrCodeLoginUtils.getQrCode("715030901", "73")
-        val bytes = map.getValue("qrCode") as ByteArray
-        thread {
-            val commonResult = QQUtils.qrCodeLoginVerify(map.getValue("sig").toString(), "715030901", "73", "https://qun.qq.com")
-            val msg = if (commonResult.code == 200){
-                //登录成功
-                qqEntity.groupPsKey = commonResult.t.getValue("p_skey")
-                qqService.save(qqEntity)
-                "绑定或更新成功！"
-            }else{
-                commonResult.msg
-            }
-            yuq.sendMessage(mf.newGroup(group).plus(mif.at(qqEntity.qq)).plus(msg))
-        }
-        return mif.image(bytes).plus("qun.qq.com的扫码登录")
-    }
-
     @Action("群签到")
-    fun groupSign(qqEntity: QQEntity, group: Long): String{
+    fun groupSign(qqEntity: QQEntity, group: Long, message: Message): String{
+        if (message.body.size > 1){
+            val item = message.body[1]
+            if (item is Image){
+                return qqLogic.groupSign(qqEntity, group, "你猜", "哈哈", "{\"category_id\":\"\",\"page\":\"\",\"pic_id\":\"\"}", item.url)
+            }
+        }
         val arr = arrayOf(178, 124, 120, 180, 181, 127, 125, 126)
         val id = arr.random()
         val map = toolLogic.hiToKoTo()
@@ -173,6 +163,7 @@ class QQController {
             val str15 = qqLogic.sVipMornSign(qqEntity)
             val str16 = qqLogic.weiYunSign(qqEntity)
             val str17 = qqLogic.weiShiSign(qqEntity)
+            val str18 = qqLogic.growthLike(qqEntity)
             sb.appendln("手机打卡：$str1")
                     .appendln("群等级抽奖：$str2")
                     .appendln("会员签到：$str3")
@@ -189,7 +180,8 @@ class QQController {
                     .appendln("蓝钻签到：$str14")
                     .appendln("svip打卡报名：$str15")
                     .appendln("微云签到：$str16")
-                    .append("微视签到：$str17")
+                    .appendln("微视签到：$str17")
+                    .append("排行榜点赞：$str18")
             sb.toString()
         }else "超级签到失败，请更新QQ！"
     }
@@ -273,36 +265,6 @@ class QQController {
     fun addAdmin(member: Member, qqEntity: QQEntity, group: Long) =
             qqLogic.setGroupAdmin(qqEntity, member.id, group, true)
 
-    @Action("龙王")
-    fun dragonKing(group: Long, qqEntity: QQEntity): Message{
-        val commonResult = qqGroupLogic.groupDragonKing(qqEntity, group)
-        return if (commonResult.code == 200){
-            val urlArr = arrayOf(
-                    "https://u.iheit.com/kuku/61f600415023300.jpg",
-                    "https://u.iheit.com/kuku/449ab0415103619.jpg",
-                    "https://u.iheit.com/kuku/51fe90415023311.jpg",
-                    "https://u.iheit.com/kuku/1d12a0415023726.jpg",
-                    "https://u.iheit.com/kuku/b04b30415023728.jpg",
-                    "https://u.iheit.com/kuku/d21200415023730.jpg",
-                    "https://u.iheit.com/kuku/55f0e0415023731.jpg",
-                    "https://u.iheit.com/kuku/634cc0415023733.jpg",
-                    "https://u.iheit.com/kuku/c044b0415023734.jpg",
-                    "https://u.iheit.com/kuku/ce2270415023735.jpg",
-                    "https://u.iheit.com/kuku/6e4b20415023737.jpg",
-                    "https://u.iheit.com/kuku/5f7d70415023738.jpg",
-                    "https://u.iheit.com/kuku/98d640415023739.jpg",
-                    "https://u.iheit.com/kuku/26a1a0415023741.jpg",
-                    "https://u.iheit.com/kuku/e84c90415023744.jpg",
-                    "https://u.iheit.com/kuku/ddc810415023745.jpg",
-                    "https://u.iheit.com/kuku/23ee20415023747.jpg",
-                    "https://u.iheit.com/kuku/8c4a80415023748.jpg",
-                    "https://u.iheit.com/kuku/bdb970415023750.jpg"
-            )
-            val url = urlArr[Random.nextInt(urlArr.size)]
-            val map = commonResult.t
-            mif.at(map.getValue("qq")).plus(mif.image(url)).plus("龙王（已蝉联${map.getValue("day")}天）快喷水！")
-        }else mif.text(commonResult.msg).toMessage()
-    }
 
     @Action("互赞")
     fun like(qq: Long): String{
@@ -342,6 +304,14 @@ class QQController {
             neTeaseService.save(newNeTeaseEntity)
             "绑定成功"
         }else "绑定失败！！${commonResult.msg}"
+    }
+
+    @Action("自定义机型 {iMei}")
+    fun changePhoneOnline(qqEntity: QQEntity, iMei: String, qq: Long, group: Long, session: ContextSession): String{
+        yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("请输入您需要自定义的机型！！"))
+        val nextMessage = session.waitNextMessage(30 * 1000)
+        val phone = nextMessage.firstString()
+        return qqLogic.changePhoneOnline(qqEntity, iMei, phone)
     }
 
     @After

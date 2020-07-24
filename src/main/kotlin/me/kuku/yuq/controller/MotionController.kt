@@ -26,8 +26,12 @@ class MotionController {
         val time = 30L * 1000
         val motionEntity = motionService.findByQQ(qq)
         val id = motionEntity?.id
+        var step: Int? = null
         if (motionEntity != null){
-            val msg = this.changeStep(group, qq, session, motionEntity)
+            yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("请输入需要修改的步数！！"))
+            val stepMessage = session.waitNextMessage(1000 * 30)
+            step = stepMessage.firstString().toInt()
+            val msg =  leXinMotionLogic.modifyStepCount(step, motionEntity)
             if ("成功" in msg) return msg
             yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("您的cookie已失效，将准备重新登录！！"))
         }
@@ -35,6 +39,7 @@ class MotionController {
         if (motionEntity == null || motionEntity.phone == "") {
             yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("您未绑定手机号，请输入手机号进行绑定！！"))
             val phoneMessage = session.waitNextMessage(time)
+            phoneMessage.recall()
             phone = phoneMessage.firstString()
             if (phone.length != 11) return "手机号格式不正确！！"
         }else phone = motionEntity.phone
@@ -60,13 +65,12 @@ class MotionController {
                 else -> return loginCommonResult.msg
             }
         }while (loginCommonResult.code == 412)
-        return this.changeStep(group, qq, session, newMotionEntity!!)
-    }
-
-    private fun changeStep(group: Long, qq: Long, session: ContextSession, motionEntity: MotionEntity): String{
-        yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("请输入需要修改的步数！！"))
-        val stepMessage = session.waitNextMessage(1000 * 30)
-        return leXinMotionLogic.modifyStepCount(stepMessage.firstString().toInt(), motionEntity)
+        if (step == null) {
+            yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("请输入需要修改的步数！！"))
+            val stepMessage = session.waitNextMessage(1000 * 30)
+            step = stepMessage.firstString().toInt()
+        }
+        return leXinMotionLogic.modifyStepCount(step, newMotionEntity!!)
     }
 
     private fun identifyImageCode(phone: String, group: Long, qq: Long): CommonResult<String>{

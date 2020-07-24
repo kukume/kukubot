@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject
 import me.kuku.yuq.entity.QQEntity
 import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.logic.QQLogic
+import me.kuku.yuq.pojo.GroupMember
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.OkHttpClientUtils
 import me.kuku.yuq.utils.QQSuperLoginUtils
@@ -33,7 +34,17 @@ class QQLogicImpl: QQLogic {
      * ""  ""   ""  运势   template_id   8
      * template_id 1 天气
      */
-    override fun groupSign(qqEntity: QQEntity, group: Long, place: String, text: String, info: String): String {
+    override fun groupSign(qqEntity: QQEntity, group: Long, place: String, text: String, info: String, url: String?): String {
+        var imgId = ""
+        if (url != null) {
+            val bytes = OkHttpClientUtils.getBytes(OkHttpClientUtils.get(url))
+            val body = MultipartBody.Builder().setType(MultipartBody.FORM).addFormDataPart("bkn", qqEntity.getGtk())
+                    .addFormDataPart("pic_up", Base64.getEncoder().encodeToString(bytes)).build()
+            val upResponse = OkHttpClientUtils.post("https://qun.qq.com/cgi-bin/qiandao/upload/pic", body, qqEntity.cookie())
+            val upJsonObject = OkHttpClientUtils.getJson(upResponse)
+            imgId = if (upJsonObject.getInteger("retcode") == 0) upJsonObject.getJSONObject("data").getString("pic_id")
+            else return "上传图片失败，${upJsonObject.getString("msg")}"
+        }
         val response = OkHttpClientUtils.post("https://qun.qq.com/cgi-bin/qiandao/sign/publish", OkHttpClientUtils.addForms(
                 "btn", qqEntity.getGtk(),
                 "template_data", "",
@@ -44,7 +55,8 @@ class QQLogicImpl: QQLogic {
                 "lgt", "0",
                 "lat", "0",
                 "poi", place,
-                "text", text
+                "text", text,
+                "pic_id", imgId
         ), qqEntity.cookie())
         val jsonObject = OkHttpClientUtils.getJson(response)
         return when (jsonObject.getInteger("retcode")){
@@ -620,13 +632,16 @@ class QQLogicImpl: QQLogic {
         }else "蓝钻签到失败，请更新QQ！"
     }
 
-    override fun like(qqEntity: QQEntity, qq: Long): String {
+    override fun like(qqEntity: QQEntity, qq: Long, psKey: String?): String {
         var msg = ""
-        val commonResult = QQSuperLoginUtils.vipLogin(qqEntity)
-        if (commonResult.code != 200) return "点赞失败，请更新QQ！！"
+        val newPsKey = if (psKey == null) {
+            val commonResult = QQSuperLoginUtils.vipLogin(qqEntity)
+            if (commonResult.code != 200) return "点赞失败，请更新QQ！！"
+            commonResult.t
+        }else psKey
         for (i in 0 until 20) {
-            val response = OkHttpClientUtils.get("https://club.vip.qq.com/visitor/like?g_tk=${QQUtils.getGtk(commonResult.t)}&nav=0&uin=$qq&t=${Date().time}", OkHttpClientUtils.addHeaders(
-                    "cookie", qqEntity.getCookie(commonResult.t),
+            val response = OkHttpClientUtils.get("https://club.vip.qq.com/visitor/like?g_tk=${QQUtils.getGtk(newPsKey!!)}&nav=0&uin=$qq&t=${Date().time}", OkHttpClientUtils.addHeaders(
+                    "cookie", qqEntity.getCookie(newPsKey),
                     "referer", "https://club.vip.qq.com/visitor/index?_wv=4099&_nav_bgclr=ffffff&_nav_titleclr=ffffff&_nav_txtclr=ffffff&_nav_alpha=0"
             ))
             val jsonObject = OkHttpClientUtils.getJson(response)
@@ -672,6 +687,7 @@ class QQLogicImpl: QQLogic {
     override fun anotherSign(qqEntity: QQEntity): String {
         var response = OkHttpClientUtils.post("https://ti.qq.com/hybrid-h5/api/json/daily_attendance/SignInMainPage",
                 OkHttpClientUtils.addJson("{\"uin\": \"${qqEntity.qq}\",\"QYY\": 2,\"qua\": \"V1_AND_SQ_8.3.3_1376_YYB_D\",\"loc\": {\"lat\": 27719813,\"lon\": 111317537}}"), qqEntity.cookie())
+        if (response.code != 200) return "打卡失败，请稍后再试！！"
         val jsonObject = OkHttpClientUtils.getJson(response)
         if (jsonObject.getInteger("ret") == 0){
             val jsonArray = jsonObject.getJSONObject("data").getJSONObject("vecSignInfo").getJSONArray("value")
@@ -688,6 +704,7 @@ class QQLogicImpl: QQLogic {
             return if (type != null && subType != null){
                 response = OkHttpClientUtils.post("https://ti.qq.com/hybrid-h5/api/json/daily_attendance/SignIn",
                         OkHttpClientUtils.addJson("{\"uin\":\"${qqEntity.qq}\",\"type\":$type,\"sId\":\"\",\"subType\":$subType,\"qua\":\"V1_AND_SQ_8.3.3_1376_YYB_D\"}"), qqEntity.cookie())
+                if (response.code != 200) return "打卡失败，请稍后再试！！"
                 val signJsonObject = OkHttpClientUtils.getJson(response)
                 if (signJsonObject.getInteger("ret") == 0){
                     for (i in 0 until 3)
@@ -764,7 +781,7 @@ class QQLogicImpl: QQLogic {
                 -200 -> "打卡失败！！可能未获得测试资格"
                 else -> "打卡失败！！${jsonObject.getString("msg")}"
             }
-        }else "打卡失败！！！"
+        }else "打卡失败！！！请售后再试！！"
     }
 
     override fun vipGrowthAdd(qqEntity: QQEntity): String {
@@ -790,9 +807,11 @@ class QQLogicImpl: QQLogic {
                     -9999 -> "每日成长值"
                     169 -> "QQ会员官方账号每日签到"
                     664 -> "早起走运"
+                    662 -> "成长值排名&点赞"
                     697,703 -> singleJsonObject.getString("actname")
                     26 -> "活动赠送"
                     136 -> "超级会员每月礼包"
+                    659 -> "领取储蓄罐成长值"
                     else -> "其他活动"
                 }
                 val add = singleJsonObject.getInteger("finaladd")
@@ -959,7 +978,7 @@ class QQLogicImpl: QQLogic {
                 CommonResult(200, "", list)
             }
             -107 -> CommonResult(500, "获取群文件失败，您还没有加入该群！！")
-            4 -> CommonResult(500, "获取群文件失败，请更新QQ！")
+            4,1 -> CommonResult(500, "获取群文件失败，请更新QQ！")
             else -> CommonResult(500, "获取群文件失败，${jsonObject.getString("em")}")
         }
     }
@@ -1039,5 +1058,70 @@ class QQLogicImpl: QQLogic {
             4 -> "执行失败，请更新QQ！！"
             else -> "执行失败，${jsonObject.getString("em")}"
         }
+    }
+
+    override fun growthLike(qqEntity: QQEntity): String {
+        val commonResult = QQSuperLoginUtils.vipLogin(qqEntity)
+        return if (commonResult.code == 200) {
+            val psKey = commonResult.t
+            val url = "https://mq.vip.qq.com/m/growth/rank?ADTAG=vipcenter&_wvSb=1&traceNum=2&traceId=${qqEntity.qq}${Date().time.toString().substring(0, 11)}"
+            val firstResponse = OkHttpClientUtils.get(url,
+                    OkHttpClientUtils.addCookie(qqEntity.getCookie(psKey)))
+            if (firstResponse.code == 200) {
+                val html = OkHttpClientUtils.getStr(firstResponse)
+                val elements = Jsoup.parse(html).getElementsByClass("f-uin")
+                for (ele in elements){
+                    val toUin = ele.text()
+                    if (toUin == qqEntity.qq.toString()) continue
+                    val secondResponse = OkHttpClientUtils.get("https://mq.vip.qq.com/m/growth/doPraise?method=0&toUin=$toUin&g_tk=${QQUtils.getGtk2(qqEntity.sKey)}&ps_tk=${qqEntity.getGtk(psKey)}",
+                            OkHttpClientUtils.addHeaders(
+                                    "cookie", qqEntity.getCookie(psKey),
+                                    "referer", url
+                            ))
+                    val jsonObject = OkHttpClientUtils.getJson(secondResponse)
+                    val code = jsonObject.getInteger("ret")
+                    if (code != -12002 && code != 0){
+                        return "点赞失败！！${jsonObject.getString("msg")}"
+                    }
+                }
+                "排行榜点赞成功！！"
+            }else "访问排行榜点赞页面失败，请稍后再试！！"
+        }else "您的QQ已失效，请更新QQ！！"
+    }
+
+    override fun groupMemberInfo(qqEntity: QQEntity, group: Long): CommonResult<List<GroupMember>> {
+        val response = OkHttpClientUtils.get("https://qinfo.clt.qq.com/cgi-bin/qun_info/get_members_info_v1?friends=1&gc=$group&bkn=${qqEntity.getGtk()}&src=qinfo_v3&_ti=${Date().time}", qqEntity.cookie())
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return when (jsonObject.getInteger("ec")){
+            0 ->{
+                val membersJsonObject = jsonObject.getJSONObject("members")
+                val list = mutableListOf<GroupMember>()
+                for ((k, v) in membersJsonObject){
+                    val memberJsonObject = v as JSONObject
+                    list.add(GroupMember(k.toLong(), memberJsonObject.getInteger("ll"),
+                            memberJsonObject.getInteger("lp"), "${memberJsonObject.getString("jt")}000".toLong(),
+                            "${memberJsonObject.getString("lst")}000".toLong()))
+                }
+                return CommonResult(200, "", list)
+            }
+            4 -> CommonResult(500, "查询失败，请更新QQ！！")
+            else -> CommonResult(500, "查询失败，${jsonObject.getString("em")}")
+        }
+    }
+
+    override fun changePhoneOnline(qqEntity: QQEntity, iMei:String, phone: String): String {
+        val commonResult = QQSuperLoginUtils.vipLogin(qqEntity)
+        return if (commonResult.code == 200) {
+            val psKey = commonResult.t
+            val response = OkHttpClientUtils.get("https://proxy.vip.qq.com/cgi-bin/srfentry.fcgi?ts=${Date().time}&daid=18&g_tk=${qqEntity.getGtk(psKey)}&data=%7B%2213031%22:%7B%22req%22:%7B%22sModel%22:%22$phone%22,%22sManu%22:%22vivo%22,%22sIMei%22:%22$iMei%22,%22iAppType%22:3,%22sVer%22:%228.4.1.4680%22,%22lUin%22:${qqEntity.qq},%22bShowInfo%22:true,%22sDesc%22:%22%22,%22sModelShow%22:%22$phone%22%7D%7D%7D&pt4_token=${qqEntity.pt4Token}",
+                    OkHttpClientUtils.addCookie(qqEntity.getCookie(psKey)))
+            val jsonObject = OkHttpClientUtils.getJson(response)
+            when {
+                jsonObject.getInteger("ecode") == 0 -> "修改在线手机型号成功！！"
+                jsonObject.getInteger("ecode") == -500000 -> "修改失败，请更新QQ！！"
+                jsonObject.getInteger("ret") == -100 -> "修改失败，请更新QQ！！"
+                else -> "修改失败！！" + (jsonObject.getString("msg") ?: jsonObject.getJSONObject("13031").getString("msg"))
+            }
+        }else "修改失败，请更新QQ！！"
     }
 }

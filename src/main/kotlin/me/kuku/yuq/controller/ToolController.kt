@@ -3,9 +3,12 @@ package me.kuku.yuq.controller
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.After
 import com.IceCreamQAQ.Yu.annotation.Config
+import com.IceCreamQAQ.Yu.annotation.Synonym
 import com.icecreamqaq.yuq.YuQ
 import com.icecreamqaq.yuq.annotation.*
 import com.icecreamqaq.yuq.controller.BotActionContext
+import com.icecreamqaq.yuq.controller.ContextSession
+import com.icecreamqaq.yuq.firstString
 import com.icecreamqaq.yuq.message.*
 import com.icecreamqaq.yuq.toMessage
 import io.ktor.http.encodeURLPath
@@ -48,7 +51,12 @@ class ToolController {
     fun baiKe(params: String) = toolLogic.baiKe(params)
 
     @Action("嘴臭")
-    fun mouthOdor() = toolLogic.mouthOdor()
+    @Synonym(["祖安语录"])
+    fun mouthOdor(group: Long): String {
+        val qqGroupEntity = qqGroupService.findByGroup(group)
+        if (qqGroupEntity?.mouthOdor != true) return "该功能已关闭！！"
+        return toolLogic.mouthOdor()
+    }
 
     @Action("毒鸡汤")
     fun poisonousChickenSoup() = toolLogic.poisonousChickenSoup()
@@ -72,7 +80,7 @@ class ToolController {
     fun zhiHuDaily() = toolLogic.zhiHuDaily()
 
     @Action("测吉凶")
-    fun qqGodLock(qq: Long) = mif.at(qq).plus(toolLogic.qqGodLock(qq))
+    fun qqGodLock(qq: Long) = toolLogic.qqGodLock(qq)
 
     @Action("拼音/{params}")
     fun convertPinYin(params: String) = toolLogic.convertPinYin(params)
@@ -86,22 +94,18 @@ class ToolController {
     @Action("历史上的今天")
     fun historyToday() = mif.text(toolLogic.historyToday())
 
-    @Action("转{str}/{content}")
-    fun translate(str: String, content: String): String{
-        return when(str){
-            "简" -> toolLogic.convertZh(content, 2)
-            "繁" -> toolLogic.convertZh(content, 1)
-            "英" -> toolLogic.convertTranslate(content, "auto", "en")
-            "中" -> toolLogic.convertTranslate(content, "auto", "zh")
-            "日" -> toolLogic.convertTranslate(content, "auto", "jp")
-            "韩" -> toolLogic.convertTranslate(content, "auto", "kor")
-            "粤" -> toolLogic.convertTranslate(content, "auto", "yue")
-            "法" -> toolLogic.convertTranslate(content, "auto", "gra")
-            "俄" -> toolLogic.convertTranslate(content, "auto", "ru")
-            "德" -> toolLogic.convertTranslate(content, "auto", "de")
-            "文" -> toolLogic.convertTranslate(content, "auto", "wyw")
-            else -> "抱歉，没有该语言的翻译"
-        }
+    @Action("转{str}")
+    fun translate(str: String, session: ContextSession, group: Long, qq: Long): String{
+        val map = mapOf("英" to "en", "中" to "zh", "日" to "jp", "韩" to "kor",
+                "粤" to "yue", "法" to "gra", "俄" to "ru", "德" to "de", "文" to "wyw", "简" to "2", "繁" to "1")
+        return if (map.containsKey(str)){
+            yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq).plus("请输入需要翻译的内容！！")))
+            val nextMessage = session.waitNextMessage(30 * 1000)
+            val content = nextMessage.firstString()
+            if (str == "简" || str == "繁"){
+                toolLogic.convertZh(content, map.getValue(str).toInt())
+            }else toolLogic.convertTranslate(content, "auto", map.getValue(str))
+        }else "抱歉，没有该语言的翻译"
     }
 
     @Action("解析/{url}")

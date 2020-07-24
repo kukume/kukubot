@@ -1,5 +1,6 @@
 package me.kuku.yuq.logic.impl
 
+import com.IceCreamQAQ.Yu.util.IO
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
 import me.kuku.yuq.pojo.CommonResult
@@ -8,6 +9,7 @@ import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.OkHttpClientUtils
 import org.jsoup.Jsoup
 import java.net.URLEncoder
+import java.nio.charset.Charset
 import kotlin.random.Random
 
 class ToolLogicImpl: ToolLogic {
@@ -271,22 +273,27 @@ class ToolLogicImpl: ToolLogic {
     }
 
     override fun ping(domain: String): String {
-        val response = OkHttpClientUtils.get("https://api.devopsclub.cn/api/ipv4query?ip=$domain")
-        val jsonObject = OkHttpClientUtils.getJson(response)
-        return if (jsonObject.getInteger("code") == 0){
-            val ip = jsonObject.getJSONObject("data").getString("ip")
-            val ipMsg = this.queryIp(ip)
+        val runtime = Runtime.getRuntime()
+        val os = System.getProperty("os.name")
+        val pingStr = if (os.contains("Windows")) "ping $domain -n 1"
+        else "ping $domain -c 1"
+        val process = runtime.exec(pingStr)
+        if (process != null){
+            val bytes = IO.read(process.inputStream)
+            val result = if (os.contains("Windows")) String(bytes, Charset.forName("gbk"))
+            else String(bytes, Charset.forName("utf-8"))
+            if (result.contains("找不到主机") || result.contains("Name or service not known")) return "域名解析失败！！"
+            val ip = BotUtils.regex("\\[", "\\]", result)?.trim() ?: BotUtils.regex("\\(", "\\)", result)?.trim()
+            val time = BotUtils.regex("时间=", "ms", result)?.trim() ?: BotUtils.regex("time=", "ms", result)?.trim() ?: "请求超时"
+            val ipInfo = this.queryIp(ip!!)
             val sb = StringBuilder("====查询结果====\n")
             sb.appendln("域名/IP：$domain")
-            sb.appendln("IP：$ip")
-            val secondResponse = OkHttpClientUtils.post("http://www.jsons.cn/ping/", OkHttpClientUtils.addForms("txt_url", domain))
-            val str = OkHttpClientUtils.getStr(secondResponse)
-            var text = Jsoup.parse(str).select("#form1 .form-group .col-sm-12 pre").first().text()
-            text = BotUtils.regex("(?<=平均\\s\\=\\s).*", text)
-            sb.appendln("延迟：$text")
-            sb.append("位置：$ipMsg")
-            sb.toString()
-        }else "无法解析域名！"
+            sb.appendln("IP：：$ip")
+            sb.appendln("延迟：${time}ms")
+            sb.append("位置：$ipInfo")
+            return sb.toString()
+        }
+        return "ping失败，请稍后再试！！"
     }
 
     override fun colorPic(): ByteArray {
@@ -371,7 +378,7 @@ class ToolLogicImpl: ToolLogic {
         val str = OkHttpClientUtils.getStr(response)
         val jsonArray = JSON.parseArray(str)
         return if (jsonArray.size > 0){
-            val transJsonArray = jsonArray.getJSONObject(0).getJSONArray("trans")
+            val transJsonArray = jsonArray.getJSONObject(0).getJSONArray("trans") ?: return "没有查询到结果！！"
             val sb = StringBuilder("缩写${content}的含义如下：\r\n")
             for (i in 0 until transJsonArray.size){
                 sb.appendln(transJsonArray.getString(i))

@@ -30,14 +30,15 @@ class GroupManagerEvent {
 
     @Event
     fun keyword(e: GroupMessageEvent){
+        if (yuq.groups[e.message.group]?.get(e.message.qq!!)?.isAdmin()!!) return
         val qqGroupEntity = qqGroupService.findByGroup(e.message.group!!) ?: return
-        val keywords = qqGroupEntity.keyword.split("|")
-        for (k in keywords){
-            if (k == "") continue
-            if (k in e.message.sourceMessage.toString()){
+        val keywordJsonArray = qqGroupEntity.getKeywordJsonArray()
+        for (i in keywordJsonArray.indices){
+            val keyword = keywordJsonArray.getString(i)
+            if (keyword in e.message.sourceMessage.toString()){
                 e.message.recall()
                 yuq.groups[e.message.group!!]?.members?.get(e.message.qq)?.ban(10 * 60)
-                yuq.sendMessage(mf.newGroup(e.message.group!!).plus(mif.at(e.message.qq!!)).plus("检测到违规词\"$k\"，您已被禁言，您当前在本群违规次数："))
+                yuq.sendMessage(mf.newGroup(e.message.group!!).plus(mif.at(e.message.qq!!)).plus("检测到违规词\"$keyword\"，您已被禁言。"))
                 return
             }
         }
@@ -46,11 +47,14 @@ class GroupManagerEvent {
     @Event
     fun qa(e: GroupMessageEvent){
         val qqGroupEntity = qqGroupService.findByGroup(e.message.group!!) ?: return
+        val message = e.message
+        if (message.toPath().isEmpty()) return
+        if (message.toPath()[0] == "删问答") return
         val qaJsonArray = qqGroupEntity.getQaJsonArray()
         for (i in qaJsonArray.indices){
             val jsonObject = qaJsonArray.getJSONObject(i)
-            if (jsonObject.getString("q") in e.message.firstString()){
-                yuq.sendMessage(mf.newGroup(e.message.group!!).plus(mif.at(e.message.qq!!)).plus(jsonObject.getString("a")))
+            if (jsonObject.getString("q") in message.firstString()){
+                yuq.sendMessage(mf.newGroup(message.group!!).plus(jsonObject.getString("a")))
                 return
             }
         }
@@ -68,7 +72,7 @@ class GroupManagerEvent {
                     if (b){
                         e.message.recall()
                         yuq.groups[e.message.group!!]?.members?.get(e.message.qq)?.ban(10 * 60)
-                        yuq.sendMessage(mf.newGroup(e.message.group!!).plus(mif.at(e.message.qq!!)).plus("检测到色情图片，您已被禁言，您当前在本群违规次数："))
+                        yuq.sendMessage(mf.newGroup(e.message.group!!).plus(mif.at(e.message.qq!!)).plus("检测到色情图片，您已被禁言"))
                     }
                 }
             }

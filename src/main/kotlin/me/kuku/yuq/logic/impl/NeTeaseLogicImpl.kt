@@ -63,7 +63,8 @@ class NeTeaseLogicImpl: NeTeaseLogic {
             val resultResponse = OkHttpClientUtils.get(commonResult.t, OkHttpClientUtils.addReferer(url))
             resultResponse.close()
             val cookieMap = OkHttpClientUtils.getCookie(resultResponse, "MUSIC_U", "__csrf")
-            CommonResult(200, "", NeTeaseEntity(null, qqEntity.qq, "", "", cookieMap.getValue("MUSIC_U"), cookieMap.getValue("__csrf")))
+            if (cookieMap.size != 2) CommonResult(500, "没有取到cookie，登录失败，请稍后再试！！")
+            else CommonResult(200, "", NeTeaseEntity(null, qqEntity.qq, "", "", cookieMap.getValue("MUSIC_U"), cookieMap.getValue("__csrf")))
         }else CommonResult(500, commonResult.msg)
     }
 

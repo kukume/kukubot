@@ -34,8 +34,10 @@ class RecallMonitor {
     fun recallEvent(e: GroupRecallEvent){
         val qqGroupEntity = qqGroupService.findByGroup(e.group)
         if (qqGroupEntity?.recall == true) {
+            val whiteJsonArray = qqGroupEntity.getWhiteJsonArray()
             if (e.sender != e.operator) return
             val rm = saves[e.messageId.toString()] ?: return
+            if (rm.qq!!.toString() in whiteJsonArray) return
             yuq.sendMessage(rm.newMessage() + "群成员：" + mif.at(rm.qq!!) + "\n妄图撤回一条消息。\n消息内容为：\n" + rm)
         }
     }

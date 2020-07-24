@@ -7,6 +7,7 @@ import me.kuku.yuq.utils.OkHttpClientUtils
 import okhttp3.Headers
 import java.time.LocalDate
 import java.util.concurrent.TimeUnit
+import kotlin.concurrent.thread
 import kotlin.random.Random
 
 class SuperCuteLogicImpl: SuperCuteLogic {
@@ -133,19 +134,21 @@ class SuperCuteLogicImpl: SuperCuteLogic {
     override fun finishTask(map: Map<String, String>): String {
         val response = OkHttpClientUtils.get("https://qqpet.jwetech.com/api/daily_missions", this.addHeader(map.getValue("token")))
         val jsonArray = OkHttpClientUtils.getJson(response).getJSONArray("missions")
-        jsonArray.forEach {
-            val jsonObject = it as JSONObject
-            if (!jsonObject.getBoolean("taked")){
-                TimeUnit.SECONDS.sleep(4)
-                val id = jsonObject.getInteger("id")
-                OkHttpClientUtils.put("https://qqpet.jwetech.com/api/daily_missions/$id",
-                        headers = this.addHeader(map.getValue("token"))).close()
-                //领取任务
-                OkHttpClientUtils.post("https://qqpet.jwetech.com/api/daily_missions",
-                        OkHttpClientUtils.addJson("{\"missionId\":$id}"), this.addHeader(map.getValue("token"))).close()
+        thread {
+            jsonArray.forEach {
+                val jsonObject = it as JSONObject
+                if (!jsonObject.getBoolean("taked")) {
+                    TimeUnit.SECONDS.sleep(4)
+                    val id = jsonObject.getInteger("id")
+                    OkHttpClientUtils.put("https://qqpet.jwetech.com/api/daily_missions/$id",
+                            headers = this.addHeader(map.getValue("token"))).close()
+                    //领取任务
+                    OkHttpClientUtils.post("https://qqpet.jwetech.com/api/daily_missions",
+                            OkHttpClientUtils.addJson("{\"missionId\":$id}"), this.addHeader(map.getValue("token"))).close()
+                }
             }
         }
-        return "萌宠任务已完成！！！"
+        return "萌宠任务已在后台执行中！！！"
     }
 
     override fun steal(map: Map<String, String>): String {
@@ -154,23 +157,24 @@ class SuperCuteLogicImpl: SuperCuteLogic {
         val myLevel = friendJsonObject.getJSONObject("me").getJSONObject("pet").getInteger("level")
         val jsonArray = friendJsonObject.getJSONArray("friends")
         var status = true
-        var num = 0
-        for (i in jsonArray.indices){
-            val jsonObject = jsonArray.getJSONObject(i)
-            if (jsonObject.getBoolean("hasCoins")){
-                TimeUnit.SECONDS.sleep(4)
-                num += this.receiveCoin(map, jsonObject.getString("id"))
-            }
-            if (jsonObject.getJSONObject("pet").getInteger("level") > myLevel) continue
-            if (!jsonObject.getBoolean("canCapture")) continue
-            if (status){
-                val arrestResponse = OkHttpClientUtils.post("https://qqpet.jwetech.com/api/captures",
-                        OkHttpClientUtils.addJson("{\"userId\":\"${jsonObject.getString("id")}\",\"type\":${Random.nextInt(2)},\"ad\":true}"), this.addHeader(map.getValue("token")))
-                val arrestJsonObject = OkHttpClientUtils.getJson(arrestResponse)
-                if (arrestJsonObject.containsKey("code")) status = false
+        thread {
+            for (i in jsonArray.indices) {
+                val jsonObject = jsonArray.getJSONObject(i)
+                if (jsonObject.getBoolean("hasCoins")) {
+                    TimeUnit.SECONDS.sleep(4)
+                    this.receiveCoin(map, jsonObject.getString("id"))
+                }
+                if (jsonObject.getJSONObject("pet").getInteger("level") > myLevel) continue
+                if (!jsonObject.getBoolean("canCapture")) continue
+                if (status) {
+                    val arrestResponse = OkHttpClientUtils.post("https://qqpet.jwetech.com/api/captures",
+                            OkHttpClientUtils.addJson("{\"userId\":\"${jsonObject.getString("id")}\",\"type\":${Random.nextInt(2)},\"ad\":true}"), this.addHeader(map.getValue("token")))
+                    val arrestJsonObject = OkHttpClientUtils.getJson(arrestResponse)
+                    if (arrestJsonObject.containsKey("code")) status = false
+                }
             }
         }
-        return "偷取金币和抓捕好友已完成，掠夺金币$num"
+        return "偷取金币和抓捕好友已在后台执行中！！"
     }
 
     override fun findCute(map: Map<String, String>): String {

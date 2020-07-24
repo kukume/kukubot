@@ -3,9 +3,6 @@ package me.kuku.yuq.utils
 import com.IceCreamQAQ.Yu.util.IO
 import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.message.MessageItemFactory
-import com.icecreamqaq.yuq.mf
-import com.icecreamqaq.yuq.mif
-import com.icecreamqaq.yuq.yuq
 import java.io.File
 
 
@@ -17,8 +14,4 @@ fun MessageItemFactory.image(byteArray: ByteArray): Image {
     return this.image(file)
 }
 
-fun String.at(qq: Long) = mif.at(qq).plus("\n$this")
-
-fun String.groupMsgAndAt(group: Long, qq: Long) = yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus(this))
-
-fun String.groupMsg(group: Long) = yuq.sendMessage(mf.newGroup(group).plus(this))
+fun StringBuilder.removeSuffixLine() = this.removeSuffix(System.getProperty("line.separator"))

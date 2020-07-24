@@ -8,8 +8,9 @@ import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.message.MessageFactory
 import com.icecreamqaq.yuq.message.MessageItemFactory
-import me.kuku.yuq.dao.SuperCuteDao
 import me.kuku.yuq.logic.SuperCuteLogic
+import me.kuku.yuq.service.QQGroupService
+import me.kuku.yuq.service.SuperCuteService
 import me.kuku.yuq.utils.BotUtils
 import javax.inject.Inject
 
@@ -18,7 +19,9 @@ class SuperCuteController {
     @Inject
     private lateinit var superCuteLogic: SuperCuteLogic
     @Inject
-    private lateinit var superCuteDao: SuperCuteDao
+    private lateinit var superCuteService: SuperCuteService
+    @Inject
+    private lateinit var qqGroupService: QQGroupService
     @Inject
     private lateinit var mif: MessageItemFactory
     @Inject
@@ -27,15 +30,18 @@ class SuperCuteController {
     private lateinit var mf: MessageFactory
 
     @Before
-    fun checkBind(qq: Long, actionContext: BotActionContext){
-        val superCuteEntity = superCuteDao.findByQQ(qq)
-        if (superCuteEntity == null) throw mif.at(qq).plus("没有绑定超级萌宠的token，请先私聊机器人发送[萌宠]进行绑定")
-        else {
-            val commonResult = superCuteLogic.getInfo(superCuteEntity.token)
-            if (commonResult.code == 200){
-                actionContext.session["map"] = commonResult.t
-            }else throw mif.at(qq).plus("超级萌宠的Token已过期，请重新绑定！")
-        }
+    fun checkBind(qq: Long, actionContext: BotActionContext, group: Long){
+        val qqGroupEntity = qqGroupService.findByGroup(group)
+        if (qqGroupEntity?.superCute == true) {
+            val superCuteEntity = superCuteService.findByQQ(qq)
+            if (superCuteEntity == null) throw mif.at(qq).plus("没有绑定超级萌宠的token，请先私聊机器人发送[萌宠]进行绑定")
+            else {
+                val commonResult = superCuteLogic.getInfo(superCuteEntity.token)
+                if (commonResult.code == 200) {
+                    actionContext.session["map"] = commonResult.t
+                } else throw mif.at(qq).plus("超级萌宠的Token已过期，请重新绑定！")
+            }
+        }else throw mif.at(qq).plus("超级萌宠功能已关闭！！")
     }
 
     @Action("萌宠签到")

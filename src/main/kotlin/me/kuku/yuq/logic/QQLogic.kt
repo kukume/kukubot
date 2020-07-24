@@ -2,10 +2,12 @@ package me.kuku.yuq.logic
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind
 import me.kuku.yuq.entity.QQEntity
+import me.kuku.yuq.pojo.CommonResult
+import me.kuku.yuq.pojo.GroupMember
 
 @AutoBind
 interface QQLogic {
-    fun groupSign(qqEntity: QQEntity, group: Long, place: String, text: String, info: String): String
+    fun groupSign(qqEntity: QQEntity, group: Long, place: String, text: String, info: String, url: String? = null): String
     fun groupLottery(qqEntity: QQEntity, group: Long): String
     fun vipSign(qqEntity: QQEntity): String
     fun queryVip(qqEntity: QQEntity): String
@@ -26,7 +28,7 @@ interface QQLogic {
     fun refuseAdd(qqEntity: QQEntity): String
     fun motionSign(qqEntity: QQEntity): String
     fun blueSign(qqEntity: QQEntity): String
-    fun like(qqEntity: QQEntity, qq: Long): String
+    fun like(qqEntity: QQEntity, qq: Long, psKey: String? = null): String
     fun sendFlower(qqEntity: QQEntity, qq: Long, group: Long): String
     fun anotherSign(qqEntity: QQEntity): String
     fun diyBubble(qqEntity: QQEntity, text: String, name: String?): String
@@ -40,4 +42,7 @@ interface QQLogic {
     fun allShutUp(qqEntity: QQEntity, group: Long, isShutUp: Boolean): String
     fun changeName(qqEntity: QQEntity, qq: Long, group: Long, name: String): String
     fun setGroupAdmin(qqEntity: QQEntity, qq: Long, group: Long, isAdmin: Boolean): String
+    fun growthLike(qqEntity: QQEntity): String
+    fun groupMemberInfo(qqEntity: QQEntity, group: Long): CommonResult<List<GroupMember>>
+    fun changePhoneOnline(qqEntity: QQEntity, iMei:String, phone: String): String
 }

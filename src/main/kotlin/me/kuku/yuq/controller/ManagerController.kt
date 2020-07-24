@@ -7,13 +7,18 @@ import com.IceCreamQAQ.Yu.annotation.Config
 import com.alibaba.fastjson.JSONObject
 import com.icecreamqaq.yuq.*
 import com.icecreamqaq.yuq.annotation.GroupController
+import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.entity.Member
+import com.icecreamqaq.yuq.message.Message
+import com.icecreamqaq.yuq.mirai.MiraiBot
 import me.kuku.yuq.entity.QQGroupEntity
 import me.kuku.yuq.service.QQGroupService
 import me.kuku.yuq.utils.BotUtils
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import kotlin.concurrent.thread
 
 @GroupController
 class ManagerController {
@@ -21,16 +26,21 @@ class ManagerController {
     private lateinit var master: String
     @Inject
     private lateinit var qqGroupService: QQGroupService
+    @Inject
+    private lateinit var miraiBot: MiraiBot
 
     @Before
-    fun before(group: Long, qq: Long, actionContext: BotActionContext){
+    fun before(group: Long, qq: Long, actionContext: BotActionContext, message: Message){
         var qqGroupEntity = qqGroupService.findByGroup(group)
         if (qqGroupEntity == null){
             qqGroupEntity = QQGroupEntity(null, group)
             qqGroupService.save(qqGroupEntity)
         }
         actionContext.session["qqGroupEntity"] = qqGroupEntity
-        if (qq != master.toLong()) throw "抱歉，您不是机器人主人，无法执行！！".toMessage()
+        val whiteList = arrayOf("问答", "违规词", "黑名单", "白名单", "重启mirai")
+        if (!whiteList.contains(message.toPath()[0])) {
+            if (qq != master.toLong()) throw "抱歉，您不是机器人主人，无法执行！！".toMessage()
+        }
     }
 
     @Action("机器人 {status}")
@@ -40,11 +50,67 @@ class ManagerController {
         return if (status) "机器人开启成功" else "机器人关闭成功"
     }
 
+    @Action("重启mirai")
+    fun robot(){
+        miraiBot.stop()
+        miraiBot.init()
+        miraiBot.start()
+    }
+
+    @Action("自动审核 {status}")
+    fun autoReview(qqGroupEntity: QQGroupEntity, status: Boolean): String{
+        qqGroupEntity.autoReview = status
+        qqGroupService.save(qqGroupEntity)
+        return if (status) "自动审核开启成功" else "自动审核关闭成功"
+    }
+
+    @Action("#qq {status}")
+    fun qqStatus(qqGroupEntity: QQGroupEntity, status: Boolean): String{
+        qqGroupEntity.qqStatus = status
+        qqGroupService.save(qqGroupEntity)
+        return if (status) "qq功能开启成功" else "qq功能关闭成功"
+    }
+
+    @Action("欢迎语 {status}")
+    fun welcome(qqGroupEntity: QQGroupEntity, status: Boolean): String{
+        qqGroupEntity.welcomeMsg = status
+        qqGroupService.save(qqGroupEntity)
+        return if (status) "欢迎语开启成功" else "欢迎语关闭成功"
+    }
+
+    @Action("萌宠 {status}")
+    fun superCute(qqGroupEntity: QQGroupEntity, status: Boolean): String{
+        qqGroupEntity.superCute = status
+        qqGroupService.save(qqGroupEntity)
+        return if (status) "萌宠功能开启成功" else "萌宠功能关闭成功"
+    }
+
+    @Action("通知")
+    fun allNotice(group: Long, qq: Long, session: ContextSession): String{
+        yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("请输入您要通知的内容！！"))
+        val noticeMessage = session.waitNextMessage(30 * 1000)
+        val members = yuq.groups[group]?.members
+        thread {
+            for (k in members!!) {
+                TimeUnit.SECONDS.sleep(2)
+                yuq.sendMessage(mf.newTemp(group, k.key).plus(noticeMessage))
+            }
+        }
+        return "通知将在后台运行中，消息包含图片、At等可能会通知不成功！！"
+    }
+
     @Action("退群拉黑 {status}")
     fun leaveGroupBlack(qqGroupEntity: QQGroupEntity, status: Boolean): String{
         qqGroupEntity.leaveGroupBlack = status
         qqGroupService.save(qqGroupEntity)
         return if (status) "退群拉黑已开启！！" else "退群拉黑已关闭！！"
+    }
+
+    @Action("#嘴臭 {status}")
+    fun mouthOdor(qqGroupEntity: QQGroupEntity, status: Boolean): String{
+        qqGroupEntity.mouthOdor = status
+        qqGroupService.save(qqGroupEntity)
+        return if (status) "嘴臭（祖安语录）已开启！！" else "嘴臭（祖安语录）已关闭！！"
     }
 
     @Action("鉴黄 {open}")
@@ -54,9 +120,20 @@ class ManagerController {
         return if (open) "鉴黄已开启！！" else "鉴黄已关闭！！"
     }
 
-    @Action("禁言 {member} {time}")
-    fun shutUp(group: Long, member: Member, time: Int): String{
-        yuq.groups[group]?.get(member.id)?.ban(time * 60)
+    @Action("禁言 {member}")
+    fun shutUp(group: Long, member: Member, @PathVar(2) timeStr: String?): String{
+        val time = if (timeStr == null) 0
+        else {
+            val num = timeStr.substring(0, timeStr.length - 1).toInt()
+            when (timeStr[timeStr.length - 1]) {
+                's' -> num
+                'm' -> num * 60
+                'h' -> num * 60 * 60
+                'd' -> num * 60 * 60 * 24
+                else -> return "禁言时间格式不正确"
+            }
+        }
+        yuq.groups[group]?.get(member.id)?.ban(time)
         return "禁言成功！！"
     }
 
@@ -68,20 +145,20 @@ class ManagerController {
 
     @Action("{act}违规词/{key}")
     fun addKey(key: String, act: String, qqGroupEntity: QQGroupEntity): String?{
-        var keyword = qqGroupEntity.keyword
+        val keywordJsonArray = qqGroupEntity.getKeywordJsonArray()
         val msg = when (act) {
             "加" -> {
-                keyword = this.add(keyword, key)
+                keywordJsonArray.add(key)
                 "加违规词成功！！"
             }
             "去" -> {
-                keyword = this.del(keyword, key)
+                keywordJsonArray.remove(key)
                 "去违规词成功！！"
             }
             else -> null
         }
         return if (msg != null) {
-            qqGroupEntity.keyword = keyword
+            qqGroupEntity.keyword = keywordJsonArray.toString()
             qqGroupService.save(qqGroupEntity)
             msg
         }else null
@@ -89,9 +166,9 @@ class ManagerController {
 
     @Action("加黑 {member}")
     fun addBlack(member: Member, qqGroupEntity: QQGroupEntity, group: Long): String{
-        var black = qqGroupEntity.blackList
-        black = this.add(black, member.id.toString())
-        qqGroupEntity.blackList = black
+        val blackJsonArray = qqGroupEntity.getBlackJsonArray()
+        blackJsonArray.add(member.id.toString())
+        qqGroupEntity.blackList = blackJsonArray.toString()
         qqGroupService.save(qqGroupEntity)
         this.kick(member, group)
         return "加黑名单成功！！"
@@ -99,33 +176,57 @@ class ManagerController {
 
     @Action("去黑 {qqStr}")
     fun delBlack(qqStr: String, qqGroupEntity: QQGroupEntity): String{
-        var black = qqGroupEntity.blackList
-        black = this.del(black, qqStr)
-        qqGroupEntity.blackList = black
+        val blackJsonArray = qqGroupEntity.getBlackJsonArray()
+        blackJsonArray.remove(qqStr)
+        qqGroupEntity.blackList = blackJsonArray.toString()
         qqGroupService.save(qqGroupEntity)
         return "删除黑名单成功！！"
     }
 
     @Action("黑名单")
     fun blackList(qqGroupEntity: QQGroupEntity): String{
-        val keyword = qqGroupEntity.blackList.split("|")
+        val blackJsonArray = qqGroupEntity.getBlackJsonArray()
         val sb = StringBuilder("本群黑名单如下：\r\n")
-        keyword.forEach {
-            if (it != ""){
-                sb.appendln(it)
-            }
+        blackJsonArray.forEach {
+            sb.appendln(it)
+        }
+        return sb.removeSuffix("\r\n").toString()
+    }
+
+    @Action("加白 {member}")
+    fun addWhite(member: Member, qqGroupEntity: QQGroupEntity): String{
+        val whiteJsonArray = qqGroupEntity.getWhiteJsonArray()
+        whiteJsonArray.add(member.id.toString())
+        qqGroupEntity.whiteList = whiteJsonArray.toString()
+        qqGroupService.save(qqGroupEntity)
+        return "加白名单成功！！"
+    }
+
+    @Action("去白 {qqStr}")
+    fun delWhite(qqStr: String, qqGroupEntity: QQGroupEntity): String{
+        val whiteJsonArray = qqGroupEntity.getWhiteJsonArray()
+        whiteJsonArray.remove(qqStr)
+        qqGroupEntity.whiteList = whiteJsonArray.toString()
+        qqGroupService.save(qqGroupEntity)
+        return "删除白名单成功！！"
+    }
+
+    @Action("白名单")
+    fun whiteList(qqGroupEntity: QQGroupEntity): String{
+        val whiteJsonArray = qqGroupEntity.getWhiteJsonArray()
+        val sb = StringBuilder("本群白名单如下：\r\n")
+        whiteJsonArray.forEach {
+            sb.appendln(it)
         }
         return sb.removeSuffix("\r\n").toString()
     }
 
     @Action("违规词")
     fun keywords(qqGroupEntity: QQGroupEntity): String{
-        val keyword = qqGroupEntity.keyword.split("|")
+        val keywordJsonArray = qqGroupEntity.getKeywordJsonArray()
         val sb = StringBuilder("本群违规词如下：\n")
-        keyword.forEach {
-            if (it != ""){
-                sb.appendln(it)
-            }
+        keywordJsonArray.forEach {
+            sb.appendln(it)
         }
         return sb.removeSuffix("\r\n").toString()
     }
@@ -218,19 +319,4 @@ class ManagerController {
 
     @After
     fun finally(actionContext: BotActionContext) = BotUtils.addAt(actionContext)
-
-    /**
-     * 修改参数
-     */
-    private fun add(oldKey: String,  key: String) = "$oldKey$key|"
-
-    private fun del(oldKey: String,  key: String): String{
-        val list = oldKey.split("|")
-        for (k in list){
-            if (k == key){
-                return oldKey.replace("$k|", "")
-            }
-        }
-        return oldKey
-    }
 }

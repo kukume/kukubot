@@ -16,6 +16,7 @@
 安装教程：[https://blog.kuku.me/index.php/archives/3/](https://blog.kuku.me/index.php/archives/3/)
 
 ## 说明
+* 机器人使用之前必须发送`机器人 开`才能开启机器人
 * 数据库使用h2，目录`db`下
 * 发送的图片保存在`images`目录下
 * 步数修改使用lexin运动的接口

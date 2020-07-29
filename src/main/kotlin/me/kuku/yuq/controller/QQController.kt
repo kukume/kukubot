@@ -8,7 +8,6 @@ import com.icecreamqaq.yuq.YuQ
 import com.icecreamqaq.yuq.annotation.*
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.ContextSession
-import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.firstString
 import com.icecreamqaq.yuq.message.*
 import me.kuku.yuq.entity.NeTeaseEntity
@@ -227,22 +226,19 @@ class QQController {
         return qqMailLogic.fileRenew(qqEntity)
     }
 
-    @Action("好友")
-    fun addFriend(qqEntity: QQEntity, @PathVar(1) qqStr: String?, @PathVar(2) msg: String?, @PathVar(3) realName: String?, @PathVar(4) groupName: String?): String{
-        return if (qqStr != null){
-            var qMsg = ""
-            if (msg != null) qMsg = msg
-            qqZoneLogic.addFriend(qqEntity, qqStr.toLong(), qMsg, realName, groupName)
-        }else "缺少参数，[qq号][验证消息（可选）][备注（可选）][分组名（可选）]"
+    @Action("好友 {qqNo}")
+    fun addFriend(qqEntity: QQEntity, qqNo: Long, @PathVar(2) msg: String?, @PathVar(3) realName: String?, @PathVar(4) groupName: String?): String{
+        return qqZoneLogic.addFriend(qqEntity, qqNo, msg ?: "", realName, groupName)
     }
 
-    @Action("复制 {qqStr}")
-    fun copyAvatar(qqStr: String, qqEntity: QQEntity): String{
-        val url = "https://q.qlogo.cn/g?b=qq&nk=${qqStr}&s=640"
+    @Action("复制 {qqNo}")
+    fun copyAvatar(qqNo: Long, qqEntity: QQEntity): String{
+        val url = "https://q.qlogo.cn/g?b=qq&nk=${qqNo}&s=640"
         return qqLogic.modifyAvatar(qqEntity, url)
     }
 
     @Action("删除qq")
+    @Synonym(["删除QQ"])
     fun delQQ(qqEntity: QQEntity): String{
         qqService.delByQQ(qqEntity.qq)
         return "删除QQ成功！！！"
@@ -261,19 +257,9 @@ class QQController {
         }else "获取群列表失败，请更新QQ！！"
     }
 
-    @Action("加管 {member}")
-    fun addAdmin(member: Member, qqEntity: QQEntity, group: Long) =
-            qqLogic.setGroupAdmin(qqEntity, member.id, group, true)
-
-
-    @Action("互赞")
-    fun like(qq: Long): String{
-        val list = qqService.findByActivity()
-        list.forEach {
-            qqLogic.like(it, qq)
-        }
-        return "点名片赞成功！！"
-    }
+    @Action("加管 {qqNo}")
+    fun addAdmin(qqNo: Long, qqEntity: QQEntity, group: Long) =
+            qqLogic.setGroupAdmin(qqEntity, qqNo, group, true)
 
     @Action("#步数/{step}")
     fun step(qqEntity: QQEntity, qq: Long, step: Int, group: Long): String{

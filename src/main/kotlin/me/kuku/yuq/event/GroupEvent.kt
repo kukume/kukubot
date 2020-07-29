@@ -63,16 +63,26 @@ class GroupEvent {
 
     @Event
     fun groupMemberLeave(e: GroupMemberLeaveEvent){
+        daoService.delQQ(e.member.id)
         val qqGroupEntity = qqGroupService.findByGroup(e.group.id) ?: return
         val msg = if (qqGroupEntity.leaveGroupBlack == true) {
             val blackJsonArray = qqGroupEntity.getBlackJsonArray()
             blackJsonArray.add(e.member.id.toString())
             qqGroupEntity.blackList = blackJsonArray.toString()
             qqGroupService.save(qqGroupEntity)
-            daoService.delQQ(e.member.id)
             "刚刚，${e.member.name}退群了，已加入本群黑名单！！"
         }else "刚刚，${e.member.name}离开了我们！！"
         yuq.sendMessage(mf.newGroup(e.group.id).plus(msg))
+    }
+
+    @Event
+    fun groupMemberKick(e: GroupMemberKickEvent){
+        val qqGroupEntity = qqGroupService.findByGroup(e.group.id) ?: return
+        val blackJsonArray = qqGroupEntity.getBlackJsonArray()
+        blackJsonArray.add(e.member.id.toString())
+        qqGroupEntity.blackList = blackJsonArray.toString()
+        qqGroupService.save(qqGroupEntity)
+        daoService.delQQ(e.member.id)
     }
 
     @Event

@@ -1,17 +1,15 @@
 package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.Action
-import com.IceCreamQAQ.Yu.annotation.After
 import com.IceCreamQAQ.Yu.annotation.Config
 import com.IceCreamQAQ.Yu.annotation.Synonym
 import com.icecreamqaq.yuq.YuQ
 import com.icecreamqaq.yuq.annotation.*
-import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.firstString
 import com.icecreamqaq.yuq.message.*
 import com.icecreamqaq.yuq.toMessage
-import io.ktor.http.encodeURLPath
+import me.kuku.yuq.logic.PiXivLogic
 import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.service.QQGroupService
 import me.kuku.yuq.utils.BotUtils
@@ -33,23 +31,30 @@ class ToolController {
     private lateinit var mf: MessageFactory
     @Inject
     private lateinit var yuq: YuQ
+    @Inject
+    private lateinit var piXivLogic: PiXivLogic
     @Config("YuQ.Mirai.user.qq")
     private lateinit var qq: String
 
+    @QMsg(at = true)
     @Action("百度/{content}")
     fun teachYouBaidu(content: String) =
         "点击以下链接即可教您使用百度搜索“$content”\n${BotUtils.shortUrl("https://u.iheit.com/baidu/index.html?${URLEncoder.encode(content, "utf-8")}")}"
 
+    @QMsg(at = true)
     @Action("谷歌/{content}")
     fun teachYouGoogle(content: String) =
         "点击以下链接即可教您使用谷歌搜索“$content”\n${BotUtils.shortUrl("https://u.iheit.com/google/index.html?${URLEncoder.encode(content, "utf-8")}")}"
 
+    @QMsg(at = true)
     @Action("舔狗日记")
     fun dogLicking() = toolLogic.dogLicking()
 
+    @QMsg(at = true)
     @Action("百科/{params}")
     fun baiKe(params: String) = toolLogic.baiKe(params)
 
+    @QMsg(at = true)
     @Action("嘴臭")
     @Synonym(["祖安语录"])
     fun mouthOdor(group: Long): String {
@@ -58,11 +63,17 @@ class ToolController {
         return toolLogic.mouthOdor()
     }
 
+    @QMsg(at = true)
     @Action("毒鸡汤")
     fun poisonousChickenSoup() = toolLogic.poisonousChickenSoup()
 
+    @QMsg(at = true)
     @Action("名言")
     fun saying() = toolLogic.saying()
+
+    @QMsg(at = true)
+    @Action("一言")
+    fun hiToKoTo() = toolLogic.hiToKoTo().getValue("text")
 
     @Action("缩短/{params}")
     fun shortUrl(params: String) = BotUtils.shortUrl(params)
@@ -79,21 +90,23 @@ class ToolController {
     @Action("知乎日报")
     fun zhiHuDaily() = toolLogic.zhiHuDaily()
 
+    @QMsg(at = true)
     @Action("测吉凶")
     fun qqGodLock(qq: Long) = toolLogic.qqGodLock(qq)
 
+    @QMsg(at = true)
     @Action("拼音/{params}")
     fun convertPinYin(params: String) = toolLogic.convertPinYin(params)
 
+    @QMsg(at = true)
     @Action("笑话")
     fun jokes() = toolLogic.jokes()
 
+    @QMsg(at = true)
     @Action("垃圾/{params}")
     fun rubbish(params: String) = toolLogic.rubbish(params)
 
-    @Action("历史上的今天")
-    fun historyToday() = mif.text(toolLogic.historyToday())
-
+    @QMsg(at = true)
     @Action("转{str}")
     fun translate(str: String, session: ContextSession, group: Long, qq: Long): String{
         val map = mapOf("英" to "en", "中" to "zh", "日" to "jp", "韩" to "kor",
@@ -118,7 +131,7 @@ class ToolController {
     fun ping(domain: String) = toolLogic.ping(domain)
 
     @Action("\\.*\\")
-    @QMsg(reply = true)
+    @QMsg(reply = true, at = true)
     fun js(message: Message): String?{
         val body = message.body
         val at = body[0]
@@ -132,11 +145,18 @@ class ToolController {
     }
 
     @Action("涩图")
-    fun colorPic(group: Long, qq: Long): Message {
+    fun colorPic(group: Long, qq: Long): Message? {
         val qqGroupEntity = qqGroupService.findByGroup(group)
         if (qqGroupEntity?.colorPic != true) return "该功能已关闭".toMessage()
-        yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("请稍后~~~~"))
-        return mif.image(toolLogic.colorPic()).toMessage()
+        return when (qqGroupEntity.colorPicType){
+            "local" -> mif.image(toolLogic.colorPic()).toMessage()
+            "remote" -> {
+                val url = piXivLogic.bookMarks("13070512", "51918341_vhV0yUgHJVaJHaTH0zcREYiIOeDIokQq")
+                val bytes = piXivLogic.getImage(url)
+                mif.image(bytes).toMessage()
+            }
+            else -> null
+        }
     }
 
     @Action("点歌/{name}")
@@ -169,8 +189,9 @@ class ToolController {
     @Action("看美女")
     fun girl() = mif.image(toolLogic.girlImage())
 
+    @QMsg(at = true)
     @Action("蓝奏/{url}")
-    fun lanZou(url: String) = BotUtils.shortUrl("https://api.iheit.com/lanZou?url=${url.encodeURLPath()}")
+    fun lanZou(url: String) = BotUtils.shortUrl("https://api.iheit.com/lanZou?url=${URLEncoder.encode(url, "utf-8")}")
 
     @Action("lol周免")
     fun lolFree() = toolLogic.lolFree()
@@ -178,6 +199,10 @@ class ToolController {
     @Action("缩写/{content}")
     fun abbreviation(content: String) = toolLogic.abbreviation(content)
 
-    @After
-    fun finally(actionContext: BotActionContext) = BotUtils.addAt(actionContext)
+    @Action("几点了")
+    @Synonym(["多久了", "时间"])
+    fun time() = mif.image(toolLogic.queryTime())
+
+    @Action("网抑")
+    fun wy() = mif.xmlEx(1, "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID=\"1\" templateID=\"-1\" action=\"app\" actionData=\"com.netease.cloudmusic\" brief=\"点击启动网抑\" sourceMsgId=\"0\" url=\"http://y-8.top\" flag=\"2\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"12\" advertiser_id=\"0\" aid=\"0\"><picture cover=\"https://imgurl.cloudimg.cc/2020/07/26/2a7410726090854.jpg\" w=\"0\" h=\"0\" /><title>启动网抑音乐</title></item><source name=\"今天你网抑了吗\" icon=\"\" action=\"\" appid=\"0\" /></msg>")
 }

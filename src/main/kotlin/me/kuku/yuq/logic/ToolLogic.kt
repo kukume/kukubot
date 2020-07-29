@@ -35,4 +35,6 @@ interface ToolLogic {
     fun girlImage(): String
     fun lolFree(): String
     fun abbreviation(content: String): String
+    fun queryTime(): ByteArray
+    fun queryVersion(): String
 }

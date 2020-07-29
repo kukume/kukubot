@@ -4,21 +4,25 @@ import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.After
 import com.IceCreamQAQ.Yu.annotation.Before
 import com.IceCreamQAQ.Yu.annotation.Config
+import com.IceCreamQAQ.Yu.util.IO
 import com.alibaba.fastjson.JSONObject
 import com.icecreamqaq.yuq.*
 import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.ContextSession
-import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.mirai.MiraiBot
 import me.kuku.yuq.entity.QQGroupEntity
+import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.service.QQGroupService
 import me.kuku.yuq.utils.BotUtils
+import me.kuku.yuq.utils.OkHttpClientUtils
+import java.io.File
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.concurrent.thread
+import kotlin.system.exitProcess
 
 @GroupController
 class ManagerController {
@@ -28,6 +32,11 @@ class ManagerController {
     private lateinit var qqGroupService: QQGroupService
     @Inject
     private lateinit var miraiBot: MiraiBot
+    @Inject
+    private lateinit var toolLogic: ToolLogic
+
+
+    private val version = "v1.3.4-beta"
 
     @Before
     fun before(group: Long, qq: Long, actionContext: BotActionContext, message: Message){
@@ -37,7 +46,7 @@ class ManagerController {
             qqGroupService.save(qqGroupEntity)
         }
         actionContext.session["qqGroupEntity"] = qqGroupEntity
-        val whiteList = arrayOf("问答", "违规词", "黑名单", "白名单", "重启mirai")
+        val whiteList = arrayOf("问答", "违规词", "黑名单", "白名单")
         if (!whiteList.contains(message.toPath()[0])) {
             if (qq != master.toLong()) throw "抱歉，您不是机器人主人，无法执行！！".toMessage()
         }
@@ -50,11 +59,51 @@ class ManagerController {
         return if (status) "机器人开启成功" else "机器人关闭成功"
     }
 
+    @Action("开关")
+    fun kai(qqGroupEntity: QQGroupEntity): String{
+        val sb = StringBuilder("本群开关情况如下：\n")
+        sb.appendln("音乐：${qqGroupEntity.musicType}")
+        sb.appendln("色图：" + this.boolToStr(qqGroupEntity.colorPic))
+        sb.appendln("鉴黄：" + this.boolToStr(qqGroupEntity.pic))
+        sb.appendln("嘴臭：" + this.boolToStr(qqGroupEntity.mouthOdor))
+        sb.appendln("欢迎语：" + this.boolToStr(qqGroupEntity.welcomeMsg))
+        sb.appendln("qq功能：" + this.boolToStr(qqGroupEntity.qqStatus))
+        sb.appendln("退群拉黑：" + this.boolToStr(qqGroupEntity.leaveGroupBlack))
+        sb.appendln("萌宠功能：" + this.boolToStr(qqGroupEntity.superCute))
+        sb.appendln("自动审核：" + this.boolToStr(qqGroupEntity.autoReview))
+        sb.appendln("撤回通知：" + this.boolToStr(qqGroupEntity.recall))
+        sb.append("整点报时：" + this.boolToStr(qqGroupEntity.onTimeAlarm))
+        return sb.toString()
+    }
+
     @Action("重启mirai")
     fun robot(){
         miraiBot.stop()
         miraiBot.init()
         miraiBot.start()
+    }
+
+    @Action("涩图切换 {type}")
+    fun colorPicType(qqGroupEntity: QQGroupEntity, type: String): String?{
+        var colorPicType = qqGroupEntity.colorPicType
+        var status = true
+        when (type){
+            "本地" -> colorPicType = "local"
+            "远程" -> colorPicType = "remote"
+            else -> status = false
+        }
+        return if (status){
+            qqGroupEntity.colorPicType = colorPicType
+            qqGroupService.save(qqGroupEntity)
+            "涩图切换${type}成功"
+        }else null
+    }
+
+    @Action("整点报时 {status}")
+    fun onTimeAlarm(qqGroupEntity: QQGroupEntity, status: Boolean): String{
+        qqGroupEntity.onTimeAlarm = status
+        qqGroupService.save(qqGroupEntity)
+        return if (status) "整点报时开启成功" else "整点报时关闭成功"
     }
 
     @Action("自动审核 {status}")
@@ -120,8 +169,8 @@ class ManagerController {
         return if (open) "鉴黄已开启！！" else "鉴黄已关闭！！"
     }
 
-    @Action("禁言 {member}")
-    fun shutUp(group: Long, member: Member, @PathVar(2) timeStr: String?): String{
+    @Action("禁言 {qqNo}")
+    fun shutUp(group: Long, qqNo: Long, @PathVar(2) timeStr: String?): String{
         val time = if (timeStr == null) 0
         else {
             val num = timeStr.substring(0, timeStr.length - 1).toInt()
@@ -133,13 +182,13 @@ class ManagerController {
                 else -> return "禁言时间格式不正确"
             }
         }
-        yuq.groups[group]?.get(member.id)?.ban(time)
+        yuq.groups[group]?.get(qqNo)?.ban(time)
         return "禁言成功！！"
     }
 
-    @Action("t {member}")
-    fun kick(member: Member, group: Long): String{
-        yuq.groups[group]?.get(member.id)?.kick()
+    @Action("t {qqNo}")
+    fun kick(qqNo: Long, group: Long): String{
+        yuq.groups[group]?.get(qqNo)?.kick()
         return "踢出成功！！"
     }
 
@@ -164,20 +213,22 @@ class ManagerController {
         }else null
     }
 
-    @Action("加黑 {member}")
-    fun addBlack(member: Member, qqGroupEntity: QQGroupEntity, group: Long): String{
+    @Action("加黑 {qqNo}")
+    fun addBlack(qqNo: Long, qqGroupEntity: QQGroupEntity, group: Long): String{
         val blackJsonArray = qqGroupEntity.getBlackJsonArray()
-        blackJsonArray.add(member.id.toString())
+        blackJsonArray.add(qqNo.toString())
         qqGroupEntity.blackList = blackJsonArray.toString()
         qqGroupService.save(qqGroupEntity)
-        this.kick(member, group)
+        val members = yuq.groups[group]?.members
+        if (members!!.containsKey(qqNo))
+            this.kick(qqNo, group)
         return "加黑名单成功！！"
     }
 
-    @Action("去黑 {qqStr}")
-    fun delBlack(qqStr: String, qqGroupEntity: QQGroupEntity): String{
+    @Action("去黑 {qqNo}")
+    fun delBlack(qqNo: Long, qqGroupEntity: QQGroupEntity): String{
         val blackJsonArray = qqGroupEntity.getBlackJsonArray()
-        blackJsonArray.remove(qqStr)
+        blackJsonArray.remove(qqNo.toString())
         qqGroupEntity.blackList = blackJsonArray.toString()
         qqGroupService.save(qqGroupEntity)
         return "删除黑名单成功！！"
@@ -193,19 +244,19 @@ class ManagerController {
         return sb.removeSuffix("\r\n").toString()
     }
 
-    @Action("加白 {member}")
-    fun addWhite(member: Member, qqGroupEntity: QQGroupEntity): String{
+    @Action("加白 {qqNo}")
+    fun addWhite(qqNo: Long, qqGroupEntity: QQGroupEntity): String{
         val whiteJsonArray = qqGroupEntity.getWhiteJsonArray()
-        whiteJsonArray.add(member.id.toString())
+        whiteJsonArray.add(qqNo.toString())
         qqGroupEntity.whiteList = whiteJsonArray.toString()
         qqGroupService.save(qqGroupEntity)
         return "加白名单成功！！"
     }
 
-    @Action("去白 {qqStr}")
-    fun delWhite(qqStr: String, qqGroupEntity: QQGroupEntity): String{
+    @Action("去白 {qqNo}")
+    fun delWhite(qqNo: Long, qqGroupEntity: QQGroupEntity): String{
         val whiteJsonArray = qqGroupEntity.getWhiteJsonArray()
-        whiteJsonArray.remove(qqStr)
+        whiteJsonArray.remove(qqNo.toString())
         qqGroupEntity.whiteList = whiteJsonArray.toString()
         qqGroupService.save(qqGroupEntity)
         return "删除白名单成功！！"
@@ -317,6 +368,26 @@ class ManagerController {
         return "没有找到该问答，请检查！！！"
     }
 
+    @Action("检查更新")
+    fun checkUpdate(group: Long): String{
+        val gitVersion = toolLogic.queryVersion()
+        val sb = StringBuilder()
+        sb.appendln("当前程序版本：$version")
+        sb.appendln("最新程序版本：$gitVersion")
+        if (gitVersion > version){
+            sb.append("发现程序可更新，正在下载中！！！")
+            yuq.sendMessage(mf.newGroup(group).plus(sb.toString()))
+            val response = OkHttpClientUtils.get("https://u.iheit.com/kuku/bot/kukubot.jar")
+            val bytes = OkHttpClientUtils.getBytes(response)
+            IO.writeFile(File("${System.getProperty("user.dir")}${File.separator}kukubot.jar"), bytes)
+            yuq.sendMessage(mf.newGroup(group).plus("更新完成，请前往控制台手动启动程序！！"))
+            exitProcess(0)
+        }else sb.append("暂未发现需要更新")
+        return sb.toString()
+    }
+
     @After
     fun finally(actionContext: BotActionContext) = BotUtils.addAt(actionContext)
+
+    private fun boolToStr(b: Boolean?) = if (b == true) "开" else "关"
 }

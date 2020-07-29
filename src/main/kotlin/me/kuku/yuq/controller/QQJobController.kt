@@ -37,8 +37,8 @@ class QQJobController {
         }
     }
 
-    @Action("\\群签到(开|关)\\")
-    fun groupSignOpen(@PathVar(0) text: String, qq: Long, qqEntity: QQEntity): String{
+    @Action("群签到 {status}")
+    fun groupSignOpen(status: Boolean, qq: Long, qqEntity: QQEntity): String{
         var qqJobEntity = qqJobService.findByQQAndType(qq, "groupSign")
         if (qqJobEntity == null){
             val jsonObject = JSONObject()
@@ -54,10 +54,10 @@ class QQJobController {
             qqJobEntity = QQJobEntity(null, qq, "groupSign", jsonObject.toString())
         }
         val jsonObject = qqJobEntity.getJsonObject()
-        jsonObject["status"] = text[3] == '开'
+        jsonObject["status"] = status
         qqJobEntity.data = jsonObject.toString()
         qqJobService.save(qqJobEntity)
-        return "群签到定时任务已${if (jsonObject.getBoolean("status")) "开启" else "关闭"}"
+        return "群签到定时任务已${if (status) "开启" else "关闭"}"
     }
 
     @Action("\\删?群排除\\")
@@ -84,8 +84,8 @@ class QQJobController {
         }else "修改失败"
     }
 
-    @Action("\\秒赞(开|关)\\")
-    fun mzOpen(qq: Long, @PathVar(0) text: String): String{
+    @Action("秒赞 {status}")
+    fun mzOpen(qq: Long, status: Boolean): String{
         var qqJobEntity = qqJobService.findByQQAndType(qq, "mz")
         if (qqJobEntity == null){
             val jsonObject = JSONObject()
@@ -93,10 +93,10 @@ class QQJobController {
             qqJobEntity = QQJobEntity(null, qq, "mz", jsonObject.toString())
         }
         val jsonObject = qqJobEntity.getJsonObject()
-        jsonObject["status"] = text[2] == '开'
+        jsonObject["status"] = status
         qqJobEntity.data = jsonObject.toString()
         qqJobService.save(qqJobEntity)
-        return "秒赞已${if (jsonObject.getBoolean("status")) "开启" else "关闭"}"
+        return "秒赞已${if (status) "开启" else "关闭"}"
     }
 
     @Action("百变气泡/{text}")

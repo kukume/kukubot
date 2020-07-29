@@ -7,7 +7,6 @@ import com.IceCreamQAQ.Yu.util.OkHttpWebImpl
 import com.icecreamqaq.yuq.annotation.*
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.ContextSession
-import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.firstString
 import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.message.Message
@@ -19,6 +18,7 @@ import me.kuku.yuq.logic.QQGroupLogic
 import me.kuku.yuq.logic.QQLogic
 import me.kuku.yuq.logic.QQZoneLogic
 import me.kuku.yuq.logic.ToolLogic
+import me.kuku.yuq.service.QQGroupService
 import me.kuku.yuq.utils.removeSuffixLine
 import java.util.*
 import javax.inject.Inject
@@ -40,6 +40,8 @@ class BotController {
     private lateinit var qqGroupLogic: QQGroupLogic
     @Inject
     private lateinit var qqZoneLogic: QQZoneLogic
+    @Inject
+    private lateinit var qqGroupService: QQGroupService
 
     @Before
     fun before(qq: Long, message: Message, actionContext: BotActionContext) {
@@ -68,9 +70,9 @@ class BotController {
         qqLogic.groupSign(qqEntity, group, "你猜", "mirai在线签到！！！", "{\"category_id\":\"\",\"page\":\"\",\"pic_id\":\"\"}", img.url)
     }
 
-    @Action("拉 {qqStr}")
-    fun addGroupMember(qqStr: String, group: Long) =
-            qqGroupLogic.addGroupMember(qqStr.toLong(), group)
+    @Action("拉 {qqNo}")
+    fun addGroupMember(qqNo: Long, group: Long) =
+            qqGroupLogic.addGroupMember(qqNo, group)
 
 
     @Action("列出{day}天未发言")
@@ -89,10 +91,39 @@ class BotController {
             yuq.sendMessage(mf.newGroup(group).plus(sb.removeSuffixLine().toString()))
             val nextMessage = session.waitNextMessage(30 * 1000)
             return if (nextMessage.firstString() == "一键踢出" && qq.toString() == master) {
-                qqList.forEach { yuq.groups[group]?.get(it)?.kick() }
+                val whiteList = qqGroupService.findByGroup(group)?.whiteList ?: "查询群失败，踢出失败！！"
+                qqList.forEach {
+                    if (it.toString() in whiteList) return@forEach
+                    yuq.groups[group]?.get(it)?.kick()
+                }
                 "踢出成功！！"
             } else null
         } else return commonResult.msg
+    }
+
+    @Action("列出从未发言")
+    fun neverSpeak(group: Long, session: ContextSession, qqEntity: QQEntity, qq: Long): String?{
+        val commonResult = qqLogic.groupMemberInfo(qqEntity, group)
+        val list = commonResult.t ?: return commonResult.msg
+        val qqList = mutableListOf<Long>()
+        val sb = StringBuilder("本群从未发言的成员如下：\n")
+        list.forEach {
+            if ((it.lastTime == it.joinTime || it.integral <= 1) && (Date().time - it.joinTime > 1000 * 60 * 60 * 24)) {
+                sb.appendln(it.qq)
+                qqList.add(it.qq)
+            }
+        }
+        yuq.sendMessage(mf.newGroup(group).plus(sb.removeSuffixLine().toString()))
+        val nextMessage = session.waitNextMessage(40 * 1000)
+        return if (nextMessage.firstString() == "一键踢出" && qq.toString() == master) {
+            val whiteList = qqGroupService.findByGroup(group)?.whiteList ?: "查询群失败，踢出失败！！"
+            qqList.forEach {
+                if (it.toString() in whiteList) return@forEach
+                yuq.groups[group]?.get(it)?.kick()
+            }
+            qqList.forEach { yuq.groups[group]?.get(it)?.kick() }
+            "踢出成功！！"
+        } else null
     }
 
     @QMsg(at = true)
@@ -117,12 +148,16 @@ class BotController {
     @Action("群文件")
     fun groupFile(@PathVar(1) fileName: String?, group: Long, qqEntity: QQEntity) = qqLogic.groupFileUrl(qqEntity, group, fileName)
 
+    @Action("删群文件 {fileName}")
+    fun delGroupFile(@PathVar(2) folderName: String?, fileName: String, group: Long, qqEntity: QQEntity) =
+            qqLogic.removeGroupFile(qqEntity, group, fileName, folderName)
+
     @Action("全体禁言 {status}")
     fun allShutUp(group: Long, status: Boolean, qqEntity: QQEntity) = qqLogic.allShutUp(qqEntity, group, status)
 
     @QMsg(at = true)
-    @Action("改 {member} {name}")
-    fun changeName(member: Member, group: Long, name: String, qqEntity: QQEntity) = qqLogic.changeName(qqEntity, member.id, group, name)
+    @Action("改 {qqNo} {name}")
+    fun changeName(qqNo: Long, group: Long, name: String, qqEntity: QQEntity) = qqLogic.changeName(qqEntity, qqNo, group, name)
 
     @Action("天气/{local}")
     fun weather(local: String, qqEntity: QQEntity): Message {
@@ -163,8 +198,8 @@ class BotController {
         }else mif.text(commonResult.msg).toMessage()
     }
 
-    @Action("加个好友 {qqStr}")
-    fun addFriend(qqEntity: QQEntity, qqStr: String) =
-        qqZoneLogic.addFriend(qqEntity, qqStr.toLong(), "机器人加你需要理由？？", null, null)
+    @Action("加个好友 {qqNo}")
+    fun addFriend(qqEntity: QQEntity, qqNo: Long) =
+        qqZoneLogic.addFriend(qqEntity, qqNo, "机器人加你需要理由？？", null, null)
 
 }

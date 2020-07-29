@@ -7,9 +7,12 @@ import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.OkHttpClientUtils
+import me.kuku.yuq.utils.removeSuffixLine
 import org.jsoup.Jsoup
 import java.net.URLEncoder
 import java.nio.charset.Charset
+import java.text.SimpleDateFormat
+import java.util.*
 import kotlin.random.Random
 
 class ToolLogicImpl: ToolLogic {
@@ -46,7 +49,7 @@ class ToolLogicImpl: ToolLogic {
 
     private fun baiKeByUrl(url: String): CommonResult<String>{
         var response = OkHttpClientUtils.get(url)
-        if (response.code == 302){
+        while (response.code == 302){
             response.close()
             val location = response.header("Location")
             if ("https://baike.baidu.com/error.html" == location) return CommonResult(500, "")
@@ -283,9 +286,9 @@ class ToolLogicImpl: ToolLogic {
             val result = if (os.contains("Windows")) String(bytes, Charset.forName("gbk"))
             else String(bytes, Charset.forName("utf-8"))
             if (result.contains("找不到主机") || result.contains("Name or service not known")) return "域名解析失败！！"
-            val ip = BotUtils.regex("\\[", "\\]", result)?.trim() ?: BotUtils.regex("\\(", "\\)", result)?.trim()
+            val ip = BotUtils.regex("\\[", "\\]", result)?.trim() ?: BotUtils.regex("\\(", "\\)", result)?.trim() ?: return "域名解析失败！！！"
             val time = BotUtils.regex("时间=", "ms", result)?.trim() ?: BotUtils.regex("time=", "ms", result)?.trim() ?: "请求超时"
-            val ipInfo = this.queryIp(ip!!)
+            val ipInfo = this.queryIp(ip)
             val sb = StringBuilder("====查询结果====\n")
             sb.appendln("域名/IP：$domain")
             sb.appendln("IP：：$ip")
@@ -369,7 +372,7 @@ class ToolLogicImpl: ToolLogic {
                 sb.appendln("${jsonObject.getString("name")}-${jsonObject.getString("title")}")
             }
         }
-        return sb.removeSuffix("\r\n").toString()
+        return sb.removeSuffixLine().toString()
     }
 
     override fun abbreviation(content: String): String {
@@ -383,7 +386,22 @@ class ToolLogicImpl: ToolLogic {
             for (i in 0 until transJsonArray.size){
                 sb.appendln(transJsonArray.getString(i))
             }
-            sb.removeSuffix("\r\n").toString()
+            sb.removeSuffixLine().toString()
         }else "没有查询到结果"
+    }
+
+    override fun queryTime(): ByteArray {
+        val sdf = SimpleDateFormat("HH-mm", Locale.CHINA)
+        val time = sdf.format(Date())
+        val response = OkHttpClientUtils.get("https://u.iheit.com/images/time/$time.jpg")
+        return OkHttpClientUtils.getBytes(response)
+    }
+
+    override fun queryVersion(): String {
+        val response = OkHttpClientUtils.get("https://github.com/kukume/kuku-bot/tags")
+        val html = OkHttpClientUtils.getStr(response)
+        val elements = Jsoup.parse(html).select(".Details .d-flex .commit-title a")
+        val ele = elements[0]
+        return ele.text()
     }
 }

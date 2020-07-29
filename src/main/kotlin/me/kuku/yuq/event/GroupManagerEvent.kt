@@ -9,6 +9,7 @@ import com.icecreamqaq.yuq.mf
 import com.icecreamqaq.yuq.mif
 import com.icecreamqaq.yuq.yuq
 import me.kuku.yuq.service.QQGroupService
+import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.QQAIUtils
 import javax.inject.Inject
 
@@ -20,7 +21,9 @@ class GroupManagerEvent {
     @Event(weight = Event.Weight.high)
     fun switchGroup(e: GroupMessageEvent){
         val qqGroupEntity = qqGroupService.findByGroup(e.message.group!!)
-        val msg = e.message.body[0].toPath()
+        val body = e.message.body
+        if (body.size < 1) return
+        val msg = body[0].toPath()
         if (!msg.startsWith("机器人")) {
             if (qqGroupEntity?.status != true) {
                 e.cancel = true
@@ -30,14 +33,19 @@ class GroupManagerEvent {
 
     @Event
     fun keyword(e: GroupMessageEvent){
-        if (yuq.groups[e.message.group]?.get(e.message.qq!!)?.isAdmin()!!) return
+        val qq = try {
+            e.message.qq!!
+        }catch (e: Exception){
+            BotUtils.regex("[0-9]*", e.message!!)?.toLong() ?: return
+        }
+        if (yuq.groups[e.message.group]?.get(qq)?.isAdmin()!!) return
         val qqGroupEntity = qqGroupService.findByGroup(e.message.group!!) ?: return
         val keywordJsonArray = qqGroupEntity.getKeywordJsonArray()
         for (i in keywordJsonArray.indices){
             val keyword = keywordJsonArray.getString(i)
             if (keyword in e.message.sourceMessage.toString()){
                 e.message.recall()
-                yuq.groups[e.message.group!!]?.members?.get(e.message.qq)?.ban(10 * 60)
+                yuq.groups[e.message.group!!]?.members?.get(qq)?.ban(10 * 60)
                 yuq.sendMessage(mf.newGroup(e.message.group!!).plus(mif.at(e.message.qq!!)).plus("检测到违规词\"$keyword\"，您已被禁言。"))
                 return
             }

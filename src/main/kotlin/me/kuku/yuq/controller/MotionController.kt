@@ -48,7 +48,7 @@ class MotionController {
         yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus(commonResult.t))
         var newMotionEntity: MotionEntity? = null
         do {
-            val codeMessage = session.waitNextMessage(time)
+            val codeMessage = session.waitNextMessage(1000 * 60 * 2)
             if (codeMessage.firstString().length != 6) return "您的验证码不符合规范，可能您不想登录了，已退出步数上下文！！"
             val loginCommonResult = leXinMotionLogic.loginByPhoneCaptcha(phone, codeMessage.firstString())
             when (loginCommonResult.code){

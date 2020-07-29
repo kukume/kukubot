@@ -1,14 +1,20 @@
 package me.kuku.yuq.utils
 
 import com.icecreamqaq.yuq.controller.BotActionContext
-import java.net.URLEncoder
 import kotlin.random.Random
 
 object BotUtils {
 
     fun shortUrl(url: String): String{
-        val response = OkHttpClientUtils.get("https://sohu.gg/api/?key=pimRuFeT7vKK&url=${URLEncoder.encode(url, "utf-8")}")
-        return OkHttpClientUtils.getStr(response)
+        if (!url.contains("qq.com") && !url.contains("iheit.com") && !url.contains("baidu.com")) return "不支持的url"
+        val newUrl = if (url.startsWith("http")) url
+        else "http://$url"
+        val response = OkHttpClientUtils.post("https://s.iheit.com/api.php", OkHttpClientUtils.addForms(
+                "d", newUrl
+        ))
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return if (jsonObject.getInteger("code") == 200) jsonObject.getString("shorturl")
+        else "生成失败！！！"
     }
 
     fun randomStr(len: Int): String{

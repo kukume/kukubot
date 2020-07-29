@@ -457,7 +457,7 @@ class QQLogicImpl: QQLogic {
                 else -> "手Q游戏中心签到失败！"
             }
             sb.appendln(str)
-        }
+        }else response.close()
         response = OkHttpClientUtils.get("https://1.game.qq.com/app/sign?start=" + SimpleDateFormat("yyyy-MM").format(Date()) +
                 "&g_tk=$gtk&_t=0.6780016267291531", qqEntity.cookie())
         val jsonStr = BotUtils.regex("(?<=var sign_index = ).*?(?=;)", OkHttpClientUtils.getStr(response))
@@ -505,6 +505,10 @@ class QQLogicImpl: QQLogic {
 
     override fun qPetSign(qqEntity: QQEntity): String {
         val response = OkHttpClientUtils.get("https://fight.pet.qq.com/cgi-bin/petpk?cmd=award&op=1&type=0", qqEntity.cookie())
+        if (response.code != 200) {
+            response.close()
+            return "大乐斗礼包领取失败！！"
+        }
         val jsonObject = OkHttpClientUtils.getJson(response)
         return when (jsonObject.getInteger("ret")){
             null -> "大乐斗领礼包失败"
@@ -535,7 +539,10 @@ class QQLogicImpl: QQLogic {
                 "Referer", "https://buluo.qq.com/mobile/personal.html",
                 "cookie", qqEntity.getCookie()
         ))
-        if (response.code != 200) return "获取兴趣部落列表失败！"
+        if (response.code != 200) {
+            response.close()
+            return "获取兴趣部落列表失败！"
+        }
         val tribeJsonObject = OkHttpClientUtils.getJson(response)
         when (tribeJsonObject.getInteger("retcode")){
             0 ->{
@@ -687,7 +694,10 @@ class QQLogicImpl: QQLogic {
     override fun anotherSign(qqEntity: QQEntity): String {
         var response = OkHttpClientUtils.post("https://ti.qq.com/hybrid-h5/api/json/daily_attendance/SignInMainPage",
                 OkHttpClientUtils.addJson("{\"uin\": \"${qqEntity.qq}\",\"QYY\": 2,\"qua\": \"V1_AND_SQ_8.3.3_1376_YYB_D\",\"loc\": {\"lat\": 27719813,\"lon\": 111317537}}"), qqEntity.cookie())
-        if (response.code != 200) return "打卡失败，请稍后再试！！"
+        if (response.code != 200) {
+            response.close()
+            return "打卡失败，请稍后再试！！"
+        }
         val jsonObject = OkHttpClientUtils.getJson(response)
         if (jsonObject.getInteger("ret") == 0){
             val jsonArray = jsonObject.getJSONObject("data").getJSONObject("vecSignInfo").getJSONArray("value")
@@ -781,7 +791,10 @@ class QQLogicImpl: QQLogic {
                 -200 -> "打卡失败！！可能未获得测试资格"
                 else -> "打卡失败！！${jsonObject.getString("msg")}"
             }
-        }else "打卡失败！！！请售后再试！！"
+        }else {
+            response.close()
+            "打卡失败！！！请售后再试！！"
+        }
     }
 
     override fun vipGrowthAdd(qqEntity: QQEntity): String {
@@ -958,7 +971,8 @@ class QQLogicImpl: QQLogic {
                             val map = mapOf(
                                     "busId" to fileJsonObject.getString("bus_id"),
                                     "id" to fileJsonObject.getString("id"),
-                                    "name" to fileJsonObject.getString("name")
+                                    "name" to fileJsonObject.getString("name"),
+                                    "parentId" to fileJsonObject.getString("parent_id")
                             )
                             list.add(map)
                         }
@@ -1123,5 +1137,37 @@ class QQLogicImpl: QQLogic {
                 else -> "修改失败！！" + (jsonObject.getString("msg") ?: jsonObject.getJSONObject("13031").getString("msg"))
             }
         }else "修改失败，请更新QQ！！"
+    }
+
+    private fun removeGroupFile(qqEntity: QQEntity, group: Long, busId: String, id: String, parentId: String): String{
+        val response = OkHttpClientUtils.post("https://pan.qun.qq.com/cgi-bin/group_file/delete_file", OkHttpClientUtils.addForms(
+                "src", "qpan",
+                "gc", group.toString(),
+                "bkn", qqEntity.getGtk(),
+                "bus_id", busId,
+                "file_id", id,
+                "app_id", "4",
+                "parent_folder_id", parentId,
+                "file_list", "{\"file_list\":[{\"gc\":$group,\"app_id\":4,\"bus_id\":$busId,\"file_id\":\"$id\",\"parent_folder_id\":\"$parentId\"}]}"
+        ), qqEntity.cookie())
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return when (jsonObject.getInteger("ec")){
+            0 -> "删除群文件成功！！"
+            4 -> "删除群文件失败，请更新QQ！！"
+            -121 -> "权限不够，删除失败！！"
+            else -> jsonObject.getString("em")
+        }
+    }
+
+    override fun removeGroupFile(qqEntity: QQEntity, group: Long, fileName: String, folderName: String?): String {
+        val commonResult = this.getGroupFileList(qqEntity, group, folderName, null)
+        val list = commonResult.t ?: return commonResult.msg
+        for (map in list){
+            if (fileName in map.getValue("name")) {
+                val result = this.removeGroupFile(qqEntity, group, map.getValue("busId"), map.getValue("id"), map.getValue("parentId"))
+                if (result.contains("失败")) return result
+            }
+        }
+        return "删除群文件成功！！"
     }
 }

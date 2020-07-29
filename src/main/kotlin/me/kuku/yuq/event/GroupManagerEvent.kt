@@ -38,7 +38,7 @@ class GroupManagerEvent {
         }catch (e: Exception){
             BotUtils.regex("[0-9]*", e.message!!)?.toLong() ?: return
         }
-        if (yuq.groups[e.message.group]?.get(qq)?.isAdmin()!!) return
+        if (yuq.groups[e.message.group]?.get(qq)?.isAdmin() == true) return
         val qqGroupEntity = qqGroupService.findByGroup(e.message.group!!) ?: return
         val keywordJsonArray = qqGroupEntity.getKeywordJsonArray()
         for (i in keywordJsonArray.indices){

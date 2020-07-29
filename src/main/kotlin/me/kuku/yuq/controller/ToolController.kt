@@ -145,17 +145,17 @@ class ToolController {
     }
 
     @Action("涩图")
-    fun colorPic(group: Long, qq: Long): Message? {
+    fun colorPic(group: Long): Message? {
         val qqGroupEntity = qqGroupService.findByGroup(group)
         if (qqGroupEntity?.colorPic != true) return "该功能已关闭".toMessage()
         return when (qqGroupEntity.colorPicType){
-            "local" -> mif.image(toolLogic.colorPic()).toMessage()
-            "remote" -> {
+            "remote" -> mif.image(toolLogic.colorPic()).toMessage()
+            "local" -> {
                 val url = piXivLogic.bookMarks("13070512", "51918341_vhV0yUgHJVaJHaTH0zcREYiIOeDIokQq")
                 val bytes = piXivLogic.getImage(url)
                 mif.image(bytes).toMessage()
             }
-            else -> null
+            else -> mif.image(toolLogic.colorPic()).toMessage()
         }
     }
 

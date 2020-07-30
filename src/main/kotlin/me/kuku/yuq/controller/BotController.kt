@@ -45,7 +45,7 @@ class BotController {
 
     @Before
     fun before(qq: Long, message: Message, actionContext: BotActionContext) {
-        val msgList = arrayOf("改", "公告", "全体禁言", "拉")
+        val msgList = arrayOf("改", "公告", "全体禁言", "拉", "发布作业", "群接龙")
         if (msgList.contains(message.toPath()[0])) {
             if (qq.toString() != master) {
                 throw mif.at(qq).plus("抱歉，您不是机器人主人，无法执行！！")
@@ -70,10 +70,39 @@ class BotController {
         qqLogic.groupSign(qqEntity, group, "你猜", "mirai在线签到！！！", "{\"category_id\":\"\",\"page\":\"\",\"pic_id\":\"\"}", img.url)
     }
 
+    @QMsg(at = true)
     @Action("拉 {qqNo}")
     fun addGroupMember(qqNo: Long, group: Long) =
             qqGroupLogic.addGroupMember(qqNo, group)
 
+    @QMsg(at = true)
+    @Action("发布作业")
+    fun addHomeWork(group: Long, qq: Long, session: ContextSession): String{
+        yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("请输入作业科目！！"))
+        val nameMessage = session.waitNextMessage(30 * 1000)
+        val name = nameMessage.firstString()
+        yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("请输入作业内容！！"))
+        val contentMessage = session.waitNextMessage(30 * 1000)
+        val content = contentMessage.firstString()
+        return qqGroupLogic.addHomeWork(group, name, "作业", content, false)
+    }
+
+    @QMsg(at = true)
+    @Action("群接龙")
+    fun groupChain(group: Long, qq: Long, session: ContextSession): String{
+        yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("请输入接龙内容"))
+        val contentMessage = session.waitNextMessage(30 * 1000)
+        val content = contentMessage.firstString()
+        yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("请输入到期日期（单位为天）！！"))
+        val timeMessage = session.waitNextMessage(30 * 1000)
+        val time = try {
+            timeMessage.firstString().toInt()
+        }catch (e: Exception){
+            return "时间不为整型"
+        }
+        val newTime = (Date().time + (time * 1000 * 60 * 60 * 24)).toString().substring(0, 10)
+        return qqGroupLogic.groupCharin(group, content, newTime.toLong())
+    }
 
     @Action("列出{day}天未发言")
     fun notSpeak(group: Long, day: String, session: ContextSession, qq: Long, qqEntity: QQEntity): String? {
@@ -139,6 +168,7 @@ class BotController {
         return qqLogic.publishNotice(qqEntity, group, notice)
     }
 
+    @QMsg(at = true)
     @Action("群链接")
     fun groupLink(group: Long, qqEntity: QQEntity) = qqLogic.getGroupLink(qqEntity, group);
 
@@ -148,10 +178,12 @@ class BotController {
     @Action("群文件")
     fun groupFile(@PathVar(1) fileName: String?, group: Long, qqEntity: QQEntity) = qqLogic.groupFileUrl(qqEntity, group, fileName)
 
+    @QMsg(at = true)
     @Action("删群文件 {fileName}")
     fun delGroupFile(@PathVar(2) folderName: String?, fileName: String, group: Long, qqEntity: QQEntity) =
             qqLogic.removeGroupFile(qqEntity, group, fileName, folderName)
 
+    @QMsg(at = true)
     @Action("全体禁言 {status}")
     fun allShutUp(group: Long, status: Boolean, qqEntity: QQEntity) = qqLogic.allShutUp(qqEntity, group, status)
 

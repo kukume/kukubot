@@ -6,6 +6,7 @@ import com.icecreamqaq.yuq.mirai.MiraiBot
 import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.logic.QQGroupLogic
 import me.kuku.yuq.utils.BotUtils
+import me.kuku.yuq.utils.OkHttpClientUtils
 import javax.inject.Inject
 
 class QQGroupLogicImpl: QQGroupLogic {
@@ -77,5 +78,49 @@ class QQGroupLogicImpl: QQGroupLogic {
             //uin qq; day_count  蝉联时间 ; avatar  头像链接 ;avatar_size  头像大小
             else CommonResult(200, "", mapOf<String, Long>("qq" to activeJsonObject.getLong("uin"), "day" to activeJsonObject.getLong("day_count")))
         }else CommonResult(500, "获取龙王失败，请更新qun.qq.com的cookie")
+    }
+
+    override fun addHomeWork(group: Long, courseName: String, title: String, content: String, needFeedback: Boolean): String {
+        val str = web.post("https://qun.qq.com/cgi-bin/homework/hw/assign_hw.fcg", mapOf(
+                "homework_id" to "",
+                "group_id" to group.toString(),
+                "course_id" to "2",
+                "course_name" to courseName,
+                "title" to title,
+                "need_feedback" to if (needFeedback) "1" else "0",
+                "c" to "{\"c\":[{\"type\":\"str\",\"text\":\"$content\"}]}",
+                "team_id" to "0",
+                "hw_type" to "0",
+                "tsfeedback" to "",
+                "syncgids" to "",
+                "client_type" to "1",
+                "bkn" to miraiBot.gtk.toString()
+        ))
+        val jsonObject = JSON.parseObject(str)
+        return when (jsonObject.getInteger("retcode")){
+            0 -> "发布作业成功！！"
+            110002 -> "权限不足，无法发布作业！！"
+            100000 -> "发布失败，请更新QQ！！"
+            else -> jsonObject.getString("msg")
+        }
+    }
+
+    override fun groupCharin(group: Long, content: String, time: Long): String {
+        val str = web.post("https://qun.qq.com/cgi-bin/group_chain/chain_new", mapOf(
+                "gc" to group.toString(),
+                "desc" to content,
+                "type" to "2",
+                "expired" to time.toString(),
+                "bkn" to miraiBot.gtk.toString()
+        ))
+        val jsonObject = JSON.parseObject(str)
+        println(jsonObject)
+        return when (jsonObject.getInteger("retcode")){
+            0 -> "发布群接龙成功！！"
+            11004 -> "到期时间格式有误"
+            10013 -> "权限不足，无法发布群接龙！！"
+            100000 -> "发布失败，请更新QQ！！"
+            else -> jsonObject.getString("msg")
+        }
     }
 }

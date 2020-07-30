@@ -14,7 +14,7 @@ data class MotionEntity(
         @Column(columnDefinition="text")
         var cookie: String = "",
         var userId: String = "",
-        @Column(length = 400)
+        @Column(length = 500)
         var accessToken: String = "",
         var step: Int = 0
 )

@@ -54,39 +54,7 @@ class QQJob {
         }
     }
 
-    @Cron("4h")
-    fun qqSign(){
-        val list = qqService.findByActivity()
-        list.forEach {
-            try {
-                val str = qqLogic.qqSign(it)
-                if (!str.contains("更新QQ")){
-                    qqLogic.anotherSign(it)
-                    qqLogic.groupLottery(it, 1132123L)
-                    qqLogic.vipSign(it)
-                    qqLogic.phoneGameSign(it)
-                    qqLogic.yellowSign(it)
-                    qqLogic.qqVideoSign1(it)
-                    qqLogic.qqVideoSign2(it)
-                    qqLogic.bigVipSign(it)
-                    qqLogic.qqMusicSign(it)
-                    qqLogic.gameSign(it)
-                    qqLogic.qPetSign(it)
-                    qqLogic.tribeSign(it)
-                    qqLogic.motionSign(it)
-                    qqLogic.blueSign(it)
-                    qqLogic.sVipMornSign(it)
-                    qqLogic.weiYunSign(it)
-                    qqLogic.weiShiSign(it)
-                    qqLogic.growthLike(it)
-                }
-            }catch (e: Exception){
-                e.printStackTrace()
-            }
-        }
-    }
-
-    @Cron("At::d::07:00")
+    @Cron("At::d::07")
     fun sVipMorn() {
         val list = qqService.findByActivity()
         list.forEach {

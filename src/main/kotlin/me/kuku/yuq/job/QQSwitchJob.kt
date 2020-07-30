@@ -76,6 +76,39 @@ class QQSwitchJob {
         }
     }
 
+    @Cron("4h")
+    fun qqSign(){
+        val list = qqJobService.findByType("autoSign")
+        list.forEach {
+            try {
+                val qqEntity = qqService.findByQQ(it.qq) ?: return@forEach
+                val str = qqLogic.qqSign(qqEntity)
+                if (!str.contains("更新QQ")){
+                    qqLogic.anotherSign(qqEntity)
+                    qqLogic.groupLottery(qqEntity, 1132123L)
+                    qqLogic.vipSign(qqEntity)
+                    qqLogic.phoneGameSign(qqEntity)
+                    qqLogic.yellowSign(qqEntity)
+                    qqLogic.qqVideoSign1(qqEntity)
+                    qqLogic.qqVideoSign2(qqEntity)
+                    qqLogic.bigVipSign(qqEntity)
+                    qqLogic.qqMusicSign(qqEntity)
+                    qqLogic.gameSign(qqEntity)
+                    qqLogic.qPetSign(qqEntity)
+                    qqLogic.tribeSign(qqEntity)
+                    qqLogic.motionSign(qqEntity)
+                    qqLogic.blueSign(qqEntity)
+                    qqLogic.sVipMornSign(qqEntity)
+                    qqLogic.weiYunSign(qqEntity)
+                    qqLogic.weiShiSign(qqEntity)
+                    qqLogic.growthLike(qqEntity)
+                }
+            }catch (e: Exception){
+                e.printStackTrace()
+            }
+        }
+    }
+
     @Cron("1m")
     fun mz(){
         val list = qqJobService.findByType("mz")

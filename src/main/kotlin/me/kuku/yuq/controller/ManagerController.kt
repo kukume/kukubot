@@ -36,7 +36,7 @@ class ManagerController {
     private lateinit var toolLogic: ToolLogic
 
 
-    private val version = "v1.3.5"
+    private val version = "v1.3.6"
 
     @Before
     fun before(group: Long, qq: Long, actionContext: BotActionContext, message: Message){
@@ -72,6 +72,7 @@ class ManagerController {
         sb.appendln("萌宠功能：" + this.boolToStr(qqGroupEntity.superCute))
         sb.appendln("自动审核：" + this.boolToStr(qqGroupEntity.autoReview))
         sb.appendln("撤回通知：" + this.boolToStr(qqGroupEntity.recall))
+        sb.appendln("涩图：${if (qqGroupEntity.colorPicType == "local")  "本地" else "远程"}")
         sb.append("整点报时：" + this.boolToStr(qqGroupEntity.onTimeAlarm))
         return sb.toString()
     }
@@ -375,6 +376,7 @@ class ManagerController {
         sb.appendln("当前程序版本：$version")
         sb.appendln("最新程序版本：$gitVersion")
         if (gitVersion > version){
+            sb.appendln("更新日志：https://github.com/kukume/kuku-bot/releases/tag/$version")
             sb.append("发现程序可更新，正在下载中！！！")
             yuq.sendMessage(mf.newGroup(group).plus(sb.toString()))
             val response = OkHttpClientUtils.get("https://u.iheit.com/kuku/bot/kukubot.jar")

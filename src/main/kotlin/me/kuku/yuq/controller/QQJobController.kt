@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
 import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.annotation.PathVar
+import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageItemFactory
@@ -37,6 +38,7 @@ class QQJobController {
         }
     }
 
+    @QMsg(at = true)
     @Action("群签到 {status}")
     fun groupSignOpen(status: Boolean, qq: Long, qqEntity: QQEntity): String{
         var qqJobEntity = qqJobService.findByQQAndType(qq, "groupSign")
@@ -60,6 +62,7 @@ class QQJobController {
         return "群签到定时任务已${if (status) "开启" else "关闭"}"
     }
 
+    @QMsg(at = true)
     @Action("\\删?群排除\\")
     fun groupSignExclude(message: Message, qq: Long, @PathVar(0) text: String): String{
         val list = message.toPath().toMutableList()
@@ -84,6 +87,7 @@ class QQJobController {
         }else "修改失败"
     }
 
+    @QMsg(at = true)
     @Action("秒赞 {status}")
     fun mzOpen(qq: Long, status: Boolean): String{
         var qqJobEntity = qqJobService.findByQQAndType(qq, "mz")
@@ -99,6 +103,7 @@ class QQJobController {
         return "秒赞已${if (status) "开启" else "关闭"}"
     }
 
+    @QMsg(at = true)
     @Action("百变气泡/{text}")
     fun varietyBubble(qq: Long, text: String): String{
         var qqJobEntity = qqJobService.findByQQAndType(qq, "bubble")
@@ -127,5 +132,21 @@ class QQJobController {
         qqJobEntity.data = jsonObject.toString()
         qqJobService.save(qqJobEntity)
         return msg
+    }
+
+    @QMsg(at = true)
+    @Action("自动签到 {status}")
+    fun autoSign(qq: Long, status: Boolean): String{
+        var qqJobEntity = qqJobService.findByQQAndType(qq, "autoSign")
+        if (qqJobEntity == null){
+            val jsonObject = JSONObject()
+            jsonObject["status"] = false
+            qqJobEntity = QQJobEntity(null, qq, "autoSign", jsonObject.toString())
+        }
+        val jsonObject = qqJobEntity.getJsonObject()
+        jsonObject["status"] = status
+        qqJobEntity.data = jsonObject.toString()
+        qqJobService.save(qqJobEntity)
+        return "qq启动签到${if (status) "开启" else "关闭"}成功"
     }
 }

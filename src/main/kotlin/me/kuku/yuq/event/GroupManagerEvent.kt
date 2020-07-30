@@ -33,20 +33,22 @@ class GroupManagerEvent {
 
     @Event
     fun keyword(e: GroupMessageEvent){
+        val group = e.message.group!!
+        if (yuq.groups[group]?.bot?.isAdmin() == true) return
         val qq = try {
             e.message.qq!!
         }catch (e: Exception){
             BotUtils.regex("[0-9]*", e.message!!)?.toLong() ?: return
         }
-        if (yuq.groups[e.message.group]?.get(qq)?.isAdmin() == true) return
-        val qqGroupEntity = qqGroupService.findByGroup(e.message.group!!) ?: return
+        if (yuq.groups[group]?.get(qq)?.isAdmin() == true) return
+        val qqGroupEntity = qqGroupService.findByGroup(group) ?: return
         val keywordJsonArray = qqGroupEntity.getKeywordJsonArray()
         for (i in keywordJsonArray.indices){
             val keyword = keywordJsonArray.getString(i)
             if (keyword in e.message.sourceMessage.toString()){
                 e.message.recall()
-                yuq.groups[e.message.group!!]?.members?.get(qq)?.ban(10 * 60)
-                yuq.sendMessage(mf.newGroup(e.message.group!!).plus(mif.at(e.message.qq!!)).plus("检测到违规词\"$keyword\"，您已被禁言。"))
+                yuq.groups[group]?.members?.get(qq)?.ban(10 * 60)
+                yuq.sendMessage(mf.newGroup(group).plus(mif.at(e.message.qq!!)).plus("检测到违规词\"$keyword\"，您已被禁言。"))
                 return
             }
         }
@@ -70,7 +72,9 @@ class GroupManagerEvent {
 
     @Event
     fun pic(e: GroupMessageEvent){
-        val qqGroupEntity = qqGroupService.findByGroup(e.message.group!!) ?: return
+        val group = e.message.group!!
+        if (yuq.groups[group]?.bot?.isAdmin() == true) return
+        val qqGroupEntity = qqGroupService.findByGroup(group) ?: return
         if (qqGroupEntity.pic == true){
             val bodyList = e.message.body
             for (body in bodyList){
@@ -79,8 +83,8 @@ class GroupManagerEvent {
                     val b = QQAIUtils.pornIdentification(url)
                     if (b){
                         e.message.recall()
-                        yuq.groups[e.message.group!!]?.members?.get(e.message.qq)?.ban(10 * 60)
-                        yuq.sendMessage(mf.newGroup(e.message.group!!).plus(mif.at(e.message.qq!!)).plus("检测到色情图片，您已被禁言"))
+                        yuq.groups[group]?.members?.get(e.message.qq)?.ban(10 * 60)
+                        yuq.sendMessage(mf.newGroup(group).plus(mif.at(e.message.qq!!)).plus("检测到色情图片，您已被禁言"))
                     }
                 }
             }

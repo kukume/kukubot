@@ -36,7 +36,7 @@ class ManagerController {
     private lateinit var toolLogic: ToolLogic
 
 
-    private val version = "v1.3.4"
+    private val version = "v1.3.5"
 
     @Before
     fun before(group: Long, qq: Long, actionContext: BotActionContext, message: Message){

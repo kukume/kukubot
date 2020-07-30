@@ -70,7 +70,7 @@ object QQUtils {
             4 -> "验证码错误，登录失败！"
             3 -> "密码错误，登录失败！"
             19 -> "您的QQ号已被冻结，登录失败！"
-            10009 -> "您的QQ号登录需要验证短信，请验证短信"
+            10009 -> return CommonResult(10009, "您的QQ号登录需要验证短信，请输入短信验证码！！")
             0,2 ->{
                 val url = BotUtils.regex(",'0','", "','", str) ?: BotUtils.regex("','", "'", str)
                 if (url != null) return CommonResult(200, "成功", url) else ""

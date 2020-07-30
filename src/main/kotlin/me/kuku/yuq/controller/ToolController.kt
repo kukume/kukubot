@@ -205,4 +205,10 @@ class ToolController {
 
     @Action("网抑")
     fun wy() = mif.xmlEx(1, "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID=\"1\" templateID=\"-1\" action=\"app\" actionData=\"com.netease.cloudmusic\" brief=\"点击启动网抑\" sourceMsgId=\"0\" url=\"http://y-8.top\" flag=\"2\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"12\" advertiser_id=\"0\" aid=\"0\"><picture cover=\"https://imgurl.cloudimg.cc/2020/07/26/2a7410726090854.jpg\" w=\"0\" h=\"0\" /><title>启动网抑音乐</title></item><source name=\"今天你网抑了吗\" icon=\"\" action=\"\" appid=\"0\" /></msg>")
+
+    @Action("跟我读")
+    fun repeat(session: ContextSession, group: Long, qq: Long): Message{
+        yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("您请说！！"))
+        return session.waitNextMessage(30 * 1000)
+    }
 }

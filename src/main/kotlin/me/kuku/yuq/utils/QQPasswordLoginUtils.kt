@@ -35,24 +35,48 @@ object QQPasswordLoginUtils {
         }
     }
 
-    private fun login(appId: String, daId: String, qq: String, password: String, url: String, map1: Map<String, String?>, map2: Map<String, String?>): CommonResult<Map<String, String>>{
-        val encryptPassword = this.encryptPassword(qq, password, map2["randStr"].toString())
-        val ptdRvs = BotUtils.regex("(?<=ptdrvs=).+?(?=;)", map1["cookie"].toString())
-        val sig = BotUtils.regex("(?<=pt_login_sig=).+?(?=;)", map1["cookie"].toString())
-        val v1 = if (map2.getValue("randStr")!!.startsWith("!")) 0 else 1
-        val uri = "https://ssl.ptlogin2.qq.com/login?u=$qq&verifycode=${map2["randStr"]}&pt_vcode_v1=$v1&pt_verifysession_v1=${map2["ticket"]}&p=$encryptPassword&pt_randsalt=2&u1=${URLEncoder.encode(url, "utf-8")}&ptredirect=0&h=1&t=1&g=1&from_ui=1&ptlang=2052&action=2-1-1591170931294&js_ver=20032614&js_type=1&login_sig=$sig&pt_uistyle=40&aid=$appId&daid=$daId&ptdrvs=$ptdRvs&"
+    private fun login(appId: String, daId: String, qq: String, password: String, url: String, randStr: String, ticket: String, cookie: String, smsCode: String? = null): CommonResult<Map<String, String>>{
+        val encryptPassword = this.encryptPassword(qq, password, randStr)
+        val ptdRvs = BotUtils.regex("(?<=ptdrvs=).+?(?=;)", cookie)
+        val sig = BotUtils.regex("(?<=pt_login_sig=).+?(?=;)", cookie)
+        val v1 = if (randStr.startsWith("!")) 0 else 1
+        var uri = "https://ssl.ptlogin2.qq.com/login?u=$qq&verifycode=$randStr&pt_vcode_v1=$v1&pt_verifysession_v1=$ticket&p=$encryptPassword&pt_randsalt=2&u1=${URLEncoder.encode(url, "utf-8")}&ptredirect=0&h=1&t=1&g=1&from_ui=1&ptlang=2052&action=2-1-1591170931294&js_ver=20032614&js_type=1&login_sig=$sig&pt_uistyle=40&aid=$appId&daid=$daId&ptdrvs=$ptdRvs&"
+        var newCookie =  cookie
+        if (smsCode != null){
+            uri += "&pt_sms_code=$smsCode"
+            newCookie += "pt_sms=$smsCode; "
+        }
         val response = OkHttpClientUtils.get(uri, OkHttpClientUtils.addHeaders(
-                "cookie", map1["cookie"].toString(),
+                "cookie", newCookie,
                 "referer", url
         ))
         val cookieMap = OkHttpClientUtils.getCookie(response, "skey", "superkey", "supertoken").toMutableMap()
         val str = OkHttpClientUtils.getStr(response)
         val commonResult = QQUtils.getResultUrl(str)
-        return if (commonResult.code == 200){
-            val otherKeys = QQUtils.getKey(commonResult.t)
-            cookieMap.putAll(otherKeys)
-            CommonResult(200, "登录成功" , cookieMap)
-        }else CommonResult(500, commonResult.msg)
+        return when (commonResult.code) {
+            200 -> {
+                val otherKeys = QQUtils.getKey(commonResult.t)
+                cookieMap.putAll(otherKeys)
+                CommonResult(200, "登录成功" , cookieMap)
+            }
+            10009 -> {
+                val newCookieMap = OkHttpClientUtils.getCookie(response, "ptdrvs", "pt_sms_ticket")
+                val resultCookie = newCookie.replace(ptdRvs!!, "${newCookieMap.getValue("ptdrvs")}; pt_sms_ticket=${newCookieMap["pt_sms_ticket"]}; ")
+                this.sendSms(appId, qq, newCookieMap["pt_sms_ticket"].toString(), resultCookie)
+                CommonResult(10009, commonResult.msg, mapOf(
+                        "randStr" to randStr,
+                        "ticket" to ticket,
+                        "cookie" to resultCookie
+                ))
+            }
+            else -> CommonResult(500, commonResult.msg)
+        }
+
+    }
+
+    private fun sendSms(appId: String, qq: String, smsTicket: String, cookie: String){
+        OkHttpClientUtils.get("https://ssl.ptlogin2.qq.com/send_sms_code?bkn=&uin=$qq&aid=$appId&pt_sms_ticket=$smsTicket",
+                OkHttpClientUtils.addCookie(cookie)).close()
     }
 
     fun login(appId: String = "549000912", daId: String = "5", qq: String, password: String, url: String = "https://qzs.qzone.qq.com/qzone/v5/loginsucc.html?para=izone&specifyurl=http://user.qzone.qq.com"): CommonResult<Map<String, String>>{
@@ -63,6 +87,10 @@ object QQPasswordLoginUtils {
             else return commonResult
         }
         else map1
-        return this.login(appId, daId, qq, password, url, map1, map2)
+        return this.login(appId, daId, qq, password, url, map2["randStr"].toString(), map2["ticket"].toString(), map1["cookie"].toString())
+    }
+
+    fun loginBySms(appId: String = "549000912", daId: String = "5", qq: String, password: String, url: String = "https://qzs.qzone.qq.com/qzone/v5/loginsucc.html?para=izone&specifyurl=http://user.qzone.qq.com",  randStr: String, ticket: String, cookie: String, smsCode: String): CommonResult<Map<String, String>> {
+        return this.login(appId, daId, qq, password, url, randStr, ticket, cookie, smsCode)
     }
 }

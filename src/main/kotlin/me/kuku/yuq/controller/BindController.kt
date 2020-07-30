@@ -7,6 +7,7 @@ import com.icecreamqaq.yuq.annotation.PrivateController
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.controller.QQController
 import com.icecreamqaq.yuq.firstString
+import com.icecreamqaq.yuq.message.Message
 import me.kuku.yuq.entity.NeTeaseEntity
 import me.kuku.yuq.entity.SteamEntity
 import me.kuku.yuq.entity.SuperCuteEntity
@@ -37,16 +38,31 @@ class BindController: QQController() {
     private lateinit var neTeaseService: NeTeaseService
 
     @Action("qq")
-    fun bindQQ(@PathVar(1) password: String?, qq: Long): Any? {
+    fun bindQQ(@PathVar(1) password: String?, qq: Long, session: ContextSession, message: Message): Any? {
         val qqEntity = qqService.findByQQ(qq)
+        val newGroup = message.group ?: 0L
         val pwd = password ?: qqEntity?.password
         return if (pwd != null){
             val commonResult = QQPasswordLoginUtils.login(qq = qq.toString(), password = pwd)
-            if (commonResult.code == 200){
-                val map = commonResult.t
-                QQUtils.saveOrUpdate(qqService, map, qq, pwd)
-                "绑定或者更新成功！"
-            }else commonResult.msg
+            when (commonResult.code) {
+                200 -> {
+                    val map = commonResult.t
+                    QQUtils.saveOrUpdate(qqService, map, qq, pwd, newGroup)
+                    "绑定或者更新成功！"
+                }
+                10009 -> {
+                    reply(commonResult.msg)
+                    val map = commonResult.t
+                    val codeMessage = session.waitNextMessage(1000 * 60 * 2)
+                    val code = codeMessage.firstString()
+                    val loginResult = QQPasswordLoginUtils.loginBySms(qq = qq.toString(), password = pwd, randStr = map["randStr"].toString(),
+                            ticket = map["ticket"].toString(), cookie = map["cookie"].toString(), smsCode = code)
+                    if (loginResult.code != 200) return "验证码输入错误，请重新登录！！"
+                    QQUtils.saveOrUpdate(qqService, loginResult.t, qq, pwd, newGroup)
+                    "绑定或者更新成功！"
+                }
+                else -> commonResult.msg
+            }
         }else "缺少参数[密码]"
     }
 

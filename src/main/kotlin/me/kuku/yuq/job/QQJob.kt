@@ -40,10 +40,14 @@ class QQJob {
                     val commonResult = QQPasswordLoginUtils.login(qq = qqEntity.qq.toString(), password = qqEntity.password)
                     if (commonResult.code == 200){
                         QQUtils.saveOrUpdate(qqService, commonResult.t, qqEntity.qq, qqEntity.password)
-                    } else if (commonResult.code != 400) {
+                    } else if (!arrayOf(400, 1, -1, 7).contains(commonResult.code)) {
                         qqEntity.status = false
                         qqService.save(qqEntity)
-                        yuq.sendMessage(mf.newPrivate(qqEntity.qq).plus("您的QQ自动更新失败，${commonResult.msg}"))
+                        val msg = "您的QQ自动更新失败，${commonResult.msg}"
+                        if (qqEntity.qqGroup == 0L)
+                            yuq.sendMessage(mf.newPrivate(qqEntity.qq).plus(msg))
+                        else
+                            yuq.sendMessage(mf.newTemp(qqEntity.qqGroup, qqEntity.qq).plus(msg))
                     }
                 }
             }

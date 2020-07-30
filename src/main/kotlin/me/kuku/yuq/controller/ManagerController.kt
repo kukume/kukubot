@@ -48,7 +48,7 @@ class ManagerController {
         actionContext.session["qqGroupEntity"] = qqGroupEntity
         val whiteList = arrayOf("问答", "违规词", "黑名单", "白名单")
         if (!whiteList.contains(message.toPath()[0])) {
-            if (qq != master.toLong()) throw "抱歉，您不是机器人主人，无法执行！！".toMessage()
+            if (qq != master.toLong()) throw mif.at(qq).plus("抱歉，您不是机器人主人，无法执行！！")
         }
     }
 

@@ -149,9 +149,10 @@ class ToolController {
     }
 
     @Action("涩图")
-    fun colorPic(group: Long): Message? {
+    @Synonym(["色图", "色图来"])
+    fun colorPic(group: Long, qq: Long): Message {
         val qqGroupEntity = qqGroupService.findByGroup(group)
-        if (qqGroupEntity?.colorPic != true) return "该功能已关闭".toMessage()
+        if (qqGroupEntity?.colorPic != true) throw mif.at(qq).plus("该功能已关闭")
         return when (qqGroupEntity.colorPicType){
             "remote" -> mif.image(toolLogic.colorPic()).toMessage()
             "local" -> {
@@ -162,6 +163,15 @@ class ToolController {
                 mif.image(bytes).toMessage()
             }
             else -> mif.image(toolLogic.colorPic()).toMessage()
+        }
+    }
+
+    @Action("涩图十连")
+    @Synonym(["色图十连"])
+    fun tenColorPic(group: Long, qq: Long){
+        for (i in 0 until 10){
+            val message = this.colorPic(group, qq)
+            yuq.sendMessage(mf.newGroup(group).plus(message))
         }
     }
 

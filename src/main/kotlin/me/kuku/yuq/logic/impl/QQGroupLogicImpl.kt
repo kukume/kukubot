@@ -5,8 +5,8 @@ import com.alibaba.fastjson.JSON
 import com.icecreamqaq.yuq.mirai.MiraiBot
 import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.logic.QQGroupLogic
+import me.kuku.yuq.pojo.GroupMember
 import me.kuku.yuq.utils.BotUtils
-import me.kuku.yuq.utils.OkHttpClientUtils
 import javax.inject.Inject
 
 class QQGroupLogicImpl: QQGroupLogic {
@@ -121,6 +121,59 @@ class QQGroupLogicImpl: QQGroupLogic {
             10013 -> "权限不足，无法发布群接龙！！"
             100000 -> "发布失败，请更新QQ！！"
             else -> jsonObject.getString("msg")
+        }
+    }
+
+    override fun groupLevel(group: Long): CommonResult<List<Map<String, String>>> {
+        val str = web.get("https://qun.qq.com/interactive/levellist?gc=$group&type=7&_wv=3&_wwv=128")
+        val jsonStr = BotUtils.regex("window.__INITIAL_STATE__=", "</script>", str)
+        val jsonObject = JSON.parseObject(jsonStr)
+        val jsonArray = jsonObject.getJSONArray("membersList")
+        if (jsonArray.size == 0) return CommonResult(500, "获取群等级列表失败，请更新QQ！！")
+        val list= mutableListOf<Map<String, String>>()
+        for (i in jsonArray.indices){
+            val singleJsonObject = jsonArray.getJSONObject(i)
+            val map = mapOf(
+                    "name" to singleJsonObject.getString("name"),
+                    "level" to singleJsonObject.getString("level"),
+                    "tag" to singleJsonObject.getString("tag"),
+                    "qq" to singleJsonObject.getString("uin")
+            )
+            list.add(map)
+        }
+        return CommonResult(200, "", list)
+    }
+
+    override fun queryMemberInfo(group: Long, qq: Long): CommonResult<GroupMember> {
+        val str = web.post("https://qun.qq.com/cgi-bin/qun_mgr/search_group_members", mapOf(
+                "gc" to group.toString(),
+                "st" to "0",
+                "end" to "20",
+                "sort" to "0",
+                "key" to qq.toString(),
+                "bkn" to miraiBot.gtk.toString()
+        ))
+        val jsonObject = JSON.parseObject(str)
+        return when (jsonObject.getInteger("ec")){
+            0 -> {
+                val jsonArray = jsonObject.getJSONArray("mems")
+                if (jsonArray.size == 0) return CommonResult(500, "未搜索到该用户")
+                val memberJsonObject = jsonArray.getJSONObject(0)
+                val card = memberJsonObject.getString("card")
+                val name = if (card == "") memberJsonObject.getString("nick")
+                else card
+                CommonResult(200, "", GroupMember(
+                        memberJsonObject.getLong("uin"),
+                        null,
+                        0,
+                        (memberJsonObject.getString("join_time") + "000").toLong(),
+                        (memberJsonObject.getString("last_speak_time") + "000").toLong(),
+                        memberJsonObject.getInteger("qage"),
+                        name
+                ))
+            }
+            4 -> CommonResult(500, "查询失败，请更新QQ！！！")
+            else -> CommonResult(500, jsonObject.getString("em"))
         }
     }
 }

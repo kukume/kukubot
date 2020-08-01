@@ -84,4 +84,6 @@ interface QQLogic {
     fun changePhoneOnline(qqEntity: QQEntity, iMei:String, phone: String): String
     //删除群文件
     fun removeGroupFile(qqEntity: QQEntity, group: Long, fileName: String, folderName: String?): String
+    //查询好友业务
+    fun queryFriendVip(qqEntity: QQEntity, qq: Long, psKey: String?): String
 }

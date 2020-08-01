@@ -34,7 +34,7 @@ class GroupManagerEvent {
     @Event
     fun keyword(e: GroupMessageEvent){
         val group = e.message.group!!
-        if (yuq.groups[group]?.bot?.isAdmin() == true) return
+        if (yuq.groups[group]?.bot?.isAdmin() != true) return
         val qq = try {
             e.message.qq!!
         }catch (e: Exception){

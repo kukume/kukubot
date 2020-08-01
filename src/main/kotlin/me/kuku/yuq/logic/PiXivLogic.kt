@@ -9,4 +9,6 @@ interface PiXivLogic {
     fun searchTag(tag: String): String
 
     fun bookMarks(id: String, cookie: String): String
+
+    fun r18setting(cookie: String, isOpen: Boolean): String
 }

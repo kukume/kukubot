@@ -17,6 +17,7 @@ import me.kuku.yuq.utils.image
 import java.net.URLEncoder
 import javax.inject.Inject
 import javax.script.ScriptEngineManager
+import kotlin.random.Random
 
 @GroupController
 @ContextController
@@ -35,6 +36,9 @@ class ToolController {
     private lateinit var piXivLogic: PiXivLogic
     @Config("YuQ.Mirai.user.qq")
     private lateinit var qq: String
+//    @Config("YuQ.Mirai.bot.pCookie")
+//    private lateinit var pCookie:String
+    private val pCookie = "51918341_vhV0yUgHJVaJHaTH0zcREYiIOeDIokQq"
 
     @QMsg(at = true)
     @Action("百度/{content}")
@@ -108,7 +112,7 @@ class ToolController {
 
     @QMsg(at = true)
     @Action("转{str}")
-    fun translate(str: String, session: ContextSession, group: Long, qq: Long): String{
+    fun translate(str: String, session: ContextSession, group: Long, qq: Long): String?{
         val map = mapOf("英" to "en", "中" to "zh", "日" to "jp", "韩" to "kor",
                 "粤" to "yue", "法" to "gra", "俄" to "ru", "德" to "de", "文" to "wyw", "简" to "2", "繁" to "1")
         return if (map.containsKey(str)){
@@ -118,7 +122,7 @@ class ToolController {
             if (str == "简" || str == "繁"){
                 toolLogic.convertZh(content, map.getValue(str).toInt())
             }else toolLogic.convertTranslate(content, "auto", map.getValue(str))
-        }else "抱歉，没有该语言的翻译"
+        }else null
     }
 
     @Action("解析/{url}")
@@ -151,12 +155,20 @@ class ToolController {
         return when (qqGroupEntity.colorPicType){
             "remote" -> mif.image(toolLogic.colorPic()).toMessage()
             "local" -> {
-                val url = piXivLogic.bookMarks("13070512", "51918341_vhV0yUgHJVaJHaTH0zcREYiIOeDIokQq")
+                val ids = arrayOf(5516155, 4875713, 14228138, 42115425, 15443500, 13070512)
+                val id = ids[Random.nextInt(ids.size)]
+                val url = piXivLogic.bookMarks(id.toString(), pCookie)
                 val bytes = piXivLogic.getImage(url)
                 mif.image(bytes).toMessage()
             }
             else -> mif.image(toolLogic.colorPic()).toMessage()
         }
+    }
+
+    @Action("r18 {status}")
+    fun r18setting(status: Boolean, qq: Long): String{
+        return if (qq != 734669014L) "您没有权限设置！！"
+        else piXivLogic.r18setting(pCookie, status)
     }
 
     @Action("点歌/{name}")
@@ -204,11 +216,21 @@ class ToolController {
     fun time() = mif.image(toolLogic.queryTime())
 
     @Action("网抑")
-    fun wy() = mif.xmlEx(1, "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID=\"1\" templateID=\"-1\" action=\"app\" actionData=\"com.netease.cloudmusic\" brief=\"点击启动网抑\" sourceMsgId=\"0\" url=\"http://y-8.top\" flag=\"2\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"12\" advertiser_id=\"0\" aid=\"0\"><picture cover=\"https://imgurl.cloudimg.cc/2020/07/26/2a7410726090854.jpg\" w=\"0\" h=\"0\" /><title>启动网抑音乐</title></item><source name=\"今天你网抑了吗\" icon=\"\" action=\"\" appid=\"0\" /></msg>")
+    fun wy(): XmlEx{
+        val num = Random.nextInt(2)
+        return if (num == 1)
+            mif.xmlEx(1, "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID=\"1\" templateID=\"-1\" action=\"app\" actionData=\"com.netease.cloudmusic\" brief=\"点击启动网抑\" sourceMsgId=\"0\" url=\"http://y-8.top\" flag=\"2\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"12\" advertiser_id=\"0\" aid=\"0\"><picture cover=\"https://imgurl.cloudimg.cc/2020/07/26/2a7410726090854.jpg\" w=\"0\" h=\"0\" /><title>启动网抑音乐</title></item><source name=\"今天你网抑了吗\" icon=\"\" action=\"\" appid=\"0\" /></msg>")
+        else
+            mif.xmlEx(1, "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID=\"1\" templateID=\"-1\" action=\"app\" actionData=\"com.netease.cloudmusic\" brief=\"点击启动网抑\" sourceMsgId=\"0\" url=\"http://y-8.top\" flag=\"2\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"4\" advertiser_id=\"0\" aid=\"0\"><picture cover=\"https://imgurl.cloudimg.cc/2020/07/26/2a7410726090854.jpg\" w=\"0\" h=\"0\" /><title>启动网抑音乐</title></item><source name=\"今天你网抑了吗\" icon=\"\" action=\"\" appid=\"0\" /></msg>")
+    }
 
     @Action("跟我读")
     fun repeat(session: ContextSession, group: Long, qq: Long): Message{
         yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("您请说！！"))
         return session.waitNextMessage(30 * 1000)
     }
+
+    @QMsg(at = true)
+    @Action("网抑云")
+    fun wyy() = toolLogic.music163cloud()
 }

@@ -2,6 +2,7 @@ package me.kuku.yuq.logic.impl
 
 import com.alibaba.fastjson.JSON
 import me.kuku.yuq.logic.PiXivLogic
+import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.OkHttpClientUtils
 import kotlin.random.Random
 
@@ -32,7 +33,7 @@ class PiXivLogicImpl: PiXivLogic {
     }
 
     override fun bookMarks(id: String, cookie: String): String {
-        val cookieHeader = OkHttpClientUtils.addCookie("PHPSESSID=$cookie;")
+        val cookieHeader = OkHttpClientUtils.addCookie("PHPSESSID=$cookie; ")
         val response = OkHttpClientUtils.get("https://www.pixiv.net/ajax/user/$id/illusts/bookmarks?tag=&offset=0&limit=48&rest=show&lang=zh",
                 cookieHeader)
         val jsonObject = OkHttpClientUtils.getJson(response)
@@ -45,5 +46,31 @@ class PiXivLogicImpl: PiXivLogic {
         val singleJsonObject = jsonArray.getJSONObject(Random.nextInt(jsonArray.size))
         val picId = singleJsonObject.getString("id")
         return this.getUrlById(picId)
+    }
+
+    override fun r18setting(cookie: String, isOpen: Boolean): String {
+        val newCookie = "PHPSESSID=$cookie; "
+        val response = OkHttpClientUtils.get("https://www.pixiv.net/setting_user.php", OkHttpClientUtils.addHeaders(
+                "cookie", newCookie,
+                "user-agent", OkHttpClientUtils.PC_UA
+        ))
+        return if (response.code == 200) {
+            val html = OkHttpClientUtils.getStr(response)
+            val token = BotUtils.regex("pixiv.context.token = \"", "\";", html) ?: return "设置失败！！"
+            val secondResponse = OkHttpClientUtils.post("https://www.pixiv.net/setting_user.php", OkHttpClientUtils.addForms(
+                    "mode", "mod",
+                    "tt", token,
+                    "user_language", "zh",
+                    "r18", if (isOpen) "show" else "hide",
+                    "r18g", if (isOpen) "2" else "1",
+                    "submit", "保存"
+            ),OkHttpClientUtils.addHeaders(
+                    "cookie", newCookie,
+                    "user-agent", OkHttpClientUtils.PC_UA
+            ))
+            secondResponse.close()
+            if (secondResponse.header("location") == "/setting_user.php?success=1") "设置成功！！"
+            else "设置失败！！可能cookie已失效！！"
+        }else "设置失败，cookie已失效！！"
     }
 }

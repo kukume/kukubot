@@ -69,6 +69,7 @@ object QQPasswordLoginUtils {
                         "cookie" to resultCookie
                 ))
             }
+            502 -> CommonResult(500, "登录失败，请稍后再试！！")
             else -> CommonResult(500, commonResult.msg)
         }
 

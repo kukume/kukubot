@@ -6,10 +6,7 @@ import me.kuku.yuq.entity.QQEntity
 import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.logic.QQLogic
 import me.kuku.yuq.pojo.GroupMember
-import me.kuku.yuq.utils.BotUtils
-import me.kuku.yuq.utils.OkHttpClientUtils
-import me.kuku.yuq.utils.QQSuperLoginUtils
-import me.kuku.yuq.utils.QQUtils
+import me.kuku.yuq.utils.*
 import okhttp3.MultipartBody
 import org.jsoup.Jsoup
 import java.net.URLEncoder
@@ -685,7 +682,7 @@ class QQLogicImpl: QQLogic {
         val jsonObject = OkHttpClientUtils.getJson(response)
         return when (jsonObject.getInteger("ec")){
             0 -> "送花成功！"
-            4 -> "送花失败，请更新QQ！"
+            4,1 -> "送花失败，请更新QQ！"
             20000 -> "鲜花不足，充点钱再送吧！！！"
             else -> "送花失败，${jsonObject.getString("em")}"
         }
@@ -883,7 +880,7 @@ class QQLogicImpl: QQLogic {
                         val singleJsonObject = it as JSONObject
                         sb.appendln("@${singleJsonObject.getString("name")}：${singleJsonObject.getString("sentences_num")}条")
                     }
-                    sb.removeSuffix("\r\n").toString()
+                    sb.removeSuffixLine().toString()
                 }else "群活跃数据获取失败！可能没有活跃信息！"
             }
             else -> "群活跃数据获取失败，请更新QQ！"
@@ -1114,7 +1111,7 @@ class QQLogicImpl: QQLogic {
                     val memberJsonObject = v as JSONObject
                     list.add(GroupMember(k.toLong(), memberJsonObject.getInteger("ll"),
                             memberJsonObject.getInteger("lp"), "${memberJsonObject.getString("jt")}000".toLong(),
-                            "${memberJsonObject.getString("lst")}000".toLong()))
+                            "${memberJsonObject.getString("lst")}000".toLong(), null, null))
                 }
                 return CommonResult(200, "", list)
             }
@@ -1169,5 +1166,24 @@ class QQLogicImpl: QQLogic {
             }
         }
         return "删除群文件成功！！"
+    }
+
+    override fun queryFriendVip(qqEntity: QQEntity, qq: Long, psKey: String?): String {
+        val newPsKey = if (psKey != null) psKey
+        else{
+            val commonResult = QQSuperLoginUtils.vipLogin(qqEntity)
+            if (commonResult.code == 200){
+                commonResult.t
+            }else return commonResult.msg
+        }
+        val response = OkHttpClientUtils.get("https://h5.vip.qq.com/p/mc/privilegelist/other?friend=$qq",
+                OkHttpClientUtils.addCookie(qqEntity.getCookie(newPsKey)))
+        val html = OkHttpClientUtils.getStr(response)
+        val elements = Jsoup.parse(html).select(".guest .grade .icon-level span")
+        val sb = StringBuilder().appendln("qq（$qq）的开通业务如下：")
+        for (ele in elements){
+            sb.appendln(ele.text())
+        }
+        return sb.removeSuffixLine().toString()
     }
 }

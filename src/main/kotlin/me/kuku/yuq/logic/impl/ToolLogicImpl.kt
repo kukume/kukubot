@@ -404,4 +404,14 @@ class ToolLogicImpl: ToolLogic {
         val ele = elements[0]
         return ele.text()
     }
+
+    override fun music163cloud(): String {
+        val response = OkHttpClientUtils.get("http://api.heerdev.top/nemusic/random")
+        return OkHttpClientUtils.getJson(response).getString("text")
+    }
+
+    override fun cosImage(): ByteArray {
+        val response = OkHttpClientUtils.get("https://img.594144.xyz/coser/cos.jpg")
+        return OkHttpClientUtils.getBytes(response)
+    }
 }

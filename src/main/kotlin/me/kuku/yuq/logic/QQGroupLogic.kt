@@ -2,6 +2,7 @@ package me.kuku.yuq.logic
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind
 import me.kuku.yuq.pojo.CommonResult
+import me.kuku.yuq.pojo.GroupMember
 
 @AutoBind
 interface QQGroupLogic {
@@ -12,4 +13,6 @@ interface QQGroupLogic {
     fun groupDragonKing(group: Long): CommonResult<Map<String, Long>>
     fun addHomeWork(group: Long, courseName: String, title: String, content: String, needFeedback: Boolean): String
     fun groupCharin(group: Long, content: String, time: Long): String
+    fun groupLevel(group: Long): CommonResult<List<Map<String, String>>>
+    fun queryMemberInfo(group: Long, qq: Long): CommonResult<GroupMember>
 }

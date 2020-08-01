@@ -80,6 +80,7 @@ object QQUtils {
             7 -> "提交参数错误，请检查！！"*/
             else -> BotUtils.regex(",'0','", "', ' '", str)
         }
+        if (msg?.contains("superKey") == true) return CommonResult(502, msg)
         return CommonResult(500, msg)
     }
 

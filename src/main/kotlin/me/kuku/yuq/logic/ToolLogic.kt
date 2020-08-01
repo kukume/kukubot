@@ -37,4 +37,6 @@ interface ToolLogic {
     fun abbreviation(content: String): String
     fun queryTime(): ByteArray
     fun queryVersion(): String
+    fun music163cloud(): String
+    fun cosImage(): ByteArray
 }

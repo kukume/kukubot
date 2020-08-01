@@ -77,7 +77,7 @@ class MotionController {
         do {
             val commonResult: CommonResult<String>
             val captchaImage = leXinMotionLogic.getCaptchaImage(phone)
-            val codeCommonResult = QQAIUtils.generalOCRToMotion(captchaImage)
+            val codeCommonResult = QQAIUtils.generalOCRToCaptcha(captchaImage)
             if (codeCommonResult.code == 200) {
                 commonResult = leXinMotionLogic.getCaptchaCode(phone, codeCommonResult.t)
                 when (commonResult.code) {

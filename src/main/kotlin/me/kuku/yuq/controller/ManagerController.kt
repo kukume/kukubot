@@ -18,6 +18,7 @@ import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.service.QQGroupService
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.OkHttpClientUtils
+import me.kuku.yuq.utils.removeSuffixLine
 import java.io.File
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -36,7 +37,7 @@ class ManagerController {
     private lateinit var toolLogic: ToolLogic
 
 
-    private val version = "v1.3.6"
+    private val version = "v1.4.0"
 
     @Before
     fun before(group: Long, qq: Long, actionContext: BotActionContext, message: Message){
@@ -174,6 +175,7 @@ class ManagerController {
     fun shutUp(group: Long, qqNo: Long, @PathVar(2) timeStr: String?): String{
         val time = if (timeStr == null) 0
         else {
+            if (timeStr.length == 1) return "未发现时间单位！！单位可为（s,m,h,d）"
             val num = timeStr.substring(0, timeStr.length - 1).toInt()
             when (timeStr[timeStr.length - 1]) {
                 's' -> num
@@ -193,16 +195,19 @@ class ManagerController {
         return "踢出成功！！"
     }
 
-    @Action("{act}违规词/{key}")
-    fun addKey(key: String, act: String, qqGroupEntity: QQGroupEntity): String?{
+    @Action("{act}违规词")
+    fun addKey(message: Message, act: String, qqGroupEntity: QQGroupEntity): String?{
         val keywordJsonArray = qqGroupEntity.getKeywordJsonArray()
+        val list = message.toPath().toMutableList()
+        list.removeAt(0)
         val msg = when (act) {
             "加" -> {
-                keywordJsonArray.add(key)
+                list.forEach { keywordJsonArray.add(it) }
+
                 "加违规词成功！！"
             }
             "去" -> {
-                keywordJsonArray.remove(key)
+                list.forEach { keywordJsonArray.remove(it) }
                 "去违规词成功！！"
             }
             else -> null
@@ -276,11 +281,11 @@ class ManagerController {
     @Action("违规词")
     fun keywords(qqGroupEntity: QQGroupEntity): String{
         val keywordJsonArray = qqGroupEntity.getKeywordJsonArray()
-        val sb = StringBuilder("本群违规词如下：\n")
+        val sb = StringBuilder().appendln("本群违规词如下：")
         keywordJsonArray.forEach {
             sb.appendln(it)
         }
-        return sb.removeSuffix("\r\n").toString()
+        return sb.removeSuffixLine().toString()
     }
 
     @Action("#涩图 {status}")

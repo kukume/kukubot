@@ -11,12 +11,11 @@ import com.icecreamqaq.yuq.message.Message
 import me.kuku.yuq.entity.NeTeaseEntity
 import me.kuku.yuq.entity.SteamEntity
 import me.kuku.yuq.entity.SuperCuteEntity
+import me.kuku.yuq.entity.WeiboEntity
 import me.kuku.yuq.logic.NeTeaseLogic
 import me.kuku.yuq.logic.SteamLogic
-import me.kuku.yuq.service.NeTeaseService
-import me.kuku.yuq.service.QQService
-import me.kuku.yuq.service.SteamService
-import me.kuku.yuq.service.SuperCuteService
+import me.kuku.yuq.logic.WeiboLogic
+import me.kuku.yuq.service.*
 import me.kuku.yuq.utils.MD5Utils
 import me.kuku.yuq.utils.QQPasswordLoginUtils
 import me.kuku.yuq.utils.QQUtils
@@ -36,6 +35,10 @@ class BindController: QQController() {
     private lateinit var neTeaseLogic: NeTeaseLogic
     @Inject
     private lateinit var neTeaseService: NeTeaseService
+    @Inject
+    private lateinit var weiboLogic: WeiboLogic
+    @Inject
+    private lateinit var weiboService: WeiboService
 
     @Action("qq")
     fun bindQQ(@PathVar(1) password: String?, qq: Long, session: ContextSession, message: Message): Any? {
@@ -121,5 +124,34 @@ class BindController: QQController() {
             neTeaseService.save(newNeTeaseEntity)
             "绑定成功！！"
         }else "绑定失败！！${commonResult.msg}"
+    }
+
+    @Action("wb {username} {password}")
+    fun bindWb(username: String, password: String, session: ContextSession, qq: Long): String{
+        val weiboEntity = weiboService.findByQQ(qq) ?: WeiboEntity(null, qq)
+        val commonResult = weiboLogic.login(username, password)
+        val mutableMap = commonResult.t ?: return commonResult.msg
+        reply("请输入短信验证码！！！")
+        loop@ do {
+            val codeMessage = session.waitNextMessage(30 * 1000)
+            val code = codeMessage.firstString()
+            val loginCommonResult = weiboLogic.loginBySms(mutableMap.getValue("token"), mutableMap.getValue("phone"), code)
+            when (loginCommonResult.code){
+                200 -> {
+                    val newWeiboEntity = loginCommonResult.t
+                    weiboEntity.pcCookie = newWeiboEntity.pcCookie
+                    weiboEntity.mobileCookie = newWeiboEntity.mobileCookie
+                    weiboEntity.username = username
+                    weiboEntity.password = password
+                    break@loop
+                }
+                500 -> {
+                    return loginCommonResult.msg
+                }
+                402 -> reply("验证码输入错误，请重新输入！！！")
+            }
+        }while (loginCommonResult.code == 402)
+        weiboService.save(weiboEntity)
+        return "绑定或更新成功！！！"
     }
 }

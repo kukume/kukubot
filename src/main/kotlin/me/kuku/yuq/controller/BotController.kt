@@ -3,6 +3,7 @@ package me.kuku.yuq.controller
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Before
 import com.IceCreamQAQ.Yu.annotation.Config
+import com.IceCreamQAQ.Yu.annotation.Synonym
 import com.IceCreamQAQ.Yu.util.OkHttpWebImpl
 import com.icecreamqaq.yuq.annotation.*
 import com.icecreamqaq.yuq.controller.BotActionContext
@@ -20,6 +21,7 @@ import me.kuku.yuq.logic.QQZoneLogic
 import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.service.QQGroupService
 import me.kuku.yuq.utils.removeSuffixLine
+import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
 import kotlin.random.Random
@@ -45,7 +47,7 @@ class BotController {
 
     @Before
     fun before(qq: Long, message: Message, actionContext: BotActionContext) {
-        val msgList = arrayOf("改", "公告", "全体禁言", "拉", "发布作业", "群接龙")
+        val msgList = arrayOf("改", "公告", "全体禁言", "拉", "发布作业", "群接龙", "群作业")
         if (msgList.contains(message.toPath()[0])) {
             if (qq.toString() != master) {
                 throw mif.at(qq).plus("抱歉，您不是机器人主人，无法执行！！")
@@ -77,6 +79,7 @@ class BotController {
 
     @QMsg(at = true)
     @Action("发布作业")
+    @Synonym(["群作业"])
     fun addHomeWork(group: Long, qq: Long, session: ContextSession): String{
         yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("请输入作业科目！！"))
         val nameMessage = session.waitNextMessage(30 * 1000)
@@ -86,6 +89,9 @@ class BotController {
         val content = contentMessage.firstString()
         return qqGroupLogic.addHomeWork(group, name, "作业", content, false)
     }
+
+    @Action("查业务 {qqNo}")
+    fun queryVip(qqNo: Long, qqEntity: QQEntity, vipPsKey: String) = qqLogic.queryFriendVip(qqEntity, qqNo, vipPsKey)
 
     @QMsg(at = true)
     @Action("群接龙")
@@ -102,6 +108,17 @@ class BotController {
         }
         val newTime = (Date().time + (time * 1000 * 60 * 60 * 24)).toString().substring(0, 10)
         return qqGroupLogic.groupCharin(group, content, newTime.toLong())
+    }
+
+    @Action("群等级")
+    fun groupLevel(group: Long): String{
+        val commonResult = qqGroupLogic.groupLevel(group)
+        val list = commonResult.t ?: return commonResult.msg
+        val sb = StringBuilder()
+        list.forEach {
+            sb.appendln("@${it["name"]}：level-${it["level"]}；${it["tag"]}")
+        }
+        return sb.removeSuffixLine().toString()
     }
 
     @Action("列出{day}天未发言")
@@ -156,16 +173,26 @@ class BotController {
     }
 
     @QMsg(at = true)
-    @Action("赞我")
-    fun like(qq: Long, qqEntity: QQEntity, vipPsKey: String) = qqLogic.like(qqEntity, qq, vipPsKey)
-
-    @QMsg(at = true)
     @Action("公告")
     fun publishNotice(group: Long, qq: Long, session: ContextSession, qqEntity: QQEntity): String {
         yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("请输入需要发送的公告内容！"))
         val noticeMessage = session.waitNextMessage(30 * 1000)
         val notice = noticeMessage.body[0].toPath()
         return qqLogic.publishNotice(qqEntity, group, notice)
+    }
+
+    @Action("查询 {qqNo}")
+    fun query(group: Long, qqNo: Long): String{
+        val commonResult = qqGroupLogic.queryMemberInfo(group, qqNo)
+        val groupMember = commonResult.t ?: return commonResult.msg
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+        val sb = StringBuilder()
+        sb.appendln("qq：${groupMember.qq}")
+        sb.appendln("昵称：${groupMember.groupCard}")
+        sb.appendln("Q龄：${groupMember.age}")
+        sb.appendln("入群时间：${sdf.format(Date(groupMember.joinTime))}")
+        sb.append("最后发言时间：${sdf.format(Date(groupMember.lastTime))}")
+        return sb.toString()
     }
 
     @QMsg(at = true)

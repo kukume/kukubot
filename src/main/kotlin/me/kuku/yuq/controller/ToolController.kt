@@ -8,15 +8,16 @@ import com.icecreamqaq.yuq.annotation.*
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.firstString
 import com.icecreamqaq.yuq.message.*
-import com.icecreamqaq.yuq.toMessage
 import me.kuku.yuq.logic.PiXivLogic
+import me.kuku.yuq.logic.QQAILogic
 import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.service.QQGroupService
 import me.kuku.yuq.utils.BotUtils
+import me.kuku.yuq.logic.impl.QQAILogicImpl
 import me.kuku.yuq.utils.image
+import java.net.SocketException
 import java.net.URLEncoder
 import javax.inject.Inject
-import javax.script.ScriptEngineManager
 import kotlin.random.Random
 
 @GroupController
@@ -34,11 +35,12 @@ class ToolController {
     private lateinit var yuq: YuQ
     @Inject
     private lateinit var piXivLogic: PiXivLogic
+    @Inject
+    private lateinit var qqAiLogic: QQAILogic
     @Config("YuQ.Mirai.user.qq")
     private lateinit var qq: String
-//    @Config("YuQ.Mirai.bot.pCookie")
-//    private lateinit var pCookie:String
-    private val pCookie = "51918341_vhV0yUgHJVaJHaTH0zcREYiIOeDIokQq"
+    @Config("YuQ.Mirai.bot.pCookie")
+    private lateinit var pCookie:String
 
     @QMsg(at = true)
     @Action("百度/{content}")
@@ -136,17 +138,18 @@ class ToolController {
 
     @Action("\\.*\\")
     @QMsg(reply = true, at = true)
-    fun js(message: Message): String?{
+    fun chat(message: Message): String?{
         val body = message.body
         val at = body[0]
         return if (at is At && at.user == this.qq.toLong()){
-            var text = ""
-            for (i in 1 until body.size)
-                text += body[i].toPath()
-            val se = ScriptEngineManager().getEngineByName("JavaScript")
-            se.eval(text).toString()
+            val msg = message.body[1].toPath()
+            qqAiLogic.textChat(msg, message.qq.toString())
         }else null
     }
+
+    @Action("搜 {question}")
+    @QMsg(at = true)
+    fun search(question: String) = toolLogic.searchQuestion(question)
 
     @Action("涩图")
     @Synonym(["色图", "色图来"])
@@ -154,15 +157,21 @@ class ToolController {
         val qqGroupEntity = qqGroupService.findByGroup(group)
         if (qqGroupEntity?.colorPic != true) throw mif.at(qq).plus("该功能已关闭")
         return when (qqGroupEntity.colorPicType){
-            "remote" -> mif.image(toolLogic.colorPic()).toMessage()
+            "remote" -> mif.image(toolLogic.colorPic(pCookie)).toMessage()
             "local" -> {
-                val ids = arrayOf(5516155, 4875713, 14228138, 42115425, 15443500, 13070512)
-                val id = ids[Random.nextInt(ids.size)]
-                val url = piXivLogic.bookMarks(id.toString(), pCookie)
-                val bytes = piXivLogic.getImage(url)
-                mif.image(bytes).toMessage()
+                try {
+                    val ids = arrayOf(5516155, 4875713, 14228138, 42115425, 15443500, 13070512)
+                    val id = ids[Random.nextInt(ids.size)]
+                    val url = piXivLogic.bookMarks(id.toString(), pCookie)
+                    val bytes = piXivLogic.getImage(url)
+                    mif.image(bytes).toMessage()
+                }catch (e: SocketException){
+                    if (e.message == "Connection reset")
+                        mif.at(qq).plus("抱歉，该服务器不能访问p站，请发送（涩图切换 远程）")
+                    else mif.at(qq).plus("出现异常了，异常信息为：${e.message}")
+                }
             }
-            else -> mif.image(toolLogic.colorPic()).toMessage()
+            else -> mif.image(toolLogic.colorPic(pCookie)).toMessage()
         }
     }
 
@@ -173,12 +182,6 @@ class ToolController {
             val message = this.colorPic(group, qq)
             yuq.sendMessage(mf.newGroup(group).plus(message))
         }
-    }
-
-    @Action("r18 {status}")
-    fun r18setting(status: Boolean, qq: Long): String{
-        return if (qq != 734669014L) "您没有权限设置！！"
-        else piXivLogic.r18setting(pCookie, status)
     }
 
     @Action("点歌/{name}")
@@ -200,7 +203,7 @@ class ToolController {
     }
 
     @Action("菜单")
-    fun menu() = "菜单如下：https://z6c.cn/lnecrr"
+    fun menu() = "菜单？没有菜单啊！我不会写菜单啊，要不你帮写一个？"
 
     @Action("qr/{content}")
     fun creatQrCode(content: String): Message{

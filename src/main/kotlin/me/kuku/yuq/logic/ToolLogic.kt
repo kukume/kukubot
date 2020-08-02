@@ -27,7 +27,8 @@ interface ToolLogic {
     fun restoreShortUrl(url: String): String
     fun weather(local: String, cookie: String): CommonResult<String>
     fun ping(domain: String): String
-    fun colorPic(): ByteArray
+    fun colorPic(cookie: String): ByteArray
+    fun r18setting(cookie: String, isOpen: Boolean): String
     fun hiToKoTo(): Map<String, String>
     fun songByQQ(name: String): String
     fun songBy163(name: String): CommonResult<String>
@@ -39,4 +40,5 @@ interface ToolLogic {
     fun queryVersion(): String
     fun music163cloud(): String
     fun cosImage(): ByteArray
+    fun searchQuestion(question: String): String
 }

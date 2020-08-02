@@ -9,9 +9,10 @@ import com.icecreamqaq.yuq.controller.ContextSession
 import me.kuku.yuq.entity.MotionEntity
 import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.logic.LeXinMotionLogic
+import me.kuku.yuq.logic.QQAILogic
 import me.kuku.yuq.service.MotionService
 import me.kuku.yuq.utils.BotUtils
-import me.kuku.yuq.utils.QQAIUtils
+import me.kuku.yuq.logic.impl.QQAILogicImpl
 import javax.inject.Inject
 
 @GroupController
@@ -20,6 +21,8 @@ class MotionController {
     private lateinit var motionService: MotionService
     @Inject
     private lateinit var leXinMotionLogic: LeXinMotionLogic
+    @Inject
+    private lateinit var qqAiLogic: QQAILogic
 
     @Action("步数")
     fun steps(qq: Long, group: Long, session: ContextSession): String{
@@ -77,7 +80,7 @@ class MotionController {
         do {
             val commonResult: CommonResult<String>
             val captchaImage = leXinMotionLogic.getCaptchaImage(phone)
-            val codeCommonResult = QQAIUtils.generalOCRToCaptcha(captchaImage)
+            val codeCommonResult = qqAiLogic.generalOCRToCaptcha(captchaImage)
             if (codeCommonResult.code == 200) {
                 commonResult = leXinMotionLogic.getCaptchaCode(phone, codeCommonResult.t)
                 when (commonResult.code) {

@@ -1,15 +1,21 @@
-package me.kuku.yuq.utils
+package me.kuku.yuq.logic.impl
 
+import com.IceCreamQAQ.Yu.annotation.Config
 import com.alibaba.fastjson.JSONObject
+import me.kuku.yuq.logic.QQAILogic
 import me.kuku.yuq.pojo.CommonResult
+import me.kuku.yuq.utils.BotUtils
+import me.kuku.yuq.utils.MD5Utils
+import me.kuku.yuq.utils.OkHttpClientUtils
 import okhttp3.FormBody
 import java.net.URLEncoder
 import java.util.*
 
-object QQAIUtils {
-
-    private const val APP_ID = "2139033099"
-    private const val APP_KEY = "wcHGRr6YMWfGfs6B"
+class QQAILogicImpl: QQAILogic {
+    @Config("YuQ.Mirai.bot.ai.appId")
+    private lateinit var appId: String
+    @Config("YuQ.Mirai.bot.ai.appKey")
+    private lateinit var appKey: String
 
     private fun getSign(map: Map<String, String>): String{
         val treeMap = TreeMap<String, String>()
@@ -18,12 +24,12 @@ object QQAIUtils {
         for ((k, v) in treeMap){
             sb.append("$k=${URLEncoder.encode(v, "utf-8")}&")
         }
-        sb.append("app_key=$APP_KEY")
+        sb.append("app_key=$appKey")
         return MD5Utils.toMD5(sb.toString()).toUpperCase()
     }
 
     private fun addParams(otherParams: Map<String, String>): FormBody {
-        val map = mutableMapOf("app_id" to APP_ID, "time_stamp" to (Date().time / 1000).toString(), "nonce_str" to BotUtils.randomStr(16))
+        val map = mutableMapOf("app_id" to appId, "time_stamp" to (Date().time / 1000).toString(), "nonce_str" to BotUtils.randomStr(16))
         val builder = FormBody.Builder()
         map.putAll(otherParams)
         val sign = this.getSign(map)
@@ -40,7 +46,7 @@ object QQAIUtils {
         return Base64.getEncoder().encodeToString(bytes)
     }
 
-    fun pornIdentification(imageUrl: String): Boolean{
+    override fun pornIdentification(imageUrl: String): Boolean{
         val baseStr = this.imageUrlToBase64(imageUrl)
         val response = OkHttpClientUtils.post("https://api.ai.qq.com/fcgi-bin/vision/vision_porn",
                 addParams(mapOf("image" to baseStr)))
@@ -54,7 +60,7 @@ object QQAIUtils {
         }else false
     }
 
-    fun generalOCR(imageUrl: String){
+    override fun generalOCR(imageUrl: String){
         val baseStr = this.imageUrlToBase64(imageUrl)
         val response = OkHttpClientUtils.post("https://api.ai.qq.com/fcgi-bin/ocr/ocr_generalocr",
                 addParams(mapOf("image" to baseStr)))
@@ -62,7 +68,7 @@ object QQAIUtils {
         println(jsonObject)
     }
 
-    fun generalOCRToCaptcha(byteArray: ByteArray): CommonResult<String>{
+    override fun generalOCRToCaptcha(byteArray: ByteArray): CommonResult<String>{
         val b64 = Base64.getEncoder().encodeToString(byteArray)
         val response = OkHttpClientUtils.post("https://api.ai.qq.com/fcgi-bin/ocr/ocr_generalocr",
                 addParams(mapOf("image" to b64)))
@@ -79,5 +85,14 @@ object QQAIUtils {
             }
             CommonResult(200, "", code)
         }else CommonResult(500, jsonObject.getString("msg"))
+    }
+
+    override fun textChat(question: String, session: String): String{
+        val response = OkHttpClientUtils.post("https://api.ai.qq.com/fcgi-bin/nlp/nlp_textchat",
+                addParams(mapOf("session" to session, "question" to question)))
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return if (jsonObject.getInteger("ret") == 0)
+            jsonObject.getJSONObject("data").getString("answer")
+        else jsonObject.getString("msg")
     }
 }

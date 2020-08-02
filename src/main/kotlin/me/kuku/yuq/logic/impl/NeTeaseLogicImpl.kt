@@ -79,7 +79,7 @@ class NeTeaseLogicImpl: NeTeaseLogic {
         return when (jsonObject.getInteger("code")){
             200 -> "签到成功！！"
             -1 -> "今日已签到"
-            else -> jsonObject.getString("msg")
+            else -> jsonObject.getString("msg") ?: "未知错误"
         }
     }
 

@@ -8,15 +8,18 @@ import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.mf
 import com.icecreamqaq.yuq.mif
 import com.icecreamqaq.yuq.yuq
+import me.kuku.yuq.logic.QQAILogic
 import me.kuku.yuq.service.QQGroupService
 import me.kuku.yuq.utils.BotUtils
-import me.kuku.yuq.utils.QQAIUtils
+import me.kuku.yuq.logic.impl.QQAILogicImpl
 import javax.inject.Inject
 
 @EventListener
 class GroupManagerEvent {
     @Inject
     private lateinit var qqGroupService: QQGroupService
+    @Inject
+    private lateinit var qqAiLogic: QQAILogic
 
     @Event(weight = Event.Weight.high)
     fun switchGroup(e: GroupMessageEvent){
@@ -80,7 +83,7 @@ class GroupManagerEvent {
             for (body in bodyList){
                 if (body is Image){
                     val url = body.url
-                    val b = QQAIUtils.pornIdentification(url)
+                    val b = qqAiLogic.pornIdentification(url)
                     if (b){
                         e.message.recall()
                         yuq.groups[group]?.members?.get(e.message.qq)?.ban(10 * 60)

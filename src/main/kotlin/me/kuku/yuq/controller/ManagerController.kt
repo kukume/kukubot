@@ -14,15 +14,15 @@ import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.mirai.MiraiBot
 import me.kuku.yuq.entity.QQGroupEntity
+import me.kuku.yuq.logic.PiXivLogic
 import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.service.QQGroupService
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.OkHttpClientUtils
 import me.kuku.yuq.utils.removeSuffixLine
 import java.io.File
-import java.util.concurrent.TimeUnit
+import java.net.SocketException
 import javax.inject.Inject
-import kotlin.concurrent.thread
 import kotlin.system.exitProcess
 
 @GroupController
@@ -35,9 +35,13 @@ class ManagerController {
     private lateinit var miraiBot: MiraiBot
     @Inject
     private lateinit var toolLogic: ToolLogic
+    @Inject
+    private lateinit var piXivLogic: PiXivLogic
+    @Config("YuQ.Mirai.bot.pCookie")
+    private lateinit var pCookie:String
 
 
-    private val version = "v1.4.0"
+    private val version = "v1.4.1"
 
     @Before
     fun before(group: Long, qq: Long, actionContext: BotActionContext, message: Message){
@@ -67,13 +71,13 @@ class ManagerController {
         sb.appendln("色图：" + this.boolToStr(qqGroupEntity.colorPic))
         sb.appendln("鉴黄：" + this.boolToStr(qqGroupEntity.pic))
         sb.appendln("嘴臭：" + this.boolToStr(qqGroupEntity.mouthOdor))
+        sb.appendln("涩图：${if (qqGroupEntity.colorPicType == "local")  "本地" else "远程"}")
         sb.appendln("欢迎语：" + this.boolToStr(qqGroupEntity.welcomeMsg))
         sb.appendln("qq功能：" + this.boolToStr(qqGroupEntity.qqStatus))
         sb.appendln("退群拉黑：" + this.boolToStr(qqGroupEntity.leaveGroupBlack))
         sb.appendln("萌宠功能：" + this.boolToStr(qqGroupEntity.superCute))
         sb.appendln("自动审核：" + this.boolToStr(qqGroupEntity.autoReview))
         sb.appendln("撤回通知：" + this.boolToStr(qqGroupEntity.recall))
-        sb.appendln("涩图：${if (qqGroupEntity.colorPicType == "local")  "本地" else "远程"}")
         sb.append("整点报时：" + this.boolToStr(qqGroupEntity.onTimeAlarm))
         return sb.toString()
     }
@@ -83,6 +87,23 @@ class ManagerController {
         miraiBot.stop()
         miraiBot.init()
         miraiBot.start()
+    }
+
+    @Action("r18 {status}")
+    fun r18setting(status: Boolean, qqGroupEntity: QQGroupEntity): String{
+        return when (qqGroupEntity.colorPicType){
+            "remote" -> toolLogic.r18setting(pCookie, status)
+            "local" -> {
+                try {
+                    piXivLogic.r18setting(pCookie, status)
+                }catch (e: SocketException){
+                    if (e.message == "Connection reset")
+                        "抱歉，该服务器不能访问p站，请发送（涩图切换 远程）"
+                    else "出现异常了，异常信息为：${e.message}"
+                }
+            }
+            else -> toolLogic.r18setting(pCookie, status)
+        }
     }
 
     @Action("涩图切换 {type}")
@@ -134,20 +155,6 @@ class ManagerController {
         qqGroupEntity.superCute = status
         qqGroupService.save(qqGroupEntity)
         return if (status) "萌宠功能开启成功" else "萌宠功能关闭成功"
-    }
-
-    @Action("通知")
-    fun allNotice(group: Long, qq: Long, session: ContextSession): String{
-        yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("请输入您要通知的内容！！"))
-        val noticeMessage = session.waitNextMessage(30 * 1000)
-        val members = yuq.groups[group]?.members
-        thread {
-            for (k in members!!) {
-                TimeUnit.SECONDS.sleep(2)
-                yuq.sendMessage(mf.newTemp(group, k.key).plus(noticeMessage))
-            }
-        }
-        return "通知将在后台运行中，消息包含图片、At等可能会通知不成功！！"
     }
 
     @Action("退群拉黑 {status}")
@@ -243,11 +250,11 @@ class ManagerController {
     @Action("黑名单")
     fun blackList(qqGroupEntity: QQGroupEntity): String{
         val blackJsonArray = qqGroupEntity.getBlackJsonArray()
-        val sb = StringBuilder("本群黑名单如下：\r\n")
+        val sb = StringBuilder().appendln("本群黑名单如下：")
         blackJsonArray.forEach {
             sb.appendln(it)
         }
-        return sb.removeSuffix("\r\n").toString()
+        return sb.removeSuffixLine().toString()
     }
 
     @Action("加白 {qqNo}")
@@ -271,11 +278,11 @@ class ManagerController {
     @Action("白名单")
     fun whiteList(qqGroupEntity: QQGroupEntity): String{
         val whiteJsonArray = qqGroupEntity.getWhiteJsonArray()
-        val sb = StringBuilder("本群白名单如下：\r\n")
+        val sb = StringBuilder().appendln("本群白名单如下：")
         whiteJsonArray.forEach {
             sb.appendln(it)
         }
-        return sb.removeSuffix("\r\n").toString()
+        return sb.removeSuffixLine().toString()
     }
 
     @Action("违规词")
@@ -350,13 +357,13 @@ class ManagerController {
 
     @Action("问答")
     fun qaList(qqGroupEntity: QQGroupEntity): String{
-        val sb = StringBuilder("本群问答列表如下：\n")
+        val sb = StringBuilder().appendln("本群问答列表如下：")
         val qaJsonArray = qqGroupEntity.getQaJsonArray()
         for (i in qaJsonArray.indices){
             val jsonObject = qaJsonArray.getJSONObject(i)
             sb.appendln(jsonObject.getString("q"))
         }
-        return sb.removeSuffix("\r\n").toString()
+        return sb.removeSuffixLine().toString()
     }
 
     @Action("删问答/{q}")
@@ -381,7 +388,7 @@ class ManagerController {
         sb.appendln("当前程序版本：$version")
         sb.appendln("最新程序版本：$gitVersion")
         if (gitVersion > version){
-            sb.appendln("更新日志：https://github.com/kukume/kuku-bot/releases/tag/$version")
+            sb.appendln("更新日志：https://github.com/kukume/kuku-bot/releases/tag/$gitVersion")
             sb.append("发现程序可更新，正在下载中！！！")
             yuq.sendMessage(mf.newGroup(group).plus(sb.toString()))
             val response = OkHttpClientUtils.get("https://u.iheit.com/kuku/bot/kukubot.jar")

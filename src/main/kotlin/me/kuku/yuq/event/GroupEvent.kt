@@ -97,8 +97,7 @@ class GroupEvent {
                 """
                     欢迎您加入本群
                     您是本群的第${group.members.size + 1}位成员
-                    您可以畅快的与大家交流啦
-                    菜单见：https://u.iheit.com/kuku/bot/menu.html
+                    您可以愉快的与大家交流啦
                 """.trimIndent()
         ).plus(mif.image("https://q.qlogo.cn/g?b=qq&nk=$qq&s=640")).plus(
                 "一言：${toolLogic.hiToKoTo().getValue("text")}\n" +

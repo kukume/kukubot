@@ -1,5 +1,6 @@
 package me.kuku.yuq.logic.impl
 
+import com.IceCreamQAQ.Yu.annotation.Config
 import com.IceCreamQAQ.Yu.util.IO
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
@@ -22,6 +23,8 @@ class ToolLogicImpl: ToolLogic {
     private val params = "&app_id=$appId&app_secret=$appSecret"
 
     private val neTeaseUrl = "https://netease.iheit.com"
+    @Config("YuQ.Mirai.bot.myApi")
+    private lateinit var myApi: String
 
     override fun dogLicking() : String {
         val response = OkHttpClientUtils.get("http://api.yyhy.me/tg.php?type=api")
@@ -299,9 +302,15 @@ class ToolLogicImpl: ToolLogic {
         return "ping失败，请稍后再试！！"
     }
 
-    override fun colorPic(): ByteArray {
-        val response = OkHttpClientUtils.get("https://api.iheit.com/pixiv/bookmarks")
+    override fun colorPic(cookie: String): ByteArray {
+        val response = OkHttpClientUtils.get("https://$myApi/pixiv/bookmarks/random?cookie=$cookie")
         return OkHttpClientUtils.getBytes(response)
+    }
+
+    override fun r18setting(cookie: String, isOpen: Boolean): String {
+        val response = OkHttpClientUtils.get("https://$myApi/pixiv/r18setting?cookie=$cookie&isopen=${if (isOpen) 1 else 0}")
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return jsonObject.getString("msg")
     }
 
     override fun hiToKoTo(): Map<String, String> {
@@ -413,5 +422,14 @@ class ToolLogicImpl: ToolLogic {
     override fun cosImage(): ByteArray {
         val response = OkHttpClientUtils.get("https://img.594144.xyz/coser/cos.jpg")
         return OkHttpClientUtils.getBytes(response)
+    }
+
+    override fun searchQuestion(question: String): String {
+        val response = OkHttpClientUtils.get("http://api.xmlm8.com/tk.php?t=$question")
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return """
+            问题：${jsonObject.getString("tm")}
+            答案：${jsonObject.getString("da")}
+        """.trimIndent()
     }
 }

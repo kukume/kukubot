@@ -8,7 +8,7 @@ import me.kuku.yuq.pojo.WeiboPojo
 @AutoBind
 interface WeiboLogic {
     fun hotSearch(): String
-    fun getIdByName(name: String): CommonResult<List<String>>
+    fun getIdByName(name: String): CommonResult<List<WeiboPojo>>
     fun convertStr(weiboPojo: WeiboPojo): String
     fun getWeiboById(id: String): CommonResult<List<WeiboPojo>>
     fun login(username: String, password: String): CommonResult<MutableMap<String, String>>

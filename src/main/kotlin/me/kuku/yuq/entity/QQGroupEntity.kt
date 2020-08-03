@@ -23,6 +23,12 @@ data class QQGroupEntity(
         @Lob
         @Column(columnDefinition="text")
         var qa: String = "[]",
+        @Lob
+        @Column(columnDefinition="text")
+        var adminList: String = "[]",
+        @Lob
+        @Column(columnDefinition="text")
+        var weiboList: String = "[]",
         var musicType: String = "qq",
         var colorPic: Boolean? = false,
         var status: Boolean? = false,
@@ -45,4 +51,8 @@ data class QQGroupEntity(
         fun getWhiteJsonArray(): JSONArray = JSON.parseArray(whiteList) ?: JSON.parseArray("[]")
         @Transient
         fun getKeywordJsonArray(): JSONArray = JSON.parseArray(keyword) ?: JSON.parseArray("[]")
+        @Transient
+        fun getAdminJsonArray(): JSONArray = JSON.parseArray(adminList) ?: JSON.parseArray("[]")
+        @Transient
+        fun getWeiboJsonArray(): JSONArray = JSON.parseArray(weiboList) ?: JSON.parseArray("[]")
 }

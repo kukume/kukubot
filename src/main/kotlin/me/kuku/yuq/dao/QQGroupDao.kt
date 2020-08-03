@@ -9,4 +9,6 @@ class QQGroupDao: HibernateDao<QQGroupEntity, Int>(){
 
     fun findByOnTimeAlarm(onTimeAlarm: Boolean) = this.searchList("from QQGroupEntity where onTimeAlarm = ?", null, onTimeAlarm)
 
+    fun findAll() = this.searchList("from QQGroupEntity")
+
 }

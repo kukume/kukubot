@@ -18,4 +18,7 @@ class QQGroupServiceImpl: QQGroupService {
 
     @Transactional
     override fun findByOnTimeAlarm(onTimeAlarm: Boolean) = qqGroupDao.findByOnTimeAlarm(onTimeAlarm)
+
+    @Transactional
+    override fun findAll() = qqGroupDao.findAll()
 }

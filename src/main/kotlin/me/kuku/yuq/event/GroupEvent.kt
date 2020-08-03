@@ -10,6 +10,7 @@ import com.icecreamqaq.yuq.mif
 import com.icecreamqaq.yuq.yuq
 import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.service.DaoService
+import me.kuku.yuq.service.GroupQQService
 import me.kuku.yuq.service.QQGroupService
 import java.text.SimpleDateFormat
 import java.util.*
@@ -23,6 +24,8 @@ class GroupEvent {
     private lateinit var qqGroupService: QQGroupService
     @Inject
     private lateinit var daoService: DaoService
+    @Inject
+    private lateinit var groupQQService: GroupQQService
 
     private val messages = mutableMapOf<Long, Message>()
     private val alreadyMessage = mutableMapOf<Long, Message>()
@@ -63,26 +66,32 @@ class GroupEvent {
 
     @Event
     fun groupMemberLeave(e: GroupMemberLeaveEvent){
-        daoService.delQQ(e.member.id)
-        val qqGroupEntity = qqGroupService.findByGroup(e.group.id) ?: return
+        val qq = e.member.id
+        val group = e.group.id
+        daoService.delQQ(qq)
+        groupQQService.delByQQAndGroup(qq, group)
+        val qqGroupEntity = qqGroupService.findByGroup(group) ?: return
         val msg = if (qqGroupEntity.leaveGroupBlack == true) {
             val blackJsonArray = qqGroupEntity.getBlackJsonArray()
-            blackJsonArray.add(e.member.id.toString())
+            blackJsonArray.add(qq.toString())
             qqGroupEntity.blackList = blackJsonArray.toString()
             qqGroupService.save(qqGroupEntity)
             "刚刚，${e.member.name}退群了，已加入本群黑名单！！"
         }else "刚刚，${e.member.name}离开了我们！！"
-        yuq.sendMessage(mf.newGroup(e.group.id).plus(msg))
+        yuq.sendMessage(mf.newGroup(group).plus(msg))
     }
 
     @Event
     fun groupMemberKick(e: GroupMemberKickEvent){
-        val qqGroupEntity = qqGroupService.findByGroup(e.group.id) ?: return
+        val qq = e.member.id
+        val group = e.group.id
+        val qqGroupEntity = qqGroupService.findByGroup(group) ?: return
         val blackJsonArray = qqGroupEntity.getBlackJsonArray()
-        blackJsonArray.add(e.member.id.toString())
+        blackJsonArray.add(qq.toString())
         qqGroupEntity.blackList = blackJsonArray.toString()
         qqGroupService.save(qqGroupEntity)
-        daoService.delQQ(e.member.id)
+        daoService.delQQ(qq)
+        groupQQService.delByQQAndGroup(qq, group)
     }
 
     @Event

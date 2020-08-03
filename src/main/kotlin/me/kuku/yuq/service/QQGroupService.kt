@@ -9,5 +9,6 @@ interface QQGroupService {
     fun save(qqGroupEntity: QQGroupEntity)
     fun findByGroup(group: Long): QQGroupEntity?
     fun findByOnTimeAlarm(onTimeAlarm: Boolean): List<QQGroupEntity>
+    fun findAll(): List<QQGroupEntity>
 
 }

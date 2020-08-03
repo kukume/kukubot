@@ -12,4 +12,6 @@ class WeiboDao: HibernateDao<WeiboEntity, Int>() {
         return query.executeUpdate()
     }
 
+    fun findByMonitor(monitor: Boolean) = this.searchList("from WeiboEntity where monitor = ?", null, monitor)
+
 }

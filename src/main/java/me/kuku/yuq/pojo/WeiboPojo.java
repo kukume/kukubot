@@ -5,16 +5,23 @@ import java.util.List;
 public class WeiboPojo {
     private String id;
     private String name;
+    private String userId;
     private String created;
     private String text;
     private String bid;
     private List<String> imageUrl;
+
+    public WeiboPojo(String name, String userId) {
+        this.name = name;
+        this.userId = userId;
+    }
 
     @Override
     public String toString() {
         return "WeiboPojo{" +
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
+                ", userId='" + userId + '\'' +
                 ", created='" + created + '\'' +
                 ", text='" + text + '\'' +
                 ", bid='" + bid + '\'' +
@@ -22,13 +29,22 @@ public class WeiboPojo {
                 '}';
     }
 
-    public WeiboPojo(String id, String name, String created, String text, String bid, List<String> imageUrl) {
+    public WeiboPojo(String id, String name, String userId, String created, String text, String bid, List<String> imageUrl) {
         this.id = id;
         this.name = name;
+        this.userId = userId;
         this.created = created;
         this.text = text;
         this.bid = bid;
         this.imageUrl = imageUrl;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public WeiboPojo() {

@@ -1,9 +1,6 @@
 package me.kuku.yuq.controller
 
-import com.IceCreamQAQ.Yu.annotation.Action
-import com.IceCreamQAQ.Yu.annotation.After
-import com.IceCreamQAQ.Yu.annotation.Before
-import com.IceCreamQAQ.Yu.annotation.Config
+import com.IceCreamQAQ.Yu.annotation.*
 import com.IceCreamQAQ.Yu.util.IO
 import com.alibaba.fastjson.JSONObject
 import com.icecreamqaq.yuq.*
@@ -16,6 +13,7 @@ import com.icecreamqaq.yuq.mirai.MiraiBot
 import me.kuku.yuq.entity.QQGroupEntity
 import me.kuku.yuq.logic.PiXivLogic
 import me.kuku.yuq.logic.ToolLogic
+import me.kuku.yuq.logic.WeiboLogic
 import me.kuku.yuq.service.QQGroupService
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.OkHttpClientUtils
@@ -37,11 +35,13 @@ class ManagerController {
     private lateinit var toolLogic: ToolLogic
     @Inject
     private lateinit var piXivLogic: PiXivLogic
+    @Inject
+    private lateinit var weiboLogic: WeiboLogic
     @Config("YuQ.Mirai.bot.pCookie")
     private lateinit var pCookie:String
 
 
-    private val version = "v1.4.1"
+    private val version = "v1.4.2"
 
     @Before
     fun before(group: Long, qq: Long, actionContext: BotActionContext, message: Message){
@@ -51,10 +51,33 @@ class ManagerController {
             qqGroupService.save(qqGroupEntity)
         }
         actionContext.session["qqGroupEntity"] = qqGroupEntity
-        val whiteList = arrayOf("问答", "违规词", "黑名单", "白名单")
-        if (!whiteList.contains(message.toPath()[0])) {
-            if (qq != master.toLong()) throw mif.at(qq).plus("抱歉，您不是机器人主人，无法执行！！")
+        val msg = message.toPath()[0]
+        val whiteList = arrayOf("问答", "违规词", "黑名单", "白名单", "开关")
+        val adminWhiteList = arrayOf("禁言", "t", "加违规词", "去违规词", "问", "删问答", "清屏", "加白", "去白")
+        if (!whiteList.contains(msg)) {
+            val adminJsonArray = qqGroupEntity.getAdminJsonArray()
+            if (!adminJsonArray.contains(qq.toString()) || !adminWhiteList.contains(msg)) {
+                if (qq != master.toLong()) throw mif.at(qq).plus("抱歉，您的权限不足，无法执行！！")
+            }
         }
+    }
+
+    @Action("加管 {qqNo}")
+    fun setAdmin(qqNo: Long, qqGroupEntity: QQGroupEntity): Message{
+        val jsonArray = qqGroupEntity.getAdminJsonArray()
+        jsonArray.add(qqNo.toString())
+        qqGroupEntity.adminList = jsonArray.toString()
+        qqGroupService.save(qqGroupEntity)
+        return mif.text("设置").plus(mif.at(qqNo)).plus("为管理员成功！！")
+    }
+
+    @Action("去管 {qqNo}")
+    fun cancelAdmin(qqNo: Long, qqGroupEntity: QQGroupEntity): Message{
+        val jsonArray = qqGroupEntity.getAdminJsonArray()
+        jsonArray.remove(qqNo.toString())
+        qqGroupEntity.adminList = jsonArray.toString()
+        qqGroupService.save(qqGroupEntity)
+        return mif.text("取消").plus(mif.at(qqNo)).plus("的管理员成功！！")
     }
 
     @Action("机器人 {status}")
@@ -62,6 +85,44 @@ class ManagerController {
         qqGroupEntity.status = status
         qqGroupService.save(qqGroupEntity)
         return if (status) "机器人开启成功" else "机器人关闭成功"
+    }
+
+    @Action("wbmonitor {name}")
+    @Synonym(["微博监控 {name}"])
+    fun wbMonitor(name: String, qqGroupEntity: QQGroupEntity): String{
+        val commonResult = weiboLogic.getIdByName(name)
+        val weiboPojo = commonResult.t?.get(0) ?: return commonResult.msg
+        val weiboJsonArray = qqGroupEntity.getWeiboJsonArray()
+        val jsonObject = JSONObject()
+        jsonObject["name"] = weiboPojo.name
+        jsonObject["id"] = weiboPojo.userId
+        weiboJsonArray.add(jsonObject)
+        qqGroupEntity.weiboList = weiboJsonArray.toString()
+        qqGroupService.save(qqGroupEntity)
+        return "微博监控添加成功！！！"
+    }
+
+    @Action("删微博监控 {name}")
+    fun delWbMonitor(name: String, qqGroupEntity: QQGroupEntity): String{
+        val weiboJsonArray = qqGroupEntity.getWeiboJsonArray()
+        for (i in weiboJsonArray.indices) {
+            val jsonObject = weiboJsonArray.getJSONObject(i)
+            if (jsonObject.getString("name") == name) weiboJsonArray.remove(jsonObject)
+        }
+        qqGroupEntity.weiboList = weiboJsonArray.toString()
+        qqGroupService.save(qqGroupEntity)
+        return "删除微博监控成功"
+    }
+
+    @Action("查微博监控")
+    fun queryWbMonitor(qqGroupEntity: QQGroupEntity): String{
+        val sb = StringBuilder().appendln("该群微博监控如下：")
+        val weiboJsonArray = qqGroupEntity.getWeiboJsonArray()
+        for (i in weiboJsonArray.indices){
+            val jsonObject = weiboJsonArray.getJSONObject(i)
+            sb.appendln("${jsonObject.getString("name")}-${jsonObject.getString("id")}")
+        }
+        return sb.removeSuffixLine().toString()
     }
 
     @Action("开关")

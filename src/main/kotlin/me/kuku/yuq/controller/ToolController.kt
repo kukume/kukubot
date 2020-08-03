@@ -3,17 +3,18 @@ package me.kuku.yuq.controller
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Config
 import com.IceCreamQAQ.Yu.annotation.Synonym
+import com.IceCreamQAQ.Yu.job.JobManager
 import com.icecreamqaq.yuq.YuQ
 import com.icecreamqaq.yuq.annotation.*
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.firstString
 import com.icecreamqaq.yuq.message.*
+import com.icecreamqaq.yuq.toMessage
 import me.kuku.yuq.logic.PiXivLogic
 import me.kuku.yuq.logic.QQAILogic
 import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.service.QQGroupService
 import me.kuku.yuq.utils.BotUtils
-import me.kuku.yuq.logic.impl.QQAILogicImpl
 import me.kuku.yuq.utils.image
 import java.net.SocketException
 import java.net.URLEncoder
@@ -246,4 +247,23 @@ class ToolController {
     @QMsg(at = true)
     @Action("网抑云")
     fun wyy() = toolLogic.music163cloud()
+
+    @Action("cos")
+    fun cos() = mif.image(toolLogic.cosImage())
+
+    @Action("\\^BV.*\\")
+    @Synonym(["\\^bv.*\\"])
+    @QMsg(at = true)
+    fun bvToAv(message: Message): Message{
+        val bv = message.body[0].toPath()
+        val commonResult = toolLogic.bvToAv(bv)
+        return if (commonResult.code == 200){
+            val map = commonResult.t
+            mif.image(map.getValue("pic")).plus(
+                    StringBuilder().appendln("标题：${map["title"]}")
+                            .appendln("描述：${map["desc"]}")
+                            .append("链接：${map["url"]}").toString()
+            )
+        }else commonResult.msg.toMessage()
+    }
 }

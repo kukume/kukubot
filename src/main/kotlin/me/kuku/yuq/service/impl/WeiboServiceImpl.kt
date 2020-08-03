@@ -18,4 +18,7 @@ class WeiboServiceImpl: WeiboService {
 
     @Transactional
     override fun delByQQ(qq: Long) = weiboDao.delByQQ(qq)
+
+    @Transactional
+    override fun findByMonitor(monitor: Boolean) = weiboDao.findByMonitor(monitor)
 }

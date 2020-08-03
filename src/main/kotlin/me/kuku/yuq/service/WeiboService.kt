@@ -11,4 +11,6 @@ interface WeiboService {
 
     fun delByQQ(qq: Long): Int
 
+    fun findByMonitor(monitor: Boolean): List<WeiboEntity>
+
 }

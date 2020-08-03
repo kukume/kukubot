@@ -41,4 +41,5 @@ interface ToolLogic {
     fun music163cloud(): String
     fun cosImage(): ByteArray
     fun searchQuestion(question: String): String
+    fun bvToAv(bv: String): CommonResult<Map<String, String>>
 }

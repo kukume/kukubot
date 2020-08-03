@@ -8,16 +8,19 @@ import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.mf
 import com.icecreamqaq.yuq.mif
 import com.icecreamqaq.yuq.yuq
+import me.kuku.yuq.entity.GroupQQEntity
 import me.kuku.yuq.logic.QQAILogic
+import me.kuku.yuq.service.GroupQQService
 import me.kuku.yuq.service.QQGroupService
 import me.kuku.yuq.utils.BotUtils
-import me.kuku.yuq.logic.impl.QQAILogicImpl
 import javax.inject.Inject
 
 @EventListener
 class GroupManagerEvent {
     @Inject
     private lateinit var qqGroupService: QQGroupService
+    @Inject
+    private lateinit var groupQQService: GroupQQService
     @Inject
     private lateinit var qqAiLogic: QQAILogic
 
@@ -50,8 +53,11 @@ class GroupManagerEvent {
             val keyword = keywordJsonArray.getString(i)
             if (keyword in e.message.sourceMessage.toString()){
                 e.message.recall()
+                val violation = this.violation(qq, group)
+                if (violation >= 5) return
                 yuq.groups[group]?.members?.get(qq)?.ban(10 * 60)
-                yuq.sendMessage(mf.newGroup(group).plus(mif.at(e.message.qq!!)).plus("检测到违规词\"$keyword\"，您已被禁言。"))
+                yuq.sendMessage(mf.newGroup(group).plus(mif.at(e.message.qq!!)).plus(
+                        "检测到违规词\"$keyword\"，您已被禁言。\n您当前的违规次数为${violation}次。\n累计违规5次会被踢出本群哦！！"))
                 return
             }
         }
@@ -76,7 +82,8 @@ class GroupManagerEvent {
     @Event
     fun pic(e: GroupMessageEvent){
         val group = e.message.group!!
-        if (yuq.groups[group]?.bot?.isAdmin() == true) return
+        val qq = e.message.qq!!
+        if (yuq.groups[group]?.bot?.isAdmin() != true) return
         val qqGroupEntity = qqGroupService.findByGroup(group) ?: return
         if (qqGroupEntity.pic == true){
             val bodyList = e.message.body
@@ -86,12 +93,28 @@ class GroupManagerEvent {
                     val b = qqAiLogic.pornIdentification(url)
                     if (b){
                         e.message.recall()
-                        yuq.groups[group]?.members?.get(e.message.qq)?.ban(10 * 60)
-                        yuq.sendMessage(mf.newGroup(group).plus(mif.at(e.message.qq!!)).plus("检测到色情图片，您已被禁言"))
+                        val violation = this.violation(qq, group)
+                        if (violation >= 5) return
+                        yuq.groups[group]?.members?.get(qq)?.ban(10 * 60)
+                        yuq.sendMessage(mf.newGroup(group).plus(mif.at(e.message.qq!!)).plus(
+                                "检测到色情图片，您已被禁言\n您当前的违规次数为${violation}次。\n累计违规5次会被踢出本群哦！！"))
                     }
                 }
             }
         }
+    }
+
+    private fun violation(qq: Long, group: Long): Int{
+        val groupQQEntity = groupQQService.findByQQAndGroup(qq, group) ?: GroupQQEntity(null, qq, group)
+        val violationCount = groupQQEntity.violationCount
+        if (violationCount == 4) {
+            yuq.groups[group]?.members?.get(qq)?.kick()
+            yuq.sendMessage(mf.newGroup(group).plus("${qq}违禁次数已达上限，被移走了！！"))
+        }else {
+            groupQQEntity.violationCount = violationCount + 1
+            groupQQService.save(groupQQEntity)
+        }
+        return violationCount + 1
     }
 
 }

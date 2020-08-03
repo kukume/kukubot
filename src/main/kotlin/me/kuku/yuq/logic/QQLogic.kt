@@ -86,4 +86,6 @@ interface QQLogic {
     fun removeGroupFile(qqEntity: QQEntity, group: Long, fileName: String, folderName: String?): String
     //查询好友业务
     fun queryFriendVip(qqEntity: QQEntity, qq: Long, psKey: String?): String
+    //查询等级等信息
+    fun queryLevel(qqEntity: QQEntity, qq: Long, psKey: String?): String
 }

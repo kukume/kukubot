@@ -250,7 +250,10 @@ class QQLogicImpl: QQLogic {
                     else -> "sVip打卡失败，${jsonObject.getString("msg")}"
                 }
             } else "sVip打卡失败，请更新QQ！"
-        }else "sVip打卡失败，请更新QQ！"
+        }else {
+            response.close()
+            "sVip打卡失败，请更新QQ！"
+        }
     }
 
     override fun bigVipSign(qqEntity: QQEntity): String {
@@ -1063,7 +1066,7 @@ class QQLogicImpl: QQLogic {
         ), qqEntity.cookie())
         val jsonObject = OkHttpClientUtils.getJson(response)
         return when (jsonObject.getInteger("ec")){
-            0 -> if (isAdmin) "添加管理员成功" else "取消管理员成功"
+            0 -> if (isAdmin) "添加${qq}为管理员成功" else "取消${qq}的管理员成功"
             7 -> "权限不够，我无法执行！！"
             2,-100005 -> "群号不存在！！"
             4 -> "执行失败，请更新QQ！！"
@@ -1096,7 +1099,10 @@ class QQLogicImpl: QQLogic {
                     }
                 }
                 "排行榜点赞成功！！"
-            }else "访问排行榜点赞页面失败，请稍后再试！！"
+            }else {
+                firstResponse.close()
+                "访问排行榜点赞页面失败，请稍后再试！！"
+            }
         }else "您的QQ已失效，请更新QQ！！"
     }
 
@@ -1185,5 +1191,21 @@ class QQLogicImpl: QQLogic {
             sb.appendln(ele.text())
         }
         return sb.removeSuffixLine().toString()
+    }
+
+    override fun queryLevel(qqEntity: QQEntity, qq: Long, psKey: String?): String {
+        val newPsKey = if (psKey != null) psKey
+        else{
+            val commonResult = QQSuperLoginUtils.vipLogin(qqEntity)
+            if (commonResult.code == 200){
+                commonResult.t
+            }else return commonResult.msg
+        }
+        val response = OkHttpClientUtils.get("https://club.vip.qq.com/api/vip/getQQLevelInfo?requestBody=%7B%22sClientIp%22:%22127.0.0.1%22,%22sSessionKey%22:%22${qqEntity.sKey}%22,%22iKeyType%22:1,%22iAppId%22:0,%22iUin%22:$qq%7D",
+                OkHttpClientUtils.addCookie(qqEntity.getCookie(newPsKey)))
+        return if (response.code == 200){
+            val jsonObject = OkHttpClientUtils.getJson(response)
+            jsonObject.getJSONObject("data").getJSONObject("mRes").getString("iQQLevel")
+        }else "获取等级失败，请更新QQ！！"
     }
 }

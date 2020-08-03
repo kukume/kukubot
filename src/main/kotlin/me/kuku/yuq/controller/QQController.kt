@@ -257,9 +257,13 @@ class QQController {
         }else "获取群列表失败，请更新QQ！！"
     }
 
-    @Action("加管 {qqNo}")
+    @Action("#加管 {qqNo}")
     fun addAdmin(qqNo: Long, qqEntity: QQEntity, group: Long) =
             qqLogic.setGroupAdmin(qqEntity, qqNo, group, true)
+
+    @Action("#去管 {qqNo}")
+    fun cancelAdmin(qqNo: Long, qqEntity: QQEntity, group: Long) =
+            qqLogic.setGroupAdmin(qqEntity, qqNo, group, false)
 
     @Action("#步数/{step}")
     fun step(qqEntity: QQEntity, qq: Long, step: Int, group: Long): String{

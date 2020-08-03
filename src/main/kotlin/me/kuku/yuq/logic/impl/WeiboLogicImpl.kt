@@ -27,23 +27,23 @@ class WeiboLogicImpl: WeiboLogic {
         return sb.toString()
     }
 
-    override fun getIdByName(name: String): CommonResult<List<String>> {
+    override fun getIdByName(name: String): CommonResult<List<WeiboPojo>> {
         val response = OkHttpClientUtils.get("https://m.weibo.cn/api/container/getIndex?containerid=100103type=1%26q=$name&page_type=searchall")
         return if (response.code == 200){
             val jsonObject = OkHttpClientUtils.getJson(response)
             val jsonArray = jsonObject.getJSONObject("data")?.getJSONArray("cards")?.getJSONObject(0)
                     ?.getJSONArray("card_group") ?: return CommonResult(500, "没有找到该用户")
-            val list = mutableListOf<String>()
+            val list = mutableListOf<WeiboPojo>()
             for (i in jsonArray.indices){
                 val newJsonObject = jsonArray.getJSONObject(i)
                 if (newJsonObject.containsKey("user") || newJsonObject.containsKey("users")) {
                     val userJsonObject = newJsonObject.getJSONObject("user")
-                    if (userJsonObject != null) list.add(userJsonObject.getString("id"))
+                    if (userJsonObject != null) list.add(WeiboPojo(userJsonObject.getString("name") ?: userJsonObject.getString("screen_name"), userJsonObject.getString("id")))
                     else {
                         val usersJsonArray = newJsonObject.getJSONArray("users")
                         for (j in usersJsonArray.indices) {
                             val singleJsonObject = usersJsonArray.getJSONObject(j)
-                            list.add(singleJsonObject.getString("id"))
+                            list.add(WeiboPojo(singleJsonObject.getString("name") ?: singleJsonObject.getString("screen_name"), singleJsonObject.getString("id")))
                         }
                     }
                 }

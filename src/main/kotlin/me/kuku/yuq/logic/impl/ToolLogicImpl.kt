@@ -432,4 +432,25 @@ class ToolLogicImpl: ToolLogic {
             答案：${jsonObject.getString("da")}
         """.trimIndent()
     }
+
+    override fun bvToAv(bv: String): CommonResult<Map<String, String>> {
+        if (bv.length != 12) return CommonResult(500, "不合格的bv号！！")
+        val response = OkHttpClientUtils.get("https://api.bilibili.com/x/web-interface/view?bvid=$bv")
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return when (jsonObject.getInteger("code")) {
+            0 -> {
+                val dataJsonObject = jsonObject.getJSONObject("data")
+                CommonResult(200, "", mapOf(
+                        "pic" to dataJsonObject.getString("pic"),
+                        "dynamic" to dataJsonObject.getString("dynamic"),
+                        "title" to dataJsonObject.getString("title"),
+                        "desc" to dataJsonObject.getString("desc"),
+                        "aid" to dataJsonObject.getString("aid"),
+                        "url" to "https://www.bilibili.com/video/av${dataJsonObject.getString("aid")}"
+                ))
+            }
+            -404 -> CommonResult(500, "没有找到该BV号！！")
+            else -> CommonResult(500, jsonObject.getString("message"))
+        }
+    }
 }

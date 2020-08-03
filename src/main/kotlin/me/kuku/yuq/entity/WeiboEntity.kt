@@ -10,6 +10,7 @@ data class WeiboEntity(
         var id: Int? = null,
         @Column(unique = true)
         var qq: Long = 0L,
+        var group_: Long? = 0L,
         var username: String = "",
         var password: String = "",
         @Lob
@@ -17,5 +18,6 @@ data class WeiboEntity(
         var pcCookie: String = "",
         @Lob
         @Column(columnDefinition="text")
-        var mobileCookie: String = ""
+        var mobileCookie: String = "",
+        var monitor: Boolean? = false
 )

@@ -113,7 +113,7 @@ class BindController: QQController() {
         val account = accountMessage.firstString()
         reply("请输入网易云音乐密码，密码必须为32位md5，不可以传入明文，如需使用机器人md5摘要，请发送md5 内容")
         reply("md5在线加密网站：https://md5jiami.51240.com/，请使用32位小写！！")
-        val pwdMessage = session.waitNextMessage(30 * 1000)
+        val pwdMessage = session.waitNextMessage(60 * 1000 * 2)
         val password = pwdMessage.firstString()
         val commonResult = neTeaseLogic.loginByPhone(account, password)
         return if (commonResult.code == 200){
@@ -127,13 +127,13 @@ class BindController: QQController() {
     }
 
     @Action("wb {username} {password}")
-    fun bindWb(username: String, password: String, session: ContextSession, qq: Long): String{
+    fun bindWb(username: String, password: String, session: ContextSession, qq: Long, message: Message): String{
         val weiboEntity = weiboService.findByQQ(qq) ?: WeiboEntity(null, qq)
         val commonResult = weiboLogic.login(username, password)
         val mutableMap = commonResult.t ?: return commonResult.msg
         reply("请输入短信验证码！！！")
         loop@ do {
-            val codeMessage = session.waitNextMessage(30 * 1000)
+            val codeMessage = session.waitNextMessage(60 * 1000 * 2)
             val code = codeMessage.firstString()
             val loginCommonResult = weiboLogic.loginBySms(mutableMap.getValue("token"), mutableMap.getValue("phone"), code)
             when (loginCommonResult.code){
@@ -143,6 +143,7 @@ class BindController: QQController() {
                     weiboEntity.mobileCookie = newWeiboEntity.mobileCookie
                     weiboEntity.username = username
                     weiboEntity.password = password
+                    weiboEntity.group_ = message.group ?: 0L
                     break@loop
                 }
                 500 -> {

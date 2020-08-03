@@ -5,9 +5,11 @@ import com.IceCreamQAQ.Yu.annotation.Before
 import com.IceCreamQAQ.Yu.annotation.Config
 import com.IceCreamQAQ.Yu.annotation.Synonym
 import com.IceCreamQAQ.Yu.util.OkHttpWebImpl
+import com.alibaba.fastjson.JSONArray
 import com.icecreamqaq.yuq.annotation.*
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.ContextSession
+import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.firstString
 import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.message.Message
@@ -121,13 +123,44 @@ class BotController {
         return sb.removeSuffixLine().toString()
     }
 
+    @Action("列出{level}级以下")
+    fun level(qqEntity: QQEntity, group: Long, vipPsKey: String, level: String, session: ContextSession, qq: Long): String?{
+        val members = yuq.groups[group]?.members ?: return "获取用户列表失败，请稍后再试！！"
+        val levelNum = try {
+            level.toInt()
+        }catch (e: Exception){
+            return "等级只能为整型！！"
+        }
+        val sb = StringBuilder().appendln("本群QQ等级在${level}以下的成员如下")
+        val list = mutableListOf<Member>()
+        for ((k, v) in members){
+            if (k == this.qq.toLong()) continue
+            val userLevel = qqLogic.queryLevel(qqEntity, k, vipPsKey)
+            if (userLevel.contains("更新QQ")) continue
+            if (levelNum > userLevel.toInt()) {
+                list.add(v)
+                sb.appendln(k)
+            }
+        }
+        yuq.sendMessage(mf.newGroup(group).plus(sb.removeSuffixLine().toString()))
+        val nextMessage = session.waitNextMessage(60 * 1000)
+        return if (this.judgmentKick(qq, nextMessage.firstString())) {
+            val whiteJsonArray = qqGroupService.findByGroup(group)?.getWhiteJsonArray() ?: JSONArray()
+            list.forEach {
+                if (it.toString() in whiteJsonArray) return@forEach
+                try{it.kick()}catch (e: Exception){e.printStackTrace()}
+            }
+            "踢出成功！！"
+        } else null
+    }
+
     @Action("列出{day}天未发言")
     fun notSpeak(group: Long, day: String, session: ContextSession, qq: Long, qqEntity: QQEntity): String? {
         val commonResult = qqLogic.groupMemberInfo(qqEntity, group)
         if (commonResult.code == 200) {
             val list = commonResult.t!!
             val qqList = mutableListOf<Long>()
-            val sb = StringBuilder("本群${day}天未发言的成员如下：\n")
+            val sb = StringBuilder().appendln("本群${day}天未发言的成员如下：")
             list.forEach {
                 if ((Date().time - it.lastTime) / (1000 * 60 * 60 * 24) > day.toInt()) {
                     sb.appendln(it.qq)
@@ -140,7 +173,7 @@ class BotController {
                 val whiteList = qqGroupService.findByGroup(group)?.whiteList ?: "查询群失败，踢出失败！！"
                 qqList.forEach {
                     if (it.toString() in whiteList) return@forEach
-                    yuq.groups[group]?.get(it)?.kick()
+                    try{yuq.groups[group]?.get(it)?.kick()}catch (e: Exception){e.printStackTrace()}
                 }
                 "踢出成功！！"
             } else null
@@ -167,7 +200,7 @@ class BotController {
                 if (it.toString() in whiteList) return@forEach
                 yuq.groups[group]?.get(it)?.kick()
             }
-            qqList.forEach { yuq.groups[group]?.get(it)?.kick() }
+            qqList.forEach { try{yuq.groups[group]?.get(it)?.kick()}catch (e: Exception){e.printStackTrace()} }
             "踢出成功！！"
         } else null
     }
@@ -261,4 +294,5 @@ class BotController {
     fun addFriend(qqEntity: QQEntity, qqNo: Long) =
         qqZoneLogic.addFriend(qqEntity, qqNo, "机器人加你需要理由？？", null, null)
 
+    private fun judgmentKick(qq: Long, msg: String) = qq == master.toLong() && msg == "一键踢出"
 }

@@ -41,7 +41,7 @@ class ManagerController {
     private lateinit var pCookie:String
 
 
-    private val version = "v1.4.2"
+    private val version = "v1.4.3"
 
     @Before
     fun before(group: Long, qq: Long, actionContext: BotActionContext, message: Message){
@@ -125,6 +125,13 @@ class ManagerController {
         return sb.removeSuffixLine().toString()
     }
 
+    @Action("违规次数 {count}")
+    fun maxViolationCount(qqGroupEntity: QQGroupEntity, count: Int): String{
+        qqGroupEntity.maxViolationCount = count
+        qqGroupService.save(qqGroupEntity)
+        return "已设置本群最大违规次数为${count}次"
+    }
+
     @Action("开关")
     fun kai(qqGroupEntity: QQGroupEntity): String{
         val sb = StringBuilder("本群开关情况如下：\n")
@@ -139,6 +146,7 @@ class ManagerController {
         sb.appendln("萌宠功能：" + this.boolToStr(qqGroupEntity.superCute))
         sb.appendln("自动审核：" + this.boolToStr(qqGroupEntity.autoReview))
         sb.appendln("撤回通知：" + this.boolToStr(qqGroupEntity.recall))
+        sb.appendln("违规次数：${qqGroupEntity.maxViolationCount}")
         sb.append("整点报时：" + this.boolToStr(qqGroupEntity.onTimeAlarm))
         return sb.toString()
     }
@@ -427,8 +435,11 @@ class ManagerController {
         return sb.removeSuffixLine().toString()
     }
 
-    @Action("删问答/{q}")
-    fun delQa(qqGroupEntity: QQGroupEntity, q: String): String{
+    @Action("删问答")
+    fun delQa(qqGroupEntity: QQGroupEntity, message: Message): String{
+        val msg = message.firstString()
+        if (msg.length <= 4) return "请输入需要删除的问答！！"
+        val q = msg.substring(4)
         val qaJsonArray = qqGroupEntity.getQaJsonArray()
         for (i in qaJsonArray.indices){
             val jsonObject = qaJsonArray.getJSONObject(i)
@@ -436,7 +447,7 @@ class ManagerController {
                 qaJsonArray.remove(jsonObject)
                 qqGroupEntity.qa = qaJsonArray.toString()
                 qqGroupService.save(qqGroupEntity)
-                return "删除改问答成功！！"
+                return "删除问答成功！！"
             }
         }
         return "没有找到该问答，请检查！！！"

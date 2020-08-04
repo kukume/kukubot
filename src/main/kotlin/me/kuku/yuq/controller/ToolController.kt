@@ -152,6 +152,9 @@ class ToolController {
     @QMsg(at = true)
     fun search(question: String) = toolLogic.searchQuestion(question)
 
+    @Action("\\.*B407F708-A2C6-A506-3420-98DF7CAC4A57.*\\")
+    fun pic(group: Long, qq: Long) = this.colorPic(group, qq)
+
     @Action("涩图")
     @Synonym(["色图", "色图来"])
     fun colorPic(group: Long, qq: Long): Message {

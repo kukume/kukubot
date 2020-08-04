@@ -6,6 +6,7 @@ import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.annotation.PrivateController
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.controller.QQController
+import com.icecreamqaq.yuq.entity.Contact
 import com.icecreamqaq.yuq.firstString
 import com.icecreamqaq.yuq.message.Message
 import me.kuku.yuq.entity.NeTeaseEntity
@@ -15,10 +16,12 @@ import me.kuku.yuq.entity.WeiboEntity
 import me.kuku.yuq.logic.NeTeaseLogic
 import me.kuku.yuq.logic.SteamLogic
 import me.kuku.yuq.logic.WeiboLogic
+import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.service.*
 import me.kuku.yuq.utils.MD5Utils
 import me.kuku.yuq.utils.QQPasswordLoginUtils
 import me.kuku.yuq.utils.QQUtils
+import me.kuku.yuq.utils.image
 import javax.inject.Inject
 
 @PrivateController
@@ -130,29 +133,58 @@ class BindController: QQController() {
     fun bindWb(username: String, password: String, session: ContextSession, qq: Long, message: Message): String{
         val weiboEntity = weiboService.findByQQ(qq) ?: WeiboEntity(null, qq)
         val commonResult = weiboLogic.login(username, password)
-        val mutableMap = commonResult.t ?: return commonResult.msg
-        reply("请输入短信验证码！！！")
-        loop@ do {
-            val codeMessage = session.waitNextMessage(60 * 1000 * 2)
-            val code = codeMessage.firstString()
-            val loginCommonResult = weiboLogic.loginBySms(mutableMap.getValue("token"), mutableMap.getValue("phone"), code)
-            when (loginCommonResult.code){
-                200 -> {
+        return if (commonResult.code == 200) {
+            val data = commonResult.t  ?: return commonResult.msg
+            reply("请输入短信验证码！！！")
+            loop@ while (true) {
+                val codeMessage = session.waitNextMessage(60 * 1000 * 2)
+                val code = codeMessage.firstString()
+                val loginCommonResult = weiboLogic.loginBySms(data["token"].toString(), data["phone"].toString(), code)
+                when (loginCommonResult.code) {
+                    200 -> {
+                        val newWeiboEntity = loginCommonResult.t
+                        weiboEntity.pcCookie = newWeiboEntity.pcCookie
+                        weiboEntity.mobileCookie = newWeiboEntity.mobileCookie
+                        weiboEntity.username = username
+                        weiboEntity.password = password
+                        weiboEntity.group_ = message.group ?: 0L
+                        break@loop
+                    }
+                    500 -> {
+                        return loginCommonResult.msg
+                    }
+                    402 -> {
+                        reply("验证码输入错误，请重新输入！！！")
+                        continue@loop
+                    }
+                }
+            }
+            weiboService.save(weiboEntity)
+            "绑定或更新成功！！！"
+        }else if (commonResult.code == 201) {
+            val map = commonResult.t
+            while (true) {
+                val bytes = weiboLogic.getCaptchaImage(map.getValue("pcid"))
+                reply(mif.image(bytes).plus("请输入图片验证码！！"))
+                val codeMessage = session.waitNextMessage()
+                val code = codeMessage.firstString()
+                val loginCommonResult = weiboLogic.loginByDoor(map, code, password)
+                if (loginCommonResult.code == 2070){
+                    reply("图片验证码输入不正确，请重新输入！！")
+                    continue
+                }else if (loginCommonResult.code == 200){
                     val newWeiboEntity = loginCommonResult.t
                     weiboEntity.pcCookie = newWeiboEntity.pcCookie
                     weiboEntity.mobileCookie = newWeiboEntity.mobileCookie
                     weiboEntity.username = username
                     weiboEntity.password = password
                     weiboEntity.group_ = message.group ?: 0L
-                    break@loop
-                }
-                500 -> {
-                    return loginCommonResult.msg
-                }
-                402 -> reply("验证码输入错误，请重新输入！！！")
+                    weiboService.save(weiboEntity)
+                    break
+                }else loginCommonResult.msg
             }
-        }while (loginCommonResult.code == 402)
-        weiboService.save(weiboEntity)
-        return "绑定或更新成功！！！"
+            weiboService.save(weiboEntity)
+            "绑定或更新成功！！！"
+        }else commonResult.msg
     }
 }

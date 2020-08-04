@@ -89,7 +89,7 @@ class BotController {
         yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("请输入作业内容！！"))
         val contentMessage = session.waitNextMessage(30 * 1000)
         val content = contentMessage.firstString()
-        return qqGroupLogic.addHomeWork(group, name, "作业", content, false)
+        return qqGroupLogic.addHomeWork(group, name, "作业", content, true)
     }
 
     @Action("查业务 {qqNo}")

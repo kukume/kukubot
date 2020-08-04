@@ -2,11 +2,13 @@
 * [YuQ](https://github.com/YuQWorks/YuQ)
 * [YuQ-Mirai](https://github.com/YuQWorks/YuQ-Mirai)
 * [YuQ-Mirai-Demo](https://github.com/YuQWorks/YuQ-Mirai-Demo)
+* [YuQ-Mirai-SuperDemo](https://github.com/YuQWorks/YuQ-SuperDemo)
 * [Mirai](https://github.com/mamoe/mirai)
 
 ## 功能
-* QQ自动签到
-* 超级萌宠快速养成
+* QQ一键签到
+* 超级萌宠一键养成
+* 微博监控
 * 自动修改步数
 * 网易云音乐打卡和每日300首听歌量
 * 一些小工具

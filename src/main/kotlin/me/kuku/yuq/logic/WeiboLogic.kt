@@ -11,6 +11,8 @@ interface WeiboLogic {
     fun getIdByName(name: String): CommonResult<List<WeiboPojo>>
     fun convertStr(weiboPojo: WeiboPojo): String
     fun getWeiboById(id: String): CommonResult<List<WeiboPojo>>
+    fun getCaptchaImage(pcId: String): ByteArray
+    fun loginByDoor(map: MutableMap<String, String>, door: String, password: String): CommonResult<WeiboEntity>
     fun login(username: String, password: String): CommonResult<MutableMap<String, String>>
     fun loginBySms(token: String, phone: String, code: String): CommonResult<WeiboEntity>
     fun getFriendWeibo(weiboEntity: WeiboEntity): CommonResult<List<WeiboPojo>>

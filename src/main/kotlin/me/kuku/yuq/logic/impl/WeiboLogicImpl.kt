@@ -1,6 +1,8 @@
 package me.kuku.yuq.logic.impl
 
+import com.IceCreamQAQ.Yu.util.IO
 import com.alibaba.fastjson.JSON
+import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
 import me.kuku.yuq.entity.WeiboEntity
 import me.kuku.yuq.logic.WeiboLogic
@@ -8,9 +10,12 @@ import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.pojo.WeiboPojo
 import me.kuku.yuq.utils.*
 import org.jsoup.Jsoup
+import java.io.File
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.util.*
+import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
 class WeiboLogicImpl: WeiboLogic {
     override fun hotSearch(): String {
@@ -28,11 +33,21 @@ class WeiboLogicImpl: WeiboLogic {
     }
 
     override fun getIdByName(name: String): CommonResult<List<WeiboPojo>> {
-        val response = OkHttpClientUtils.get("https://m.weibo.cn/api/container/getIndex?containerid=100103type=1%26q=$name&page_type=searchall")
+        val newName = URLEncoder.encode(name, "utf-8")
+        val response = OkHttpClientUtils.get("https://m.weibo.cn/api/container/getIndex?containerid=100103type%3D3%26q%3D$newName%26t%3D0&page_type=searchall",
+                OkHttpClientUtils.addReferer("https://m.weibo.cn/search?containerid=100103type%3D1%26q%3D$newName"))
         return if (response.code == 200){
             val jsonObject = OkHttpClientUtils.getJson(response)
-            val jsonArray = jsonObject.getJSONObject("data")?.getJSONArray("cards")?.getJSONObject(0)
-                    ?.getJSONArray("card_group") ?: return CommonResult(500, "没有找到该用户")
+            val cardsJsonArray = jsonObject.getJSONObject("data")?.getJSONArray("cards") ?: return CommonResult(500, "搜索失败，请稍后再试！！")
+            var jsonArray: JSONArray? = null
+            for (i in cardsJsonArray.indices) {
+                val cardGroupJsonArray = cardsJsonArray.getJSONObject(i).getJSONArray("card_group")
+                if (cardGroupJsonArray != null) {
+                    jsonArray = cardGroupJsonArray
+                    break
+                }
+            }
+            if (jsonArray == null) return CommonResult(500, "没有找到该用户")
             val list = mutableListOf<WeiboPojo>()
             for (i in jsonArray.indices){
                 val newJsonObject = jsonArray.getJSONObject(i)
@@ -106,9 +121,14 @@ class WeiboLogicImpl: WeiboLogic {
         for ((k, v) in jsonObject){
             map[k] = v.toString()
         }
-        map["cookie"] = OkHttpClientUtils.getCookie(response)
+        map["cookie"] = OkHttpClientUtils.getCookie(response) + "ULOGIN_IMG=${map["pcid"]}; "
         map["username"] = username
         return map
+    }
+
+    override fun getCaptchaImage(pcId: String): ByteArray{
+        val response = OkHttpClientUtils.get("https://login.sina.com.cn/cgi/pin.php?r=${BotUtils.randomStr(8)}&s=0&p=$pcId")
+        return OkHttpClientUtils.getBytes(response)
     }
 
     private fun encryptPassword(map: Map<String, String>, password: String): String {
@@ -116,6 +136,13 @@ class WeiboLogicImpl: WeiboLogic {
         val newPassword = RSAUtils.encrypt(message, RSAUtils.getPublicKey(map["pubkey"], "10001"))
         val bytes = Base64.getDecoder().decode(newPassword)
         return HexUtils.bytesToHexString(bytes)
+    }
+
+    private fun getMobileCookie(pcCookie: String): String{
+        val response = OkHttpClientUtils.get("https://login.sina.com.cn/sso/login.php?url=https%3A%2F%2Fm.weibo.cn%2F%3F%26jumpfrom%3Dweibocom&_rand=1588483688.7261&gateway=1&service=sinawap&entry=sinawap&useticket=1&returntype=META&sudaref=&_client_version=0.6.33",
+                OkHttpClientUtils.addCookie(pcCookie))
+        response.close()
+        return OkHttpClientUtils.getCookie(response)
     }
 
     private fun login(map: MutableMap<String, String>, password: String): CommonResult<MutableMap<String, String>>{
@@ -164,14 +191,62 @@ class WeiboLogicImpl: WeiboLogic {
         }
     }
 
+    override fun loginByDoor(map: MutableMap<String, String>, door: String, password: String): CommonResult<WeiboEntity>{
+        val newPassword = this.encryptPassword(map, password)
+        val response = OkHttpClientUtils.post("https://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.19)&_=${Date().time}", OkHttpClientUtils.addForms(
+                "entry", "weibo",
+                "gateway", "1",
+                "from", "",
+                "savestate", "7",
+                "qrcode_flag", "false",
+                "useticket", "1",
+                "pcid", map.getValue("pcid"),
+                "pagerefer", "",
+                "door", door,
+                "vsnf", "1",
+                "su", map.getValue("username"),
+                "service", "miniblog",
+                "servertime", map.getValue("servertime"),
+                "nonce", map.getValue("nonce"),
+                "pwencode", "rsa2",
+                "rsakv", map.getValue("rsakv"),
+                "sp", newPassword,
+                "sr", "1536*864",
+                "encoding", "UTF-8",
+                "cdult", "2",
+                "domain", "sina.com.cn",
+                "prelt", "53",
+                "returntype", "TEXT"
+        ), OkHttpClientUtils.addCookie(map.getValue("cookie")))
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return when (jsonObject.getInteger("retcode")){
+             0 -> {
+                 val alcCookie = OkHttpClientUtils.getCookie(response, "ALC").get("ALC");
+                 val secondResponse = OkHttpClientUtils.get(jsonObject.getJSONArray("crossDomainUrlList").getString(0),
+                         OkHttpClientUtils.addCookie(map.getValue("cookie")))
+                 secondResponse.close()
+                 val pcCookie = OkHttpClientUtils.getCookie(secondResponse)
+                 val mobileCookie = this.getMobileCookie("ALC=$alcCookie; ")
+                 CommonResult(200, "", WeiboEntity(pcCookie = pcCookie, mobileCookie = mobileCookie))
+             }
+            4049 -> CommonResult(2070, "请输入验证码！！")
+            2070 -> CommonResult(2070, "验证码输入不正确！！")
+            101 -> CommonResult(500, "用户名密码错误！！")
+            else -> CommonResult(500, jsonObject.getString("reason"))
+        }
+    }
+
     override fun login(username: String, password: String): CommonResult<MutableMap<String, String>> {
         val newUsername = Base64.getEncoder().encodeToString(username.toByteArray())
         val loginParams = this.loginParams(newUsername)
-        return this.login(loginParams, password)
+        return if (loginParams["showpin"] == "0") {
+            this.login(loginParams, password)
+        }else CommonResult(201, "", loginParams)
     }
 
     override fun loginBySms(token: String, phone: String, code: String): CommonResult<WeiboEntity> {
-        val response = OkHttpClientUtils.post("https://login.sina.com.cn/protection/mobile/confirm?token=$token", OkHttpClientUtils.addForms(
+        val refererUrl = "https://login.sina.com.cn/protection/mobile/confirm?token=$token"
+        val response = OkHttpClientUtils.post(refererUrl, OkHttpClientUtils.addForms(
                 "encrypt_mobile", phone,
                 "code", code
         ))
@@ -179,13 +254,22 @@ class WeiboLogicImpl: WeiboLogic {
         return when (jsonObject.getInteger("retcode")){
             20000000 -> {
                 val url = jsonObject.getJSONObject("data").getString("redirect_url")
-                val resultResponse = OkHttpClientUtils.get(url)
-                resultResponse.close()
-                val pcCookie = OkHttpClientUtils.getCookie(resultResponse)
-                val mobileResponse = OkHttpClientUtils.get("https://login.sina.com.cn/sso/login.php?url=https%3A%2F%2Fm.weibo.cn%2F%3F%26jumpfrom%3Dweibocom&_rand=1588483688.7261&gateway=1&service=sinawap&entry=sinawap&useticket=1&returntype=META&sudaref=&_client_version=0.6.33",
-                        OkHttpClientUtils.addCookie(pcCookie))
-                mobileResponse.close()
-                val mobileCookie = OkHttpClientUtils.getCookie(mobileResponse)
+                val resultResponse = OkHttpClientUtils.get(url, OkHttpClientUtils.addReferer(refererUrl))
+                val cookie = OkHttpClientUtils.getCookie(resultResponse)
+                val html = OkHttpClientUtils.getStr(resultResponse)
+                val secondUrl = BotUtils.regex("location.replace\\(\"", "\"\\);", html) ?: return CommonResult(500, "登录失败，请稍后再试！！")
+                val secondResponse = OkHttpClientUtils.get(secondUrl, OkHttpClientUtils.addHeaders(
+                        "cookie", cookie,
+                        "referer", url
+                ))
+                val secondHtml = OkHttpClientUtils.getStr(secondResponse)
+                val jsonStr = BotUtils.regex("sinaSSOController.setCrossDomainUrlList\\(", "\\);", secondHtml)
+                val urlJsonObject = JSON.parseObject(jsonStr)
+                val pcUrl = urlJsonObject.getJSONArray("arrURL").getString(0)
+                val pcResponse = OkHttpClientUtils.get("$pcUrl&callback=sinaSSOController.doCrossDomainCallBack&scriptId=ssoscript0&client=ssologin.js(v1.4.19)&_=${Date().time}")
+                pcResponse.close()
+                val pcCookie = OkHttpClientUtils.getCookie(pcResponse)
+                val mobileCookie = this.getMobileCookie(cookie)
                 CommonResult(200, "", WeiboEntity(pcCookie = pcCookie, mobileCookie = mobileCookie))
             }
             8518 -> CommonResult(402, "验证码错误或已经过期！！！")

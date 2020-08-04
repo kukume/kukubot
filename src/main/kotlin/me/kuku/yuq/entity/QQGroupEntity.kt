@@ -41,7 +41,8 @@ data class QQGroupEntity(
         var mouthOdor: Boolean? = false,
         var autoReview: Boolean? = false,
         var onTimeAlarm: Boolean? = false,
-        var colorPicType: String? = "remote"
+        var colorPicType: String? = "remote",
+        var maxViolationCount: Int? = 0
 ){
         @Transient
         fun getQaJsonArray(): JSONArray = JSON.parseArray(qa) ?: JSON.parseArray("[]")

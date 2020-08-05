@@ -6,16 +6,13 @@ import com.IceCreamQAQ.Yu.annotation.Config
 import com.IceCreamQAQ.Yu.annotation.Synonym
 import com.IceCreamQAQ.Yu.util.OkHttpWebImpl
 import com.alibaba.fastjson.JSONArray
+import com.icecreamqaq.yuq.*
 import com.icecreamqaq.yuq.annotation.*
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.entity.Member
-import com.icecreamqaq.yuq.firstString
 import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.message.Message
-import com.icecreamqaq.yuq.mf
-import com.icecreamqaq.yuq.mif
-import com.icecreamqaq.yuq.yuq
 import me.kuku.yuq.entity.QQEntity
 import me.kuku.yuq.logic.QQGroupLogic
 import me.kuku.yuq.logic.QQLogic
@@ -230,7 +227,7 @@ class BotController {
 
     @QMsg(at = true)
     @Action("群链接")
-    fun groupLink(group: Long, qqEntity: QQEntity) = qqLogic.getGroupLink(qqEntity, group);
+    fun groupLink(group: Long, qqEntity: QQEntity) = qqLogic.getGroupLink(qqEntity, group)
 
     @Action("群活跃")
     fun groupActive(group: Long, qqEntity: QQEntity) = qqLogic.groupActive(qqEntity, group, 0)
@@ -260,6 +257,8 @@ class BotController {
 
     @Action("龙王")
     fun dragonKing(group: Long): Message{
+        val qqGroupEntity = qqGroupService.findByGroup(group)
+        if (qqGroupEntity?.dragonKing == false) return "迫害龙王已关闭！！".toMessage()
         val commonResult = qqGroupLogic.groupDragonKing(group)
         return if (commonResult.code == 200){
             val urlArr = arrayOf(
@@ -282,7 +281,9 @@ class BotController {
                     "https://u.iheit.com/kuku/8c4a80415023748.jpg",
                     "https://u.iheit.com/kuku/bdb970415023750.jpg",
                     "https://u.iheit.com/images/2020/07/23/33609b326b5b30b0.jpg",
-                    "https://u.iheit.com/images/2020/07/23/3e53644bd75c68e6.jpg"
+                    "https://u.iheit.com/images/2020/07/23/3e53644bd75c68e6.jpg",
+                    "https://u.iheit.com/images/2020/08/05/image.png",
+                    "https://u.iheit.com/images/2020/08/05/image4046ccd0c6179229.png"
             )
             val url = urlArr[Random.nextInt(urlArr.size)]
             val map = commonResult.t

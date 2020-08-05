@@ -6,7 +6,6 @@ import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.annotation.PrivateController
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.controller.QQController
-import com.icecreamqaq.yuq.entity.Contact
 import com.icecreamqaq.yuq.firstString
 import com.icecreamqaq.yuq.message.Message
 import me.kuku.yuq.entity.NeTeaseEntity
@@ -16,12 +15,8 @@ import me.kuku.yuq.entity.WeiboEntity
 import me.kuku.yuq.logic.NeTeaseLogic
 import me.kuku.yuq.logic.SteamLogic
 import me.kuku.yuq.logic.WeiboLogic
-import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.service.*
-import me.kuku.yuq.utils.MD5Utils
-import me.kuku.yuq.utils.QQPasswordLoginUtils
-import me.kuku.yuq.utils.QQUtils
-import me.kuku.yuq.utils.image
+import me.kuku.yuq.utils.*
 import javax.inject.Inject
 
 @PrivateController
@@ -165,7 +160,13 @@ class BindController: QQController() {
             val map = commonResult.t
             while (true) {
                 val bytes = weiboLogic.getCaptchaImage(map.getValue("pcid"))
-                reply(mif.image(bytes).plus("请输入图片验证码！！"))
+                try {
+                    reply(mif.image(bytes).plus("请输入图片验证码！！"))
+                }catch (e: Exception){
+                    reply("图片发送失败，改为链接发送！！！")
+                    reply("https://login.sina.com.cn/cgi/pin.php?r=${BotUtils.randomNum(8)}&s=0&p=${map.getValue("pcid")}")
+                    reply("打开该链接，输入图片验证码！！！")
+                }
                 val codeMessage = session.waitNextMessage()
                 val code = codeMessage.firstString()
                 val loginCommonResult = weiboLogic.loginByDoor(map, code, password)

@@ -42,7 +42,8 @@ data class QQGroupEntity(
         var autoReview: Boolean? = false,
         var onTimeAlarm: Boolean? = false,
         var colorPicType: String? = "remote",
-        var maxViolationCount: Int? = 0
+        var maxViolationCount: Int? = 0,
+        var dragonKing: Boolean? = true
 ){
         @Transient
         fun getQaJsonArray(): JSONArray = JSON.parseArray(qa) ?: JSON.parseArray("[]")

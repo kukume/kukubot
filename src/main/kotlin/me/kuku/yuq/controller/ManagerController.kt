@@ -41,7 +41,7 @@ class ManagerController {
     private lateinit var pCookie:String
 
 
-    private val version = "v1.4.3"
+    private val version = "v1.4.4"
 
     @Before
     fun before(group: Long, qq: Long, actionContext: BotActionContext, message: Message){
@@ -105,9 +105,13 @@ class ManagerController {
     @Action("删微博监控 {name}")
     fun delWbMonitor(name: String, qqGroupEntity: QQGroupEntity): String{
         val weiboJsonArray = qqGroupEntity.getWeiboJsonArray()
+        val list = mutableListOf<JSONObject>()
         for (i in weiboJsonArray.indices) {
             val jsonObject = weiboJsonArray.getJSONObject(i)
-            if (jsonObject.getString("name") == name) weiboJsonArray.remove(jsonObject)
+            if (jsonObject.getString("name") == name) list.add(jsonObject)
+        }
+        for (jsonObject in list){
+            weiboJsonArray.remove(jsonObject)
         }
         qqGroupEntity.weiboList = weiboJsonArray.toString()
         qqGroupService.save(qqGroupEntity)
@@ -139,6 +143,7 @@ class ManagerController {
         sb.appendln("色图：" + this.boolToStr(qqGroupEntity.colorPic))
         sb.appendln("鉴黄：" + this.boolToStr(qqGroupEntity.pic))
         sb.appendln("嘴臭：" + this.boolToStr(qqGroupEntity.mouthOdor))
+        sb.appendln("龙王：" + this.boolToStr(qqGroupEntity.dragonKing))
         sb.appendln("涩图：${if (qqGroupEntity.colorPicType == "local")  "本地" else "远程"}")
         sb.appendln("欢迎语：" + this.boolToStr(qqGroupEntity.welcomeMsg))
         sb.appendln("qq功能：" + this.boolToStr(qqGroupEntity.qqStatus))
@@ -146,7 +151,7 @@ class ManagerController {
         sb.appendln("萌宠功能：" + this.boolToStr(qqGroupEntity.superCute))
         sb.appendln("自动审核：" + this.boolToStr(qqGroupEntity.autoReview))
         sb.appendln("撤回通知：" + this.boolToStr(qqGroupEntity.recall))
-        sb.appendln("违规次数：${qqGroupEntity.maxViolationCount}")
+        sb.appendln("违规次数：${qqGroupEntity.maxViolationCount ?: 5}")
         sb.append("整点报时：" + this.boolToStr(qqGroupEntity.onTimeAlarm))
         return sb.toString()
     }
@@ -203,6 +208,13 @@ class ManagerController {
         qqGroupEntity.autoReview = status
         qqGroupService.save(qqGroupEntity)
         return if (status) "自动审核开启成功" else "自动审核关闭成功"
+    }
+
+    @Action("#龙王 {status}")
+    fun dragonKing(qqGroupEntity: QQGroupEntity, status: Boolean): String{
+        qqGroupEntity.dragonKing = status
+        qqGroupService.save(qqGroupEntity)
+        return if (status) "迫害龙王开启成功" else "迫害龙王关闭成功"
     }
 
     @Action("#qq {status}")

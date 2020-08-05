@@ -10,7 +10,9 @@ import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.mif
 import me.kuku.yuq.entity.WeiboEntity
 import me.kuku.yuq.logic.WeiboLogic
+import me.kuku.yuq.pojo.WeiboPojo
 import me.kuku.yuq.service.WeiboService
+import me.kuku.yuq.utils.removeSuffixLine
 import javax.inject.Inject
 
 @GroupController
@@ -29,7 +31,30 @@ class WeiboController {
     }
 
     @Action("热搜")
-    fun hotSearch() = weiboLogic.hotSearch()
+    fun hotSearch(): String{
+        val list = weiboLogic.hotSearch()
+        val sb = StringBuilder()
+        for (str in list){
+            sb.appendln(str)
+        }
+        return sb.removeSuffixLine().toString()
+    }
+
+    @Action("hot {num}")
+    fun hot(num: Int): String{
+        val list = weiboLogic.hotSearch()
+        var name: String? = null
+        for (str in list){
+            if (str.startsWith(num.toString())){
+                name = str.split("、")[1]
+                break
+            }
+        }
+        if (name == null) return "没有找到该热搜！！"
+        val commonResult = weiboLogic.weiboTopic(name)
+        val weiboPojo = commonResult.t?.get(0) ?: return "没有找到该话题！！"
+        return weiboLogic.convertStr(weiboPojo)
+    }
 
     @Action("wb {username}")
     fun searchWeibo(username: String, @PathVar(2) numStr: String?): String{
@@ -78,6 +103,23 @@ class WeiboController {
             }
             weiboLogic.convertStr(weiboPojo)
         }else commonResult.msg
+    }
+
+    @Action("wbtopic {keyword}")
+    fun weiboTopic(keyword: String, @PathVar(value = 2, type = PathVar.Type.Integer) num: Int?): String{
+        val commonResult = weiboLogic.weiboTopic(keyword)
+        if (commonResult.code != 200) return commonResult.msg
+        val list = commonResult.t
+        val weiboPojo = this.getWeiboPojo(list, num)
+        return weiboLogic.convertStr(weiboPojo)
+    }
+
+    private fun getWeiboPojo(list: List<WeiboPojo>, num: Int?): WeiboPojo {
+        return when {
+            num == null -> list[0]
+            num >= list.size -> list[0]
+            else -> list[num]
+        }
     }
 
 }

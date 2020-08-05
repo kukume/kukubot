@@ -1,6 +1,5 @@
 package me.kuku.yuq.logic.impl
 
-import com.IceCreamQAQ.Yu.util.IO
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
@@ -10,26 +9,24 @@ import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.pojo.WeiboPojo
 import me.kuku.yuq.utils.*
 import org.jsoup.Jsoup
-import java.io.File
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.util.*
-import java.util.concurrent.TimeUnit
-import javax.inject.Inject
 
 class WeiboLogicImpl: WeiboLogic {
-    override fun hotSearch(): String {
+    override fun hotSearch(): List<String> {
         val doc = Jsoup.connect("https://s.weibo.com/top/summary").get()
         val elements = doc.getElementById("pl_top_realtimehot").getElementsByTag("tbody").first()
                 .getElementsByTag("tr")
-        val sb = StringBuilder()
+        val list = mutableListOf<String>()
         for (ele in elements){
             var text: String = ele.getElementsByClass("td-01").first().text()
             text = if (text == "") "顶" else text
             val title: String = ele.getElementsByClass("td-02").first().getElementsByTag("a").first().text()
-            sb.appendln("$text、$title")
+            list.add("$text、$title")
+
         }
-        return sb.toString()
+        return list
     }
 
     override fun getIdByName(name: String): CommonResult<List<WeiboPojo>> {
@@ -127,7 +124,7 @@ class WeiboLogicImpl: WeiboLogic {
     }
 
     override fun getCaptchaImage(pcId: String): ByteArray{
-        val response = OkHttpClientUtils.get("https://login.sina.com.cn/cgi/pin.php?r=${BotUtils.randomStr(8)}&s=0&p=$pcId")
+        val response = OkHttpClientUtils.get("https://login.sina.com.cn/cgi/pin.php?r=${BotUtils.randomNum(8)}&s=0&p=$pcId")
         return OkHttpClientUtils.getBytes(response)
     }
 
@@ -221,7 +218,7 @@ class WeiboLogicImpl: WeiboLogic {
         val jsonObject = OkHttpClientUtils.getJson(response)
         return when (jsonObject.getInteger("retcode")){
              0 -> {
-                 val alcCookie = OkHttpClientUtils.getCookie(response, "ALC").get("ALC");
+                 val alcCookie = OkHttpClientUtils.getCookie(response, "ALC")["ALC"]
                  val secondResponse = OkHttpClientUtils.get(jsonObject.getJSONArray("crossDomainUrlList").getString(0),
                          OkHttpClientUtils.addCookie(map.getValue("cookie")))
                  secondResponse.close()
@@ -291,5 +288,20 @@ class WeiboLogicImpl: WeiboLogic {
             }
             CommonResult(200, "", list)
         }else CommonResult(500, "您的cookie已失效，请重新绑定微博！！")
+    }
+
+    override fun weiboTopic(keyword: String): CommonResult<List<WeiboPojo>> {
+        val response = OkHttpClientUtils.get("https://m.weibo.cn/api/container/getIndex?containerid=100103type%3D1%26q%3D%23${URLEncoder.encode(keyword, "utf-8")}%23&page_type=searchall")
+        if (response.code != 200) return CommonResult(500, "查询失败，请稍后再试！！")
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        val jsonArray = jsonObject.getJSONObject("data").getJSONArray("cards")
+        val list = mutableListOf<WeiboPojo>()
+        for (i in jsonArray.indices){
+            val singleJsonObject = jsonArray.getJSONObject(i)
+            val mBlogJsonObject = singleJsonObject.getJSONObject("mblog")
+            if (mBlogJsonObject != null) list.add(this.convert(mBlogJsonObject))
+        }
+        return if (list.size == 0) CommonResult(500, "没有找到该话题")
+        else CommonResult(200, "", list)
     }
 }

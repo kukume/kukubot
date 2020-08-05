@@ -76,7 +76,7 @@ class WeiboLogicImpl: WeiboLogic {
         if (picNum != 0){
             val list = mutableListOf<String>()
             val jsonArray = jsonObject.getJSONArray("pics")
-            jsonArray.forEach {
+            jsonArray?.forEach {
                 val picJsonObject = it as JSONObject
                 val url = picJsonObject.getJSONObject("large").getString("url")
                 list.add(url)
@@ -123,9 +123,8 @@ class WeiboLogicImpl: WeiboLogic {
         return map
     }
 
-    override fun getCaptchaImage(pcId: String): ByteArray{
-        val response = OkHttpClientUtils.get("https://login.sina.com.cn/cgi/pin.php?r=${BotUtils.randomNum(8)}&s=0&p=$pcId")
-        return OkHttpClientUtils.getBytes(response)
+    override fun getCaptchaUrl(pcId: String): String{
+        return "https://login.sina.com.cn/cgi/pin.php?r=${BotUtils.randomNum(8)}&s=0&p=$pcId"
     }
 
     private fun encryptPassword(map: Map<String, String>, password: String): String {
@@ -142,8 +141,8 @@ class WeiboLogicImpl: WeiboLogic {
         return OkHttpClientUtils.getCookie(response)
     }
 
-    private fun login(map: MutableMap<String, String>, password: String): CommonResult<MutableMap<String, String>>{
-        val newPassword = this.encryptPassword(map, password)
+    override fun login(map: MutableMap<String, String>, door: String?): CommonResult<MutableMap<String, String>>{
+        val newPassword = this.encryptPassword(map, map.getValue("password"))
         val response = OkHttpClientUtils.post("https://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.19)&_=${Date().time}", OkHttpClientUtils.addForms(
                 "entry", "weibo",
                 "gateway", "1",
@@ -152,6 +151,8 @@ class WeiboLogicImpl: WeiboLogic {
                 "qrcode_flag", "false",
                 "useticket", "1",
                 "pagerefer", "https://passport.weibo.com/visitor/visitor?entry=miniblog&a=enter&url=https%3A%2F%2Fweibo.com%2F&domain=.weibo.com&ua=php-sso_sdk_client-0.6.36&_rand=1596261779.2657",
+                "pcid", if (door != null) map.getValue("pcid") else "",
+                "door", door ?: "",
                 "vnf", "1",
                 "su", map.getValue("username"),
                 "service", "miniblog",
@@ -166,16 +167,24 @@ class WeiboLogicImpl: WeiboLogic {
                 "url", "https://weibo.com/ajaxlogin.php?framelogin=1&callback=parent.sinaSSOController.feedBackUrlCallBack",
                 "returntype", "META"
         ), OkHttpClientUtils.addCookie(map.getValue("cookie")))
-        val str = OkHttpClientUtils.getStr(response)
-        val token = BotUtils.regex("token%3D", "\"", str)
-        return if (token == null){
-            val reason = BotUtils.regex("reason=", "&", str)
+        val html = OkHttpClientUtils.getStr(response)
+        val url = BotUtils.regex("location.replace\\(\"", "\"\\);", html) ?: return CommonResult(500, "获取失败！！")
+        val token = BotUtils.regex("token%3D", "\"", html)
+        val cookie = OkHttpClientUtils.getCookie(response)
+        map["cookie"] = cookie
+        return if (url.contains("https://login.sina.com.cn/crossdomain2.php")){
+            map["url"] = url
+            map["referer"] = "https://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.19)"
+            CommonResult(200, "登录成功", map)
+        }
+        else if (token == null){
+            val reason = BotUtils.regex("reason=", "&", html)
             val result = URLDecoder.decode(reason, "gbk")
             CommonResult(500, result)
         }else {
             val phoneResponse = OkHttpClientUtils.get("https://login.sina.com.cn/protection/index?token=$token&callback_url=https%3A%2F%2Fweibo.com")
-            val html = OkHttpClientUtils.getStr(phoneResponse)
-            val phone = Jsoup.parse(html).getElementById("ss0").attr("value")
+            val phoneHtml = OkHttpClientUtils.getStr(phoneResponse)
+            val phone = Jsoup.parse(phoneHtml).getElementById("ss0").attr("value")
             val smsResponse = OkHttpClientUtils.post("https://login.sina.com.cn/protection/mobile/sendcode?token=$token", OkHttpClientUtils.addForms(
                     "encrypt_mobile", phone
             ))
@@ -183,62 +192,34 @@ class WeiboLogicImpl: WeiboLogic {
             if (smsJsonObject.getInteger("retcode") == 20000000) {
                 map["token"] = token
                 map["phone"] = phone
-                CommonResult(200, "", map)
+                CommonResult(201, "请输入短信验证码！！", map)
             }else CommonResult(500, smsJsonObject.getString("msg"))
         }
     }
 
-    override fun loginByDoor(map: MutableMap<String, String>, door: String, password: String): CommonResult<WeiboEntity>{
-        val newPassword = this.encryptPassword(map, password)
-        val response = OkHttpClientUtils.post("https://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.19)&_=${Date().time}", OkHttpClientUtils.addForms(
-                "entry", "weibo",
-                "gateway", "1",
-                "from", "",
-                "savestate", "7",
-                "qrcode_flag", "false",
-                "useticket", "1",
-                "pcid", map.getValue("pcid"),
-                "pagerefer", "",
-                "door", door,
-                "vsnf", "1",
-                "su", map.getValue("username"),
-                "service", "miniblog",
-                "servertime", map.getValue("servertime"),
-                "nonce", map.getValue("nonce"),
-                "pwencode", "rsa2",
-                "rsakv", map.getValue("rsakv"),
-                "sp", newPassword,
-                "sr", "1536*864",
-                "encoding", "UTF-8",
-                "cdult", "2",
-                "domain", "sina.com.cn",
-                "prelt", "53",
-                "returntype", "TEXT"
-        ), OkHttpClientUtils.addCookie(map.getValue("cookie")))
-        val jsonObject = OkHttpClientUtils.getJson(response)
-        return when (jsonObject.getInteger("retcode")){
-             0 -> {
-                 val alcCookie = OkHttpClientUtils.getCookie(response, "ALC")["ALC"]
-                 val secondResponse = OkHttpClientUtils.get(jsonObject.getJSONArray("crossDomainUrlList").getString(0),
-                         OkHttpClientUtils.addCookie(map.getValue("cookie")))
-                 secondResponse.close()
-                 val pcCookie = OkHttpClientUtils.getCookie(secondResponse)
-                 val mobileCookie = this.getMobileCookie("ALC=$alcCookie; ")
-                 CommonResult(200, "", WeiboEntity(pcCookie = pcCookie, mobileCookie = mobileCookie))
-             }
-            4049 -> CommonResult(2070, "请输入验证码！！")
-            2070 -> CommonResult(2070, "验证码输入不正确！！")
-            101 -> CommonResult(500, "用户名密码错误！！")
-            else -> CommonResult(500, jsonObject.getString("reason"))
-        }
+    override fun loginSuccess(cookie: String, referer: String, url: String): WeiboEntity{
+        val response = OkHttpClientUtils.get(url, OkHttpClientUtils.addHeaders(
+                "cookie", cookie,
+                "referer", referer
+        ))
+        val html = OkHttpClientUtils.getStr(response)
+        val jsonStr = BotUtils.regex("sinaSSOController.setCrossDomainUrlList\\(", "\\);", html)
+        val urlJsonObject = JSON.parseObject(jsonStr)
+        val pcUrl = urlJsonObject.getJSONArray("arrURL").getString(0)
+        val pcResponse = OkHttpClientUtils.get("$pcUrl&callback=sinaSSOController.doCrossDomainCallBack&scriptId=ssoscript0&client=ssologin.js(v1.4.19)&_=${Date().time}")
+        pcResponse.close()
+        val pcCookie = OkHttpClientUtils.getCookie(pcResponse)
+        val mobileCookie = this.getMobileCookie(cookie)
+        return WeiboEntity(pcCookie = pcCookie, mobileCookie = mobileCookie)
     }
 
-    override fun login(username: String, password: String): CommonResult<MutableMap<String, String>> {
+
+    override fun preparedLogin(username: String, password: String): CommonResult<MutableMap<String, String>> {
         val newUsername = Base64.getEncoder().encodeToString(username.toByteArray())
         val loginParams = this.loginParams(newUsername)
-        return if (loginParams["showpin"] == "0") {
-            this.login(loginParams, password)
-        }else CommonResult(201, "", loginParams)
+        loginParams["password"] = password
+        return if (loginParams["showpin"] == "0") CommonResult(200, "不需要验证码", loginParams)
+        else CommonResult(201, "需要验证码", loginParams)
     }
 
     override fun loginBySms(token: String, phone: String, code: String): CommonResult<WeiboEntity> {
@@ -255,19 +236,7 @@ class WeiboLogicImpl: WeiboLogic {
                 val cookie = OkHttpClientUtils.getCookie(resultResponse)
                 val html = OkHttpClientUtils.getStr(resultResponse)
                 val secondUrl = BotUtils.regex("location.replace\\(\"", "\"\\);", html) ?: return CommonResult(500, "登录失败，请稍后再试！！")
-                val secondResponse = OkHttpClientUtils.get(secondUrl, OkHttpClientUtils.addHeaders(
-                        "cookie", cookie,
-                        "referer", url
-                ))
-                val secondHtml = OkHttpClientUtils.getStr(secondResponse)
-                val jsonStr = BotUtils.regex("sinaSSOController.setCrossDomainUrlList\\(", "\\);", secondHtml)
-                val urlJsonObject = JSON.parseObject(jsonStr)
-                val pcUrl = urlJsonObject.getJSONArray("arrURL").getString(0)
-                val pcResponse = OkHttpClientUtils.get("$pcUrl&callback=sinaSSOController.doCrossDomainCallBack&scriptId=ssoscript0&client=ssologin.js(v1.4.19)&_=${Date().time}")
-                pcResponse.close()
-                val pcCookie = OkHttpClientUtils.getCookie(pcResponse)
-                val mobileCookie = this.getMobileCookie(cookie)
-                CommonResult(200, "", WeiboEntity(pcCookie = pcCookie, mobileCookie = mobileCookie))
+                CommonResult(200, "", this.loginSuccess(cookie, url, secondUrl))
             }
             8518 -> CommonResult(402, "验证码错误或已经过期！！！")
             else -> CommonResult(500, jsonObject.getString("msg"))

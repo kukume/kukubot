@@ -127,17 +127,25 @@ class BindController: QQController() {
     @Action("wb {username} {password}")
     fun bindWb(username: String, password: String, session: ContextSession, qq: Long, message: Message): String{
         val weiboEntity = weiboService.findByQQ(qq) ?: WeiboEntity(null, qq)
-        val commonResult = weiboLogic.login(username, password)
-        return if (commonResult.code == 200) {
-            val data = commonResult.t  ?: return commonResult.msg
+        val preparedLoginCommonResult = weiboLogic.preparedLogin(username, password)
+        val loginParams = preparedLoginCommonResult.t
+        val door = if (preparedLoginCommonResult.code == 201){
+            reply(weiboLogic.getCaptchaUrl(loginParams.getValue("pcid")))
+            reply("打开该链接，输入图片验证码！！！如需更换验证码请重新打开该链接！！")
+            val codeMessage = session.waitNextMessage(60 * 1000 * 2)
+            codeMessage.firstString()
+        }else null
+        val loginCommonResult = weiboLogic.login(loginParams, door)
+        return if (loginCommonResult.code == 201) {
+            val data = loginCommonResult.t  ?: return loginCommonResult.msg
             reply("请输入短信验证码！！！")
             loop@ while (true) {
                 val codeMessage = session.waitNextMessage(60 * 1000 * 2)
                 val code = codeMessage.firstString()
-                val loginCommonResult = weiboLogic.loginBySms(data["token"].toString(), data["phone"].toString(), code)
-                when (loginCommonResult.code) {
+                val loginSmsCommonResult = weiboLogic.loginBySms(data["token"].toString(), data["phone"].toString(), code)
+                when (loginSmsCommonResult.code) {
                     200 -> {
-                        val newWeiboEntity = loginCommonResult.t
+                        val newWeiboEntity = loginSmsCommonResult.t
                         weiboEntity.pcCookie = newWeiboEntity.pcCookie
                         weiboEntity.mobileCookie = newWeiboEntity.mobileCookie
                         weiboEntity.username = username
@@ -146,7 +154,7 @@ class BindController: QQController() {
                         break@loop
                     }
                     500 -> {
-                        return loginCommonResult.msg
+                        return loginSmsCommonResult.msg
                     }
                     402 -> {
                         reply("验证码输入错误，请重新输入！！！")
@@ -156,36 +164,17 @@ class BindController: QQController() {
             }
             weiboService.save(weiboEntity)
             "绑定或更新成功！！！"
-        }else if (commonResult.code == 201) {
-            val map = commonResult.t
-            while (true) {
-                val bytes = weiboLogic.getCaptchaImage(map.getValue("pcid"))
-                try {
-                    reply(mif.image(bytes).plus("请输入图片验证码！！"))
-                }catch (e: Exception){
-                    reply("图片发送失败，改为链接发送！！！")
-                    reply("https://login.sina.com.cn/cgi/pin.php?r=${BotUtils.randomNum(8)}&s=0&p=${map.getValue("pcid")}")
-                    reply("打开该链接，输入图片验证码！！！")
-                }
-                val codeMessage = session.waitNextMessage()
-                val code = codeMessage.firstString()
-                val loginCommonResult = weiboLogic.loginByDoor(map, code, password)
-                if (loginCommonResult.code == 2070){
-                    reply("图片验证码输入不正确，请重新输入！！")
-                    continue
-                }else if (loginCommonResult.code == 200){
-                    val newWeiboEntity = loginCommonResult.t
-                    weiboEntity.pcCookie = newWeiboEntity.pcCookie
-                    weiboEntity.mobileCookie = newWeiboEntity.mobileCookie
-                    weiboEntity.username = username
-                    weiboEntity.password = password
-                    weiboEntity.group_ = message.group ?: 0L
-                    weiboService.save(weiboEntity)
-                    break
-                }else loginCommonResult.msg
-            }
+        }else if (loginCommonResult.code == 200) {
+            val map = loginCommonResult.t
+            val newWeiboEntity = weiboLogic.loginSuccess(map.getValue("cookie"), map.getValue("referer"), map.getValue("url"))
+            weiboEntity.pcCookie = newWeiboEntity.pcCookie
+            weiboEntity.mobileCookie = newWeiboEntity.mobileCookie
+            weiboEntity.username = username
+            weiboEntity.password = password
+            weiboEntity.group_ = message.group ?: 0L
+            weiboService.save(weiboEntity)
             weiboService.save(weiboEntity)
             "绑定或更新成功！！！"
-        }else commonResult.msg
+        }else loginCommonResult.msg
     }
 }

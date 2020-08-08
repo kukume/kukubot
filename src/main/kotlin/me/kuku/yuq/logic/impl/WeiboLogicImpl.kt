@@ -8,6 +8,7 @@ import me.kuku.yuq.logic.WeiboLogic
 import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.pojo.WeiboPojo
 import me.kuku.yuq.utils.*
+import okhttp3.Cookie
 import org.jsoup.Jsoup
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -272,5 +273,33 @@ class WeiboLogicImpl: WeiboLogic {
         }
         return if (list.size == 0) CommonResult(500, "没有找到该话题")
         else CommonResult(200, "", list)
+    }
+
+    private fun getToken(weiboEntity: WeiboEntity): CommonResult<Map<String, String>>{
+        val response = OkHttpClientUtils.get("https://m.weibo.cn/api/config",
+                OkHttpClientUtils.addCookie(weiboEntity.mobileCookie))
+        val jsonObject = OkHttpClientUtils.getJson(response).getJSONObject("data")
+        return if (jsonObject.getBoolean("login")) {
+            val cookie = OkHttpClientUtils.getCookie(response)
+            CommonResult(200, "", mapOf(
+                    "cookie" to cookie,
+                    "token" to BotUtils.regex("XSRF-TOKEN=", "; ", cookie)!!
+            ))
+        }else CommonResult(500, "登录已失效")
+    }
+
+    override fun like(weiboEntity: WeiboEntity, id: String): String {
+        val map = this.getToken(weiboEntity).t ?: return "登录已失效！！"
+        val response = OkHttpClientUtils.post("https://m.weibo.cn/api/attitudes/create", OkHttpClientUtils.addForms(
+                "id", id,
+                "attitude", "heart",
+                "st", map.getValue("token"),
+                "_spr", "screen:1536x864"
+        ), OkHttpClientUtils.addHeaders(
+                "cookie", "${weiboEntity.mobileCookie}${map["cookie"]}",
+                "referer", "https://m.weibo.cn/detail/$id"
+        ))
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return jsonObject.getString("msg")
     }
 }

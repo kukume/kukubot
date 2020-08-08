@@ -1,6 +1,8 @@
 package me.kuku.yuq.utils
 
 import com.icecreamqaq.yuq.controller.BotActionContext
+import com.icecreamqaq.yuq.entity.Contact
+import com.icecreamqaq.yuq.entity.Member
 import kotlin.random.Random
 
 object BotUtils {
@@ -46,5 +48,10 @@ object BotUtils {
 
     fun addAt(actionContext: BotActionContext){
         actionContext.reMessage!!.at=true
+    }
+
+    fun getGroupId(qq: Contact): Long{
+        return if (qq is Member) qq.group.id
+        else 0L
     }
 }

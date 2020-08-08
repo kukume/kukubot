@@ -2,12 +2,10 @@ package me.kuku.yuq.event
 
 import com.IceCreamQAQ.Yu.annotation.Event
 import com.IceCreamQAQ.Yu.annotation.EventListener
-import com.icecreamqaq.yuq.entity.Group
 import com.icecreamqaq.yuq.event.*
 import com.icecreamqaq.yuq.message.Message
-import com.icecreamqaq.yuq.mf
 import com.icecreamqaq.yuq.mif
-import com.icecreamqaq.yuq.yuq
+import com.icecreamqaq.yuq.toMessage
 import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.service.DaoService
 import me.kuku.yuq.service.GroupQQService
@@ -32,14 +30,16 @@ class GroupEvent {
 
     @Event
     fun repeat(e: GroupMessageEvent){
-        val group = e.message.group!!
+        val group = e.group.id
+        val qqGroupEntity = qqGroupService.findByGroup(group)
+        if (qqGroupEntity?.repeat == false) return
         val nowMessage = e.message
         if (messages.containsKey(group)){
             val oldMessage = messages.getValue(group)
             if (nowMessage.bodyEquals(oldMessage) &&
                     nowMessage.qq!! != oldMessage.qq!! &&
                     !nowMessage.bodyEquals(alreadyMessage[group])){
-                yuq.sendMessage(mf.newGroup(group).plus(nowMessage))
+                e.group.sendMessage(nowMessage)
                 alreadyMessage[group] = nowMessage
             }
         }
@@ -78,7 +78,7 @@ class GroupEvent {
             qqGroupService.save(qqGroupEntity)
             "刚刚，${e.member.name}退群了，已加入本群黑名单！！"
         }else "刚刚，${e.member.name}离开了我们！！"
-        yuq.sendMessage(mf.newGroup(group).plus(msg))
+        e.group.sendMessage(msg.toMessage())
     }
 
     @Event
@@ -96,23 +96,22 @@ class GroupEvent {
 
     @Event
     fun groupMemberJoin(e: GroupMemberJoinEvent){
-        val qqGroupEntity = qqGroupService.findByGroup(e.group.id)
-        if (qqGroupEntity?.welcomeMsg == true)
-            yuq.sendMessage(mf.newGroup(e.group.id).plus(this.welcomeMessage(e.member.id, e.group)))
-    }
-
-    private fun welcomeMessage(qq: Long, group: Group): Message {
-        return mif.at(qq).plus(
-                """
+        val group = e.group.id
+        val qq = e.member.id
+        val qqGroupEntity = qqGroupService.findByGroup(group)
+        if (qqGroupEntity?.welcomeMsg == true) {
+            e.group.sendMessage(
+                    mif.at(qq).plus(
+                            """
                     欢迎您加入本群
-                    您是本群的第${group.members.size + 1}位成员
+                    您是本群的第${e.group.members.size + 1}位成员
                     您可以愉快的与大家交流啦
                 """.trimIndent()
-        ).plus(mif.image("https://q.qlogo.cn/g?b=qq&nk=$qq&s=640")).plus(
-                "一言：${toolLogic.hiToKoTo().getValue("text")}\n" +
-                        SimpleDateFormat("yyyy年MM月dd日HH时mm分ss秒", Locale.CHINA).format(Date())
-        )
+                    ).plus(mif.image("https://q.qlogo.cn/g?b=qq&nk=$qq&s=640")).plus(
+                            "一言：${toolLogic.hiToKoTo().getValue("text")}\n" +
+                                    SimpleDateFormat("yyyy年MM月dd日HH时mm分ss秒", Locale.CHINA).format(Date())
+                    )
+            )
+        }
     }
-
-
 }

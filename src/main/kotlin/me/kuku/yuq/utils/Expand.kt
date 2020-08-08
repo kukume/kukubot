@@ -8,7 +8,6 @@ import java.io.File
 
 fun MessageItemFactory.image(byteArray: ByteArray): Image {
     val md5Str = MD5Utils.toMD5(byteArray)
-//    val file = File("${System.getProperty("user.home")}${File.separator}.kuku${File.separator}images${File.separator}$md5Str.jpg")
     val file = File("tmp/$md5Str")
     IO.writeFile(file, byteArray)
     return this.image(file)

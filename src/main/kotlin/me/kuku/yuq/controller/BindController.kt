@@ -6,6 +6,8 @@ import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.annotation.PrivateController
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.controller.QQController
+import com.icecreamqaq.yuq.entity.Contact
+import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.firstString
 import com.icecreamqaq.yuq.message.Message
 import me.kuku.yuq.entity.NeTeaseEntity
@@ -39,16 +41,16 @@ class BindController: QQController() {
     private lateinit var weiboService: WeiboService
 
     @Action("qq")
-    fun bindQQ(@PathVar(1) password: String?, qq: Long, session: ContextSession, message: Message): Any? {
-        val qqEntity = qqService.findByQQ(qq)
-        val newGroup = message.group ?: 0L
+    fun bindQQ(@PathVar(1) password: String?, qq: Contact, session: ContextSession): Any? {
+        val qqEntity = qqService.findByQQ(qq.id)
+        val newGroup = BotUtils.getGroupId(qq)
         val pwd = password ?: qqEntity?.password
         return if (pwd != null){
             val commonResult = QQPasswordLoginUtils.login(qq = qq.toString(), password = pwd)
             when (commonResult.code) {
                 200 -> {
                     val map = commonResult.t
-                    QQUtils.saveOrUpdate(qqService, map, qq, pwd, newGroup)
+                    QQUtils.saveOrUpdate(qqService, map, qq.id, pwd, newGroup)
                     "绑定或者更新成功！"
                 }
                 10009 -> {
@@ -59,7 +61,7 @@ class BindController: QQController() {
                     val loginResult = QQPasswordLoginUtils.loginBySms(qq = qq.toString(), password = pwd, randStr = map["randStr"].toString(),
                             ticket = map["ticket"].toString(), cookie = map["cookie"].toString(), smsCode = code)
                     if (loginResult.code != 200) return "验证码输入错误，请重新登录！！"
-                    QQUtils.saveOrUpdate(qqService, loginResult.t, qq, pwd, newGroup)
+                    QQUtils.saveOrUpdate(qqService, loginResult.t, qq.id, pwd, newGroup)
                     "绑定或者更新成功！"
                 }
                 else -> commonResult.msg
@@ -125,8 +127,9 @@ class BindController: QQController() {
     }
 
     @Action("wb {username} {password}")
-    fun bindWb(username: String, password: String, session: ContextSession, qq: Long, message: Message): String{
-        val weiboEntity = weiboService.findByQQ(qq) ?: WeiboEntity(null, qq)
+    fun bindWb(username: String, password: String, session: ContextSession, qq: Contact): String{
+        val group = if (qq is Member) qq.group.id else 0L
+        val weiboEntity = weiboService.findByQQ(qq.id) ?: WeiboEntity(null, qq.id)
         val preparedLoginCommonResult = weiboLogic.preparedLogin(username, password)
         val loginParams = preparedLoginCommonResult.t
         val door = if (preparedLoginCommonResult.code == 201){
@@ -150,7 +153,7 @@ class BindController: QQController() {
                         weiboEntity.mobileCookie = newWeiboEntity.mobileCookie
                         weiboEntity.username = username
                         weiboEntity.password = password
-                        weiboEntity.group_ = message.group ?: 0L
+                        weiboEntity.group_ = group
                         break@loop
                     }
                     500 -> {
@@ -171,7 +174,7 @@ class BindController: QQController() {
             weiboEntity.mobileCookie = newWeiboEntity.mobileCookie
             weiboEntity.username = username
             weiboEntity.password = password
-            weiboEntity.group_ = message.group ?: 0L
+            weiboEntity.group_ = group
             weiboService.save(weiboEntity)
             weiboService.save(weiboEntity)
             "绑定或更新成功！！！"

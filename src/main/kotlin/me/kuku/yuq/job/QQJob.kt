@@ -3,8 +3,7 @@ package me.kuku.yuq.job
 import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
 import com.icecreamqaq.yuq.YuQ
-import com.icecreamqaq.yuq.message.MessageFactory
-import com.icecreamqaq.yuq.message.MessageItemFactory
+import com.icecreamqaq.yuq.toMessage
 import me.kuku.yuq.logic.QQLogic
 import me.kuku.yuq.service.QQService
 import me.kuku.yuq.utils.QQPasswordLoginUtils
@@ -20,10 +19,6 @@ class QQJob {
     private lateinit var qqLogic: QQLogic
     @Inject
     private lateinit var yuq: YuQ
-    @Inject
-    private lateinit var mf: MessageFactory
-    @Inject
-    private lateinit var mif: MessageItemFactory
 
     @Cron("30m")
     fun checkAndUpdate(){
@@ -35,7 +30,7 @@ class QQJob {
                 if (qqEntity.password == "") {
                     qqEntity.status = false
                     qqService.save(qqEntity)
-                    yuq.sendMessage(mf.newTemp(qqEntity.qqGroup, qqEntity.qq).plus(mif.at(qqEntity.qq)).plus("您的QQ已失效。"))
+                    yuq.groups[qqEntity.qqGroup]?.get(qqEntity.qq)?.sendMessage("您的QQ登录已失效！！".toMessage())
                 }else{
                     val commonResult = QQPasswordLoginUtils.login(qq = qqEntity.qq.toString(), password = qqEntity.password)
                     if (commonResult.code == 200){
@@ -45,9 +40,9 @@ class QQJob {
                         qqService.save(qqEntity)
                         val msg = "您的QQ自动更新失败，${commonResult.msg}"
                         if (qqEntity.qqGroup == 0L)
-                            yuq.sendMessage(mf.newPrivate(qqEntity.qq).plus(msg))
+                            yuq.friends[qqEntity.qq]?.sendMessage(msg.toMessage())
                         else
-                            yuq.sendMessage(mf.newTemp(qqEntity.qqGroup, qqEntity.qq).plus(msg))
+                            yuq.groups[qqEntity.qqGroup]?.get(qqEntity.qq)?.sendMessage(msg.toMessage())
                     }
                 }
             }

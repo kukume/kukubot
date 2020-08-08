@@ -2,10 +2,9 @@ package me.kuku.yuq.job
 
 import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
-import com.icecreamqaq.yuq.mf
+import com.icecreamqaq.yuq.toMessage
 import com.icecreamqaq.yuq.yuq
 import me.kuku.yuq.logic.WeiboLogic
-import me.kuku.yuq.service.GroupQQService
 import me.kuku.yuq.service.QQGroupService
 import me.kuku.yuq.service.WeiboService
 import javax.inject.Inject
@@ -38,7 +37,7 @@ class WeiboJob {
                     val oldMBlogId = map.getValue(weiboId)
                     if (weiboPojo.id.toLong() > oldMBlogId){
                         map[weiboId] = weiboPojo.id.toLong()
-                        yuq.sendMessage(mf.newGroup(group).plus(weiboLogic.convertStr(weiboPojo)))
+                        yuq.groups[group]?.sendMessage(weiboLogic.convertStr(weiboPojo).toMessage())
                     }
                 }else map[weiboId] = weiboPojo.id.toLong()
             }
@@ -59,8 +58,8 @@ class WeiboJob {
                 qqMap[qq] = newMBlogId
                 val group = weiboEntity.group_
                 if (group == null || group == 0L)
-                    yuq.sendMessage(mf.newPrivate(qq).plus(weiboLogic.convertStr(weiboPojo)))
-                else yuq.sendMessage(mf.newTemp(group, qq).plus(weiboLogic.convertStr(weiboPojo)))
+                    yuq.friends[qq]?.sendMessage(weiboLogic.convertStr(weiboPojo).toMessage())
+                else yuq.groups[group]?.get(qq)?.sendMessage(weiboLogic.convertStr(weiboPojo).toMessage())
             }
         }
     }

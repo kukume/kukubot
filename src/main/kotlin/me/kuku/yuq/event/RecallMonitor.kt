@@ -3,7 +3,6 @@ package me.kuku.yuq.event
 import com.IceCreamQAQ.Yu.annotation.Event
 import com.IceCreamQAQ.Yu.annotation.EventListener
 import com.IceCreamQAQ.Yu.cache.EhcacheHelp
-import com.icecreamqaq.yuq.YuQ
 import com.icecreamqaq.yuq.event.GroupMessageEvent
 import com.icecreamqaq.yuq.event.GroupRecallEvent
 import com.icecreamqaq.yuq.message.Message
@@ -22,8 +21,6 @@ class RecallMonitor {
     private lateinit var qqGroupService: QQGroupService
     @Inject
     private lateinit var mif: MessageItemFactory
-    @Inject
-    private lateinit var yuq: YuQ
 
     @Event
     fun messageEvent(e: GroupMessageEvent){
@@ -32,13 +29,13 @@ class RecallMonitor {
 
     @Event
     fun recallEvent(e: GroupRecallEvent){
-        val qqGroupEntity = qqGroupService.findByGroup(e.group)
+        val qqGroupEntity = qqGroupService.findByGroup(e.group.id)
         if (qqGroupEntity?.recall == true) {
             val whiteJsonArray = qqGroupEntity.getWhiteJsonArray()
             if (e.sender != e.operator) return
             val rm = saves[e.messageId.toString()] ?: return
             if (rm.qq!!.toString() in whiteJsonArray) return
-            yuq.sendMessage(rm.newMessage() + "群成员：" + mif.at(rm.qq!!) + "\n妄图撤回一条消息。\n消息内容为：\n" + rm)
+            e.group.sendMessage(rm.newMessage() + "群成员：" + mif.at(rm.qq!!) + "\n妄图撤回一条消息。\n消息内容为：\n" + rm)
         }
     }
 

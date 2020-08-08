@@ -69,6 +69,7 @@ object OkHttpClientUtils {
         val sb = StringBuilder()
         val cookies = response.headers("Set-Cookie")
         for (cookie in cookies){
+            if ("deleted" in cookie) continue
             sb.append("${BotUtils.regex(".*?;", cookie)} ")
         }
         return sb.toString()

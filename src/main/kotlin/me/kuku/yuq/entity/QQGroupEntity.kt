@@ -29,6 +29,12 @@ data class QQGroupEntity(
         @Lob
         @Column(columnDefinition="text")
         var weiboList: String = "[]",
+        @Lob
+        @Column(columnDefinition="text")
+        var allowedCommandsList: String = "[]",
+        @Lob
+        @Column(columnDefinition="text")
+        var interceptList: String = "[]",
         var musicType: String = "qq",
         var colorPic: Boolean? = false,
         var status: Boolean? = false,
@@ -43,7 +49,8 @@ data class QQGroupEntity(
         var onTimeAlarm: Boolean? = false,
         var colorPicType: String? = "remote",
         var maxViolationCount: Int? = 0,
-        var dragonKing: Boolean? = true
+        var dragonKing: Boolean? = true,
+        var repeat: Boolean? = true
 ){
         @Transient
         fun getQaJsonArray(): JSONArray = JSON.parseArray(qa) ?: JSON.parseArray("[]")
@@ -57,4 +64,8 @@ data class QQGroupEntity(
         fun getAdminJsonArray(): JSONArray = JSON.parseArray(adminList) ?: JSON.parseArray("[]")
         @Transient
         fun getWeiboJsonArray(): JSONArray = JSON.parseArray(weiboList) ?: JSON.parseArray("[]")
+        @Transient
+        fun getAllowedCommandsJsonArray(): JSONArray = JSON.parseArray(allowedCommandsList) ?: JSON.parseArray("[]")
+        @Transient
+        fun getInterceptJsonArray(): JSONArray = JSON.parseArray(interceptList) ?: JSON.parseArray("[]")
 }

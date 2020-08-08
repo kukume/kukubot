@@ -10,6 +10,7 @@ import com.icecreamqaq.yuq.*
 import com.icecreamqaq.yuq.annotation.*
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.ContextSession
+import com.icecreamqaq.yuq.controller.QQController
 import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.message.Message
@@ -26,7 +27,7 @@ import javax.inject.Inject
 import kotlin.random.Random
 
 @GroupController
-class BotController {
+class BotController: QQController() {
     @Config("YuQ.Mirai.user.qq")
     private lateinit var qq: String
     @Config("YuQ.Mirai.bot.master")
@@ -80,10 +81,10 @@ class BotController {
     @Action("发布作业")
     @Synonym(["群作业"])
     fun addHomeWork(group: Long, qq: Long, session: ContextSession): String{
-        yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("请输入作业科目！！"))
+        reply(mif.at(qq).plus("请输入作业科目！！"))
         val nameMessage = session.waitNextMessage(30 * 1000)
         val name = nameMessage.firstString()
-        yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("请输入作业内容！！"))
+        reply(mif.at(qq).plus("请输入作业内容！！"))
         val contentMessage = session.waitNextMessage(30 * 1000)
         val content = contentMessage.firstString()
         return qqGroupLogic.addHomeWork(group, name, "作业", content, true)
@@ -95,10 +96,10 @@ class BotController {
     @QMsg(at = true)
     @Action("群接龙")
     fun groupChain(group: Long, qq: Long, session: ContextSession): String{
-        yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("请输入接龙内容"))
+        reply(mif.at(qq).plus("请输入接龙内容"))
         val contentMessage = session.waitNextMessage(30 * 1000)
         val content = contentMessage.firstString()
-        yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("请输入到期日期（单位为天）！！"))
+        reply(mif.at(qq).plus("请输入到期日期（单位为天）！！"))
         val timeMessage = session.waitNextMessage(30 * 1000)
         val time = try {
             timeMessage.firstString().toInt()
@@ -139,7 +140,7 @@ class BotController {
                 sb.appendln(k)
             }
         }
-        yuq.sendMessage(mf.newGroup(group).plus(sb.removeSuffixLine().toString()))
+        reply(sb.removeSuffixLine().toString())
         val nextMessage = session.waitNextMessage(60 * 1000)
         return if (this.judgmentKick(qq, nextMessage.firstString())) {
             val whiteJsonArray = qqGroupService.findByGroup(group)?.getWhiteJsonArray() ?: JSONArray()
@@ -164,7 +165,7 @@ class BotController {
                     qqList.add(it.qq)
                 }
             }
-            yuq.sendMessage(mf.newGroup(group).plus(sb.removeSuffixLine().toString()))
+            reply(sb.removeSuffixLine().toString())
             val nextMessage = session.waitNextMessage(30 * 1000)
             return if (nextMessage.firstString() == "一键踢出" && qq.toString() == master) {
                 val whiteList = qqGroupService.findByGroup(group)?.whiteList ?: "查询群失败，踢出失败！！"
@@ -189,7 +190,7 @@ class BotController {
                 qqList.add(it.qq)
             }
         }
-        yuq.sendMessage(mf.newGroup(group).plus(sb.removeSuffixLine().toString()))
+        reply(sb.removeSuffixLine().toString())
         val nextMessage = session.waitNextMessage(40 * 1000)
         return if (nextMessage.firstString() == "一键踢出" && qq.toString() == master) {
             val whiteList = qqGroupService.findByGroup(group)?.whiteList ?: "查询群失败，踢出失败！！"
@@ -205,7 +206,7 @@ class BotController {
     @QMsg(at = true)
     @Action("公告")
     fun publishNotice(group: Long, qq: Long, session: ContextSession, qqEntity: QQEntity): String {
-        yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("请输入需要发送的公告内容！"))
+        reply(mif.at(qq).plus("请输入需要发送的公告内容！"))
         val noticeMessage = session.waitNextMessage(30 * 1000)
         val notice = noticeMessage.body[0].toPath()
         return qqLogic.publishNotice(qqEntity, group, notice)

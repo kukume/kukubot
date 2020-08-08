@@ -22,6 +22,8 @@ class WeiboController {
     @Inject
     private lateinit var weiboService: WeiboService
 
+    private val hotMap: MutableMap<Long, List<String>> = mutableMapOf()
+
     @Before
     fun before(qq: Long, message: Message): WeiboEntity?{
         val str = message.toPath()[0]
@@ -31,8 +33,9 @@ class WeiboController {
     }
 
     @Action("热搜")
-    fun hotSearch(): String{
+    fun hotSearch(group: Long): String{
         val list = weiboLogic.hotSearch()
+        hotMap[group] = list
         val sb = StringBuilder()
         for (str in list){
             sb.appendln(str)
@@ -41,8 +44,13 @@ class WeiboController {
     }
 
     @Action("hot {num}")
-    fun hot(num: Int): String{
-        val list = weiboLogic.hotSearch()
+    fun hot(num: Int, group: Long): String{
+        val list = if (hotMap.containsKey(group)) hotMap[group]!!
+        else {
+            val list = weiboLogic.hotSearch()
+            hotMap[group] = list
+            list
+        }
         var name: String? = null
         for (str in list){
             if (str.startsWith(num.toString())){

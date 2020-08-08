@@ -4,10 +4,11 @@ import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.After
 import com.IceCreamQAQ.Yu.annotation.Before
 import com.IceCreamQAQ.Yu.annotation.Synonym
-import com.icecreamqaq.yuq.YuQ
 import com.icecreamqaq.yuq.annotation.*
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.ContextSession
+import com.icecreamqaq.yuq.controller.QQController
+import com.icecreamqaq.yuq.entity.Group
 import com.icecreamqaq.yuq.firstString
 import com.icecreamqaq.yuq.message.*
 import me.kuku.yuq.entity.NeTeaseEntity
@@ -22,7 +23,7 @@ import javax.inject.Inject
 import kotlin.concurrent.thread
 
 @GroupController
-class QQController {
+class QQController: QQController() {
     @Inject
     private lateinit var leXinMotionLogic: LeXinMotionLogic
     @Inject
@@ -38,12 +39,6 @@ class QQController {
     @Inject
     private lateinit var qqService: QQService
     @Inject
-    private lateinit var mif: MessageItemFactory
-    @Inject
-    private lateinit var yuq: YuQ
-    @Inject
-    private lateinit var mf: MessageFactory
-    @Inject
     private lateinit var neTeaseLogic: NeTeaseLogic
     @Inject
     private lateinit var neTeaseService: NeTeaseService
@@ -57,7 +52,7 @@ class QQController {
             val qqEntity = qqService.findByQQ(qq)
             when {
                 str.toLowerCase() == "qq" -> return
-                qqEntity?.status == false -> throw  mif.at(qq).plus("您的QQ已失效，请更新QQ！！")
+                qqEntity?.status == false -> throw mif.at(qq).plus("您的QQ已失效，请更新QQ！！")
                 qqEntity != null -> actionContext.session["qqEntity"] = qqEntity
                 else -> throw mif.at(qq).plus("没有绑定QQ！，请先发送qq进行扫码登录绑定，如需密码登录绑定请私聊机器人发送qq")
             }
@@ -66,19 +61,19 @@ class QQController {
 
     @Action("qq")
     @Synonym(["QQ", "qQ", "Qq"])
-    fun bindQQ(group: Long, qq: Long): Message{
+    fun bindQQ(group: Group, qq: Long): Message{
         val map = QQQrCodeLoginUtils.getQrCode()
         val bytes = map.getValue("qrCode") as ByteArray
         thread {
             val commonResult = QQUtils.qrCodeLoginVerify(map.getValue("sig").toString())
             val msg = if (commonResult.code == 200){
                 //登录成功
-                QQUtils.saveOrUpdate(qqService, commonResult.t, qq, group = group)
+                QQUtils.saveOrUpdate(qqService, commonResult.t, qq, group = group.id)
                 "绑定或更新成功！"
             }else{
                 commonResult.msg
             }
-            yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus(msg))
+            group.sendMessage(mif.at(qq).plus(msg))
         }
         return mif.image(bytes).plus("qzone.qq.com的扫码登录")
     }
@@ -141,7 +136,7 @@ class QQController {
 
     @Action("超级签到")
     @Synchronized fun allSign(qqEntity: QQEntity, group: Long, qq: Long): String{
-        yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("请稍后！！！正在为您签到中~~~"))
+        reply(mif.at(qq).plus("请稍后！！！正在为您签到中~~~"))
         val str1 = qqLogic.qqSign(qqEntity)
         return if (!str1.contains("更新QQ")){
             val sb = StringBuilder()
@@ -202,9 +197,9 @@ class QQController {
     fun growth(qqEntity: QQEntity): String = qqLogic.vipGrowthAdd(qqEntity)
 
     @Action("中转站")
-    fun mailFile(qqEntity: QQEntity, group: Long): String {
+    fun mailFile(qqEntity: QQEntity, qq: Long): String {
         if (qqEntity.password == "") return "获取QQ邮箱文件中转站分享链接，需要使用密码登录QQ！"
-        yuq.sendMessage(mf.newGroup(group).plus("正在获取中，请稍后~~~~~"))
+        reply(mif.at(qq).plus("正在获取中，请稍后~~~~~"))
         val commonResult = qqMailLogic.getFile(qqEntity)
         return if (commonResult.code == 200){
             val list = commonResult.t
@@ -220,9 +215,9 @@ class QQController {
     }
 
     @Action("续期")
-    fun renew(qqEntity: QQEntity, group: Long): String{
+    fun renew(qqEntity: QQEntity, qq: Long): String{
         if (qqEntity.password == "") return "续期QQ邮箱中转站文件失败！！，需要使用密码登录QQ！"
-        yuq.sendMessage(mf.newGroup(group).plus("正在续期中，请稍后~~~~~"))
+        reply(mif.at(qq).plus("正在续期中，请稍后~~~~~"))
         return qqMailLogic.fileRenew(qqEntity)
     }
 
@@ -266,12 +261,12 @@ class QQController {
             qqLogic.setGroupAdmin(qqEntity, qqNo, group, false)
 
     @Action("#步数/{step}")
-    fun step(qqEntity: QQEntity, qq: Long, step: Int, group: Long): String{
+    fun step(qqEntity: QQEntity, qq: Long, step: Int): String{
         val motionEntity = motionService.findByQQ(qq)
         if (motionEntity != null){
             val msg = leXinMotionLogic.modifyStepCount(step, motionEntity)
             if ("成功" in msg) return msg
-            yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("lexin运动的cookie已过期，正在为您重新登录并执行！！"))
+            reply(mif.at(qq).plus("lexin运动的cookie已过期，正在为您重新登录并执行！！"))
         }
         val commonResult = leXinMotionLogic.loginByQQ(qqEntity)
         return if (commonResult.code == 200){
@@ -297,8 +292,8 @@ class QQController {
     }
 
     @Action("自定义机型 {iMei}")
-    fun changePhoneOnline(qqEntity: QQEntity, iMei: String, qq: Long, group: Long, session: ContextSession): String{
-        yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("请输入您需要自定义的机型！！"))
+    fun changePhoneOnline(qqEntity: QQEntity, iMei: String, qq: Long, session: ContextSession): String{
+        reply(mif.at(qq).plus("请输入您需要自定义的机型！！"))
         val nextMessage = session.waitNextMessage(30 * 1000)
         val phone = nextMessage.firstString()
         return qqLogic.changePhoneOnline(qqEntity, iMei, phone)

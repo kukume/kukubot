@@ -248,15 +248,17 @@ class ToolLogicImpl: ToolLogic {
     }
 
     override fun weather(local: String, cookie: String): CommonResult<String> {
-        val cityResponse = OkHttpClientUtils.get("https://ti.qq.com/v2/city-selector/index?star=8&redirect=true")
-        val cityHtml = OkHttpClientUtils.getStr(cityResponse)
-        val elements = Jsoup.parse(cityHtml).getElementsByTag("li")
         var code: String? = null
         var id: String? = null
-        for (ele in elements){
-            if (ele.text() == local){
-                code = ele.attr("data-adcode")
-                id = ele.attr("data-areaid")
+        val cityResponse = OkHttpClientUtils.get("https://qq-web.cdn-go.cn/city-selector/41c008e0/app/index/dist/cdn/index.bundle.js")
+        val jsStr = OkHttpClientUtils.getStr(cityResponse)
+        val jsonStr = BotUtils.regex("var y=c\\(\"[0-9a-z]{20}\"\\),p=", ",s=\\{name", jsStr)
+        val cityJsonArray = JSON.parseArray(jsonStr)
+        for (i in cityJsonArray.indices){
+            val jsonObject = cityJsonArray.getJSONObject(i)
+            if (jsonObject.getString("district") == local){
+                id = jsonObject.getString("areaid")
+                code = jsonObject.getString("adcode")
                 break
             }
         }
@@ -419,11 +421,6 @@ class ToolLogicImpl: ToolLogic {
         return OkHttpClientUtils.getJson(response).getString("text")
     }
 
-    override fun cosImage(): ByteArray {
-        val response = OkHttpClientUtils.get("https://img.594144.xyz/coser/cos.jpg")
-        return OkHttpClientUtils.getBytes(response)
-    }
-
     override fun searchQuestion(question: String): String {
         val response = OkHttpClientUtils.get("http://api.xmlm8.com/tk.php?t=$question")
         val jsonObject = OkHttpClientUtils.getJson(response)
@@ -452,5 +449,84 @@ class ToolLogicImpl: ToolLogic {
             -404 -> CommonResult(500, "没有找到该BV号！！")
             else -> CommonResult(500, jsonObject.getString("message"))
         }
+    }
+
+    override fun zhiHuHot(): List<Map<String, String>> {
+        val response = OkHttpClientUtils.get("https://www.zhihu.com/hot",
+                OkHttpClientUtils.addUA(OkHttpClientUtils.MOBILE_UA))
+        val html = OkHttpClientUtils.getStr(response)
+        val elements = Jsoup.parse(html).getElementsByClass("css-hi1lih")
+        val list = mutableListOf<Map<String, String>>()
+        for (ele in elements){
+            list.add(mapOf(
+                    "title" to ele.getElementsByClass("css-dk79m8").first().text(),
+                    "url" to ele.attr("href"),
+                    "hot" to ele.getElementsByClass("css-1ixcu37").first().text().trim('\n')
+            ))
+        }
+        return list
+    }
+
+    override fun hostLocPost(): List<Map<String, String>> {
+        val response = OkHttpClientUtils.get("https://www.hostloc.com/forum.php?mod=forumdisplay&fid=45&filter=author&orderby=dateline",
+                OkHttpClientUtils.addUA(OkHttpClientUtils.PC_UA))
+        val html = OkHttpClientUtils.getStr(response)
+        val elements = Jsoup.parse(html).getElementsByTag("tbody")
+        val list = mutableListOf<Map<String, String>>()
+        for (ele in elements){
+            if (!ele.attr("id").startsWith("normalth")) continue
+            val s = ele.getElementsByClass("s").first()
+            val title = s.text()
+            val url = "https://www.hostloc.com/" + s.attr("href")
+            val name = ele.select("cite a").first().text()
+            val time = ele.select("em a span").first().text()
+            list.add(mapOf(
+                    "title" to title,
+                    "url" to url,
+                    "name" to name,
+                    "time" to time
+            ))
+        }
+        return list
+    }
+
+    override fun wordSegmentation(text: String): String {
+        val response = OkHttpClientUtils.get("https://api.devopsclub.cn/api/segcut?text=${URLEncoder.encode(text, "utf-8")}")
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return if (jsonObject.getInteger("code") == 0){
+            val sb = StringBuilder()
+            val jsonArray = jsonObject.getJSONObject("data").getJSONArray("result")
+            jsonArray.forEach{  sb.appendln(it) }
+            return sb.removeSuffixLine().toString()
+        }else jsonObject.getString("msg")
+    }
+
+    override fun acgPic(): String {
+        val response = OkHttpClientUtils.get("https://v1.alapi.cn/api/acg")
+        response.close()
+        return response.header("location")!!
+    }
+
+    override fun danBooRuPic(): String {
+        val tagResponse = OkHttpClientUtils.get("https://danbooru.donmai.us/",
+                OkHttpClientUtils.addUA(OkHttpClientUtils.PC_UA))
+        val tagHtml = OkHttpClientUtils.getStr(tagResponse)
+        val elements = Jsoup.parse(tagHtml).select("#tag-box ul li")
+        val tags = mutableListOf<Map<String, String>>()
+        elements.forEach { tags.add(mapOf(
+                "tag" to it.attr("data-tag-name"),
+                "num" to it.getElementsByClass("post-count").first().attr("title")
+        )) }
+        val tagMap = tags[Random.nextInt(tags.size)]
+        val tag = tagMap.getValue("tag")
+        val page = tagMap.getValue("num").toInt() / 20
+        val maxPage = if (page > 1000) 1000 else page
+        val picResponse = OkHttpClientUtils.get("https://danbooru.donmai.us/posts?tags=$tag&page=${Random.nextInt(1, maxPage + 1)}",
+                OkHttpClientUtils.addUA(OkHttpClientUtils.PC_UA))
+        val picHtml = OkHttpClientUtils.getStr(picResponse)
+        val picElements = Jsoup.parse(picHtml).select("#posts-container article")
+        val urls = mutableListOf<String>()
+        picElements.forEach { urls.add(it.attr("data-file-url")) }
+        return urls[Random.nextInt(urls.size)]
     }
 }

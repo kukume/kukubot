@@ -39,7 +39,11 @@ interface ToolLogic {
     fun queryTime(): ByteArray
     fun queryVersion(): String
     fun music163cloud(): String
-    fun cosImage(): ByteArray
     fun searchQuestion(question: String): String
     fun bvToAv(bv: String): CommonResult<Map<String, String>>
+    fun zhiHuHot(): List<Map<String, String>>
+    fun hostLocPost(): List<Map<String, String>>
+    fun wordSegmentation(text: String): String
+    fun acgPic(): String
+    fun danBooRuPic(): String
 }

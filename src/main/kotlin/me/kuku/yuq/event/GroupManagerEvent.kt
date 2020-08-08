@@ -2,10 +2,11 @@ package me.kuku.yuq.event
 
 import com.IceCreamQAQ.Yu.annotation.Event
 import com.IceCreamQAQ.Yu.annotation.EventListener
+import com.alibaba.fastjson.JSONArray
 import com.icecreamqaq.yuq.event.GroupMessageEvent
 import com.icecreamqaq.yuq.message.Image
-import com.icecreamqaq.yuq.mf
 import com.icecreamqaq.yuq.mif
+import com.icecreamqaq.yuq.toMessage
 import com.icecreamqaq.yuq.yuq
 import me.kuku.yuq.entity.GroupQQEntity
 import me.kuku.yuq.logic.QQAILogic
@@ -25,7 +26,7 @@ class GroupManagerEvent {
 
     @Event(weight = Event.Weight.high)
     fun switchGroup(e: GroupMessageEvent){
-        val qqGroupEntity = qqGroupService.findByGroup(e.message.group!!)
+        val qqGroupEntity = qqGroupService.findByGroup(e.group.id)
         val body = e.message.body
         if (body.size < 1) return
         val msg = body[0].toPath()
@@ -36,15 +37,19 @@ class GroupManagerEvent {
         }
     }
 
+    @Event(weight = Event.Weight.low)
+    fun intercept(e: GroupMessageEvent){
+        val qqGroupEntity = qqGroupService.findByGroup(e.group.id) ?: return
+        val msg = e.message.toPath()[0]
+        val interceptJsonArray = qqGroupEntity.getInterceptJsonArray()
+        if (interceptJsonArray.contains(msg)) e.cancel = true
+    }
+
     @Event
     fun keyword(e: GroupMessageEvent){
-        val group = e.message.group!!
+        val group = e.group.id
         if (yuq.groups[group]?.bot?.isAdmin() != true) return
-        val qq = try {
-            e.message.qq!!
-        }catch (e: Exception){
-            BotUtils.regex("[0-9]*", e.message!!)?.toLong() ?: return
-        }
+        val qq = e.sender.id
         if (yuq.groups[group]?.get(qq)?.isAdmin() == true) return
         val qqGroupEntity = qqGroupService.findByGroup(group) ?: return
         val keywordJsonArray = qqGroupEntity.getKeywordJsonArray()
@@ -53,10 +58,10 @@ class GroupManagerEvent {
             if (keyword in e.message.sourceMessage.toString()){
                 e.message.recall()
                 val maxCount = qqGroupEntity.maxViolationCount ?: 5
-                val violation = this.violation(qq, group, maxCount)
+                val violation = this.violation(qq, group, maxCount, e)
                 if (violation >= maxCount) return
-                yuq.groups[group]?.members?.get(qq)?.ban(10 * 60)
-                yuq.sendMessage(mf.newGroup(group).plus(mif.at(e.message.qq!!)).plus(
+                e.sender.ban(10 * 60)
+                e.group.sendMessage(mif.at(qq).plus(
                         "检测到违规词\"$keyword\"，您已被禁言。\n您当前的违规次数为${violation}次。\n累计违规${maxCount}次会被踢出本群哦！！"))
                 return
             }
@@ -65,7 +70,7 @@ class GroupManagerEvent {
 
     @Event
     fun qa(e: GroupMessageEvent){
-        val qqGroupEntity = qqGroupService.findByGroup(e.message.group!!) ?: return
+        val qqGroupEntity = qqGroupService.findByGroup(e.group.id) ?: return
         val message = e.message
         if (message.toPath().isEmpty()) return
         if (message.toPath()[0] == "删问答") return
@@ -73,11 +78,24 @@ class GroupManagerEvent {
         for (i in qaJsonArray.indices){
             val jsonObject = qaJsonArray.getJSONObject(i)
             if (jsonObject.getString("q") in message.body[0].toPath()){
-                val answer = jsonObject.getString("a")
-                if (answer.startsWith("<?xml version=")){
-                    yuq.sendMessage(mf.newGroup(message.group!!).plus(mif.xmlEx(BotUtils.regex("serviceID=\"", "\"", answer)!!.toInt(), answer)))
+                val textAnswer = jsonObject.get("a")
+                if (textAnswer is String) {
+                    if (textAnswer.startsWith("<?xml version=")) {
+                        e.group.sendMessage(mif.xmlEx(BotUtils.regex("serviceID=\"", "\"", textAnswer)!!.toInt(), textAnswer).toMessage())
+                    } else e.group.sendMessage(textAnswer.toMessage())
+                } else {
+                    val aJsonArray = textAnswer as JSONArray
+                    val msg = "".toMessage()
+                    for (j in aJsonArray.indices){
+                        val aJsonObject = aJsonArray.getJSONObject(j)
+                        when (aJsonObject.getString("type")){
+                            "text" -> msg.plus(aJsonObject.getString("content"))
+                            "image" -> msg.plus(mif.image(aJsonObject.getString("content")))
+                            "face" -> msg.plus(mif.face(aJsonObject.getInteger("content")))
+                        }
+                    }
+                    e.group.sendMessage(msg)
                 }
-                else yuq.sendMessage(mf.newGroup(message.group!!).plus(answer))
                 return
             }
         }
@@ -85,8 +103,8 @@ class GroupManagerEvent {
 
     @Event
     fun pic(e: GroupMessageEvent){
-        val group = e.message.group!!
-        val qq = e.message.qq!!
+        val group = e.group.id
+        val qq = e.sender.id
         if (yuq.groups[group]?.bot?.isAdmin() != true) return
         val qqGroupEntity = qqGroupService.findByGroup(group) ?: return
         if (qqGroupEntity.pic == true){
@@ -98,10 +116,10 @@ class GroupManagerEvent {
                     if (b){
                         e.message.recall()
                         val maxCount = qqGroupEntity.maxViolationCount ?: 5
-                        val violation = this.violation(qq, group, maxCount)
+                        val violation = this.violation(qq, group, maxCount, e)
                         if (violation >= 5) return
-                        yuq.groups[group]?.members?.get(qq)?.ban(10 * 60)
-                        yuq.sendMessage(mf.newGroup(group).plus(mif.at(e.message.qq!!)).plus(
+                        e.sender.ban(10 * 60)
+                        e.group.sendMessage(mif.at(qq).plus(
                                 "检测到色情图片，您已被禁言\n您当前的违规次数为${violation}次。\n累计违规${maxCount}次会被踢出本群哦！！"))
                     }
                 }
@@ -109,12 +127,12 @@ class GroupManagerEvent {
         }
     }
 
-    private fun violation(qq: Long, group: Long, count: Int): Int{
+    private fun violation(qq: Long, group: Long, count: Int, e: GroupMessageEvent): Int{
         val groupQQEntity = groupQQService.findByQQAndGroup(qq, group) ?: GroupQQEntity(null, qq, group)
         val nextViolationCount = groupQQEntity.violationCount + 1
         if (nextViolationCount >= count) {
-            yuq.groups[group]?.members?.get(qq)?.kick()
-            yuq.sendMessage(mf.newGroup(group).plus("${qq}违禁次数已达上限，被移走了！！"))
+            e.sender.kick()
+            e.group.sendMessage("${qq}违禁次数已达上限，被移走了！！".toMessage())
         }else {
             groupQQEntity.violationCount = nextViolationCount
             groupQQService.save(groupQQEntity)

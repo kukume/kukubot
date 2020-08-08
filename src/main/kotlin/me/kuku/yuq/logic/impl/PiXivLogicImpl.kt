@@ -8,6 +8,8 @@ import kotlin.random.Random
 
 class PiXivLogicImpl: PiXivLogic {
 
+    private fun phpCookie(cookie: String) = "PHPSESSID=$cookie; "
+
     override fun getImage(url: String): ByteArray {
         val response = OkHttpClientUtils.get(url, OkHttpClientUtils.addReferer("https://www.pixiv.net/artworks"))
         return OkHttpClientUtils.getBytes(response)
@@ -33,7 +35,7 @@ class PiXivLogicImpl: PiXivLogic {
     }
 
     override fun bookMarks(id: String, cookie: String): String {
-        val cookieHeader = OkHttpClientUtils.addCookie("PHPSESSID=$cookie; ")
+        val cookieHeader = OkHttpClientUtils.addCookie(this.phpCookie(cookie))
         val response = OkHttpClientUtils.get("https://www.pixiv.net/ajax/user/$id/illusts/bookmarks?tag=&offset=0&limit=48&rest=show&lang=zh",
                 cookieHeader)
         val jsonObject = OkHttpClientUtils.getJson(response)
@@ -49,7 +51,7 @@ class PiXivLogicImpl: PiXivLogic {
     }
 
     override fun r18setting(cookie: String, isOpen: Boolean): String {
-        val newCookie = "PHPSESSID=$cookie; "
+        val newCookie = this.phpCookie(cookie)
         val response = OkHttpClientUtils.get("https://www.pixiv.net/setting_user.php", OkHttpClientUtils.addHeaders(
                 "cookie", newCookie,
                 "user-agent", OkHttpClientUtils.PC_UA

@@ -3,10 +3,10 @@ package me.kuku.yuq.controller
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Config
 import com.IceCreamQAQ.Yu.annotation.Synonym
-import com.IceCreamQAQ.Yu.job.JobManager
-import com.icecreamqaq.yuq.YuQ
 import com.icecreamqaq.yuq.annotation.*
 import com.icecreamqaq.yuq.controller.ContextSession
+import com.icecreamqaq.yuq.controller.QQController
+import com.icecreamqaq.yuq.entity.Contact
 import com.icecreamqaq.yuq.firstString
 import com.icecreamqaq.yuq.message.*
 import com.icecreamqaq.yuq.toMessage
@@ -16,6 +16,7 @@ import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.service.QQGroupService
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.image
+import me.kuku.yuq.utils.removeSuffixLine
 import java.net.SocketException
 import java.net.URLEncoder
 import javax.inject.Inject
@@ -23,17 +24,11 @@ import kotlin.random.Random
 
 @GroupController
 @ContextController
-class ToolController {
+class ToolController: QQController() {
     @Inject
     private lateinit var toolLogic: ToolLogic
     @Inject
     private lateinit var qqGroupService: QQGroupService
-    @Inject
-    private lateinit var mif: MessageItemFactory
-    @Inject
-    private lateinit var mf: MessageFactory
-    @Inject
-    private lateinit var yuq: YuQ
     @Inject
     private lateinit var piXivLogic: PiXivLogic
     @Inject
@@ -115,11 +110,11 @@ class ToolController {
 
     @QMsg(at = true)
     @Action("转{str}")
-    fun translate(str: String, session: ContextSession, group: Long, qq: Long): String?{
+    fun translate(str: String, session: ContextSession, qq: Long): String?{
         val map = mapOf("英" to "en", "中" to "zh", "日" to "jp", "韩" to "kor",
                 "粤" to "yue", "法" to "gra", "俄" to "ru", "德" to "de", "文" to "wyw", "简" to "2", "繁" to "1")
         return if (map.containsKey(str)){
-            yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq).plus("请输入需要翻译的内容！！")))
+            reply(mif.at(qq).plus("请输入需要翻译的内容！！"))
             val nextMessage = session.waitNextMessage(30 * 1000)
             val content = nextMessage.firstString()
             if (str == "简" || str == "繁"){
@@ -139,12 +134,12 @@ class ToolController {
 
     @Action("\\.*\\")
     @QMsg(reply = true, at = true)
-    fun chat(message: Message): String?{
+    fun chat(message: Message, qq: Contact): String?{
         val body = message.body
         val at = body[0]
         return if (at is At && at.user == this.qq.toLong()){
             val msg = message.body[1].toPath()
-            qqAiLogic.textChat(msg, message.qq.toString())
+            qqAiLogic.textChat(msg, qq.id.toString())
         }else null
     }
 
@@ -164,7 +159,7 @@ class ToolController {
             "remote" -> mif.image(toolLogic.colorPic(pCookie)).toMessage()
             "local" -> {
                 try {
-                    val ids = arrayOf(5516155, 4875713, 14228138, 42115425, 15443500, 13070512)
+                    val ids = arrayOf(5516155, 4875713, 13070512)
                     val id = ids[Random.nextInt(ids.size)]
                     val url = piXivLogic.bookMarks(id.toString(), pCookie)
                     val bytes = piXivLogic.getImage(url)
@@ -175,6 +170,7 @@ class ToolController {
                     else mif.at(qq).plus("出现异常了，异常信息为：${e.message}")
                 }
             }
+            "danbooru" -> mif.image(toolLogic.danBooRuPic()).toMessage()
             else -> mif.image(toolLogic.colorPic(pCookie)).toMessage()
         }
     }
@@ -184,11 +180,11 @@ class ToolController {
     fun tenColorPic(group: Long, qq: Long){
         for (i in 0 until 10){
             val message = this.colorPic(group, qq)
-            yuq.sendMessage(mf.newGroup(group).plus(message))
+            reply(message)
         }
     }
 
-    @Action("点歌/{name}")
+    @Action("点歌 {name}")
     fun song(name: String, group: Long): Any?{
         val qqGroupEntity = qqGroupService.findByGroup(group)
         return when (qqGroupEntity?.musicType ?: "qq") {
@@ -242,17 +238,14 @@ class ToolController {
     }
 
     @Action("跟我读")
-    fun repeat(session: ContextSession, group: Long, qq: Long): Message{
-        yuq.sendMessage(mf.newGroup(group).plus(mif.at(qq)).plus("您请说！！"))
+    fun repeat(session: ContextSession, qq: Long): Message{
+        reply(mif.at(qq).plus("您请说！！"))
         return session.waitNextMessage(30 * 1000)
     }
 
     @QMsg(at = true)
     @Action("网抑云")
     fun wyy() = toolLogic.music163cloud()
-
-    @Action("cos")
-    fun cos() = mif.image(toolLogic.cosImage())
 
     @Action("\\^BV.*\\")
     @Synonym(["\\^bv.*\\"])
@@ -269,4 +262,33 @@ class ToolController {
             )
         }else commonResult.msg.toMessage()
     }
+
+    @Action("知乎热榜")
+    fun zhiHuHot(): String{
+        val list = toolLogic.zhiHuHot()
+        val sb = StringBuilder()
+        for (i in list.indices){
+            val map = list[i]
+            sb.appendln("${i + 1}、${map["title"]}")
+        }
+        return sb.removeSuffixLine().toString()
+    }
+
+    @Action("loc")
+    fun loc(): String{
+        val list = toolLogic.hostLocPost()
+        val sb = StringBuilder()
+        list.forEach { sb.appendln("${it["title"]}-${it["name"]}-${it["time"]}").appendln("------------") }
+        return sb.removeSuffixLine().toString()
+    }
+
+    @Action("分词")
+    fun wordSegmentation(qq: Long, session: ContextSession): String{
+        reply(mif.at(qq).plus("请输入需要中文分词的内容！！"))
+        val nextMessage = session.waitNextMessage()
+        return toolLogic.wordSegmentation(nextMessage.firstString())
+    }
+
+    @Action("acg")
+    fun acgPic() = mif.image(toolLogic.acgPic())
 }

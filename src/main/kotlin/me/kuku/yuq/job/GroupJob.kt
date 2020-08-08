@@ -2,7 +2,6 @@ package me.kuku.yuq.job
 
 import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
-import com.icecreamqaq.yuq.mf
 import com.icecreamqaq.yuq.mif
 import com.icecreamqaq.yuq.yuq
 import me.kuku.yuq.service.QQGroupService
@@ -24,7 +23,7 @@ class GroupJob {
         if (hour == 0) hour = 12
         if (hour > 12) hour -= 12
         val url = "https://u.iheit.com/kuku/bot/time/$hour.jpg"
-        list.forEach { yuq.sendMessage(mf.newGroup(it.group_).plus(mif.image(url))) }
+        list.forEach { yuq.groups[it.group_]?.sendMessage(mif.image(url).toMessage()) }
     }
 
 }

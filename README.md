@@ -40,7 +40,7 @@ YuQ.Mirai.user.qq=
 YuQ.Mirai.user.pwd=
 # 机器人主人
 YuQ.Mirai.bot.master=734669014
-# pixiv的cookie，需在登录的情况下抓取cookie的PHPSessionId
+# pixiv的cookie，需在登录的情况下抓取cookie的PHPSESSID
 YuQ.Mirai.bot.pCookie=
 # api
 YuQ.Mirai.bot.myApi=api.kuku.me

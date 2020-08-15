@@ -12,7 +12,7 @@ object BotUtils {
         val newUrl = if (url.startsWith("http")) url
         else "http://$url"
         val response = OkHttpClientUtils.post("https://s.iheit.com/api.php", OkHttpClientUtils.addForms(
-                "d", newUrl
+                "url", newUrl
         ))
         val jsonObject = OkHttpClientUtils.getJson(response)
         return if (jsonObject.getInteger("code") == 200) jsonObject.getString("shorturl")

@@ -5,6 +5,10 @@ import com.alibaba.fastjson.JSONObject
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
+import okio.ByteString
+import java.net.InetSocketAddress
+import java.net.Proxy
+import java.net.SocketAddress
 import java.util.concurrent.TimeUnit
 
 object OkHttpClientUtils {
@@ -16,6 +20,7 @@ object OkHttpClientUtils {
     const val QQ_UA = "Mozilla/5.0 (Linux; Android 10; V1914A Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/66.0.3359.126 MQQBrowser/6.2 TBS/045132 Mobile Safari/537.36 V1_AND_SQ_8.3.0_1362_YYB_D QQ/8.3.0.4480 NetType/4G WebP/0.3.0 Pixel/1080 StatusBarHeight/85 SimpleUISwitch/0 QQTheme/1000"
     const val QQ_UA2 = "Mozilla/5.0 (Linux; Android 10; V1914A Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/77.0.3865.120 MQQBrowser/6.2 TBS/045224 Mobile Safari/537.36 V1_AND_SQ_8.3.9_1424_YYB_D QQ/8.3.9.4635 NetType/4G WebP/0.3.0 Pixel/1080 StatusBarHeight/85 SimpleUISwitch/0 QQTheme/1000"
     private val okHttpClient: OkHttpClient = OkHttpClient.Builder()
+//            .proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress("localhost", 7890)))
             .followRedirects(false)
             .followSslRedirects(false)
             .connectTimeout(TIME_OUT, TimeUnit.SECONDS)
@@ -91,9 +96,11 @@ object OkHttpClientUtils {
         return builder.build()
     }
 
-    fun addStream(url: String): RequestBody{
-        return this.getByteStr(this.get(url)).toRequestBody(this.MEDIA_STREAM)
-    }
+    fun addStream(url: String) = this.getByteStr(this.get(url)).toRequestBody(this.MEDIA_STREAM)
+
+    fun addStream(byteArray: ByteArray) = byteArray.toRequestBody(this.MEDIA_STREAM)
+
+    fun addStream(byteString: ByteString) = byteString.toRequestBody(this.MEDIA_STREAM)
 
     fun addJson(params: String) = params.toRequestBody(MEDIA_JSON)
 

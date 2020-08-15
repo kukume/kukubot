@@ -2,8 +2,8 @@ package me.kuku.yuq.job
 
 import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
-import com.icecreamqaq.yuq.YuQ
 import com.icecreamqaq.yuq.toMessage
+import com.icecreamqaq.yuq.yuq
 import me.kuku.yuq.logic.QQLogic
 import me.kuku.yuq.service.QQService
 import me.kuku.yuq.utils.QQPasswordLoginUtils
@@ -17,8 +17,6 @@ class QQJob {
     private lateinit var qqService: QQService
     @Inject
     private lateinit var qqLogic: QQLogic
-    @Inject
-    private lateinit var yuq: YuQ
 
     @Cron("30m")
     fun checkAndUpdate(){

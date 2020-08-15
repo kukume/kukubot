@@ -15,6 +15,4 @@ class QQJobDao: HibernateDao<QQJobEntity, Int>() {
         val query = this.query("delete from QQJobEntity where qq = ?", qq)
         query.executeUpdate()
     }
-
-
 }

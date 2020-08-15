@@ -29,8 +29,6 @@ class QQController: QQController() {
     @Inject
     private lateinit var motionService: MotionService
     @Inject
-    private lateinit var toolLogic: ToolLogic
-    @Inject
     private lateinit var qqMailLogic: QQMailLogic
     @Inject
     private lateinit var qqLogic: QQLogic
@@ -78,20 +76,6 @@ class QQController: QQController() {
         return mif.image(bytes).plus("qzone.qq.com的扫码登录")
     }
 
-    @Action("群签到")
-    fun groupSign(qqEntity: QQEntity, group: Long, message: Message): String{
-        if (message.body.size > 1){
-            val item = message.body[1]
-            if (item is Image){
-                return qqLogic.groupSign(qqEntity, group, "你猜", "哈哈", "{\"category_id\":\"\",\"page\":\"\",\"pic_id\":\"\"}", item.url)
-            }
-        }
-        val arr = arrayOf(178, 124, 120, 180, 181, 127, 125, 126)
-        val id = arr.random()
-        val map = toolLogic.hiToKoTo()
-        return qqLogic.groupSign(qqEntity, group, map["from"] ?: "你猜", map.getValue("text"), "{\"category_id\":9,\"page\":0,\"pic_id\":$id}")
-    }
-
     @Action("气泡")
     fun bubble(@PathVar(1) text: String?, @PathVar(2) name: String?, qqEntity: QQEntity): String{
         return if (text != null){
@@ -129,6 +113,23 @@ class QQController: QQController() {
             }else singleBody.toPath()
         }else return "缺少参数，送花的对象！"
         return qqLogic.sendFlower(qqEntity, qq.toLong(), group)
+    }
+
+    @Action("群礼物")
+    fun lottery(qqEntity: QQEntity): String{
+        val commonResult = qqZoneLogic.queryGroup(qqEntity)
+        return if (commonResult.code == 200){
+            val list = commonResult.t
+            val sb = StringBuilder()
+            list.forEach {
+                val group = it.getValue("group").toLong()
+                val result = qqLogic.groupLottery(qqEntity, group)
+                if (result.contains("成功")) sb.appendln(result)
+            }
+            val str = sb.removeSuffixLine().toString()
+            if (str == "") "啥都没抽到"
+            else str
+        }else commonResult.msg
     }
 
     @Action("拒绝添加")

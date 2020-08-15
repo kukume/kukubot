@@ -9,7 +9,6 @@ import com.icecreamqaq.yuq.controller.QQController
 import com.icecreamqaq.yuq.entity.Contact
 import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.firstString
-import com.icecreamqaq.yuq.message.Message
 import me.kuku.yuq.entity.NeTeaseEntity
 import me.kuku.yuq.entity.SteamEntity
 import me.kuku.yuq.entity.SuperCuteEntity
@@ -19,6 +18,7 @@ import me.kuku.yuq.logic.SteamLogic
 import me.kuku.yuq.logic.WeiboLogic
 import me.kuku.yuq.service.*
 import me.kuku.yuq.utils.*
+import java.io.File
 import javax.inject.Inject
 
 @PrivateController
@@ -46,7 +46,7 @@ class BindController: QQController() {
         val newGroup = BotUtils.getGroupId(qq)
         val pwd = password ?: qqEntity?.password
         return if (pwd != null){
-            val commonResult = QQPasswordLoginUtils.login(qq = qq.toString(), password = pwd)
+            val commonResult = QQPasswordLoginUtils.login(qq = qq.id.toString(), password = pwd)
             when (commonResult.code) {
                 200 -> {
                     val map = commonResult.t

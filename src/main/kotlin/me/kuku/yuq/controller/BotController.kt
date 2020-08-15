@@ -15,6 +15,7 @@ import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.message.Message
 import me.kuku.yuq.entity.QQEntity
+import me.kuku.yuq.entity.QQGroupEntity
 import me.kuku.yuq.logic.QQGroupLogic
 import me.kuku.yuq.logic.QQLogic
 import me.kuku.yuq.logic.QQZoneLogic
@@ -46,11 +47,17 @@ class BotController: QQController() {
     private lateinit var qqGroupService: QQGroupService
 
     @Before
-    fun before(qq: Long, message: Message, actionContext: BotActionContext) {
+    fun before(qq: Long, message: Message, actionContext: BotActionContext, group: Long) {
         val msgList = arrayOf("改", "公告", "全体禁言", "拉", "发布作业", "群接龙", "群作业")
-        if (msgList.contains(message.toPath()[0])) {
-            if (qq.toString() != master) {
-                throw mif.at(qq).plus("抱歉，您不是机器人主人，无法执行！！")
+        val msg = message.toPath()[0]
+        if (msgList.contains(msg)) {
+            val qqGroupEntity = qqGroupService.findByGroup(group) ?: QQGroupEntity()
+            val adminJsonArray = qqGroupEntity.getAdminJsonArray()
+            val adminWhiteList = qqGroupEntity.getAllowedCommandsJsonArray()
+            if (!adminJsonArray.contains(qq.toString()) || !adminWhiteList.contains(msg)) {
+                if (qq.toString() != master) {
+                    throw "抱歉，您的权限不足，无法执行！！".toMessage()
+                }
             }
         }
         val concurrentHashMap = web.domainMap
@@ -294,7 +301,7 @@ class BotController: QQController() {
 
     @Action("加个好友 {qqNo}")
     fun addFriend(qqEntity: QQEntity, qqNo: Long) =
-        qqZoneLogic.addFriend(qqEntity, qqNo, "机器人加你需要理由？？", null, null)
+        qqZoneLogic.addFriend(qqEntity, qqNo, "加个好友呗！！", null, null)
 
     private fun judgmentKick(qq: Long, msg: String) = qq == master.toLong() && msg == "一键踢出"
 }

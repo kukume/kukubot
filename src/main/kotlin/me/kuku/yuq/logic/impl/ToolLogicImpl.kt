@@ -304,9 +304,12 @@ class ToolLogicImpl: ToolLogic {
         return "ping失败，请稍后再试！！"
     }
 
-    override fun colorPic(cookie: String): ByteArray {
-        val response = OkHttpClientUtils.get("https://$myApi/pixiv/bookmarks/random?cookie=$cookie")
-        return OkHttpClientUtils.getBytes(response)
+    override fun colorPic(type: String): String {
+        val response = OkHttpClientUtils.get("https://$myApi/pixiv/random/$type")
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return if (jsonObject.getInteger("code") == 200){
+            jsonObject.getJSONObject("data").getString("url")
+        }else jsonObject.getString("msg")
     }
 
     override fun r18setting(cookie: String, isOpen: Boolean): String {
@@ -528,5 +531,12 @@ class ToolLogicImpl: ToolLogic {
         val urls = mutableListOf<String>()
         picElements.forEach { urls.add(it.attr("data-file-url")) }
         return urls[Random.nextInt(urls.size)]
+    }
+
+    override fun identifyPic(url: String): String? {
+        val response = OkHttpClientUtils.get("https://saucenao.com/search.php?url=$url&output_type=2")
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        val resultJsonObject = jsonObject.getJSONArray("results")
+        return resultJsonObject?.getJSONObject(0)?.getJSONObject("data")?.getJSONArray("ext_urls")?.getString(0)
     }
 }

@@ -63,7 +63,7 @@ class GroupManagerEvent {
                 e.sender.ban(10 * 60)
                 e.group.sendMessage(mif.at(qq).plus(
                         "检测到违规词\"$keyword\"，您已被禁言。\n您当前的违规次数为${violation}次。\n累计违规${maxCount}次会被踢出本群哦！！"))
-                return
+                e.cancel = true
             }
         }
     }

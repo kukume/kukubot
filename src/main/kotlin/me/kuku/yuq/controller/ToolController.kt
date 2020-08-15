@@ -10,15 +10,16 @@ import com.icecreamqaq.yuq.entity.Contact
 import com.icecreamqaq.yuq.firstString
 import com.icecreamqaq.yuq.message.*
 import com.icecreamqaq.yuq.toMessage
-import me.kuku.yuq.logic.PiXivLogic
 import me.kuku.yuq.logic.QQAILogic
 import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.service.QQGroupService
 import me.kuku.yuq.utils.BotUtils
+import me.kuku.yuq.utils.OkHttpClientUtils
 import me.kuku.yuq.utils.image
 import me.kuku.yuq.utils.removeSuffixLine
 import java.net.SocketException
 import java.net.URLEncoder
+import java.util.*
 import javax.inject.Inject
 import kotlin.random.Random
 
@@ -30,13 +31,13 @@ class ToolController: QQController() {
     @Inject
     private lateinit var qqGroupService: QQGroupService
     @Inject
-    private lateinit var piXivLogic: PiXivLogic
-    @Inject
     private lateinit var qqAiLogic: QQAILogic
     @Config("YuQ.Mirai.user.qq")
     private lateinit var qq: String
     @Config("YuQ.Mirai.bot.pCookie")
     private lateinit var pCookie:String
+
+    private var colorPicTime = 0L
 
     @QMsg(at = true)
     @Action("百度/{content}")
@@ -155,29 +156,30 @@ class ToolController: QQController() {
     fun colorPic(group: Long, qq: Long): Message {
         val qqGroupEntity = qqGroupService.findByGroup(group)
         if (qqGroupEntity?.colorPic != true) throw mif.at(qq).plus("该功能已关闭")
-        return when (qqGroupEntity.colorPicType){
-            "remote" -> mif.image(toolLogic.colorPic(pCookie)).toMessage()
-            "local" -> {
-                try {
-                    val ids = arrayOf(5516155, 4875713, 13070512)
-                    val id = ids[Random.nextInt(ids.size)]
-                    val url = piXivLogic.bookMarks(id.toString(), pCookie)
-                    val bytes = piXivLogic.getImage(url)
+        return when (val type = qqGroupEntity.colorPicType){
+            "native","r-18" -> {
+                val url = toolLogic.colorPic(type)
+                if (url.startsWith("http")){
+                    val response = OkHttpClientUtils.get(url)
+                    val bytes = OkHttpClientUtils.getBytes(response)
                     mif.image(bytes).toMessage()
-                }catch (e: SocketException){
-                    if (e.message == "Connection reset")
-                        mif.at(qq).plus("抱歉，该服务器不能访问p站，请发送（涩图切换 远程）")
-                    else mif.at(qq).plus("出现异常了，异常信息为：${e.message}")
-                }
+                }else url.toMessage()
             }
             "danbooru" -> mif.image(toolLogic.danBooRuPic()).toMessage()
-            else -> mif.image(toolLogic.colorPic(pCookie)).toMessage()
+            else -> "涩图类型不匹配！！".toMessage()
         }
     }
 
     @Action("涩图十连")
     @Synonym(["色图十连"])
+    @Synchronized
     fun tenColorPic(group: Long, qq: Long){
+        val time = Date().time
+        val timeDifference = (time - colorPicTime) / 1000
+        if (timeDifference < 120){
+            reply("涩图十连还有${120 - timeDifference}s才允许被执行")
+            return
+        }else colorPicTime = time
         for (i in 0 until 10){
             val message = this.colorPic(group, qq)
             reply(message)
@@ -291,4 +293,12 @@ class ToolController: QQController() {
 
     @Action("acg")
     fun acgPic() = mif.image(toolLogic.acgPic())
+
+    @Action("搜图 {img}")
+    @QMsg(at = true)
+    fun searchImage(img: Image): Message {
+        val url = toolLogic.identifyPic(img.url)
+        return if (url != null) mif.image(img.url).plus(url)
+        else "没有找到这张图片！！！".toMessage()
+    }
 }

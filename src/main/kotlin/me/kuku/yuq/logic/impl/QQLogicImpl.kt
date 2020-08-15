@@ -54,13 +54,14 @@ class QQLogicImpl: QQLogic {
                 "poi", place,
                 "text", text,
                 "pic_id", imgId
-        ), qqEntity.cookie())
+        ), qqEntity.cookieWithGroup())
         val jsonObject = OkHttpClientUtils.getJson(response)
         return when (jsonObject.getInteger("retcode")){
             0 -> "qq群${group}签到成功"
             10013,10001 -> "qq群签到失败，已被禁言！"
             10016 -> "群签到一次性只能签到5个群，请10分钟后再试！"
-            else -> "qq群签到失败，请更新QQ！"
+            5 -> "qq群签到失败，请更新QQ！！"
+            else -> "qq群签到失败，${jsonObject.getString("msg")}"
         }
     }
 
@@ -75,7 +76,7 @@ class QQLogicImpl: QQLogic {
         val jsonObject = OkHttpClientUtils.getJson(response)
         return if (jsonObject.getInteger("ec") == 0){
             when {
-                jsonObject.getInteger("lucky_code") == 7779 -> "抱歉，等级不够5级，无法抽礼物"
+                jsonObject.getInteger("lucky_code") == 7779 -> "抱歉，等级不够61级，无法抽礼物"
                 "" == jsonObject.getString("name") || jsonObject.getString("name") == null -> "抱歉，没有抽到礼物"
                 else -> "抽礼物成功，抽到了${jsonObject.getString("name")}"
             }

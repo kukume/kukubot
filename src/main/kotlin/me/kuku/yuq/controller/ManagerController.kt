@@ -17,14 +17,12 @@ import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.Text
 import com.icecreamqaq.yuq.mirai.MiraiBot
 import me.kuku.yuq.entity.QQGroupEntity
-import me.kuku.yuq.logic.PiXivLogic
 import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.logic.WeiboLogic
 import me.kuku.yuq.service.QQGroupService
 import me.kuku.yuq.utils.OkHttpClientUtils
 import me.kuku.yuq.utils.removeSuffixLine
 import java.io.File
-import java.net.SocketException
 import javax.inject.Inject
 import kotlin.system.exitProcess
 
@@ -39,14 +37,9 @@ class ManagerController: QQController() {
     @Inject
     private lateinit var toolLogic: ToolLogic
     @Inject
-    private lateinit var piXivLogic: PiXivLogic
-    @Inject
     private lateinit var weiboLogic: WeiboLogic
-    @Config("YuQ.Mirai.bot.pCookie")
-    private lateinit var pCookie:String
 
-
-    private val version = "v1.4.6"
+    private val version = "v1.4.7"
 
     @Before
     fun before(group: Long, qq: Long, actionContext: BotActionContext, message: Message){
@@ -193,20 +186,19 @@ class ManagerController: QQController() {
     fun kai(qqGroupEntity: QQGroupEntity): String{
         val sb = StringBuilder("本群开关情况如下：\n")
         sb.appendln("音乐：${qqGroupEntity.musicType}")
-        sb.appendln("色图：" + this.boolToStr(qqGroupEntity.colorPic))
+        sb.appendln("色图：" + this.boolToStr(qqGroupEntity.colorPic) + "、" + qqGroupEntity.colorPicType)
         sb.appendln("鉴黄：" + this.boolToStr(qqGroupEntity.pic))
         sb.appendln("嘴臭：" + this.boolToStr(qqGroupEntity.mouthOdor))
         sb.appendln("龙王：" + this.boolToStr(qqGroupEntity.dragonKing))
         sb.appendln("复读：" + this.boolToStr(qqGroupEntity.repeat))
-        sb.appendln("涩图：${if (qqGroupEntity.colorPicType == "local")  "本地" else "远程"}")
         sb.appendln("欢迎语：" + this.boolToStr(qqGroupEntity.welcomeMsg))
         sb.appendln("qq功能：" + this.boolToStr(qqGroupEntity.qqStatus))
         sb.appendln("退群拉黑：" + this.boolToStr(qqGroupEntity.leaveGroupBlack))
         sb.appendln("萌宠功能：" + this.boolToStr(qqGroupEntity.superCute))
         sb.appendln("自动审核：" + this.boolToStr(qqGroupEntity.autoReview))
         sb.appendln("撤回通知：" + this.boolToStr(qqGroupEntity.recall))
-        sb.appendln("违规次数：${qqGroupEntity.maxViolationCount ?: 5}")
-        sb.append("整点报时：" + this.boolToStr(qqGroupEntity.onTimeAlarm))
+        sb.appendln("整点报时：" + this.boolToStr(qqGroupEntity.onTimeAlarm))
+        sb.append("最大违规次数：${qqGroupEntity.maxViolationCount ?: "5次"}")
         return sb.toString()
     }
 
@@ -217,40 +209,24 @@ class ManagerController: QQController() {
         miraiBot.start()
     }
 
-    @Action("r18 {status}")
-    @QMsg(at = true)
-    fun r18setting(status: Boolean, qqGroupEntity: QQGroupEntity): String{
-        return when (qqGroupEntity.colorPicType){
-            "remote" -> toolLogic.r18setting(pCookie, status)
-            "local" -> {
-                try {
-                    piXivLogic.r18setting(pCookie, status)
-                }catch (e: SocketException){
-                    if (e.message == "Connection reset")
-                        "抱歉，该服务器不能访问p站，请发送（涩图切换 远程）"
-                    else "出现异常了，异常信息为：${e.message}"
-                }
-            }
-            else -> toolLogic.r18setting(pCookie, status)
-        }
-    }
-
     @Action("涩图切换 {type}")
     @QMsg(at = true)
     fun colorPicType(qqGroupEntity: QQGroupEntity, type: String): String?{
         var colorPicType = qqGroupEntity.colorPicType
         var status = true
         when (type){
-            "本地" -> colorPicType = "local"
-            "远程" -> colorPicType = "remote"
-            "danbooru" -> colorPicType = "danbooru"
+            "native", "r-18", "danbooru" -> colorPicType = type
             else -> status = false
         }
         return if (status){
             qqGroupEntity.colorPicType = colorPicType
             qqGroupService.save(qqGroupEntity)
             "涩图切换${type}成功"
-        }else null
+        }else {
+            qqGroupEntity.colorPic = false
+            qqGroupService.save(qqGroupEntity)
+            "涩图关闭成功！！"
+        }
     }
 
     @Action("整点报时 {status}")

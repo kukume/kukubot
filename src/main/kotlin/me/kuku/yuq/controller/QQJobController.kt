@@ -2,17 +2,12 @@ package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Before
-import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
 import com.icecreamqaq.yuq.annotation.GroupController
-import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.controller.BotActionContext
-import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageItemFactory
-import me.kuku.yuq.entity.QQEntity
 import me.kuku.yuq.entity.QQJobEntity
-import me.kuku.yuq.logic.QQZoneLogic
 import me.kuku.yuq.service.QQJobService
 import me.kuku.yuq.service.QQService
 import javax.inject.Inject
@@ -24,8 +19,6 @@ class QQJobController {
     @Inject
     private lateinit var qqService: QQService
     @Inject
-    private lateinit var qqZoneLogic: QQZoneLogic
-    @Inject
     private lateinit var mif: MessageItemFactory
 
     @Before
@@ -36,55 +29,6 @@ class QQJobController {
         else{
             context.session["qqEntity"] = qqEntity
         }
-    }
-
-    @QMsg(at = true)
-    @Action("群签到 {status}")
-    fun groupSignOpen(status: Boolean, qq: Long, qqEntity: QQEntity): String{
-        var qqJobEntity = qqJobService.findByQQAndType(qq, "groupSign")
-        if (qqJobEntity == null){
-            val jsonObject = JSONObject()
-            val commonResult = qqZoneLogic.queryGroup(qqEntity)
-            if (commonResult.code != 200) return "获取群列表失败，请更新QQ！！！"
-            val list = commonResult.t
-            val jsonArray = JSONArray()
-            list.forEach { jsonArray.add(it.getValue("group")) }
-            jsonObject["status"] = false
-            jsonObject["num"] = 0
-            jsonObject["exclude"] = JSONArray()
-            jsonObject["group"] = jsonArray
-            qqJobEntity = QQJobEntity(null, qq, "groupSign", jsonObject.toString())
-        }
-        val jsonObject = qqJobEntity.getJsonObject()
-        jsonObject["status"] = status
-        qqJobEntity.data = jsonObject.toString()
-        qqJobService.save(qqJobEntity)
-        return "群签到定时任务已${if (status) "开启" else "关闭"}"
-    }
-
-    @QMsg(at = true)
-    @Action("\\删?群排除\\")
-    fun groupSignExclude(message: Message, qq: Long, @PathVar(0) text: String): String{
-        val list = message.toPath().toMutableList()
-        if (list.size == 1) return "缺少参数，群号"
-        list.removeAt(0)
-        val qqJobEntity = qqJobService.findByQQAndType(qq, "groupSign")
-        return if (qqJobEntity != null){
-            val jsonObject = qqJobEntity.getJsonObject()
-            val jsonArray = jsonObject.getJSONArray("exclude")
-            val msg: String
-            if (text[0] == '群') {
-                msg = "群签到定时任务添加排除名单成功！！"
-                jsonArray.addAll(list)
-            }else{
-                msg = "群签到定时任务删除排除名单成功！！"
-                list.forEach { jsonArray.remove(it) }
-            }
-            jsonObject["exclude"] = jsonArray
-            qqJobEntity.data = jsonObject.toString()
-            qqJobService.save(qqJobEntity)
-            msg
-        }else "修改失败"
     }
 
     @QMsg(at = true)

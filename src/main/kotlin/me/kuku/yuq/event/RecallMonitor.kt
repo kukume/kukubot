@@ -31,11 +31,12 @@ class RecallMonitor {
     fun recallEvent(e: GroupRecallEvent){
         val qqGroupEntity = qqGroupService.findByGroup(e.group.id)
         if (qqGroupEntity?.recall == true) {
+            val qq = e.sender.id
             val whiteJsonArray = qqGroupEntity.getWhiteJsonArray()
             if (e.sender != e.operator) return
             val rm = saves[e.messageId.toString()] ?: return
-            if (rm.qq!!.toString() in whiteJsonArray) return
-            e.group.sendMessage(rm.newMessage() + "群成员：" + mif.at(rm.qq!!) + "\n妄图撤回一条消息。\n消息内容为：\n" + rm)
+            if (qq.toString() in whiteJsonArray) return
+            e.group.sendMessage(mif.text("群成员：").plus(mif.at(qq)).plus("\n妄图撤回一条消息。\n消息内容为：\n").plus(rm))
         }
     }
 

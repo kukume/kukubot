@@ -5,7 +5,7 @@ import me.kuku.yuq.pojo.CommonResult
 
 object QQSuperLoginUtils {
 
-    private fun login(qqEntity: QQEntity, appId: String, daId: String, prefixUrl: String, suffixUrl: String): CommonResult<String>{
+    private fun login(qqEntity: QQEntity, appId: String, daId: String, prefixUrl: String, suffixUrl: String): CommonResult<String> {
         val response = OkHttpClientUtils.get("https://ssl.ptlogin2.qq.com/pt4_auth?daid=$daId&appid=$appId&auth_token=${qqEntity.getToken()}", OkHttpClientUtils.addHeaders(
                 "cookie", qqEntity.getCookieWithSuper(),
                 "referer", "https://ui.ptlogin2.qq.com/cgi-bin/login"
@@ -13,7 +13,7 @@ object QQSuperLoginUtils {
         val str = OkHttpClientUtils.getStr(response)
         val commonResult = QQUtils.getPtToken(str)
         return if (commonResult.code == 200){
-            val map = QQUtils.getKey(commonResult.t, qqEntity.qq.toString(), prefixUrl, suffixUrl)
+            val map = QQUtils.getKey(commonResult.t!!, qqEntity.qq.toString(), prefixUrl, suffixUrl)
             return CommonResult(200, "成功", map.getValue("p_skey"))
         }else CommonResult(500, commonResult.msg)
     }

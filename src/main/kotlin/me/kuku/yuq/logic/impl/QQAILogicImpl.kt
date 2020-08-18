@@ -68,7 +68,7 @@ class QQAILogicImpl: QQAILogic {
         println(jsonObject)
     }
 
-    override fun generalOCRToCaptcha(byteArray: ByteArray): CommonResult<String>{
+    override fun generalOCRToCaptcha(byteArray: ByteArray): CommonResult<String> {
         val b64 = Base64.getEncoder().encodeToString(byteArray)
         val response = OkHttpClientUtils.post("https://api.ai.qq.com/fcgi-bin/ocr/ocr_generalocr",
                 addParams(mapOf("image" to b64)))

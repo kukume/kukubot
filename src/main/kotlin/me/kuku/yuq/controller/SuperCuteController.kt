@@ -30,7 +30,7 @@ class SuperCuteController: QQController() {
             else {
                 val commonResult = superCuteLogic.getInfo(superCuteEntity.token)
                 if (commonResult.code == 200) {
-                    actionContext.session["map"] = commonResult.t
+                    actionContext.session["map"] = commonResult.t!!
                 } else throw mif.at(qq).plus("超级萌宠的Token已过期，请重新绑定！")
             }
         }else throw mif.at(qq).plus("超级萌宠功能已关闭！！")

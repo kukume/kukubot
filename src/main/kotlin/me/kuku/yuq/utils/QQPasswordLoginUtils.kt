@@ -55,7 +55,7 @@ object QQPasswordLoginUtils {
         val commonResult = QQUtils.getResultUrl(str)
         return when (commonResult.code) {
             200 -> {
-                val otherKeys = QQUtils.getKey(commonResult.t)
+                val otherKeys = QQUtils.getKey(commonResult.t!!)
                 cookieMap.putAll(otherKeys)
                 CommonResult(200, "登录成功" , cookieMap)
             }
@@ -80,11 +80,11 @@ object QQPasswordLoginUtils {
                 OkHttpClientUtils.addCookie(cookie)).close()
     }
 
-    fun login(appId: String = "549000912", daId: String = "5", qq: String, password: String, url: String = "https://qzs.qzone.qq.com/qzone/v5/loginsucc.html?para=izone&specifyurl=http://user.qzone.qq.com"): CommonResult<Map<String, String>>{
+    fun login(appId: String = "549000912", daId: String = "5", qq: String, password: String, url: String = "https://qzs.qzone.qq.com/qzone/v5/loginsucc.html?para=izone&specifyurl=http://user.qzone.qq.com"): CommonResult<Map<String, String>> {
         val map1 = this.checkVc(appId, daId, url, qq)
         val map2 = if (map1.getValue("code") != "0") {
             val commonResult = TenCentCaptchaUtils.identify(appId, map1["sig"].toString(), qq.toLong())
-            if (commonResult.code == 200) commonResult.t
+            if (commonResult.code == 200) commonResult.t!!
             else return commonResult
         }
         else map1

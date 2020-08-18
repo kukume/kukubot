@@ -66,7 +66,7 @@ class QQController: QQController() {
             val commonResult = QQUtils.qrCodeLoginVerify(map.getValue("sig").toString())
             val msg = if (commonResult.code == 200){
                 //登录成功
-                QQUtils.saveOrUpdate(qqService, commonResult.t, qq, group = group.id)
+                QQUtils.saveOrUpdate(qqService, commonResult.t!!, qq, group = group.id)
                 "绑定或更新成功！"
             }else{
                 commonResult.msg
@@ -121,7 +121,7 @@ class QQController: QQController() {
         return if (commonResult.code == 200){
             val list = commonResult.t
             val sb = StringBuilder()
-            list.forEach {
+            list?.forEach {
                 val group = it.getValue("group").toLong()
                 val result = qqLogic.groupLottery(qqEntity, group)
                 if (result.contains("成功")) sb.appendln(result)
@@ -203,7 +203,7 @@ class QQController: QQController() {
         reply(mif.at(qq).plus("正在获取中，请稍后~~~~~"))
         val commonResult = qqMailLogic.getFile(qqEntity)
         return if (commonResult.code == 200){
-            val list = commonResult.t
+            val list = commonResult.t!!
             val sb = StringBuilder().appendln("QQ邮箱文件中转站文件如下：")
             for (i in list.indices){
                 val map = list[i]
@@ -244,7 +244,7 @@ class QQController: QQController() {
     fun groupList(qqEntity: QQEntity): String{
         val commonResult = qqZoneLogic.queryGroup(qqEntity)
         return if (commonResult.code == 200){
-            val list = commonResult.t
+            val list = commonResult.t!!
             val sb = StringBuilder("群号        群名\n")
             list.forEach {
                 sb.appendln("${it.getValue("groupName")}\t\t${it.getValue("group")}")
@@ -271,7 +271,7 @@ class QQController: QQController() {
         }
         val commonResult = leXinMotionLogic.loginByQQ(qqEntity)
         return if (commonResult.code == 200){
-            val newMotionEntity = commonResult.t
+            val newMotionEntity = commonResult.t!!
             newMotionEntity.id = motionEntity?.id
             newMotionEntity.qq = qq
             motionService.save(newMotionEntity)
@@ -284,7 +284,7 @@ class QQController: QQController() {
         val commonResult = neTeaseLogic.loginByQQ(qqEntity)
         return if (commonResult.code == 200){
             val neTeaseEntity = neTeaseService.findByQQ(qq) ?: NeTeaseEntity(null)
-            val newNeTeaseEntity = commonResult.t
+            val newNeTeaseEntity = commonResult.t!!
             newNeTeaseEntity.id = neTeaseEntity.id
             newNeTeaseEntity.qq = qq
             neTeaseService.save(newNeTeaseEntity)

@@ -3,8 +3,8 @@ package me.kuku.yuq.logic.impl
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
 import me.kuku.yuq.entity.QQEntity
-import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.logic.QQZoneLogic
+import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.OkHttpClientUtils
 import okhttp3.FormBody

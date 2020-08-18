@@ -18,7 +18,6 @@ import me.kuku.yuq.logic.SteamLogic
 import me.kuku.yuq.logic.WeiboLogic
 import me.kuku.yuq.service.*
 import me.kuku.yuq.utils.*
-import java.io.File
 import javax.inject.Inject
 
 @PrivateController
@@ -49,19 +48,19 @@ class BindController: QQController() {
             val commonResult = QQPasswordLoginUtils.login(qq = qq.id.toString(), password = pwd)
             when (commonResult.code) {
                 200 -> {
-                    val map = commonResult.t
+                    val map = commonResult.t!!
                     QQUtils.saveOrUpdate(qqService, map, qq.id, pwd, newGroup)
                     "绑定或者更新成功！"
                 }
                 10009 -> {
                     reply(commonResult.msg)
-                    val map = commonResult.t
+                    val map = commonResult.t!!
                     val codeMessage = session.waitNextMessage(1000 * 60 * 2)
                     val code = codeMessage.firstString()
                     val loginResult = QQPasswordLoginUtils.loginBySms(qq = qq.toString(), password = pwd, randStr = map["randStr"].toString(),
                             ticket = map["ticket"].toString(), cookie = map["cookie"].toString(), smsCode = code)
                     if (loginResult.code != 200) return "验证码输入错误，请重新登录！！"
-                    QQUtils.saveOrUpdate(qqService, loginResult.t, qq.id, pwd, newGroup)
+                    QQUtils.saveOrUpdate(qqService, loginResult.t!!, qq.id, pwd, newGroup)
                     "绑定或者更新成功！"
                 }
                 else -> commonResult.msg
@@ -90,16 +89,14 @@ class BindController: QQController() {
     fun nextBindSteam(@PathVar(0) username: String?, @PathVar(1) password: String?, @PathVar(2) code: String, qq: Long): String{
         return if (username != null && password != null) {
             val commonResult = steamLogic.login(username, password, code)
-            if (commonResult.code == 200){
-                val map = commonResult.t
-                val steamEntity = steamService.findByQQ(qq) ?: SteamEntity(null, qq)
-                steamEntity.cookie = map.getValue("cookie")
-                steamEntity.steamId = map.getValue("steamId")
-                steamEntity.username = username
-                steamEntity.password = password
-                steamService.save(steamEntity)
-                "绑定或者更新成功"
-            } else commonResult.msg
+            val map = commonResult.t ?: return commonResult.msg
+            val steamEntity = steamService.findByQQ(qq) ?: SteamEntity(null, qq)
+            steamEntity.cookie = map.getValue("cookie")
+            steamEntity.steamId = map.getValue("steamId")
+            steamEntity.username = username
+            steamEntity.password = password
+            steamService.save(steamEntity)
+            "绑定或者更新成功"
         }else "缺少参数[账号 密码 二次验证码（令牌）]"
     }
 
@@ -116,14 +113,12 @@ class BindController: QQController() {
         val pwdMessage = session.waitNextMessage(60 * 1000 * 2)
         val password = pwdMessage.firstString()
         val commonResult = neTeaseLogic.loginByPhone(account, password)
-        return if (commonResult.code == 200){
-            val neTeaseEntity = neTeaseService.findByQQ(qq) ?: NeTeaseEntity(null, qq)
-            val newNeTeaseEntity = commonResult.t
-            newNeTeaseEntity.id = neTeaseEntity.id
-            newNeTeaseEntity.qq = qq
-            neTeaseService.save(newNeTeaseEntity)
-            "绑定成功！！"
-        }else "绑定失败！！${commonResult.msg}"
+        val neTeaseEntity = neTeaseService.findByQQ(qq) ?: NeTeaseEntity(null, qq)
+        val newNeTeaseEntity = commonResult.t ?: return "绑定失败！！${commonResult.msg}"
+        newNeTeaseEntity.id = neTeaseEntity.id
+        newNeTeaseEntity.qq = qq
+        neTeaseService.save(newNeTeaseEntity)
+        return "绑定成功！！"
     }
 
     @Action("wb {username} {password}")
@@ -131,7 +126,7 @@ class BindController: QQController() {
         val group = if (qq is Member) qq.group.id else 0L
         val weiboEntity = weiboService.findByQQ(qq.id) ?: WeiboEntity(null, qq.id)
         val preparedLoginCommonResult = weiboLogic.preparedLogin(username, password)
-        val loginParams = preparedLoginCommonResult.t
+        val loginParams = preparedLoginCommonResult.t!!
         val door = if (preparedLoginCommonResult.code == 201){
             reply(weiboLogic.getCaptchaUrl(loginParams.getValue("pcid")))
             reply("打开该链接，输入图片验证码！！！如需更换验证码请重新打开该链接！！")
@@ -148,7 +143,7 @@ class BindController: QQController() {
                 val loginSmsCommonResult = weiboLogic.loginBySms(data["token"].toString(), data["phone"].toString(), code)
                 when (loginSmsCommonResult.code) {
                     200 -> {
-                        val newWeiboEntity = loginSmsCommonResult.t
+                        val newWeiboEntity = loginSmsCommonResult.t!!
                         weiboEntity.pcCookie = newWeiboEntity.pcCookie
                         weiboEntity.mobileCookie = newWeiboEntity.mobileCookie
                         weiboEntity.username = username
@@ -168,7 +163,7 @@ class BindController: QQController() {
             weiboService.save(weiboEntity)
             "绑定或更新成功！！！"
         }else if (loginCommonResult.code == 200) {
-            val map = loginCommonResult.t
+            val map = loginCommonResult.t!!
             val newWeiboEntity = weiboLogic.loginSuccess(map.getValue("cookie"), map.getValue("referer"), map.getValue("url"))
             weiboEntity.pcCookie = newWeiboEntity.pcCookie
             weiboEntity.mobileCookie = newWeiboEntity.mobileCookie

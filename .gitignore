@@ -1,10 +1,10 @@
 # Project exclude paths
-/target/
+/build/
 /.idea/
+/.gradle/
 /log/
 /tmp/
 /db/
 /dependency-reduced-pom.xml
 /device.json
 /yuq.iml
-/src/main/resources/conf/YuQ.properties

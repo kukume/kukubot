@@ -259,8 +259,7 @@ class BotController: QQController() {
     @Action("天气/{local}")
     fun weather(local: String, qqEntity: QQEntity): Message {
         val commonResult = toolLogic.weather(local, qqEntity.getCookie())
-        return if (commonResult.code == 200) mif.xmlEx(146, commonResult.t).toMessage()
-        else mif.text(commonResult.msg).toMessage()
+        return mif.xmlEx(146, commonResult.t ?: return "commonResult.msg".toMessage()).toMessage()
     }
 
     @Action("龙王")
@@ -268,35 +267,33 @@ class BotController: QQController() {
         val qqGroupEntity = qqGroupService.findByGroup(group)
         if (qqGroupEntity?.dragonKing == false) return "迫害龙王已关闭！！".toMessage()
         val commonResult = qqGroupLogic.groupDragonKing(group)
-        return if (commonResult.code == 200){
-            val urlArr = arrayOf(
-                    "https://u.iheit.com/kuku/61f600415023300.jpg",
-                    "https://u.iheit.com/kuku/449ab0415103619.jpg",
-                    "https://u.iheit.com/kuku/51fe90415023311.jpg",
-                    "https://u.iheit.com/kuku/1d12a0415023726.jpg",
-                    "https://u.iheit.com/kuku/b04b30415023728.jpg",
-                    "https://u.iheit.com/kuku/d21200415023730.jpg",
-                    "https://u.iheit.com/kuku/55f0e0415023731.jpg",
-                    "https://u.iheit.com/kuku/634cc0415023733.jpg",
-                    "https://u.iheit.com/kuku/c044b0415023734.jpg",
-                    "https://u.iheit.com/kuku/ce2270415023735.jpg",
-                    "https://u.iheit.com/kuku/6e4b20415023737.jpg",
-                    "https://u.iheit.com/kuku/5f7d70415023738.jpg",
-                    "https://u.iheit.com/kuku/98d640415023739.jpg",
-                    "https://u.iheit.com/kuku/26a1a0415023741.jpg",
-                    "https://u.iheit.com/kuku/ddc810415023745.jpg",
-                    "https://u.iheit.com/kuku/23ee20415023747.jpg",
-                    "https://u.iheit.com/kuku/8c4a80415023748.jpg",
-                    "https://u.iheit.com/kuku/bdb970415023750.jpg",
-                    "https://u.iheit.com/images/2020/07/23/33609b326b5b30b0.jpg",
-                    "https://u.iheit.com/images/2020/07/23/3e53644bd75c68e6.jpg",
-                    "https://u.iheit.com/images/2020/08/05/image.png",
-                    "https://u.iheit.com/images/2020/08/05/image4046ccd0c6179229.png"
-            )
-            val url = urlArr[Random.nextInt(urlArr.size)]
-            val map = commonResult.t
-            mif.at(map.getValue("qq")).plus(mif.image(url)).plus("龙王（已蝉联${map.getValue("day")}天）快喷水！")
-        }else mif.text(commonResult.msg).toMessage()
+        val map = commonResult.t ?: return commonResult.msg.toMessage()
+        val urlArr = arrayOf(
+                "https://u.iheit.com/kuku/61f600415023300.jpg",
+                "https://u.iheit.com/kuku/449ab0415103619.jpg",
+                "https://u.iheit.com/kuku/51fe90415023311.jpg",
+                "https://u.iheit.com/kuku/1d12a0415023726.jpg",
+                "https://u.iheit.com/kuku/b04b30415023728.jpg",
+                "https://u.iheit.com/kuku/d21200415023730.jpg",
+                "https://u.iheit.com/kuku/55f0e0415023731.jpg",
+                "https://u.iheit.com/kuku/634cc0415023733.jpg",
+                "https://u.iheit.com/kuku/c044b0415023734.jpg",
+                "https://u.iheit.com/kuku/ce2270415023735.jpg",
+                "https://u.iheit.com/kuku/6e4b20415023737.jpg",
+                "https://u.iheit.com/kuku/5f7d70415023738.jpg",
+                "https://u.iheit.com/kuku/98d640415023739.jpg",
+                "https://u.iheit.com/kuku/26a1a0415023741.jpg",
+                "https://u.iheit.com/kuku/ddc810415023745.jpg",
+                "https://u.iheit.com/kuku/23ee20415023747.jpg",
+                "https://u.iheit.com/kuku/8c4a80415023748.jpg",
+                "https://u.iheit.com/kuku/bdb970415023750.jpg",
+                "https://u.iheit.com/images/2020/07/23/33609b326b5b30b0.jpg",
+                "https://u.iheit.com/images/2020/07/23/3e53644bd75c68e6.jpg",
+                "https://u.iheit.com/images/2020/08/05/image.png",
+                "https://u.iheit.com/images/2020/08/05/image4046ccd0c6179229.png"
+        )
+        val url = urlArr[Random.nextInt(urlArr.size)]
+        return mif.at(map.getValue("qq")).plus(mif.image(url)).plus("龙王（已蝉联${map.getValue("day")}天）快喷水！")
     }
 
     @Action("加个好友 {qqNo}")

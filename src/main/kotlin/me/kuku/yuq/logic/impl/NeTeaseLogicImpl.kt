@@ -60,7 +60,7 @@ class NeTeaseLogicImpl: NeTeaseLogic {
         val str = OkHttpClientUtils.getStr(response)
         val commonResult = QQUtils.getResultUrl(str)
         return if (commonResult.code == 200){
-            val resultResponse = OkHttpClientUtils.get(commonResult.t, OkHttpClientUtils.addReferer(url))
+            val resultResponse = OkHttpClientUtils.get(commonResult.t!!, OkHttpClientUtils.addReferer(url))
             resultResponse.close()
             val cookieMap = OkHttpClientUtils.getCookie(resultResponse, "MUSIC_U", "__csrf")
             if (cookieMap.size != 2) CommonResult(500, "没有取到cookie，登录失败，请稍后再试！！")
@@ -119,7 +119,7 @@ class NeTeaseLogicImpl: NeTeaseLogic {
     override fun listeningVolume(neTeaseEntity: NeTeaseEntity): String {
         val recommend = this.recommend(neTeaseEntity)
         return if (recommend.code == 200){
-            val playList = recommend.t
+            val playList = recommend.t!!
             val ids = JSONArray()
             while (ids.size < 310){
                 val songIds = this.getSongId(neTeaseEntity, playList[Random.nextInt(playList.size)])

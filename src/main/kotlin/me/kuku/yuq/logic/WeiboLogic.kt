@@ -19,4 +19,5 @@ interface WeiboLogic {
     fun getFriendWeibo(weiboEntity: WeiboEntity): CommonResult<List<WeiboPojo>>
     fun weiboTopic(keyword: String): CommonResult<List<WeiboPojo>>
     fun like(weiboEntity: WeiboEntity, id: String): String
+    fun comment(weiboEntity: WeiboEntity, id: String, commentContent: String): String
 }

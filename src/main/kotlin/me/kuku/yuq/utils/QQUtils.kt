@@ -78,16 +78,16 @@ object QQUtils {
             1,-1,7 -> "superKey已失效，请更新QQ！"
             /*-1 -> "登录失败，请稍后再试！！"
             7 -> "提交参数错误，请检查！！"*/
-            else -> BotUtils.regex(",'0','", "', ' '", str)
+            else -> BotUtils.regex(",'0','", "', ' '", str) ?: "其他错误"
         }
-        if (msg?.contains("superKey") == true) return CommonResult(502, msg)
+        if (msg.contains("superKey")) return CommonResult(502, msg)
         return CommonResult(500, msg)
     }
 
     fun getPtToken(str: String): CommonResult<String>{
         val commonResult = this.getResultUrl(str)
         return if (commonResult.code == 200){
-            val url = commonResult.t
+            val url = commonResult.t!!
             val token = BotUtils.regex("ptsigx=", "&", url)
             CommonResult(200, "成功", token!!)
         }else commonResult

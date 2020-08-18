@@ -1,8 +1,8 @@
 package me.kuku.yuq.logic.impl
 
 import me.kuku.yuq.entity.QQEntity
-import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.logic.QQMailLogic
+import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.OkHttpClientUtils
 import me.kuku.yuq.utils.QQPasswordLoginUtils
@@ -10,10 +10,10 @@ import okhttp3.FormBody
 
 class QQMailLogicImpl: QQMailLogic {
 
-    fun login(qqEntity: QQEntity): CommonResult<Map<String, String>>{
+    fun login(qqEntity: QQEntity): CommonResult<Map<String, String>> {
         val commonResult = QQPasswordLoginUtils.login("522005705", "4", qqEntity.qq.toString(), qqEntity.password, "https://mail.qq.com/cgi-bin/readtemplate?check=false&t=loginpage_new_jump&vt=passport&vm=wpt&ft=loginpage&target=")
         return if (commonResult.code == 200){
-            val psKey = commonResult.t.getValue("p_skey")
+            val psKey = commonResult.t!!.getValue("p_skey")
             val response = OkHttpClientUtils.get("http://mail.qq.com/cgi-bin/login?vt=passport&vm=wpt&ft=loginpage&target=",
                     OkHttpClientUtils.addCookie(qqEntity.getCookie(psKey)))
             val cookie = OkHttpClientUtils.getCookie(response)
@@ -26,7 +26,7 @@ class QQMailLogicImpl: QQMailLogic {
     override fun getFile(qqEntity: QQEntity): CommonResult<List<Map<String, String>>> {
         val commonResult = this.login(qqEntity)
         return if (commonResult.code == 200){
-            val map = commonResult.t
+            val map = commonResult.t!!
             val response = OkHttpClientUtils.get("https://mail.qq.com/cgi-bin/ftnExs_files?sid=${map.getValue("sid")}&t=ftn.json&s=list&ef=js&listtype=self&up=down&sorttype=createtime&page=0&pagesize=50&pagemode=more&pagecount=2&ftnpreload=true&sid=${map.getValue("sid")}",
                     OkHttpClientUtils.addCookie(map.getValue("cookie")))
             val result = OkHttpClientUtils.getStr(response)
@@ -48,7 +48,7 @@ class QQMailLogicImpl: QQMailLogic {
         val commonResult = this.getFile(qqEntity)
         return if (commonResult.code == 200){
             val builder = FormBody.Builder()
-            val list = commonResult.t
+            val list = commonResult.t!!
             if (list.isNotEmpty()) {
                 val sid = list[0].getValue("sid")
                 val cookie = list[0].getValue("cookie")

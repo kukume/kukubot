@@ -3,8 +3,8 @@ package me.kuku.yuq.logic.impl
 import com.IceCreamQAQ.Yu.util.Web
 import com.alibaba.fastjson.JSON
 import com.icecreamqaq.yuq.mirai.MiraiBot
-import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.logic.QQGroupLogic
+import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.pojo.GroupMember
 import me.kuku.yuq.utils.BotUtils
 import javax.inject.Inject

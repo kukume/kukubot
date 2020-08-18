@@ -1,6 +1,5 @@
 package me.kuku.yuq.utils
 
-import com.alibaba.fastjson.JSONObject
 import me.kuku.yuq.pojo.CommonResult
 import java.awt.image.BufferedImage
 import java.net.URL
@@ -102,7 +101,7 @@ object TenCentCaptchaUtils {
         return map
     }
 
-    private fun identifyCaptcha(appId: String, map: Map<String, String>): CommonResult<Map<String, String>>{
+    private fun identifyCaptcha(appId: String, map: Map<String, String>): CommonResult<Map<String, String>> {
         val firstResponse = OkHttpClientUtils.get("https://ssl.captcha.qq.com/dfpReg?0=Mozilla%2F5.0%20(Windows%20NT%2010.0%3B%20Win64%3B%20x64)%20AppleWebKit%2F537.36%20(KHTML%2C%20like%20Gecko)%20Chrome%2F83.0.4103.116%20Safari%2F537.36&1=zh-CN&2=1.8&3=1.9&4=24&5=8&6=-480&7=1&8=1&9=1&10=u&11=function&12=u&13=Win32&14=0&15=9dcc2da81f0e59e03185ad3db82acb72&16=b845fd62efae6732b958d2b9c29e7145&17=a1835c959081afa32e01bd14786db9b3&18=0&19=76cd47f4e5fcb3f96d6c57addb5498fd&20=824153624864153624&21=1.25%3B&22=1%3B1%3B1%3B1%3B1%3B1%3B1%3B0%3B1%3Bobject0UTF-8&23=0&24=0%3B0&25=31fc8c5fca18c5c1d5acbe2d336b9a63&26=48000_2_1_0_2_explicit_speakers&27=c8205b36aba2b1f3b581d8170984e918&28=ANGLE(AMDRadeon(TM)RXVega10GraphicsDirect3D11vs_5_0ps_5_0)&29=3331cb2359a3c1aded346ac2e279d401&30=a23a38527a38dcea2f63d5d078443f78&31=0&32=0&33=0&34=0&35=0&36=0&37=0&38=0&39=0&40=0&41=0&42=0&43=0&44=0&45=0&46=0&47=0&48=0&49=0&50=0&fesig=15341077811401570658&ut=1066&appid=0&refer=https%3A%2F%2Ft.captcha.qq.com%2Fcap_union_new_show&domain=t.captcha.qq.com&fph=1100805BC31DAAEC6C4B4A686CC8F312CD98DA4D6F7ADB1CE8619BDEB0EA580DE88363A57C65F3A76B2D6D905F49E70266EB&fpv=0.0.15&ptcz=0d372124ed637aa9210ef7ebe9af2ee8e09a1e8919d4b5349e6cf34f21ed2d31&callback=_fp_091990", OkHttpClientUtils.addReferer(map.getValue("url")))
         val fpSig = OkHttpClientUtils.getJson(firstResponse, "\\{.*\\}").getString("fpsig")
         val secondResponse = OkHttpClientUtils.post("https://t.captcha.qq.com/cap_union_new_verify", OkHttpClientUtils.addForms(

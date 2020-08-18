@@ -1,0 +1,21 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.3.72'
+}
+
+group 'me.kuku'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+    compile group: 'com.IceCreamQAQ.YuQ', name: 'YuQ-Mirai', version: '0.0.6.3'
+    compile (group: 'com.IceCreamQAQ.Yu', name: 'Yu-DB', version: '0.0.1.0'){
+        exclude group: 'mysql', module: 'mysql-connector-java'
+    }
+    compile group: 'org.jsoup', name: 'jsoup', version: '1.13.1'
+    compile group: 'com.h2database', name: 'h2', version: '1.4.200'
+}

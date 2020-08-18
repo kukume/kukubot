@@ -8,9 +8,9 @@ import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.controller.QQController
 import me.kuku.yuq.entity.MotionEntity
-import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.logic.LeXinMotionLogic
 import me.kuku.yuq.logic.QQAILogic
+import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.service.MotionService
 import me.kuku.yuq.utils.BotUtils
 import javax.inject.Inject
@@ -47,8 +47,7 @@ class MotionController: QQController() {
             if (phone.length != 11) return "手机号格式不正确！！"
         }else phone = motionEntity.phone
         val commonResult = this.identifyImageCode(phone, qq)
-        if (commonResult.code != 200) return commonResult.msg
-        reply(mif.at(qq).plus(commonResult.t))
+        reply(mif.at(qq).plus(commonResult.t ?: return commonResult.msg))
         var newMotionEntity: MotionEntity? = null
         do {
             val codeMessage = session.waitNextMessage(1000 * 60 * 2)
@@ -59,10 +58,10 @@ class MotionController: QQController() {
                     reply(mif.at(qq).plus("验证码错误，请重新输入！！"))
                 }
                 200 -> {
-                    newMotionEntity = loginCommonResult.t
-                    newMotionEntity?.id = id
-                    newMotionEntity?.phone = phone
-                    newMotionEntity?.qq = qq
+                    newMotionEntity = loginCommonResult.t!!
+                    newMotionEntity.id = id
+                    newMotionEntity.phone = phone
+                    newMotionEntity.qq = qq
                     motionService.save(newMotionEntity)
                 }
                 else -> return loginCommonResult.msg
@@ -76,20 +75,19 @@ class MotionController: QQController() {
         return leXinMotionLogic.modifyStepCount(step, newMotionEntity!!)
     }
 
-    private fun identifyImageCode(phone: String, qq: Long): CommonResult<String>{
+    private fun identifyImageCode(phone: String, qq: Long): CommonResult<String> {
         do {
             val commonResult: CommonResult<String>
             val captchaImage = leXinMotionLogic.getCaptchaImage(phone)
             val codeCommonResult = qqAiLogic.generalOCRToCaptcha(captchaImage)
-            if (codeCommonResult.code == 200) {
-                commonResult = leXinMotionLogic.getCaptchaCode(phone, codeCommonResult.t)
-                when (commonResult.code) {
-                    200 -> return CommonResult(200, "", "验证码发送成功，请输入验证码！！")
-                    416 -> return CommonResult(500, "验证码已失效")
-                    412 -> reply(mif.at(qq).plus("验证码错误，正在为您重新识别中！！"))
-                    else -> return CommonResult(500, commonResult.msg)
-                }
-            } else return CommonResult(500, "可能为OCR受到限制，请稍后再试！！")
+            val code = codeCommonResult.t ?: return CommonResult(500, "", "OCR错误，${codeCommonResult.msg}")
+            commonResult = leXinMotionLogic.getCaptchaCode(phone, code)
+            when (commonResult.code) {
+                200 -> return CommonResult(200, "", "验证码发送成功，请输入验证码！！")
+                416 -> return CommonResult(500, "验证码已失效")
+                412 -> reply(mif.at(qq).plus("验证码错误，正在为您重新识别中！！"))
+                else -> return CommonResult(500, commonResult.msg)
+            }
         } while (commonResult.code == 412)
         return CommonResult(500, "未知原因，请稍后再试！！")
     }

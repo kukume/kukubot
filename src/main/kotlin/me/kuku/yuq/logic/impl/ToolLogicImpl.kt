@@ -4,8 +4,8 @@ import com.IceCreamQAQ.Yu.annotation.Config
 import com.IceCreamQAQ.Yu.util.IO
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
-import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.logic.ToolLogic
+import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.OkHttpClientUtils
 import me.kuku.yuq.utils.removeSuffixLine
@@ -43,7 +43,7 @@ class ToolLogicImpl: ToolLogic {
                 commonResult.t + "\n查看详情：" + BotUtils.shortUrl(url)
             }
             210 -> {
-                val resultUrl = commonResult.t
+                val resultUrl = commonResult.t!!
                 baiKeByUrl(resultUrl).t + "\n查看详情：" + BotUtils.shortUrl(resultUrl)
             }
             else -> "抱歉，没有找到与“$text”相关的百科结果。"
@@ -98,11 +98,11 @@ class ToolLogicImpl: ToolLogic {
     }
 
     override fun queryIp(ip: String): String {
-        val response = OkHttpClientUtils.get("$url/ip/aim_ip?ip=$ip$params")
+        val response = OkHttpClientUtils.get("https://api.kieng.cn/ipgeography?ip=$ip")
         val jsonObject = OkHttpClientUtils.getJson(response)
-        return if (jsonObject.getInteger("code") == 1){
-            jsonObject.getJSONObject("data").getString("desc")
-        }else jsonObject.getString("msg")
+        return if (jsonObject.getInteger("code") == 200){
+            jsonObject.getString("pos") + jsonObject.getString("isp")
+        }else jsonObject.getString("error")
     }
 
     override fun queryWhois(domain: String): String {

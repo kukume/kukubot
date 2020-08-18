@@ -197,7 +197,7 @@ class ToolController: QQController() {
             "163" -> {
                 val commonResult = toolLogic.songBy163(name)
                 return if (commonResult.code == 200) {
-                    mif.jsonEx(commonResult.t)
+                    mif.jsonEx(commonResult.t!!)
                 }else commonResult.msg
             }
             else -> null
@@ -256,7 +256,7 @@ class ToolController: QQController() {
         val bv = message.body[0].toPath()
         val commonResult = toolLogic.bvToAv(bv)
         return if (commonResult.code == 200){
-            val map = commonResult.t
+            val map = commonResult.t!!
             mif.image(map.getValue("pic")).plus(
                     StringBuilder().appendln("标题：${map["title"]}")
                             .appendln("描述：${map["desc"]}")

@@ -3,8 +3,8 @@ package me.kuku.yuq.logic.impl
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
 import me.kuku.yuq.entity.QQEntity
-import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.logic.QQLogic
+import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.pojo.GroupMember
 import me.kuku.yuq.utils.*
 import okhttp3.MultipartBody
@@ -349,8 +349,9 @@ class QQLogicImpl: QQLogic {
     override fun weiYunSign(qqEntity: QQEntity): String {
         val commonResult = QQSuperLoginUtils.weiYunLogin(qqEntity)
         return if (commonResult.code == 200) {
+            val psKey = commonResult.t!!
             val response = OkHttpClientUtils.get("https://h5.weiyun.com/sign_in",
-                    OkHttpClientUtils.addCookie(qqEntity.getCookie(commonResult.t)))
+                    OkHttpClientUtils.addCookie(qqEntity.getCookie(psKey)))
             val str = OkHttpClientUtils.getStr(response)
             val json = BotUtils.regex("(?<=window\\.__INITIAL_STATE__=).+?(?=</script>)", str)
             val jsonObject = JSON.parseObject(json)
@@ -601,7 +602,7 @@ class QQLogicImpl: QQLogic {
     override fun blueSign(qqEntity: QQEntity): String {
         val commonResult = QQSuperLoginUtils.blueLogin(qqEntity)
         return if (commonResult.code == 200){
-            val psKey = commonResult.t
+            val psKey = commonResult.t!!
             val cookie = qqEntity.getCookie(psKey) + "DomainID=176; "
             val gtk = qqEntity.getGtk()
             val sb = StringBuilder()
@@ -761,11 +762,11 @@ class QQLogicImpl: QQLogic {
                 val ids = "2551|2514|2516|2493|2494|2464|2465|2428|2427|2426|2351|2319|2320|2321|2232|2239|2240|2276|2275|2274|2273|2272|2271"
                 ids.split("|").random().toInt()
             }else{
-                this.getBubbleId(qqEntity, commonResult.t, name)
+                this.getBubbleId(qqEntity, commonResult.t!!, name)
             }
             if (id != null){
                 val response = OkHttpClientUtils.get("https://g.vip.qq.com/bubble/bubbleSetup?id=$id&platformId=2&uin=${qqEntity.qq}&version=8.3.0.4480&diyText=%7B%22diyText%22%3A%22$text%22%7D&format=jsonp&t=${Date().time}&g_tk=${qqEntity.getGtk()}&p_tk=${qqEntity.pt4Token}&callback=jsonp0",
-                        OkHttpClientUtils.addCookie(qqEntity.getCookie(commonResult.t)))
+                        OkHttpClientUtils.addCookie(qqEntity.getCookie(commonResult.t!!)))
                 val jsonObject = OkHttpClientUtils.getJsonp(response)
                 when (jsonObject.getInteger("ret")){
                     0 -> "更换气泡成功，由于缓存等原因，效果可能会在较长一段时间后生效！"
@@ -955,7 +956,7 @@ class QQLogicImpl: QQLogic {
         }else "微视签到失败，请更新QQ！"
     }
 
-    private fun getGroupFileList(qqEntity: QQEntity, group: Long, folderName: String?, folderId: String?): CommonResult<List<Map<String, String>>>{
+    private fun getGroupFileList(qqEntity: QQEntity, group: Long, folderName: String?, folderId: String?): CommonResult<List<Map<String, String>>> {
         val response = OkHttpClientUtils.get("https://pan.qun.qq.com/cgi-bin/group_file/get_file_list?gc=$group&bkn=${qqEntity.getGtk()}&start_index=0&cnt=30&filter_code=0&folder_id=${folderId ?: "%2F"}",
                 qqEntity.cookie())
         val jsonObject = OkHttpClientUtils.getJson(response)
@@ -1011,7 +1012,7 @@ class QQLogicImpl: QQLogic {
         val commonResult = this.getGroupFileList(qqEntity, group, folderName, null)
         return if (commonResult.code == 200){
             val sb = StringBuilder("本群的目录<${folderName?: "/"}>的群文件如下：\r\n")
-            val list = commonResult.t
+            val list = commonResult.t!!
             for (map in list){
                 val url = this.getGroupFileUrl(qqEntity, group, map.getValue("busId"), map.getValue("id"))
                 sb.appendln("文件名：${map.getValue("name")}")
@@ -1078,7 +1079,7 @@ class QQLogicImpl: QQLogic {
     override fun growthLike(qqEntity: QQEntity): String {
         val commonResult = QQSuperLoginUtils.vipLogin(qqEntity)
         return if (commonResult.code == 200) {
-            val psKey = commonResult.t
+            val psKey = commonResult.t!!
             val url = "https://mq.vip.qq.com/m/growth/rank?ADTAG=vipcenter&_wvSb=1&traceNum=2&traceId=${qqEntity.qq}${Date().time.toString().substring(0, 11)}"
             val firstResponse = OkHttpClientUtils.get(url,
                     OkHttpClientUtils.addCookie(qqEntity.getCookie(psKey)))
@@ -1130,7 +1131,7 @@ class QQLogicImpl: QQLogic {
     override fun changePhoneOnline(qqEntity: QQEntity, iMei:String, phone: String): String {
         val commonResult = QQSuperLoginUtils.vipLogin(qqEntity)
         return if (commonResult.code == 200) {
-            val psKey = commonResult.t
+            val psKey = commonResult.t!!
             val response = OkHttpClientUtils.get("https://proxy.vip.qq.com/cgi-bin/srfentry.fcgi?ts=${Date().time}&daid=18&g_tk=${qqEntity.getGtk(psKey)}&data=%7B%2213031%22:%7B%22req%22:%7B%22sModel%22:%22$phone%22,%22sManu%22:%22vivo%22,%22sIMei%22:%22$iMei%22,%22iAppType%22:3,%22sVer%22:%228.4.1.4680%22,%22lUin%22:${qqEntity.qq},%22bShowInfo%22:true,%22sDesc%22:%22%22,%22sModelShow%22:%22$phone%22%7D%7D%7D&pt4_token=${qqEntity.pt4Token}",
                     OkHttpClientUtils.addCookie(qqEntity.getCookie(psKey)))
             val jsonObject = OkHttpClientUtils.getJson(response)
@@ -1180,7 +1181,7 @@ class QQLogicImpl: QQLogic {
         else{
             val commonResult = QQSuperLoginUtils.vipLogin(qqEntity)
             if (commonResult.code == 200){
-                commonResult.t
+                commonResult.t!!
             }else return commonResult.msg
         }
         val response = OkHttpClientUtils.get("https://h5.vip.qq.com/p/mc/privilegelist/other?friend=$qq",
@@ -1199,7 +1200,7 @@ class QQLogicImpl: QQLogic {
         else{
             val commonResult = QQSuperLoginUtils.vipLogin(qqEntity)
             if (commonResult.code == 200){
-                commonResult.t
+                commonResult.t!!
             }else return commonResult.msg
         }
         val response = OkHttpClientUtils.get("https://club.vip.qq.com/api/vip/getQQLevelInfo?requestBody=%7B%22sClientIp%22:%22127.0.0.1%22,%22sSessionKey%22:%22${qqEntity.sKey}%22,%22iKeyType%22:1,%22iAppId%22:0,%22iUin%22:$qq%7D",

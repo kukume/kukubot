@@ -38,7 +38,7 @@ class SteamController{
     fun buff(steamEntity: SteamEntity): String{
         val commonResult = steamLogic.loginToBuff(steamEntity)
         return if (commonResult.code == 200){
-            steamEntity.buffCookie = commonResult.t
+            steamEntity.buffCookie = commonResult.t!!
             steamDao.saveOrUpdate(steamEntity)
             "绑定网易buff的cookie成功"
         }else commonResult.msg

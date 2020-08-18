@@ -7,8 +7,8 @@ import me.kuku.yuq.entity.WeiboEntity
 import me.kuku.yuq.logic.WeiboLogic
 import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.pojo.WeiboPojo
+import me.kuku.yuq.pojo.WeiboToken
 import me.kuku.yuq.utils.*
-import okhttp3.Cookie
 import org.jsoup.Jsoup
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -51,12 +51,12 @@ class WeiboLogicImpl: WeiboLogic {
                 val newJsonObject = jsonArray.getJSONObject(i)
                 if (newJsonObject.containsKey("user") || newJsonObject.containsKey("users")) {
                     val userJsonObject = newJsonObject.getJSONObject("user")
-                    if (userJsonObject != null) list.add(WeiboPojo(userJsonObject.getString("name") ?: userJsonObject.getString("screen_name"), userJsonObject.getString("id")))
+                    if (userJsonObject != null) list.add(WeiboPojo(name = userJsonObject.getString("name") ?: userJsonObject.getString("screen_name"), userId = userJsonObject.getString("id")))
                     else {
                         val usersJsonArray = newJsonObject.getJSONArray("users")
                         for (j in usersJsonArray.indices) {
                             val singleJsonObject = usersJsonArray.getJSONObject(j)
-                            list.add(WeiboPojo(singleJsonObject.getString("name") ?: singleJsonObject.getString("screen_name"), singleJsonObject.getString("id")))
+                            list.add(WeiboPojo(name = singleJsonObject.getString("name") ?: singleJsonObject.getString("screen_name"), userId = singleJsonObject.getString("id")))
                         }
                     }
                 }
@@ -275,31 +275,46 @@ class WeiboLogicImpl: WeiboLogic {
         else CommonResult(200, "", list)
     }
 
-    private fun getToken(weiboEntity: WeiboEntity): CommonResult<Map<String, String>>{
+    private fun getToken(weiboEntity: WeiboEntity): CommonResult<WeiboToken>{
         val response = OkHttpClientUtils.get("https://m.weibo.cn/api/config",
                 OkHttpClientUtils.addCookie(weiboEntity.mobileCookie))
         val jsonObject = OkHttpClientUtils.getJson(response).getJSONObject("data")
         return if (jsonObject.getBoolean("login")) {
             val cookie = OkHttpClientUtils.getCookie(response)
-            CommonResult(200, "", mapOf(
-                    "cookie" to cookie,
-                    "token" to BotUtils.regex("XSRF-TOKEN=", "; ", cookie)!!
+            CommonResult(200, "", WeiboToken(
+                    jsonObject.getString("st"), cookie
             ))
         }else CommonResult(500, "登录已失效")
     }
 
     override fun like(weiboEntity: WeiboEntity, id: String): String {
-        val map = this.getToken(weiboEntity).t ?: return "登录已失效！！"
+        val weiboToken = this.getToken(weiboEntity).t ?: return "登录已失效！！"
         val response = OkHttpClientUtils.post("https://m.weibo.cn/api/attitudes/create", OkHttpClientUtils.addForms(
                 "id", id,
                 "attitude", "heart",
-                "st", map.getValue("token"),
+                "st", weiboToken.token,
                 "_spr", "screen:1536x864"
         ), OkHttpClientUtils.addHeaders(
-                "cookie", "${weiboEntity.mobileCookie}${map["cookie"]}",
+                "cookie", "${weiboEntity.mobileCookie}${weiboToken.cookie}",
                 "referer", "https://m.weibo.cn/detail/$id"
         ))
         val jsonObject = OkHttpClientUtils.getJson(response)
         return jsonObject.getString("msg")
+    }
+
+    override fun comment(weiboEntity: WeiboEntity, id: String, commentContent: String): String {
+        val weiboToken = this.getToken(weiboEntity).t ?: return "登录已失效！！"
+        val response = OkHttpClientUtils.post("https://m.weibo.cn/api/comments/create", OkHttpClientUtils.addForms(
+                "content", commentContent,
+                "mid", id,
+                "st", weiboToken.token,
+                "_spr", "screen:411x731"
+        ), OkHttpClientUtils.addHeaders(
+                "cookie", "${weiboEntity.mobileCookie}${weiboToken.cookie}",
+                "referer", "https://m.weibo.cn/detail/$id"
+        ))
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return if (jsonObject.getInteger("ok") == 1) "评论成功"
+        else jsonObject.getString("msg")
     }
 }

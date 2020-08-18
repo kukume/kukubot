@@ -33,12 +33,12 @@ object QQQrCodeLoginUtils {
             0 -> {
                 val cookieMap = OkHttpClientUtils.getCookie(response, "skey", "superkey", "supertoken").toMutableMap()
                 val commonResult = QQUtils.getResultUrl(str)
-                val map = QQUtils.getKey(commonResult.t)
+                val map = QQUtils.getKey(commonResult.t!!)
                 cookieMap.putAll(map)
                 CommonResult(200, "登录成功", cookieMap)
             }
             66,67 -> CommonResult(0, "未失效或者验证中！")
-            else -> CommonResult(500, BotUtils.regex("','','0','", "', ''", str))
+            else -> CommonResult(500, BotUtils.regex("','','0','", "', ''", str) ?: "其他错误！！")
         }
     }
 

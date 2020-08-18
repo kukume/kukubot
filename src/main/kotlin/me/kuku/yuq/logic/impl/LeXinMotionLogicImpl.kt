@@ -2,8 +2,8 @@ package me.kuku.yuq.logic.impl
 
 import me.kuku.yuq.entity.MotionEntity
 import me.kuku.yuq.entity.QQEntity
-import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.logic.LeXinMotionLogic
+import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.OkHttpClientUtils
 import me.kuku.yuq.utils.QQUtils
@@ -56,7 +56,7 @@ class LeXinMotionLogicImpl: LeXinMotionLogic {
         val str = OkHttpClientUtils.getStr(qqResponse)
         val commonResult = QQUtils.getResultUrl(str)
         return if (commonResult.code == 200){
-            val url = commonResult.t
+            val url = commonResult.t!!
             val openId = BotUtils.regex("openid=", "&", url)
             val accessToken = BotUtils.regex("access_token=", "&", url)
             val response = OkHttpClientUtils.post("https://sports.lifesense.com/sessions_service/loginFromOpenId?systemType=2&version=3.7.5",

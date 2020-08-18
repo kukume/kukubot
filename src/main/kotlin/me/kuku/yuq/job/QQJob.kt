@@ -32,7 +32,7 @@ class QQJob {
                 }else{
                     val commonResult = QQPasswordLoginUtils.login(qq = qqEntity.qq.toString(), password = qqEntity.password)
                     if (commonResult.code == 200){
-                        QQUtils.saveOrUpdate(qqService, commonResult.t, qqEntity.qq, qqEntity.password)
+                        QQUtils.saveOrUpdate(qqService, commonResult.t!!, qqEntity.qq, qqEntity.password)
                     } else if (!arrayOf(400, 1, -1, 7).contains(commonResult.code)) {
                         qqEntity.status = false
                         qqService.save(qqEntity)

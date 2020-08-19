@@ -1,7 +1,6 @@
 package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.Action
-import com.IceCreamQAQ.Yu.annotation.After
 import com.IceCreamQAQ.Yu.annotation.Before
 import com.IceCreamQAQ.Yu.annotation.Synonym
 import com.icecreamqaq.yuq.annotation.*

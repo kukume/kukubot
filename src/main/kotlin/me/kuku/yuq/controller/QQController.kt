@@ -11,13 +11,12 @@ import com.icecreamqaq.yuq.controller.QQController
 import com.icecreamqaq.yuq.entity.Group
 import com.icecreamqaq.yuq.firstString
 import com.icecreamqaq.yuq.message.*
+import com.icecreamqaq.yuq.toMessage
 import me.kuku.yuq.entity.NeTeaseEntity
 import me.kuku.yuq.entity.QQEntity
+import me.kuku.yuq.entity.WeiboEntity
 import me.kuku.yuq.logic.*
-import me.kuku.yuq.service.MotionService
-import me.kuku.yuq.service.NeTeaseService
-import me.kuku.yuq.service.QQGroupService
-import me.kuku.yuq.service.QQService
+import me.kuku.yuq.service.*
 import me.kuku.yuq.utils.*
 import javax.inject.Inject
 import kotlin.concurrent.thread
@@ -41,6 +40,10 @@ class QQController: QQController() {
     @Inject
     private lateinit var neTeaseService: NeTeaseService
     @Inject
+    private lateinit var weiboLogic: WeiboLogic
+    @Inject
+    private lateinit var weiboService: WeiboService
+    @Inject
     private lateinit var qqGroupService: QQGroupService
 
     @Before
@@ -50,15 +53,16 @@ class QQController: QQController() {
             val qqEntity = qqService.findByQQ(qq)
             when {
                 str.toLowerCase() == "qq" -> return
-                qqEntity?.status == false -> throw mif.at(qq).plus("您的QQ已失效，请更新QQ！！")
+                qqEntity?.status == false -> throw "您的QQ已失效，请更新QQ！！".toMessage()
                 qqEntity != null -> actionContext.session["qqEntity"] = qqEntity
                 else -> throw mif.at(qq).plus("没有绑定QQ！，请先发送qq进行扫码登录绑定，如需密码登录绑定请私聊机器人发送qq")
             }
-        }else throw mif.at(qq).plus("QQ功能已关闭！！请联系管理员开启！！")
+        }else throw "QQ功能已关闭！！请联系管理员开启！！".toMessage()
     }
 
     @Action("qq")
     @Synonym(["QQ", "qQ", "Qq"])
+    @QMsg(at = true)
     fun bindQQ(group: Group, qq: Long): Message{
         val map = QQQrCodeLoginUtils.getQrCode()
         val bytes = map.getValue("qrCode") as ByteArray
@@ -77,6 +81,7 @@ class QQController: QQController() {
     }
 
     @Action("气泡")
+    @QMsg(at = true)
     fun bubble(@PathVar(1) text: String?, @PathVar(2) name: String?, qqEntity: QQEntity): String{
         return if (text != null){
             qqLogic.diyBubble(qqEntity, text, name)
@@ -84,9 +89,11 @@ class QQController: QQController() {
     }
 
     @Action("业务")
+    @QMsg(at = true)
     fun queryVip(qqEntity: QQEntity) = qqLogic.queryVip(qqEntity)
 
     @Action("昵称")
+    @QMsg(at = true)
     fun modifyNickname(@PathVar(1) str: String?, qqEntity: QQEntity): String{
         return if (str != null){
             qqLogic.modifyNickname(qqEntity, str)
@@ -94,6 +101,7 @@ class QQController: QQController() {
     }
 
     @Action("头像")
+    @QMsg(at = true)
     fun modifyAvatar(qqEntity: QQEntity, message: Message): String{
         val singleBody = message.body.getOrNull(1)
         val url = if (singleBody != null) {
@@ -105,6 +113,7 @@ class QQController: QQController() {
     }
 
     @Action("送花")
+    @QMsg(at = true)
     fun sendFlower(qqEntity: QQEntity, message: Message, group: Long): String{
         val singleBody = message.body.getOrNull(1)
         val qq: String =  if (singleBody != null){
@@ -116,6 +125,7 @@ class QQController: QQController() {
     }
 
     @Action("群礼物")
+    @QMsg(at = true)
     fun lottery(qqEntity: QQEntity): String{
         val commonResult = qqZoneLogic.queryGroup(qqEntity)
         return if (commonResult.code == 200){
@@ -133,9 +143,11 @@ class QQController: QQController() {
     }
 
     @Action("拒绝添加")
+    @QMsg(at = true)
     fun refuseAdd(qqEntity: QQEntity) = qqLogic.refuseAdd(qqEntity)
 
     @Action("超级签到")
+    @QMsg(at = true)
     @Synchronized fun allSign(qqEntity: QQEntity, group: Long, qq: Long): String{
         reply(mif.at(qq).plus("请稍后！！！正在为您签到中~~~"))
         val str1 = qqLogic.qqSign(qqEntity)
@@ -182,6 +194,7 @@ class QQController: QQController() {
     }
 
     @Action("赞说说")
+    @QMsg(at = true)
     fun likeTalk(qqEntity: QQEntity): String{
         val friendTalk = qqZoneLogic.friendTalk(qqEntity)
         return if (friendTalk != null) {
@@ -195,9 +208,11 @@ class QQController: QQController() {
     }
 
     @Action("成长")
+    @QMsg(at = true)
     fun growth(qqEntity: QQEntity): String = qqLogic.vipGrowthAdd(qqEntity)
 
     @Action("中转站")
+    @QMsg(at = true)
     fun mailFile(qqEntity: QQEntity, qq: Long): String {
         if (qqEntity.password == "") return "获取QQ邮箱文件中转站分享链接，需要使用密码登录QQ！"
         reply(mif.at(qq).plus("正在获取中，请稍后~~~~~"))
@@ -216,6 +231,7 @@ class QQController: QQController() {
     }
 
     @Action("续期")
+    @QMsg(at = true)
     fun renew(qqEntity: QQEntity, qq: Long): String{
         if (qqEntity.password == "") return "续期QQ邮箱中转站文件失败！！，需要使用密码登录QQ！"
         reply(mif.at(qq).plus("正在续期中，请稍后~~~~~"))
@@ -223,11 +239,13 @@ class QQController: QQController() {
     }
 
     @Action("好友 {qqNo}")
+    @QMsg(at = true)
     fun addFriend(qqEntity: QQEntity, qqNo: Long, @PathVar(2) msg: String?, @PathVar(3) realName: String?, @PathVar(4) groupName: String?): String{
-        return qqZoneLogic.addFriend(qqEntity, qqNo, msg ?: "", realName, groupName)
+        return qqZoneLogic.addFriend(qqEntity, qqNo, msg ?: "加个好友呗！！", realName, groupName)
     }
 
     @Action("复制 {qqNo}")
+    @QMsg(at = true)
     fun copyAvatar(qqNo: Long, qqEntity: QQEntity): String{
         val url = "https://q.qlogo.cn/g?b=qq&nk=${qqNo}&s=640"
         return qqLogic.modifyAvatar(qqEntity, url)
@@ -235,12 +253,14 @@ class QQController: QQController() {
 
     @Action("删除qq")
     @Synonym(["删除QQ"])
+    @QMsg(at = true)
     fun delQQ(qqEntity: QQEntity): String{
         qqService.delByQQ(qqEntity.qq)
         return "删除QQ成功！！！"
     }
 
     @Action("群列表")
+    @QMsg(at = true)
     fun groupList(qqEntity: QQEntity): String{
         val commonResult = qqZoneLogic.queryGroup(qqEntity)
         return if (commonResult.code == 200){
@@ -254,14 +274,17 @@ class QQController: QQController() {
     }
 
     @Action("#加管 {qqNo}")
+    @QMsg(at = true)
     fun addAdmin(qqNo: Long, qqEntity: QQEntity, group: Long) =
             qqLogic.setGroupAdmin(qqEntity, qqNo, group, true)
 
     @Action("#去管 {qqNo}")
+    @QMsg(at = true)
     fun cancelAdmin(qqNo: Long, qqEntity: QQEntity, group: Long) =
             qqLogic.setGroupAdmin(qqEntity, qqNo, group, false)
 
     @Action("#步数/{step}")
+    @QMsg(at = true)
     fun step(qqEntity: QQEntity, qq: Long, step: Int): String{
         val motionEntity = motionService.findByQQ(qq)
         if (motionEntity != null){
@@ -280,6 +303,7 @@ class QQController: QQController() {
     }
 
     @Action("网易")
+    @QMsg(at = true)
     fun neTeaseLogin(qqEntity: QQEntity, qq: Long): String{
         val commonResult = neTeaseLogic.loginByQQ(qqEntity)
         return if (commonResult.code == 200){
@@ -293,6 +317,7 @@ class QQController: QQController() {
     }
 
     @Action("自定义机型 {iMei}")
+    @QMsg(at = true)
     fun changePhoneOnline(qqEntity: QQEntity, iMei: String, qq: Long, session: ContextSession): String{
         reply(mif.at(qq).plus("请输入您需要自定义的机型！！"))
         val nextMessage = session.waitNextMessage(30 * 1000)
@@ -300,8 +325,30 @@ class QQController: QQController() {
         return qqLogic.changePhoneOnline(qqEntity, iMei, phone)
     }
 
-    @After
-    fun finally(actionContext: BotActionContext) = BotUtils.addAt(actionContext)
+    @Action("访问空间 {qqNo}")
+    fun visit(qqNo: Long, qqEntity: QQEntity) = qqZoneLogic.visitQZoneMobile(qqEntity, qqNo)
 
+    @Action("互访")
+    fun visitAll(qq: Long): String{
+        val list = qqService.findByActivity()
+        list.forEach { qqZoneLogic.visitQZone(it, qq) }
+        return "互访成功！！"
+    }
+
+    @Action("wblogin")
+    @QMsg(at = true)
+    fun weiboLogin(qqEntity: QQEntity, session: ContextSession, qq: Long, group: Long): String{
+        reply(mif.at(qq).plus("确保你的微博账号已绑定QQ！！如果是请发送1"))
+        val nextMessage = session.waitNextMessage()
+        return if (nextMessage.firstString() == "1"){
+            val commonResult = weiboLogic.loginByQQ(qqEntity)
+            val weiboEntity = commonResult.t ?: return commonResult.msg
+            val newWeiboEntity = weiboService.findByQQ(qq) ?: WeiboEntity(null, qq, group)
+            newWeiboEntity.mobileCookie = weiboEntity.mobileCookie
+            newWeiboEntity.pcCookie = weiboEntity.pcCookie
+            weiboService.save(newWeiboEntity)
+            "绑定或者更新成功！！"
+        }else "已退出上下文！！"
+    }
 }
 

@@ -35,6 +35,9 @@ data class QQGroupEntity(
         @Lob
         @Column(columnDefinition="text")
         var interceptList: String = "[]",
+        @Lob
+        @Column(columnDefinition="text")
+        var recallMessage: String = "[]",
         var musicType: String = "qq",
         var colorPic: Boolean? = false,
         var status: Boolean? = false,
@@ -68,4 +71,6 @@ data class QQGroupEntity(
         fun getAllowedCommandsJsonArray(): JSONArray = JSON.parseArray(allowedCommandsList) ?: JSON.parseArray("[]")
         @Transient
         fun getInterceptJsonArray(): JSONArray = JSON.parseArray(interceptList) ?: JSON.parseArray("[]")
+        @Transient
+        fun getRecallMessageJsonArray(): JSONArray = JSON.parseArray(recallMessage) ?: JSON.parseArray("[]")
 }

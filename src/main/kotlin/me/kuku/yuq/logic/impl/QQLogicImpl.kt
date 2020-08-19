@@ -1119,7 +1119,7 @@ class QQLogicImpl: QQLogic {
                     val memberJsonObject = v as JSONObject
                     list.add(GroupMember(k.toLong(), memberJsonObject.getInteger("ll"),
                             memberJsonObject.getInteger("lp"), "${memberJsonObject.getString("jt")}000".toLong(),
-                            "${memberJsonObject.getString("lst")}000".toLong(), null, null))
+                            "${memberJsonObject.getString("lst")}000".toLong(), 0, null))
                 }
                 return CommonResult(200, "", list)
             }
@@ -1167,13 +1167,16 @@ class QQLogicImpl: QQLogic {
     override fun removeGroupFile(qqEntity: QQEntity, group: Long, fileName: String, folderName: String?): String {
         val commonResult = this.getGroupFileList(qqEntity, group, folderName, null)
         val list = commonResult.t ?: return commonResult.msg
+        var status = false
         for (map in list){
             if (fileName in map.getValue("name")) {
+                status = true
                 val result = this.removeGroupFile(qqEntity, group, map.getValue("busId"), map.getValue("id"), map.getValue("parentId"))
                 if (result.contains("失败")) return result
             }
         }
-        return "删除群文件成功！！"
+        return if (status) "删除群文件成功！！"
+        else "没有找到该文件！！"
     }
 
     override fun queryFriendVip(qqEntity: QQEntity, qq: Long, psKey: String?): String {

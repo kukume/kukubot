@@ -14,6 +14,7 @@ import com.icecreamqaq.yuq.controller.QQController
 import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.message.Message
+import com.icecreamqaq.yuq.mirai.MiraiBot
 import me.kuku.yuq.entity.QQEntity
 import me.kuku.yuq.entity.QQGroupEntity
 import me.kuku.yuq.logic.QQGroupLogic
@@ -21,6 +22,7 @@ import me.kuku.yuq.logic.QQLogic
 import me.kuku.yuq.logic.QQZoneLogic
 import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.service.QQGroupService
+import me.kuku.yuq.utils.QQUtils
 import me.kuku.yuq.utils.removeSuffixLine
 import java.text.SimpleDateFormat
 import java.util.*
@@ -35,6 +37,8 @@ class BotController: QQController() {
     private lateinit var master: String
     @Inject
     private lateinit var qqLogic: QQLogic
+    @Inject
+    private lateinit var miraiBot: MiraiBot
     @Inject
     private lateinit var toolLogic: ToolLogic
     @Inject
@@ -69,7 +73,7 @@ class BotController: QQController() {
         val psKey = qZoneList[0].value
         val vipList = concurrentHashMap.getValue("vip.qq.com")
         val vipPsKey = vipList[0].value
-        val qqEntity = QQEntity(null, this.qq.toLong(), 0L, "", sKey, psKey, groupPsKey)
+        val qqEntity = QQEntity(null, this.qq.toLong(), 0L, "", sKey, psKey, groupPsKey, miraiBot.superKey, QQUtils.getToken(miraiBot.superKey).toString())
         actionContext["qqEntity"] = qqEntity
         actionContext["vipPsKey"] = vipPsKey
     }
@@ -220,16 +224,23 @@ class BotController: QQController() {
     }
 
     @Action("查询 {qqNo}")
-    fun query(group: Long, qqNo: Long): String{
+    fun query(group: Long, qqNo: Long, qqEntity: QQEntity): String{
         val commonResult = qqGroupLogic.queryMemberInfo(group, qqNo)
-        val groupMember = commonResult.t ?: return commonResult.msg
+        val groupMember = commonResult.t
+        val groupMember2 = qqZoneLogic.visitQZoneMobile(qqEntity, qqNo).t!!
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
         val sb = StringBuilder()
-        sb.appendln("qq：${groupMember.qq}")
-        sb.appendln("昵称：${groupMember.groupCard}")
-        sb.appendln("Q龄：${groupMember.age}")
-        sb.appendln("入群时间：${sdf.format(Date(groupMember.joinTime))}")
-        sb.append("最后发言时间：${sdf.format(Date(groupMember.lastTime))}")
+        sb.appendln("qq：$qqNo")
+        sb.appendln("昵称：${groupMember2.nickName}")
+        sb.appendln("年龄：${groupMember2.userAge}")
+        sb.append("所在地区：${groupMember2.country}-${groupMember2.province}-${groupMember2.city}")
+        if (groupMember != null) {
+            sb.appendln()
+            sb.appendln("群名片：${groupMember.groupCard}")
+            sb.appendln("Q龄：${groupMember.age}")
+            sb.appendln("入群时间：${sdf.format(Date(groupMember.joinTime))}")
+            sb.append("最后发言时间：${sdf.format(Date(groupMember.lastTime))}")
+        }
         return sb.toString()
     }
 
@@ -256,16 +267,16 @@ class BotController: QQController() {
     @Action("改 {qqNo} {name}")
     fun changeName(qqNo: Long, group: Long, name: String, qqEntity: QQEntity) = qqLogic.changeName(qqEntity, qqNo, group, name)
 
-    @Action("天气/{local}")
+    @Action("天气 {local}")
     fun weather(local: String, qqEntity: QQEntity): Message {
         val commonResult = toolLogic.weather(local, qqEntity.getCookie())
         return mif.xmlEx(146, commonResult.t ?: return "commonResult.msg".toMessage()).toMessage()
     }
 
     @Action("龙王")
-    fun dragonKing(group: Long): Message{
+    fun dragonKing(group: Long, qq: Long): Message{
         val qqGroupEntity = qqGroupService.findByGroup(group)
-        if (qqGroupEntity?.dragonKing == false) return "迫害龙王已关闭！！".toMessage()
+        if (qqGroupEntity?.dragonKing == false) return mif.at(qq).plus("迫害龙王已关闭！！")
         val commonResult = qqGroupLogic.groupDragonKing(group)
         val map = commonResult.t ?: return commonResult.msg.toMessage()
         val urlArr = arrayOf(
@@ -297,8 +308,16 @@ class BotController: QQController() {
     }
 
     @Action("加个好友 {qqNo}")
+    @QMsg(at = true)
     fun addFriend(qqEntity: QQEntity, qqNo: Long) =
         qqZoneLogic.addFriend(qqEntity, qqNo, "加个好友呗！！", null, null)
+
+    @Action("群精华消息")
+    fun essenceMessage(group: Long): String{
+        val commonResult = qqGroupLogic.essenceMessage(group)
+        val list = commonResult.t ?: return commonResult.msg
+        return list[Random.nextInt(list.size)]
+    }
 
     private fun judgmentKick(qq: Long, msg: String) = qq == master.toLong() && msg == "一键踢出"
 }

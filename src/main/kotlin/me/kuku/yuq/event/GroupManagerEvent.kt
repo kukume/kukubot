@@ -85,15 +85,7 @@ class GroupManagerEvent {
                     } else e.group.sendMessage(textAnswer.toMessage())
                 } else {
                     val aJsonArray = textAnswer as JSONArray
-                    val msg = "".toMessage()
-                    for (j in aJsonArray.indices){
-                        val aJsonObject = aJsonArray.getJSONObject(j)
-                        when (aJsonObject.getString("type")){
-                            "text" -> msg.plus(aJsonObject.getString("content"))
-                            "image" -> msg.plus(mif.image(aJsonObject.getString("content")))
-                            "face" -> msg.plus(mif.face(aJsonObject.getInteger("content")))
-                        }
-                    }
+                    val msg = BotUtils.jsonArrayToMessage(aJsonArray)
                     e.group.sendMessage(msg)
                 }
                 return

@@ -5,12 +5,12 @@ import kotlin.experimental.and
 object HexUtils {
     /**
      * 十六进制String转换成Byte[]
-     * @param hexString the hex string
+     * @param hexStr the hex string
      * *
      * @return byte[]
      */
-    fun hexStringToBytes(hexString: String?): ByteArray? {
-        var hexString = hexString
+    fun hexStringToBytes(hexStr: String?): ByteArray? {
+        var hexString = hexStr
         if (hexString == null || hexString == "") {
             return null
         }

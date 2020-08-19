@@ -2,6 +2,7 @@ package me.kuku.yuq.logic.impl
 
 import com.IceCreamQAQ.Yu.util.Web
 import com.alibaba.fastjson.JSON
+import com.alibaba.fastjson.JSONObject
 import com.icecreamqaq.yuq.mirai.MiraiBot
 import me.kuku.yuq.logic.QQGroupLogic
 import me.kuku.yuq.pojo.CommonResult
@@ -157,14 +158,14 @@ class QQGroupLogicImpl: QQGroupLogic {
         return when (jsonObject.getInteger("ec")){
             0 -> {
                 val jsonArray = jsonObject.getJSONArray("mems")
-                if (jsonArray.size == 0) return CommonResult(500, "未搜索到该用户")
+                if (jsonArray == null || jsonArray.size == 0) return CommonResult(500, "未搜索到该用户")
                 val memberJsonObject = jsonArray.getJSONObject(0)
                 val card = memberJsonObject.getString("card")
                 val name = if (card == "") memberJsonObject.getString("nick")
                 else card
                 CommonResult(200, "", GroupMember(
                         memberJsonObject.getLong("uin"),
-                        null,
+                        0,
                         0,
                         (memberJsonObject.getString("join_time") + "000").toLong(),
                         (memberJsonObject.getString("last_speak_time") + "000").toLong(),
@@ -175,5 +176,55 @@ class QQGroupLogicImpl: QQGroupLogic {
             4 -> CommonResult(500, "查询失败，请更新QQ！！！")
             else -> CommonResult(500, jsonObject.getString("em"))
         }
+    }
+
+    override fun essenceMessage(group: Long): CommonResult<List<String>> {
+        val html = web.get("https://qun.qq.com/essence/index?gc=$group&_wv=3&_wwv=128&_wvx=2&_wvxBclr=f5f6fa")
+        val jsonStr = BotUtils.regex("window.__INITIAL_STATE__=", "</", html)
+        val jsonObject = JSON.parseObject(jsonStr)
+        return if (jsonObject.getInteger("pageStart") == 1){
+            val jsonArray = jsonObject.getJSONArray("msgList")
+            if (jsonArray.size == 0) return CommonResult(500, "当前群内没有精华消息！！")
+            val list = mutableListOf<String>()
+            for (i in jsonArray.indices){
+                val msgJsonObject = jsonArray.getJSONObject(i)
+                val contentJsonArray = msgJsonObject.getJSONArray("msg_content")
+                val sb = StringBuilder()
+                contentJsonArray.forEach {
+                    val singleJsonObject = it as JSONObject
+                    sb.append(singleJsonObject.getString("text") ?: singleJsonObject.getString("face_text"))
+                }
+                list.add(sb.toString())
+            }
+            CommonResult(200, "", list)
+        }else CommonResult(500, "查询失败，请更新qun.qq.com的cookie")
+    }
+
+    override fun queryGroup(): CommonResult<List<Long>> {
+        val str = web.post(
+            "https://qun.qq.com/cgi-bin/qun_mgr/get_group_list", mapOf(
+                "bkn" to miraiBot.gtk.toString()
+            )
+        )
+        val jsonObject = JSON.parseObject(str)
+        return if (jsonObject.getInteger("ec") == 0){
+            val list = mutableListOf<Long>()
+            val manageJsonArray = jsonObject.getJSONArray("manage")
+            manageJsonArray?.forEach {
+                val groupJsonObject = it as JSONObject
+                list.add(groupJsonObject.getLong("gc"))
+            }
+            val joinJsonArray = jsonObject.getJSONArray("join")
+            joinJsonArray?.forEach {
+                val groupJsonObject = it as JSONObject
+                list.add(groupJsonObject.getLong("gc"))
+            }
+            val createJsonArray = jsonObject.getJSONArray("create")
+            createJsonArray?.forEach {
+                val groupJsonObject = it as JSONObject
+                list.add(groupJsonObject.getLong("gc"))
+            }
+            CommonResult(200, "", list)
+        }else CommonResult(500, "查询失败，请更新qun.qq.com的cookie")
     }
 }

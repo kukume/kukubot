@@ -6,6 +6,7 @@ import com.IceCreamQAQ.Yu.annotation.Synonym
 import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.annotation.QMsg
+import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.mif
 import me.kuku.yuq.entity.WeiboEntity
@@ -14,6 +15,7 @@ import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.pojo.WeiboPojo
 import me.kuku.yuq.service.WeiboService
 import me.kuku.yuq.utils.removeSuffixLine
+import java.lang.ClassCastException
 import javax.inject.Inject
 
 @GroupController
@@ -28,7 +30,8 @@ class WeiboController {
     @Before
     fun before(qq: Long, message: Message): WeiboEntity?{
         val str = message.toPath()[0]
-        return if (str in arrayOf("wbmy", "wbmymonitor", "微博关注监控", "微博评论")){
+        val whiteList = arrayOf("热搜", "hot", "wb", "微博监控", "wbinfo")
+        return if (!whiteList.contains(str)){
             return weiboService.findByQQ(qq) ?: throw mif.at(qq).plus("您还未绑定微博，请先私聊机器人发送（wb 账号 密码）进行绑定")
         }else null
     }
@@ -97,6 +100,26 @@ class WeiboController {
         }else commonResult.msg
     }
 
+    @Action("mywb")
+    fun myWeibo(@PathVar(1) numStr: String?, weiboEntity: WeiboEntity): String{
+        val commonResult = weiboLogic.getMyWeibo(weiboEntity)
+        val list = commonResult.t ?: return commonResult.msg
+        val num = try {
+            numStr?.toInt()
+        }catch (e: Exception){
+            return "第一个参数应为整型！！"
+        }
+        val weiboPojo = this.getWeiboPojo(list, num)
+        return weiboLogic.convertStr(weiboPojo)
+    }
+
+    @Action("wbinfo {username}")
+    fun weiboInfo(username: String): String{
+        val idResult = weiboLogic.getIdByName(username)
+        val idList = idResult.t ?: return idResult.msg
+        return weiboLogic.getUserInfo(idList[0].userId)
+    }
+
     @Action("wbtopic {keyword}")
     @Synonym(["微博话题 {keyword}"])
     fun weiboTopic(keyword: String, @PathVar(value = 2, type = PathVar.Type.Integer) num: Int?): String{
@@ -108,10 +131,39 @@ class WeiboController {
     }
 
     @Action("微博评论 {username} {content}")
-    fun comment(@PathVar(4) numStr: String?, username: String, content: String, weiboEntity: WeiboEntity): String{
+    fun comment(@PathVar(3) numStr: String?, username: String, content: String, weiboEntity: WeiboEntity): String{
         val commonResult = this.queryWeibo(username, numStr)
         val weiboPojo = commonResult.t ?: return commonResult.msg
         return weiboLogic.comment(weiboEntity, weiboPojo.id, content)
+    }
+
+    @Action("微博转发 {username} {content}")
+    fun forward(username: String, content: String, weiboEntity: WeiboEntity, @PathVar(3) numStr: String?, message: Message): String{
+        val commonResult = this.queryWeibo(username, numStr)
+        val weiboPojo = commonResult.t ?: return commonResult.msg
+        val bodyList = message.body
+        var url: String? = null
+        if (bodyList.size > 1){
+            url = try {
+                val image = bodyList[1] as Image
+                image.url
+            }catch (e: ClassCastException){
+                null
+            }
+        }
+        return weiboLogic.forward(weiboEntity, weiboPojo.id, content, url)
+    }
+
+    @Action("微博发布 {content}")
+    fun publishWeibo(weiboEntity: WeiboEntity, content: String, message: Message): String{
+        val url = mutableListOf<String>()
+        val bodyList = message.body
+        bodyList.forEach {
+            if (it is Image){
+                url.add(it.url)
+            }
+        }
+        return weiboLogic.publishWeibo(weiboEntity, content, url)
     }
 
     private fun getWeiboPojo(list: List<WeiboPojo>, num: Int?): WeiboPojo {

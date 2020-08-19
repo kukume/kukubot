@@ -20,9 +20,12 @@ import me.kuku.yuq.entity.QQGroupEntity
 import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.logic.WeiboLogic
 import me.kuku.yuq.service.QQGroupService
+import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.OkHttpClientUtils
 import me.kuku.yuq.utils.removeSuffixLine
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
 import javax.inject.Inject
 import kotlin.system.exitProcess
 
@@ -39,7 +42,7 @@ class ManagerController: QQController() {
     @Inject
     private lateinit var weiboLogic: WeiboLogic
 
-    private val version = "v1.4.7"
+    private val version = "v1.4.8"
 
     @Before
     fun before(group: Long, qq: Long, actionContext: BotActionContext, message: Message){
@@ -50,7 +53,7 @@ class ManagerController: QQController() {
         }
         actionContext.session["qqGroupEntity"] = qqGroupEntity
         val msg = message.toPath()[0]
-        val whiteList = arrayOf("问答", "违规词", "黑名单", "白名单", "开关")
+        val whiteList = arrayOf("问答", "违规词", "黑名单", "白名单", "开关", "查撤回")
         val adminWhiteList = qqGroupEntity.getAllowedCommandsJsonArray()
         if (!whiteList.contains(msg)) {
             val adminJsonArray = qqGroupEntity.getAdminJsonArray()
@@ -436,7 +439,7 @@ class ManagerController: QQController() {
     @Action("清屏")
     fun clear(): String{
         val sb = StringBuilder()
-        for (i in 0 until 1000) sb.appendln("\n")
+        for (i in 0 until 1000) sb.appendln()
         return sb.toString()
     }
 
@@ -479,27 +482,7 @@ class ManagerController: QQController() {
         reply(mif.at(qq).plus("请输入回答语句！！"))
         val a = session.waitNextMessage(300000)
         val jsonObject = JSONObject()
-        val body = a.body
-        val aJsonArray = JSONArray()
-        for (messageItem in body){
-            val aJsonObject = JSONObject()
-            when (messageItem) {
-                is Text -> {
-                    aJsonObject["type"] = "text"
-                    aJsonObject["content"] = messageItem.text
-                }
-                is Image -> {
-                    aJsonObject["type"] = "image"
-                    aJsonObject["content"] = messageItem.url
-                }
-                is Face -> {
-                    aJsonObject["type"] = "face"
-                    aJsonObject["content"] = messageItem.faceId
-                }
-            }
-            if (aJsonObject.size != 0)
-                aJsonArray.add(aJsonObject)
-        }
+        val aJsonArray = BotUtils.messageToJsonArray(a)
         if (aJsonArray.size == 0) return "回答的语句暂只支持文本和图片和表情！！"
         jsonObject["q"] =  qStr
         jsonObject["a"] = aJsonArray
@@ -585,6 +568,29 @@ class ManagerController: QQController() {
             exitProcess(0)
         }else sb.append("暂未发现需要更新")
         return sb.toString()
+    }
+
+    @Action("查撤回 {qqNo}")
+    fun queryRecall(qqGroupEntity: QQGroupEntity, qqNo: Long, qq: Long, @PathVar(value = 2, type = PathVar.Type.Integer) numParam: Int?): Message{
+        val recallMessageJsonArray = qqGroupEntity.getRecallMessageJsonArray()
+        val list = mutableListOf<JSONObject>()
+        var messageSize = recallMessageJsonArray.size - 1
+        while (messageSize >= 0){
+            val jsonObject = recallMessageJsonArray.getJSONObject(messageSize--)
+            if (jsonObject.getLong("qq") == qqNo) list.add(jsonObject)
+        }
+        val all = list.size
+        if (all == 0) return mif.at(qq).plus("该qq并没有撤回消息")
+        val num = numParam ?: 1
+        if (num > all) return mif.at(qq).plus("该qq一共有${all}条消息，超过范围了！！")
+        val jsonObject = list[num - 1]
+        val sendMessage = mif.text("群成员：").plus(mif.at(qqNo)).plus("共有${all}条撤回消息")
+        val time = jsonObject.getLong("time")
+        val timeStr = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date(time))
+        sendMessage.plus("\n这是第${num}条撤回消息！！撤回时间为$timeStr").plus("\n消息内容为：\n")
+        val jsonArray = jsonObject.getJSONArray("message")
+        val contentMessage = BotUtils.jsonArrayToMessage(jsonArray)
+        return sendMessage.plus(contentMessage)
     }
 
     private fun boolToStr(b: Boolean?) = if (b == true) "开" else "关"

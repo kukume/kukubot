@@ -7,6 +7,7 @@ import com.icecreamqaq.yuq.annotation.*
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.controller.QQController
 import com.icecreamqaq.yuq.entity.Contact
+import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.firstString
 import com.icecreamqaq.yuq.message.*
 import com.icecreamqaq.yuq.toMessage
@@ -40,12 +41,12 @@ class ToolController: QQController() {
     private var colorPicTime = 0L
 
     @QMsg(at = true)
-    @Action("百度/{content}")
+    @Action("百度 {content}")
     fun teachYouBaidu(content: String) =
         "点击以下链接即可教您使用百度搜索“$content”\n${BotUtils.shortUrl("https://u.iheit.com/baidu/index.html?${URLEncoder.encode(content, "utf-8")}")}"
 
     @QMsg(at = true)
-    @Action("谷歌/{content}")
+    @Action("谷歌 {content}")
     fun teachYouGoogle(content: String) =
         "点击以下链接即可教您使用谷歌搜索“$content”\n${BotUtils.shortUrl("https://u.iheit.com/google/index.html?${URLEncoder.encode(content, "utf-8")}")}"
 
@@ -54,7 +55,7 @@ class ToolController: QQController() {
     fun dogLicking() = toolLogic.dogLicking()
 
     @QMsg(at = true)
-    @Action("百科/{params}")
+    @Action("百科 {params}")
     fun baiKe(params: String) = toolLogic.baiKe(params)
 
     @QMsg(at = true)
@@ -133,7 +134,7 @@ class ToolController: QQController() {
     @Action("ping/{domain}")
     fun ping(domain: String) = toolLogic.ping(domain)
 
-    @Action("\\.*\\")
+    @Action("\\At\\")
     @QMsg(reply = true, at = true)
     fun chat(message: Message, qq: Contact): String?{
         val body = message.body
@@ -186,8 +187,11 @@ class ToolController: QQController() {
         }
     }
 
-    @Action("点歌 {name}")
-    fun song(name: String, group: Long): Any?{
+    @Action("点歌")
+    fun song(group: Long, message: Message, qq: Long): Any?{
+        if (message.toPath().size == 1) return mif.at(qq).plus("没有发现歌曲名字")
+        val msgStr = message.body[0].toPath()
+        val name = msgStr.substring(3)
         val qqGroupEntity = qqGroupService.findByGroup(group)
         return when (qqGroupEntity?.musicType ?: "qq") {
             "qq" -> {
@@ -300,5 +304,15 @@ class ToolController: QQController() {
         val url = toolLogic.identifyPic(img.url)
         return if (url != null) mif.image(img.url).plus(url)
         else "没有找到这张图片！！！".toMessage()
+    }
+
+    @Action("自闭")
+    fun shut(qq: Member, group: Long): String?{
+        if (yuq.groups[group]?.bot?.isAdmin() == true){
+            if (qq.isAdmin()) return "以你的权限来看，我无法给予你想要的套餐呢！！"
+            val time = Random.nextInt(11)
+            qq.ban(time * 60)
+        }
+        return null
     }
 }

@@ -3,6 +3,7 @@ package me.kuku.yuq.logic
 import com.IceCreamQAQ.Yu.annotation.AutoBind
 import me.kuku.yuq.entity.QQEntity
 import me.kuku.yuq.pojo.CommonResult
+import me.kuku.yuq.pojo.GroupMember
 
 @AutoBind
 interface QQZoneLogic {
@@ -28,4 +29,7 @@ interface QQZoneLogic {
     fun queryGroupMember(qqEntity: QQEntity, group: String): CommonResult<List<Map<String, String>>>
     //留言
     fun leaveMessage(qqEntity: QQEntity, qq: Long, content: String): String
+    //访问空间
+    fun visitQZone(qqEntity: QQEntity, qq: Long): String
+    fun visitQZoneMobile(qqEntity: QQEntity, qq: Long): CommonResult<GroupMember>
 }

@@ -15,4 +15,6 @@ interface QQGroupLogic {
     fun groupCharin(group: Long, content: String, time: Long): String
     fun groupLevel(group: Long): CommonResult<List<Map<String, String>>>
     fun queryMemberInfo(group: Long, qq: Long): CommonResult<GroupMember>
+    fun essenceMessage(group: Long): CommonResult<List<String>>
+    fun queryGroup(): CommonResult<List<Long>>
 }

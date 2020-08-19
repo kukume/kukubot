@@ -27,20 +27,23 @@ class GroupEvent {
 
     private val messages = mutableMapOf<Long, Message>()
     private val alreadyMessage = mutableMapOf<Long, Message>()
+    private val alreadyQQ = mutableMapOf<Long, Long>()
 
     @Event
     fun repeat(e: GroupMessageEvent){
         val group = e.group.id
+        val qq = e.sender.id
         val qqGroupEntity = qqGroupService.findByGroup(group)
         if (qqGroupEntity?.repeat == false) return
         val nowMessage = e.message
         if (messages.containsKey(group)){
             val oldMessage = messages.getValue(group)
             if (nowMessage.bodyEquals(oldMessage) &&
-                    nowMessage.qq!! != oldMessage.qq!! &&
+                    qq != alreadyQQ[group] &&
                     !nowMessage.bodyEquals(alreadyMessage[group])){
                 e.group.sendMessage(nowMessage)
                 alreadyMessage[group] = nowMessage
+                alreadyQQ[group] = qq
             }
         }
         messages[group] = nowMessage

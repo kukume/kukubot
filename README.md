@@ -10,7 +10,7 @@
 ## 功能
 * QQ签到
 * 超级萌宠养成
-* 推送最新微博到群聊（指定用户名）、私聊（我的关注）
+* 推送最新微博到群聊（指定用户名）、私聊（我的关注），微博自动赞、评论、转发
 * 修改步数（wx and alipay）
 * 网易云音乐打卡和每日300首听歌量
 * 群管功能
@@ -33,9 +33,6 @@ YuQ.Mirai.protocol=
 
 # 机器人名，可不配置。
 # YuQ.bot.name = Yu
-
-# 自定义 Ehcache 配置文件
-yu.cache.ehcache.config=ehcache-YuQ-Mirai.xml
 
 # 登录的 QQ 号
 YuQ.Mirai.user.qq=

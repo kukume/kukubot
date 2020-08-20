@@ -10,6 +10,7 @@ data class QQGroupEntity(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         var id: Int? = null,
+        @Column(unique = true)
         var group_: Long = 0L,
         @Lob
         @Column(columnDefinition="text")

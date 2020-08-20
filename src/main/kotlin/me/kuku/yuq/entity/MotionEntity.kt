@@ -8,13 +8,15 @@ data class MotionEntity(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         var id: Int? = null,
+        @Column(unique = true)
         var qq: Long = 0L,
         var phone: String = "",
         @Lob
         @Column(columnDefinition="text")
         var cookie: String = "",
         var userId: String = "",
-        @Column(length = 500)
+        @Lob
+        @Column(columnDefinition="text")
         var accessToken: String = "",
         var step: Int = 0
 )

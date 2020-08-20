@@ -3,12 +3,15 @@ package me.kuku.yuq.controller
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Before
 import com.IceCreamQAQ.Yu.annotation.Synonym
+import com.alibaba.fastjson.JSONArray
+import com.alibaba.fastjson.JSONObject
 import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.mif
+import kotlinx.serialization.json.JsonObject
 import me.kuku.yuq.entity.WeiboEntity
 import me.kuku.yuq.logic.WeiboLogic
 import me.kuku.yuq.pojo.CommonResult
@@ -114,6 +117,7 @@ class WeiboController {
     }
 
     @Action("wbinfo {username}")
+    @QMsg(at = true)
     fun weiboInfo(username: String): String{
         val idResult = weiboLogic.getIdByName(username)
         val idList = idResult.t ?: return idResult.msg
@@ -131,6 +135,7 @@ class WeiboController {
     }
 
     @Action("微博评论 {username} {content}")
+    @QMsg(at = true)
     fun comment(@PathVar(3) numStr: String?, username: String, content: String, weiboEntity: WeiboEntity): String{
         val commonResult = this.queryWeibo(username, numStr)
         val weiboPojo = commonResult.t ?: return commonResult.msg
@@ -138,6 +143,7 @@ class WeiboController {
     }
 
     @Action("微博转发 {username} {content}")
+    @QMsg(at = true)
     fun forward(username: String, content: String, weiboEntity: WeiboEntity, @PathVar(3) numStr: String?, message: Message): String{
         val commonResult = this.queryWeibo(username, numStr)
         val weiboPojo = commonResult.t ?: return commonResult.msg
@@ -155,6 +161,7 @@ class WeiboController {
     }
 
     @Action("微博发布 {content}")
+    @QMsg(at = true)
     fun publishWeibo(weiboEntity: WeiboEntity, content: String, message: Message): String{
         val url = mutableListOf<String>()
         val bodyList = message.body
@@ -166,12 +173,134 @@ class WeiboController {
         return weiboLogic.publishWeibo(weiboEntity, content, url)
     }
 
+    @Action("微博自动赞 {username}")
+    @QMsg(at = true)
+    fun weiboAutoLike(weiboEntity: WeiboEntity, username: String): String{
+        val commonResult = this.searchToJsonObject(username)
+        val jsonObject = commonResult.t ?: return commonResult.msg
+        val likeJsonArray = weiboEntity.getLikeJsonArray()
+        likeJsonArray.add(jsonObject)
+        weiboEntity.likeList = likeJsonArray.toString()
+        weiboService.save(weiboEntity)
+        return "添加微博用户[${jsonObject["name"]}]的自动赞成功"
+    }
+
+    @Action("查微博自动赞")
+    @QMsg(at = true)
+    fun queryAutoLike(weiboEntity: WeiboEntity): String{
+        val sb = StringBuilder().appendln("您的微博自动赞列表如下：")
+        val likeJsonArray = weiboEntity.getLikeJsonArray()
+        for (i in likeJsonArray.indices){
+            val jsonObject = likeJsonArray.getJSONObject(i)
+            sb.appendln("${jsonObject.getString("name")}-${jsonObject.getString("id")}")
+        }
+        return sb.removeSuffixLine().toString()
+    }
+
+    @Action("删微博自动赞 {username}")
+    @QMsg(at = true)
+    fun delAutoLike(weiboEntity: WeiboEntity, username: String): String{
+        val likeJsonArray = weiboEntity.getLikeJsonArray()
+        this.delAuto(likeJsonArray, username)
+        weiboEntity.likeList = likeJsonArray.toString()
+        weiboService.save(weiboEntity)
+        return "删除该用户的微博自动赞成功！！"
+    }
+
+    @Action("微博自动评论 {username} {content}")
+    @QMsg(at = true)
+    fun weiboAutoComment(weiboEntity: WeiboEntity, username: String, content: String): String{
+        val commonResult = this.searchToJsonObject(username)
+        val jsonObject = commonResult.t ?: return commonResult.msg
+        jsonObject["content"] = content
+        val commentJsonArray = weiboEntity.getCommentJsonArray()
+        commentJsonArray.add(jsonObject)
+        weiboEntity.commentList = commentJsonArray.toString()
+        weiboService.save(weiboEntity)
+        return "添加微博用户[${jsonObject["name"]}]自动评论成功！！"
+    }
+
+    @Action("查微博自动评论")
+    @QMsg(at = true)
+    fun queryAutoComment(weiboEntity: WeiboEntity): String{
+        val sb = StringBuilder().appendln("您的微博自动评论列表如下：")
+        val commentJsonArray = weiboEntity.getCommentJsonArray()
+        for (i in commentJsonArray.indices){
+            val jsonObject = commentJsonArray.getJSONObject(i)
+            sb.appendln("${jsonObject.getString("name")}-${jsonObject.getString("id")}-${jsonObject.getString("content")}")
+        }
+        return sb.removeSuffixLine().toString()
+    }
+
+    @Action("删微博自动评论 {username}")
+    @QMsg(at = true)
+    fun delAutoComment(weiboEntity: WeiboEntity, username: String): String{
+        val commentJsonArray = weiboEntity.getCommentJsonArray()
+        this.delAuto(commentJsonArray, username)
+        weiboEntity.commentList = commentJsonArray.toString()
+        weiboService.save(weiboEntity)
+        return "删除该用户的微博自动评论成功！！"
+    }
+
+    @Action("微博自动转发 {username} {content}")
+    @QMsg(at = true)
+    fun weiboAutoForward(weiboEntity: WeiboEntity, username: String, content: String): String{
+        val commonResult = this.searchToJsonObject(username)
+        val jsonObject = commonResult.t ?: return commonResult.msg
+        jsonObject["content"] = content
+        val forwardJsonArray = weiboEntity.getForwardJsonArray()
+        forwardJsonArray.add(jsonObject)
+        weiboEntity.forwardList = forwardJsonArray.toString()
+        weiboService.save(weiboEntity)
+        return "添加微博用户的[${jsonObject["name"]}]自动转发成功！！"
+    }
+
+    @Action("查微博自动转发")
+    @QMsg(at = true)
+    fun queryAutoForward(weiboEntity: WeiboEntity): String{
+        val sb = StringBuilder().appendln("您的微博自动转发列表如下：")
+        val forwardJsonArray = weiboEntity.getForwardJsonArray()
+        for (i in forwardJsonArray){
+            val jsonObject =  i as JSONObject
+            sb.appendln("${jsonObject.getString("name")}-${jsonObject.getString("id")}-${jsonObject.getString("content")}")
+        }
+        return sb.removeSuffixLine().toString()
+    }
+
+    @Action("删微博自动转发 {username}")
+    fun delAutoForward(weiboEntity: WeiboEntity, username: String): String{
+        val forwardJsonArray = weiboEntity.getForwardJsonArray()
+        this.delAuto(forwardJsonArray, username)
+        weiboEntity.forwardList = forwardJsonArray.toString()
+        weiboService.save(weiboEntity)
+        return "删除该用户的微博自动转发成功！！"
+    }
+
     private fun getWeiboPojo(list: List<WeiboPojo>, num: Int?): WeiboPojo {
         return when {
             num == null -> list[0]
             num >= list.size -> list[0]
             else -> list[num]
         }
+    }
+
+    private fun delAuto(jsonArray: JSONArray, username: String): JSONArray{
+        val delList = mutableListOf<JSONObject>()
+        for (i in jsonArray.indices){
+            val jsonObject = jsonArray.getJSONObject(i)
+            if (jsonObject.getString("name") == username) delList.add(jsonObject)
+        }
+        delList.forEach { jsonArray.remove(it) }
+        return jsonArray
+    }
+
+    private fun searchToJsonObject(username: String): CommonResult<JSONObject>{
+        val commonResult = weiboLogic.getIdByName(username)
+        val weiboPojo = commonResult.t?.get(0) ?: return CommonResult(500, commonResult.msg)
+        val jsonObject = JSONObject()
+        jsonObject["id"] = weiboPojo.userId
+        jsonObject["name"] = weiboPojo.name
+        return CommonResult(200, "", jsonObject)
     }
 
     private fun queryWeibo(username: String, numStr: String?): CommonResult<WeiboPojo> {

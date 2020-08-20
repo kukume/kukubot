@@ -134,7 +134,7 @@ class ToolController: QQController() {
     @Action("ping/{domain}")
     fun ping(domain: String) = toolLogic.ping(domain)
 
-    @Action("\\At\\")
+    @Action("\\.*\\")
     @QMsg(reply = true, at = true)
     fun chat(message: Message, qq: Contact): String?{
         val body = message.body

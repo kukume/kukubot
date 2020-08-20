@@ -42,7 +42,7 @@ class ManagerController: QQController() {
     @Inject
     private lateinit var weiboLogic: WeiboLogic
 
-    private val version = "v1.4.8"
+    private val version = "v1.4.9"
 
     @Before
     fun before(group: Long, qq: Long, actionContext: BotActionContext, message: Message){
@@ -58,7 +58,7 @@ class ManagerController: QQController() {
         if (!whiteList.contains(msg)) {
             val adminJsonArray = qqGroupEntity.getAdminJsonArray()
             if (!adminJsonArray.contains(qq.toString()) || !adminWhiteList.contains(msg)) {
-                if (qq != master.toLong()) throw mif.at(qq).plus("抱歉，您的权限不足，无法执行！！")
+                if (qq != master.toLong()) throw "抱歉，您的权限不足，无法执行！！".toMessage()
             }
         }
     }

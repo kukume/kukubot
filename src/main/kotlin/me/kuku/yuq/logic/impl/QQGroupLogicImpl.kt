@@ -182,22 +182,20 @@ class QQGroupLogicImpl: QQGroupLogic {
         val html = web.get("https://qun.qq.com/essence/index?gc=$group&_wv=3&_wwv=128&_wvx=2&_wvxBclr=f5f6fa")
         val jsonStr = BotUtils.regex("window.__INITIAL_STATE__=", "</", html)
         val jsonObject = JSON.parseObject(jsonStr)
-        return if (jsonObject.getInteger("pageStart") == 1){
-            val jsonArray = jsonObject.getJSONArray("msgList")
-            if (jsonArray.size == 0) return CommonResult(500, "当前群内没有精华消息！！")
-            val list = mutableListOf<String>()
-            for (i in jsonArray.indices){
-                val msgJsonObject = jsonArray.getJSONObject(i)
-                val contentJsonArray = msgJsonObject.getJSONArray("msg_content")
-                val sb = StringBuilder()
-                contentJsonArray.forEach {
-                    val singleJsonObject = it as JSONObject
-                    sb.append(singleJsonObject.getString("text") ?: singleJsonObject.getString("face_text"))
-                }
-                list.add(sb.toString())
+        val jsonArray = jsonObject.getJSONArray("msgList")
+        if (jsonArray.size == 0) return CommonResult(500, "当前群内没有精华消息！！或者cookie已失效！！")
+        val list = mutableListOf<String>()
+        for (i in jsonArray.indices){
+            val msgJsonObject = jsonArray.getJSONObject(i)
+            val contentJsonArray = msgJsonObject.getJSONArray("msg_content")
+            val sb = StringBuilder()
+            contentJsonArray.forEach {
+                val singleJsonObject = it as JSONObject
+                sb.append(singleJsonObject.getString("text") ?: singleJsonObject.getString("face_text"))
             }
-            CommonResult(200, "", list)
-        }else CommonResult(500, "查询失败，请更新qun.qq.com的cookie")
+            list.add(sb.toString())
+        }
+        return CommonResult(200, "", list)
     }
 
     override fun queryGroup(): CommonResult<List<Long>> {

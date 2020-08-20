@@ -101,8 +101,4 @@ class SuperCuteController: QQController() {
                 .append("萌宠任务：$str8")
                 .toString()
     }
-
-    @After
-    fun finally(actionContext: BotActionContext) = BotUtils.addAt(actionContext)
-
 }

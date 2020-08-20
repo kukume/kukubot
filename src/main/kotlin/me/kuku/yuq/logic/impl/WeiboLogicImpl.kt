@@ -71,11 +71,13 @@ class WeiboLogicImpl: WeiboLogic {
 
     private fun convert(jsonObject: JSONObject): WeiboPojo{
         val weiboPojo = WeiboPojo()
+        val userJsonObject = jsonObject.getJSONObject("user")
         weiboPojo.id = jsonObject.getString("id")
-        weiboPojo.name = jsonObject.getJSONObject("user").getString("screen_name")
+        weiboPojo.name = userJsonObject.getString("screen_name")
         weiboPojo.created = jsonObject.getString("created_at")
         weiboPojo.text = Jsoup.parse(jsonObject.getString("text")).text()
         weiboPojo.bid = jsonObject.getString("bid")
+        weiboPojo.userId = userJsonObject.getString("id")
         val picNum = jsonObject.getInteger("pic_num")
         if (picNum != 0){
             val list = mutableListOf<String>()

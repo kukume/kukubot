@@ -1,5 +1,7 @@
 package me.kuku.yuq.entity
 
+import com.alibaba.fastjson.JSON
+import com.alibaba.fastjson.JSONArray
 import javax.persistence.*
 
 @Entity
@@ -19,5 +21,21 @@ data class WeiboEntity(
         @Lob
         @Column(columnDefinition="text")
         var mobileCookie: String = "",
-        var monitor: Boolean? = false
-)
+        var monitor: Boolean? = false,
+        @Lob
+        @Column(columnDefinition="text")
+        var likeList: String? = "[]",
+        @Lob
+        @Column(columnDefinition="text")
+        var commentList: String? = "[]",
+        @Lob
+        @Column(columnDefinition="text")
+        var forwardList: String? = "[]"
+){
+        @Transient
+        fun getLikeJsonArray(): JSONArray = JSON.parseArray(likeList) ?: JSON.parseArray("[]")
+        @Transient
+        fun getCommentJsonArray(): JSONArray = JSON.parseArray(commentList) ?: JSON.parseArray("[]")
+        @Transient
+        fun getForwardJsonArray(): JSONArray = JSON.parseArray(forwardList) ?: JSON.parseArray("[]")
+}

@@ -1,5 +1,6 @@
 package me.kuku.yuq.event
 
+import com.IceCreamQAQ.Yu.annotation.Config
 import com.IceCreamQAQ.Yu.annotation.Event
 import com.IceCreamQAQ.Yu.annotation.EventListener
 import com.alibaba.fastjson.JSONArray
@@ -23,6 +24,8 @@ class GroupManagerEvent {
     private lateinit var groupQQService: GroupQQService
     @Inject
     private lateinit var qqAiLogic: QQAILogic
+    @Config("YuQ.Mirai.bot.master")
+    private lateinit var master: String
 
     @Event(weight = Event.Weight.high)
     fun switchGroup(e: GroupMessageEvent){
@@ -40,6 +43,9 @@ class GroupManagerEvent {
     @Event(weight = Event.Weight.low)
     fun intercept(e: GroupMessageEvent){
         val qqGroupEntity = qqGroupService.findByGroup(e.group.id) ?: return
+        val qq = e.sender.id
+        val whiteJsonArray = qqGroupEntity.getWhiteJsonArray()
+        if (whiteJsonArray.contains(qq) || qq == master.toLong()) return
         val msg = e.message.toPath()[0]
         val interceptJsonArray = qqGroupEntity.getInterceptJsonArray()
         if (interceptJsonArray.contains(msg)) e.cancel = true

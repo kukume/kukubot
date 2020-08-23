@@ -65,14 +65,14 @@ class BotController: QQController() {
             }
         }
         val concurrentHashMap = web.domainMap
-        val qunList = concurrentHashMap.getValue("qun.qq.com")
-        val groupPsKey = qunList[0].value
-        val qqList = concurrentHashMap.getValue("qq.com")
-        val sKey = qqList[1].value
-        val qZoneList = concurrentHashMap.getValue("qzone.qq.com")
-        val psKey = qZoneList[0].value
-        val vipList = concurrentHashMap.getValue("vip.qq.com")
-        val vipPsKey = vipList[0].value
+        val qunMap = concurrentHashMap.getValue("qun.qq.com")
+        val groupPsKey = qunMap.getValue("p_skey").value
+        val qqMap = concurrentHashMap.getValue("qq.com")
+        val sKey = qqMap.getValue("skey").value
+        val qZoneMap = concurrentHashMap.getValue("qzone.qq.com")
+        val psKey = qZoneMap.getValue("p_skey").value
+        val vipMap = concurrentHashMap.getValue("vip.qq.com")
+        val vipPsKey = vipMap.getValue("p_skey").value
         val qqEntity = QQEntity(null, this.qq.toLong(), 0L, "", sKey, psKey, groupPsKey, miraiBot.superKey, QQUtils.getToken(miraiBot.superKey).toString())
         actionContext["qqEntity"] = qqEntity
         actionContext["vipPsKey"] = vipPsKey
@@ -268,9 +268,9 @@ class BotController: QQController() {
     fun changeName(qqNo: Long, group: Long, name: String, qqEntity: QQEntity) = qqLogic.changeName(qqEntity, qqNo, group, name)
 
     @Action("天气 {local}")
-    fun weather(local: String, qqEntity: QQEntity): Message {
+    fun weather(local: String, qqEntity: QQEntity, qq: Long): Message {
         val commonResult = toolLogic.weather(local, qqEntity.getCookie())
-        return mif.xmlEx(146, commonResult.t ?: return "commonResult.msg".toMessage()).toMessage()
+        return mif.xmlEx(146, commonResult.t ?: return mif.at(qq).plus(commonResult.msg)).toMessage()
     }
 
     @Action("龙王")

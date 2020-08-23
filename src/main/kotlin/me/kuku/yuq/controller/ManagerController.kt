@@ -2,7 +2,6 @@ package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.*
 import com.IceCreamQAQ.Yu.util.IO
-import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
 import com.icecreamqaq.yuq.*
 import com.icecreamqaq.yuq.annotation.GroupController
@@ -11,12 +10,9 @@ import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.controller.QQController
-import com.icecreamqaq.yuq.message.Face
-import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.message.Message
-import com.icecreamqaq.yuq.message.Text
-import com.icecreamqaq.yuq.mirai.MiraiBot
 import me.kuku.yuq.entity.QQGroupEntity
+import me.kuku.yuq.logic.BiliBiliLogic
 import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.logic.WeiboLogic
 import me.kuku.yuq.service.QQGroupService
@@ -36,13 +32,13 @@ class ManagerController: QQController() {
     @Inject
     private lateinit var qqGroupService: QQGroupService
     @Inject
-    private lateinit var miraiBot: MiraiBot
-    @Inject
     private lateinit var toolLogic: ToolLogic
     @Inject
     private lateinit var weiboLogic: WeiboLogic
+    @Inject
+    private lateinit var biliBiliLogic: BiliBiliLogic
 
-    private val version = "v1.4.9"
+    private val version = "v1.5.0"
 
     @Before
     fun before(group: Long, qq: Long, actionContext: BotActionContext, message: Message){
@@ -53,17 +49,18 @@ class ManagerController: QQController() {
         }
         actionContext.session["qqGroupEntity"] = qqGroupEntity
         val msg = message.toPath()[0]
-        val whiteList = arrayOf("问答", "违规词", "黑名单", "白名单", "开关", "查撤回")
+        val whiteList = arrayOf("问答", "违规词", "黑名单", "查黑", "白名单", "查白", "开关", "查撤回", "查管", "查微博监控")
         val adminWhiteList = qqGroupEntity.getAllowedCommandsJsonArray()
         if (!whiteList.contains(msg)) {
             val adminJsonArray = qqGroupEntity.getAdminJsonArray()
             if (!adminJsonArray.contains(qq.toString()) || !adminWhiteList.contains(msg)) {
-                if (qq != master.toLong()) throw "抱歉，您的权限不足，无法执行！！".toMessage()
+                if (qq != master.toLong()) throw mif.at(qq).plus("抱歉，您的权限不足，无法执行！！")
             }
         }
     }
 
     @Action("加管 {qqNo}")
+    @QMsg(at = true)
     fun setAdmin(qqNo: Long, qqGroupEntity: QQGroupEntity): Message{
         val jsonArray = qqGroupEntity.getAdminJsonArray()
         jsonArray.add(qqNo.toString())
@@ -73,6 +70,7 @@ class ManagerController: QQController() {
     }
 
     @Action("去管 {qqNo}")
+    @QMsg(at = true)
     fun cancelAdmin(qqNo: Long, qqGroupEntity: QQGroupEntity): Message{
         val jsonArray = qqGroupEntity.getAdminJsonArray()
         jsonArray.remove(qqNo.toString())
@@ -90,6 +88,7 @@ class ManagerController: QQController() {
     }
 
     @Action("加admin命令 {command}")
+    @QMsg(at = true)
     fun addCommands(command: String, qqGroupEntity: QQGroupEntity): String{
         val jsonArray = qqGroupEntity.getAllowedCommandsJsonArray()
         jsonArray.add(command)
@@ -99,6 +98,7 @@ class ManagerController: QQController() {
     }
 
     @Action("删admin命令 {command}")
+    @QMsg(at = true)
     fun delCommands(command: String, qqGroupEntity: QQGroupEntity): String{
         val jsonArray = qqGroupEntity.getAllowedCommandsJsonArray()
         jsonArray.remove(command)
@@ -121,6 +121,14 @@ class ManagerController: QQController() {
         qqGroupEntity.status = status
         qqGroupService.save(qqGroupEntity)
         return if (status) "机器人开启成功" else "机器人关闭成功"
+    }
+
+    @Action("loc监控 {status}")
+    @QMsg(at = true)
+    fun locMonitor(qqGroupEntity: QQGroupEntity, status: Boolean): String{
+        qqGroupEntity.locMonitor = status
+        qqGroupService.save(qqGroupEntity)
+        return if (status) "loc监控开启成功！！" else "loc监控关闭成功"
     }
 
     @Action("复读 {status}")
@@ -151,14 +159,8 @@ class ManagerController: QQController() {
     @QMsg(at = true)
     fun delWbMonitor(name: String, qqGroupEntity: QQGroupEntity): String{
         val weiboJsonArray = qqGroupEntity.getWeiboJsonArray()
-        val list = mutableListOf<JSONObject>()
-        for (i in weiboJsonArray.indices) {
-            val jsonObject = weiboJsonArray.getJSONObject(i)
-            if (jsonObject.getString("name") == name) list.add(jsonObject)
-        }
-        for (jsonObject in list){
-            weiboJsonArray.remove(jsonObject)
-        }
+        val list = BotUtils.delMonitorList(weiboJsonArray, name)
+        list.forEach { weiboJsonArray.remove(it) }
         qqGroupEntity.weiboList = weiboJsonArray.toString()
         qqGroupService.save(qqGroupEntity)
         return "删除微博监控成功"
@@ -174,6 +176,44 @@ class ManagerController: QQController() {
             sb.appendln("${jsonObject.getString("name")}-${jsonObject.getString("id")}")
         }
         return sb.removeSuffixLine().toString()
+    }
+
+    @Action("哔哩哔哩监控 {username}")
+    @QMsg(at = true)
+    fun biliBiliMonitor(qqGroupEntity: QQGroupEntity, username:String): String{
+        val commonResult = biliBiliLogic.getIdByName(username)
+        val list = commonResult.t ?: return commonResult.msg
+        val biliBiliPojo = list[0]
+        val jsonObject = JSONObject()
+        jsonObject["name"] = biliBiliPojo.name
+        jsonObject["id"] = biliBiliPojo.userId
+        val biliBiliJsonArray = qqGroupEntity.getBiliBiliJsonArray()
+        biliBiliJsonArray.add(jsonObject)
+        qqGroupEntity.biliBiliList = biliBiliJsonArray.toString()
+        qqGroupService.save(qqGroupEntity)
+        return "添加哔哩哔哩用户${biliBiliPojo.name}的监控成功！！"
+    }
+
+    @Action("查哔哩哔哩监控")
+    fun queryBiliBiliMonitor(qqGroupEntity: QQGroupEntity): String{
+        val biliBiliJsonArray = qqGroupEntity.getBiliBiliJsonArray()
+        val sb = StringBuilder().appendln("本群的哔哩哔哩用户监控如下：")
+        biliBiliJsonArray.forEach {
+            val jsonObject = it as JSONObject
+            sb.appendln("${jsonObject["name"]}-${jsonObject["id"]}")
+        }
+        return sb.removeSuffixLine().toString()
+    }
+
+    @Action("删哔哩哔哩监控 {name}")
+    @QMsg(at = true)
+    fun delBiliBiliMonitor(qqGroupEntity: QQGroupEntity, name: String): String{
+        val biliBiliJsonArray = qqGroupEntity.getBiliBiliJsonArray()
+        val delList = BotUtils.delMonitorList(biliBiliJsonArray, name)
+        delList.forEach { biliBiliJsonArray.remove(it) }
+        qqGroupEntity.biliBiliList = biliBiliJsonArray.toString()
+        qqGroupService.save(qqGroupEntity)
+        return "删除该用户的哔哩哔哩监控成功！！"
     }
 
     @Action("违规次数 {count}")
@@ -203,13 +243,6 @@ class ManagerController: QQController() {
         sb.appendln("整点报时：" + this.boolToStr(qqGroupEntity.onTimeAlarm))
         sb.append("最大违规次数：${qqGroupEntity.maxViolationCount ?: "5次"}")
         return sb.toString()
-    }
-
-    @Action("重启mirai")
-    fun robot(){
-        miraiBot.stop()
-        miraiBot.init()
-        miraiBot.start()
     }
 
     @Action("涩图切换 {type}")
@@ -379,6 +412,7 @@ class ManagerController: QQController() {
     }
 
     @Action("黑名单")
+    @Synonym(["查黑"])
     fun blackList(qqGroupEntity: QQGroupEntity): String{
         val blackJsonArray = qqGroupEntity.getBlackJsonArray()
         val sb = StringBuilder().appendln("本群黑名单如下：")
@@ -409,6 +443,7 @@ class ManagerController: QQController() {
     }
 
     @Action("白名单")
+    @Synonym(["查白"])
     fun whiteList(qqGroupEntity: QQGroupEntity): String{
         val whiteJsonArray = qqGroupEntity.getWhiteJsonArray()
         val sb = StringBuilder().appendln("本群白名单如下：")

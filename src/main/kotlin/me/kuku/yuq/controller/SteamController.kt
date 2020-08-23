@@ -3,6 +3,7 @@ package me.kuku.yuq.controller
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Before
 import com.icecreamqaq.yuq.annotation.GroupController
+import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.MessageItemFactory
 import me.kuku.yuq.dao.SteamDao
@@ -24,6 +25,7 @@ class SteamController{
     fun checkBind(qq: Long) = steamDao.findByQQ(qq) ?: throw mif.text("您还没有绑定steam账号").toMessage()
 
     @Action("更名")
+    @QMsg(at = true)
     fun changeName(steamEntity: SteamEntity, message: Message): String{
         val list = message.toPath()
         return if (list.size > 1) {
@@ -35,6 +37,7 @@ class SteamController{
     }
 
     @Action("buff")
+    @QMsg(at = true)
     fun buff(steamEntity: SteamEntity): String{
         val commonResult = steamLogic.loginToBuff(steamEntity)
         return if (commonResult.code == 200){

@@ -1,10 +1,8 @@
 package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.Action
-import com.IceCreamQAQ.Yu.annotation.After
 import com.icecreamqaq.yuq.*
 import com.icecreamqaq.yuq.annotation.*
-import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.controller.QQController
 import me.kuku.yuq.entity.MotionEntity
@@ -12,7 +10,6 @@ import me.kuku.yuq.logic.LeXinMotionLogic
 import me.kuku.yuq.logic.QQAILogic
 import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.service.MotionService
-import me.kuku.yuq.utils.BotUtils
 import javax.inject.Inject
 
 @GroupController
@@ -25,6 +22,7 @@ class MotionController: QQController() {
     private lateinit var qqAiLogic: QQAILogic
 
     @Action("步数")
+    @QMsg(at = true)
     fun steps(qq: Long, session: ContextSession): String{
         val time = 30L * 1000
         val motionEntity = motionService.findByQQ(qq)
@@ -93,6 +91,7 @@ class MotionController: QQController() {
     }
 
     @Action("步数任务")
+    @QMsg(at = true)
     fun stepTask(qq: Long, session: ContextSession): String {
         val motionEntity = motionService.findByQQ(qq) ?: return "您还没有绑定lexin运动账号！如需要绑定，请发送<步数>"
         reply(mif.at(qq).plus("请输入需要定时修改的步数！！"))
@@ -104,11 +103,9 @@ class MotionController: QQController() {
     }
 
     @Action("删除步数")
+    @QMsg(at = true)
     fun del(qq: Long): String{
         motionService.delByQQ(qq)
         return "删除步数成功！！"
     }
-
-    @After
-    fun finally(actionContext: BotActionContext) = BotUtils.addAt(actionContext)
 }

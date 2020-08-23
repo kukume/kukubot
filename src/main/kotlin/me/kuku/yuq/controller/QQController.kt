@@ -11,6 +11,7 @@ import com.icecreamqaq.yuq.entity.Group
 import com.icecreamqaq.yuq.firstString
 import com.icecreamqaq.yuq.message.*
 import com.icecreamqaq.yuq.toMessage
+import me.kuku.yuq.entity.BiliBiliEntity
 import me.kuku.yuq.entity.NeTeaseEntity
 import me.kuku.yuq.entity.QQEntity
 import me.kuku.yuq.entity.WeiboEntity
@@ -44,6 +45,10 @@ class QQController: QQController() {
     private lateinit var weiboService: WeiboService
     @Inject
     private lateinit var qqGroupService: QQGroupService
+    @Inject
+    private lateinit var biliBiliLogic: BiliBiliLogic
+    @Inject
+    private lateinit var biliBiliService: BiliBiliService
 
     @Before
     fun checkBind(@PathVar(0) str: String, qq: Long, actionContext: BotActionContext, group: Long){
@@ -325,9 +330,11 @@ class QQController: QQController() {
     }
 
     @Action("访问空间 {qqNo}")
+    @QMsg(at = true)
     fun visit(qqNo: Long, qqEntity: QQEntity) = qqZoneLogic.visitQZoneMobile(qqEntity, qqNo)
 
     @Action("互访")
+    @QMsg(at = true)
     fun visitAll(qq: Long): String{
         val list = qqService.findByActivity()
         list.forEach { qqZoneLogic.visitQZone(it, qq) }
@@ -348,6 +355,18 @@ class QQController: QQController() {
             weiboService.save(newWeiboEntity)
             "绑定或者更新成功！！"
         }else "已退出上下文！！"
+    }
+
+    @Action("bilibililogin")
+    @QMsg(at = true)
+    fun biliBiliLogin(qqEntity: QQEntity, qq: Long, group: Long): String{
+        val commonResult = biliBiliLogic.loginByQQ(qqEntity)
+        val cookie = commonResult.t ?: return commonResult.msg
+        val biliBiliEntity = biliBiliService.findByQQ(qq) ?: BiliBiliEntity(null, qq)
+        biliBiliEntity.cookie = cookie
+        biliBiliEntity.group_ = group
+        biliBiliService.save(biliBiliEntity)
+        return "绑定或者更新成功！！"
     }
 }
 

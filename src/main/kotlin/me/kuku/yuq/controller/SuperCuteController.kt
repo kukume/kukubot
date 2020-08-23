@@ -4,6 +4,7 @@ import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.After
 import com.IceCreamQAQ.Yu.annotation.Before
 import com.icecreamqaq.yuq.annotation.GroupController
+import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.QQController
 import me.kuku.yuq.logic.SuperCuteLogic
@@ -37,9 +38,11 @@ class SuperCuteController: QQController() {
     }
 
     @Action("萌宠签到")
+    @QMsg(at = true)
     fun dailySign(map: Map<String, String>) = superCuteLogic.dailySign(map)
 
     @Action("萌宠元气")
+    @QMsg(at = true)
     fun dailyVitality(map: Map<String, String>, qq: Long): String{
         reply(mif.at(qq).plus("正在为您领取元气中~~~请稍后~~~"))
         val str1 = superCuteLogic.dailyVitality(map)
@@ -48,38 +51,47 @@ class SuperCuteController: QQController() {
     }
 
     @Action("萌宠喂食")
+    @QMsg(at = true)
     fun feeding(map: Map<String, String>, qq: Long): String{
         reply(mif.at(qq).plus("正在为您的宠物喂食~~~请稍后~~~"))
         return superCuteLogic.feeding(map)
     }
 
     @Action("萌宠任务")
+    @QMsg(at = true)
     fun finishTask(map: Map<String, String>, qq: Long): String {
         reply(mif.at(qq).plus("正在为您完成任务中~~~请稍后~~~"))
         return superCuteLogic.finishTask(map)
     }
 
     @Action("萌宠金币")
+    @QMsg(at = true)
     fun receiveCoin(map: Map<String, String>) = "您收取了${superCuteLogic.receiveCoin(map)}金币"
 
     @Action("萌宠掠夺")
+    @QMsg(at = true)
     fun steal(map: Map<String, String>, qq: Long): String {
         reply(mif.at(qq).plus("正在为您偷取金币和抓捕奴隶中~~~请稍后~~~"))
         return superCuteLogic.steal(map)
     }
 
     @Action("萌宠找回")
+    @QMsg(at = true)
     fun findCute(map: Map<String, String>) = superCuteLogic.findCute(map)
 
     @Action("萌宠抽奖")
+    @QMsg(at = true)
     fun dailyLottery(map: Map<String, String>, qq: Long): String {
         reply(mif.at(qq).plus("正在为您抽奖中~~~请稍后~~~"))
         return superCuteLogic.dailyLottery(map)
     }
+
     @Action("萌宠信息")
+    @QMsg(at = true)
     fun profile(map: Map<String, String>) = superCuteLogic.getProfile(map)
 
     @Action("萌宠一键")
+    @QMsg(at = true)
     @Synchronized fun all(map: Map<String, String>, qq: Long): String{
         reply(mif.at(qq).plus("正在为您的萌宠完成任务~~~时间会很长~~~请稍后~~~"))
         val str1 = superCuteLogic.findCute(map)

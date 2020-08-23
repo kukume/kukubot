@@ -18,7 +18,6 @@ import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.OkHttpClientUtils
 import me.kuku.yuq.utils.image
 import me.kuku.yuq.utils.removeSuffixLine
-import java.net.SocketException
 import java.net.URLEncoder
 import java.util.*
 import javax.inject.Inject
@@ -35,8 +34,6 @@ class ToolController: QQController() {
     private lateinit var qqAiLogic: QQAILogic
     @Config("YuQ.Mirai.user.qq")
     private lateinit var qq: String
-    @Config("YuQ.Mirai.bot.pCookie")
-    private lateinit var pCookie:String
 
     private var colorPicTime = 0L
 

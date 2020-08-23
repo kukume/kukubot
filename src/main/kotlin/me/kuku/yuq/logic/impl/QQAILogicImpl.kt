@@ -91,8 +91,10 @@ class QQAILogicImpl: QQAILogic {
         val response = OkHttpClientUtils.post("https://api.ai.qq.com/fcgi-bin/nlp/nlp_textchat",
                 addParams(mapOf("session" to session, "question" to question)))
         val jsonObject = OkHttpClientUtils.getJson(response)
-        return if (jsonObject.getInteger("ret") == 0)
-            jsonObject.getJSONObject("data").getString("answer")
-        else jsonObject.getString("msg")
+        return when (jsonObject.getInteger("ret")){
+            0 -> jsonObject.getJSONObject("data").getString("answer")
+            16385 -> "您没有填入appid"
+            else -> jsonObject.getString("msg")
+        }
     }
 }

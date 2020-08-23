@@ -11,4 +11,6 @@ class QQGroupDao: HibernateDao<QQGroupEntity, Int>(){
 
     fun findAll() = this.searchList("from QQGroupEntity")
 
+    fun findByLocMonitor(locMonitor: Boolean) = this.searchList("from QQGroupEntity where locMonitor = ?", null, locMonitor)
+
 }

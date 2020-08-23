@@ -9,11 +9,12 @@ version '1.0-SNAPSHOT'
 repositories {
     mavenCentral()
     jcenter()
+    maven{ url "https://dl.bintray.com/icecreamqaq/mirai/"}
 }
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
-    compile group: 'com.IceCreamQAQ.YuQ', name: 'YuQ-Mirai', version: '0.0.6.3'
+    compile group: 'com.IceCreamQAQ.YuQ', name: 'YuQ-Mirai', version: '0.0.6.7'
     compile (group: 'com.IceCreamQAQ.Yu', name: 'Yu-DB', version: '0.0.1.0'){
         exclude group: 'mysql', module: 'mysql-connector-java'
     }

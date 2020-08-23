@@ -7,7 +7,6 @@ import com.alibaba.fastjson.JSONObject
 import com.icecreamqaq.yuq.toMessage
 import com.icecreamqaq.yuq.yuq
 import me.kuku.yuq.logic.WeiboLogic
-import me.kuku.yuq.pojo.WeiboPojo
 import me.kuku.yuq.service.QQGroupService
 import me.kuku.yuq.service.WeiboService
 import javax.inject.Inject
@@ -36,13 +35,12 @@ class WeiboJob {
                 val weiboId = jsonObject.getLong("id")
                 val commonResult = weiboLogic.getWeiboById(weiboId.toString())
                 val list = commonResult.t ?: continue
-                val firstWeiboPojo = if (list.isNotEmpty()) list[0] else WeiboPojo("0")
+                val firstWeiboPojo = if (list.isNotEmpty()) list[0] else continue
                 if (map.containsKey(weiboId)){
                     val oldMBlogId = map.getValue(weiboId)
                     if (firstWeiboPojo.id.toLong() > oldMBlogId)
                         map[weiboId] = firstWeiboPojo.id.toLong()
-                    list.forEach {
-                        val weiboPojo = it
+                    list.forEach { weiboPojo ->
                         if (weiboPojo.id.toLong() > oldMBlogId){
                             yuq.groups[group]?.sendMessage(weiboLogic.convertStr(weiboPojo).toMessage())
                         }else return@forEach
@@ -64,24 +62,25 @@ class WeiboJob {
             val firstMBlogId = firstWeiboPojo.id.toLong()
             if (!qqMap.containsKey(qq)) qqMap[qq] = firstMBlogId
             val oldMBlogId = qqMap[qq]!!
-            if (firstWeiboPojo.id.toLong() > oldMBlogId) qqMap[qq] = firstMBlogId
-            weiboList.forEach {
-                val weiboPojo = it
+            if (firstMBlogId > oldMBlogId) qqMap[qq] = firstMBlogId
+            weiboList.forEach { weiboPojo ->
                 if (weiboPojo.id.toLong() > oldMBlogId) {
                     val userId = weiboPojo.userId
                     val id = weiboPojo.id
                     val likeJsonArray = weiboEntity.getLikeJsonArray()
-                    val likeJsonObject = this.isMatch(likeJsonArray, userId)
-                    if (likeJsonObject != null)
+                    val likeList = this.isMatch(likeJsonArray, userId)
+                    if (likeList.isNotEmpty())
                         weiboLogic.like(weiboEntity, id)
                     val commentJsonArray = weiboEntity.getCommentJsonArray()
-                    val commentJsonObject = this.isMatch(commentJsonArray, userId)
-                    if (commentJsonObject != null)
-                        weiboLogic.comment(weiboEntity, id, commentJsonObject.getString("content"))
+                    val commentList = this.isMatch(commentJsonArray, userId)
+                    commentList.forEach {
+                        weiboLogic.comment(weiboEntity, id, it.getString("content"))
+                    }
                     val forwardJsonArray = weiboEntity.getForwardJsonArray()
-                    val forwardJsonObject = this.isMatch(forwardJsonArray, userId)
-                    if (forwardJsonObject != null)
-                        weiboLogic.forward(weiboEntity, id, forwardJsonObject.getString("content"), null)
+                    val forwardList = this.isMatch(forwardJsonArray, userId)
+                    forwardList.forEach {
+                        weiboLogic.forward(weiboEntity, id, it.getString("content"), null)
+                    }
                     val group = weiboEntity.group_
                     if (group == null || group == 0L)
                         yuq.friends[qq]?.sendMessage(weiboLogic.convertStr(weiboPojo).toMessage())
@@ -91,12 +90,13 @@ class WeiboJob {
         }
     }
 
-    private fun isMatch(jsonArray: JSONArray, userId: String): JSONObject?{
+    private fun isMatch(jsonArray: JSONArray, userId: String): List<JSONObject>{
+        val list = mutableListOf<JSONObject>()
         for (i in jsonArray.indices){
             val jsonObject = jsonArray.getJSONObject(i)
-            if (jsonObject.getString("id") == userId) return jsonObject
+            if (jsonObject.getString("id") == userId) list.add(jsonObject)
         }
-        return null
+        return list
     }
 
 }

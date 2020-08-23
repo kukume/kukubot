@@ -6,7 +6,8 @@ import me.kuku.yuq.entity.QQGroupEntity
 import me.kuku.yuq.service.QQGroupService
 import javax.inject.Inject
 
-class QQGroupServiceImpl: QQGroupService {
+class
+QQGroupServiceImpl: QQGroupService {
     @Inject
     private lateinit var qqGroupDao: QQGroupDao
 
@@ -21,4 +22,7 @@ class QQGroupServiceImpl: QQGroupService {
 
     @Transactional
     override fun findAll() = qqGroupDao.findAll()
+
+    @Transactional
+    override fun findByLocMonitor(locMonitor: Boolean) = qqGroupDao.findByLocMonitor(locMonitor)
 }

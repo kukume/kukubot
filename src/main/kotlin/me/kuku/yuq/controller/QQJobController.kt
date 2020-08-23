@@ -6,7 +6,7 @@ import com.alibaba.fastjson.JSONObject
 import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.controller.BotActionContext
-import com.icecreamqaq.yuq.message.MessageItemFactory
+import com.icecreamqaq.yuq.mif
 import me.kuku.yuq.entity.QQJobEntity
 import me.kuku.yuq.service.QQJobService
 import me.kuku.yuq.service.QQService
@@ -18,14 +18,12 @@ class QQJobController {
     private lateinit var qqJobService: QQJobService
     @Inject
     private lateinit var qqService: QQService
-    @Inject
-    private lateinit var mif: MessageItemFactory
 
     @Before
     fun check(qq: Long, context: BotActionContext){
         val qqEntity = qqService.findByQQ(qq)
         if (qqEntity == null)
-            throw mif.text("没有绑定QQ！！").toMessage()
+            throw mif.at(qq).plus("没有绑定QQ！！")
         else{
             context.session["qqEntity"] = qqEntity
         }

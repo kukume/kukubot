@@ -106,9 +106,9 @@ class WeiboLogicImpl: WeiboLogic {
             val jsonObject = OkHttpClientUtils.getJson(response)
             val cardJsonArray = jsonObject.getJSONObject("data").getJSONArray("cards")
             val list = mutableListOf<WeiboPojo>()
-            cardJsonArray.stream().skip(1).forEach {
+            cardJsonArray.forEach {
                 val singleJsonObject = it as JSONObject
-                val blogJsonObject = singleJsonObject.getJSONObject("mblog")
+                val blogJsonObject = singleJsonObject.getJSONObject("mblog") ?: return@forEach
                 if (1 == blogJsonObject.getInteger("isTop")) return@forEach
                 val weiboPojo = this.convert(blogJsonObject)
                 list.add(weiboPojo)

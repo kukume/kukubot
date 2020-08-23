@@ -3,6 +3,7 @@ package me.kuku.yuq.controller
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Before
 import com.icecreamqaq.yuq.annotation.GroupController
+import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.mif
 import me.kuku.yuq.entity.NeTeaseEntity
 import me.kuku.yuq.logic.NeTeaseLogic
@@ -25,6 +26,7 @@ class NeTeaseController {
     }
 
     @Action("网易加速")
+    @QMsg(at = true)
     fun listeningVolume(neTeaseEntity: NeTeaseEntity): String{
         val signResult = neTeaseLogic.sign(neTeaseEntity)
         val listeningVolume = neTeaseLogic.listeningVolume(neTeaseEntity)

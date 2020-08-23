@@ -10,5 +10,6 @@ interface QQGroupService {
     fun findByGroup(group: Long): QQGroupEntity?
     fun findByOnTimeAlarm(onTimeAlarm: Boolean): List<QQGroupEntity>
     fun findAll(): List<QQGroupEntity>
+    fun findByLocMonitor(locMonitor: Boolean): List<QQGroupEntity>
 
 }

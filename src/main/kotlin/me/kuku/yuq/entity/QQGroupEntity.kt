@@ -32,6 +32,9 @@ data class QQGroupEntity(
         var weiboList: String = "[]",
         @Lob
         @Column(columnDefinition="text")
+        var biliBiliList: String = "[]",
+        @Lob
+        @Column(columnDefinition="text")
         var allowedCommandsList: String = "[]",
         @Lob
         @Column(columnDefinition="text")
@@ -54,7 +57,8 @@ data class QQGroupEntity(
         var colorPicType: String? = "remote",
         var maxViolationCount: Int? = 0,
         var dragonKing: Boolean? = true,
-        var repeat: Boolean? = true
+        var repeat: Boolean? = true,
+        var locMonitor: Boolean? = false
 ){
         @Transient
         fun getQaJsonArray(): JSONArray = JSON.parseArray(qa) ?: JSON.parseArray("[]")
@@ -74,4 +78,6 @@ data class QQGroupEntity(
         fun getInterceptJsonArray(): JSONArray = JSON.parseArray(interceptList) ?: JSON.parseArray("[]")
         @Transient
         fun getRecallMessageJsonArray(): JSONArray = JSON.parseArray(recallMessage) ?: JSON.parseArray("[]")
+        @Transient
+        fun getBiliBiliJsonArray(): JSONArray = JSON.parseArray(biliBiliList) ?: JSON.parseArray("[]")
 }

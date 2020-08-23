@@ -11,11 +11,13 @@ import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.mif
-import kotlinx.serialization.json.JsonObject
+import me.kuku.yuq.entity.BiliBiliEntity
 import me.kuku.yuq.entity.WeiboEntity
+import me.kuku.yuq.logic.BiliBiliLogic
 import me.kuku.yuq.logic.WeiboLogic
 import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.pojo.WeiboPojo
+import me.kuku.yuq.service.BiliBiliService
 import me.kuku.yuq.service.WeiboService
 import me.kuku.yuq.utils.removeSuffixLine
 import java.lang.ClassCastException
@@ -27,6 +29,10 @@ class WeiboController {
     private lateinit var weiboLogic: WeiboLogic
     @Inject
     private lateinit var weiboService: WeiboService
+    @Inject
+    private lateinit var biliBiliLogic: BiliBiliLogic
+    @Inject
+    private lateinit var biliBiliService: BiliBiliService
 
     private val hotMap: MutableMap<Long, List<String>> = mutableMapOf()
 
@@ -89,29 +95,19 @@ class WeiboController {
 
     @Action("wbmy")
     @QMsg(at = true)
-    fun myFriendWeibo(@PathVar(1) numStr: String?, weiboEntity: WeiboEntity): String{
+    fun myFriendWeibo(@PathVar(value = 1, type = PathVar.Type.Integer) num: Int?, weiboEntity: WeiboEntity): String{
         val commonResult = weiboLogic.getFriendWeibo(weiboEntity)
         return if (commonResult.code == 200) {
             val list = commonResult.t!!
-            val num = try {
-                numStr?.toInt()
-            }catch (e: Exception){
-                return "第一个参数应为整型！！"
-            }
             val weiboPojo = this.getWeiboPojo(list, num)
             weiboLogic.convertStr(weiboPojo)
         }else commonResult.msg
     }
 
     @Action("mywb")
-    fun myWeibo(@PathVar(1) numStr: String?, weiboEntity: WeiboEntity): String{
+    fun myWeibo(@PathVar(value = 1, type = PathVar.Type.Integer) num: Int?, weiboEntity: WeiboEntity): String{
         val commonResult = weiboLogic.getMyWeibo(weiboEntity)
         val list = commonResult.t ?: return commonResult.msg
-        val num = try {
-            numStr?.toInt()
-        }catch (e: Exception){
-            return "第一个参数应为整型！！"
-        }
         val weiboPojo = this.getWeiboPojo(list, num)
         return weiboLogic.convertStr(weiboPojo)
     }
@@ -268,6 +264,7 @@ class WeiboController {
     }
 
     @Action("删微博自动转发 {username}")
+    @QMsg(at = true)
     fun delAutoForward(weiboEntity: WeiboEntity, username: String): String{
         val forwardJsonArray = weiboEntity.getForwardJsonArray()
         this.delAuto(forwardJsonArray, username)
@@ -276,11 +273,24 @@ class WeiboController {
         return "删除该用户的微博自动转发成功！！"
     }
 
+    @QMsg(at = true)
+    @Action("bilibililoginbyweibo")
+    fun biliBiliLogin(weiboEntity: WeiboEntity, qq: Long, group: Long): String{
+        val commonResult = biliBiliLogic.loginByWeibo(weiboEntity)
+        val cookie = commonResult.t ?: return commonResult.msg
+        val biliBiliEntity = biliBiliService.findByQQ(qq) ?: BiliBiliEntity(null, qq)
+        biliBiliEntity.cookie = cookie
+        biliBiliEntity.group_ = group
+        biliBiliService.save(biliBiliEntity)
+        return "绑定或者更新哔哩哔哩成功！！"
+    }
+
     private fun getWeiboPojo(list: List<WeiboPojo>, num: Int?): WeiboPojo {
         return when {
             num == null -> list[0]
             num >= list.size -> list[0]
-            else -> list[num]
+            num <= 0 -> list[0]
+            else -> list[num - 1]
         }
     }
 
@@ -309,6 +319,7 @@ class WeiboController {
         val queryWeiboPojo = idList[0]
         val weiboResult = weiboLogic.getWeiboById(queryWeiboPojo.userId)
         val weiboList = weiboResult.t ?: return CommonResult(500, weiboResult.msg)
+        if (weiboList.isEmpty()) return CommonResult(500, "没有查询到微博，可能还没有发布过微博或者连接异常！！")
         val num = try {
             numStr?.toInt()
         }catch (e: Exception){

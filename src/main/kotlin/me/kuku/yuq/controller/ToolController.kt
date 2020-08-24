@@ -77,9 +77,11 @@ class ToolController: QQController() {
     fun hiToKoTo() = toolLogic.hiToKoTo().getValue("text")
 
     @Action("缩短/{params}")
+    @QMsg(at = true)
     fun shortUrl(params: String) = BotUtils.shortUrl(params)
 
     @Action("ip/{params}")
+    @QMsg(at = true)
     fun queryIp(params: String) = toolLogic.queryIp(params)
 
     @Action("whois/{params}")
@@ -126,6 +128,7 @@ class ToolController: QQController() {
     fun parseVideo(url: String) = toolLogic.parseVideo(url)
 
     @Action("还原/{url}")
+    @QMsg(at = true)
     fun restoreShortUrl(url: String) = toolLogic.restoreShortUrl(url)
 
     @Action("ping/{domain}")

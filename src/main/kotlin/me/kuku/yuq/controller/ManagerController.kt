@@ -38,7 +38,7 @@ class ManagerController: QQController() {
     @Inject
     private lateinit var biliBiliLogic: BiliBiliLogic
 
-    private val version = "v1.5.0"
+    private val version = "v1.5.1"
 
     @Before
     fun before(group: Long, qq: Long, actionContext: BotActionContext, message: Message){

@@ -69,18 +69,6 @@ class QQGroupLogicImpl: QQGroupLogic {
         }
     }
 
-    override fun groupDragonKing(group: Long): CommonResult<Map<String, Long>> {
-        val html = web.get("https://qun.qq.com/interactive/qunhonor?gc=$group&_wv=3&&_wwv=128&showMine=1")
-        val jsonStr = BotUtils.regex("INITIAL_STATE__=", "<", html)
-        val jsonObject = JSON.parseObject(jsonStr)
-        return if (jsonObject.getJSONArray("admins").size != 0){
-            val activeJsonObject = jsonObject.getJSONObject("currentTalkative")
-            if (activeJsonObject.size == 0) CommonResult(500, "昨天木得龙王！！")
-            //uin qq; day_count  蝉联时间 ; avatar  头像链接 ;avatar_size  头像大小
-            else CommonResult(200, "", mapOf<String, Long>("qq" to activeJsonObject.getLong("uin"), "day" to activeJsonObject.getLong("day_count")))
-        }else CommonResult(500, "获取龙王失败，请更新qun.qq.com的cookie")
-    }
-
     override fun addHomeWork(group: Long, courseName: String, title: String, content: String, needFeedback: Boolean): String {
         val str = web.post("https://qun.qq.com/cgi-bin/homework/hw/assign_hw.fcg", mapOf(
                 "homework_id" to "",
@@ -224,5 +212,53 @@ class QQGroupLogicImpl: QQGroupLogic {
             }
             CommonResult(200, "", list)
         }else CommonResult(500, "查询失败，请更新qun.qq.com的cookie")
+    }
+
+    override fun groupHonor(group: Long, type: String): List<Map<String, String>> {
+        val typeNum: Int?
+        val wwv: Int?
+        val param: String?
+        when (type){
+            "talkAtIve" -> {
+                typeNum = 1
+                wwv = 129
+                param = "talkativeList"
+            }
+            "legend" -> {
+                typeNum = 3
+                wwv = 128
+                param = "legendList"
+            }
+            "actor" -> {
+                typeNum = 2
+                wwv = 128
+                param = "actorList"
+            }
+            "strongNewBie" -> {
+                typeNum = 5
+                wwv = 128
+                param = "strongnewbieList"
+            }
+            "emotion" -> {
+                typeNum = 6
+                wwv = 128
+                param = "emotionList"
+            }
+            else -> return listOf()
+        }
+        val html = web.get("https://qun.qq.com/interactive/honorlist?gc=$group&type=$typeNum&_wv=3&_wwv=$wwv")
+        val jsonStr = BotUtils.regex("window.__INITIAL_STATE__=", "</script", html)
+        val jsonObject = JSON.parseObject(jsonStr)
+        val jsonArray = jsonObject.getJSONArray(param)
+        val list = mutableListOf<Map<String, String>>()
+        jsonArray.forEach {
+            val singleJsonObject = it as JSONObject
+            list.add(mapOf(
+                    "qq" to singleJsonObject.getString("uin"),
+                    "name" to singleJsonObject.getString("name"),
+                    "desc" to singleJsonObject.getString("desc")
+            ))
+        }
+        return list
     }
 }

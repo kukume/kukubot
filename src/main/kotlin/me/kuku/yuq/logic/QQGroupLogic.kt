@@ -10,11 +10,11 @@ interface QQGroupLogic {
     fun setGroupAdmin(qq: Long, group: Long, isAdmin: Boolean): String
     fun setGroupCard(qq: Long, group: Long, name: String): String
     fun deleteGroupMember(qq: Long, group: Long, isFlag: Boolean): String
-    fun groupDragonKing(group: Long): CommonResult<Map<String, Long>>
     fun addHomeWork(group: Long, courseName: String, title: String, content: String, needFeedback: Boolean): String
     fun groupCharin(group: Long, content: String, time: Long): String
     fun groupLevel(group: Long): CommonResult<List<Map<String, String>>>
     fun queryMemberInfo(group: Long, qq: Long): CommonResult<GroupMember>
     fun essenceMessage(group: Long): CommonResult<List<String>>
     fun queryGroup(): CommonResult<List<Long>>
+    fun groupHonor(group: Long, type: String): List<Map<String, String>>
 }

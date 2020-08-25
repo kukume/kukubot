@@ -1,5 +1,6 @@
 package me.kuku.yuq.utils
 
+import com.IceCreamQAQ.Yu.util.OkHttpWebImpl
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
 import com.icecreamqaq.yuq.controller.BotActionContext
@@ -7,7 +8,9 @@ import com.icecreamqaq.yuq.entity.Contact
 import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.message.*
 import com.icecreamqaq.yuq.mif
+import com.icecreamqaq.yuq.mirai.MiraiBot
 import com.icecreamqaq.yuq.toMessage
+import me.kuku.yuq.entity.QQEntity
 import java.net.URLEncoder
 import kotlin.random.Random
 
@@ -108,5 +111,17 @@ object BotUtils {
             if (jsonObject.getString("name") == username) list.add(jsonObject)
         }
         return list
+    }
+
+    fun toQQEntity(web: OkHttpWebImpl, miraiBot: MiraiBot): QQEntity{
+        val concurrentHashMap = web.domainMap
+        val qunMap = concurrentHashMap.getValue("qun.qq.com")
+        val groupPsKey = qunMap.getValue("p_skey").value
+        val qqMap = concurrentHashMap.getValue("qq.com")
+        val sKey = qqMap.getValue("skey").value
+        val qq = Regex("[1-9][0-9]*").find(qqMap.getValue("uin").value)?.value!!
+        val qZoneMap = concurrentHashMap.getValue("qzone.qq.com")
+        val psKey = qZoneMap.getValue("p_skey").value
+        return QQEntity(null, qq.toLong(), 0L, "", sKey, psKey, groupPsKey, miraiBot.superKey, QQUtils.getToken(miraiBot.superKey).toString())
     }
 }

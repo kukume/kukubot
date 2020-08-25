@@ -27,7 +27,7 @@ class GroupEvent {
 
     private val messages = mutableMapOf<Long, Message>()
     private val alreadyMessage = mutableMapOf<Long, Message>()
-    private val alreadyQQ = mutableMapOf<Long, Long>()
+    private val prefixQQ = mutableMapOf<Long, Long>()
 
     @Event
     fun repeat(e: GroupMessageEvent){
@@ -39,13 +39,13 @@ class GroupEvent {
         if (messages.containsKey(group)){
             val oldMessage = messages.getValue(group)
             if (nowMessage.bodyEquals(oldMessage) &&
-                    qq != alreadyQQ[group] &&
+                    qq != prefixQQ[group] &&
                     !nowMessage.bodyEquals(alreadyMessage[group])){
                 e.group.sendMessage(nowMessage)
                 alreadyMessage[group] = nowMessage
-                alreadyQQ[group] = qq
             }
         }
+        prefixQQ[group] = qq
         messages[group] = nowMessage
     }
 

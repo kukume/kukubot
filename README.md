@@ -54,6 +54,13 @@ YuQ.Mirai.bot.ai.appKey=
 * 数据库使用h2，目录`db`下
 * 发送的图片保存在`tmp`目录下
 
+## 鸣谢
+
+> [IntelliJ IDEA](https://zh.wikipedia.org/zh-hans/IntelliJ_IDEA) 是一个在各个方面都最大程度地提高开发人员的生产力的 IDE，适用于 JVM 平台语言。
+
+特别感谢 [JetBrains](https://www.jetbrains.com/?from=kuku-bot) 为开源项目提供免费的 [IntelliJ IDEA](https://www.jetbrains.com/idea/?from=kuku-bot) 等 IDE 的授权  
+[<img src="https://u.iheit.com/images/jetbrains-variant-3.png" width="200"/>](https://www.jetbrains.com/?from=mirai)
+
 ## 协议
 **一切开发旨在学习，请勿用于非法用途**
 

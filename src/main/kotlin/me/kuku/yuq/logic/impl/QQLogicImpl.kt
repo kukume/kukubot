@@ -7,6 +7,7 @@ import me.kuku.yuq.logic.QQLogic
 import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.pojo.GroupMember
 import me.kuku.yuq.utils.*
+import okhttp3.FormBody
 import okhttp3.MultipartBody
 import org.jsoup.Jsoup
 import java.net.URLEncoder
@@ -1212,5 +1213,79 @@ class QQLogicImpl: QQLogic {
             val jsonObject = OkHttpClientUtils.getJson(response)
             jsonObject.getJSONObject("data").getJSONObject("mRes").getString("iQQLevel")
         }else "获取等级失败，请更新QQ！！"
+    }
+
+    override fun operatingGroupMsg(qqEntity: QQEntity, type: String, groupNo: Long?, refuseMsg: String?): String {
+        val htmlResponse = OkHttpClientUtils.get("https://web.qun.qq.com/cgi-bin/sys_msg/getmsg?ver=5761&filter=0&ep=0",
+                OkHttpClientUtils.addCookie(qqEntity.getCookie()))
+        val html = OkHttpClientUtils.getStr(htmlResponse)
+        val elements = Jsoup.parse(html).getElementsByClass("msg_list")
+        val list = mutableListOf<Map<String, String>>()
+        elements.forEach { ele ->
+            val ddEle = ele.getElementsByTag("dd").first()
+            val seq = ddEle.attr("seq")
+            val group = ddEle.attr("qid")
+            val authKey = ddEle.attr("authKey")
+            val liEle = ele.getElementsByTag("li").first()
+            val msg = liEle.attr("aria-label")
+            val qq = liEle.getElementsByTag("a").first().attr("uin")
+            list.add(mapOf(
+                    "seq" to seq,
+                    "group" to group,
+                    "authKey" to authKey,
+                    "msg" to msg,
+                    "qq" to qq
+            ))
+        }
+        var map: Map<String, String>? = null
+        list.forEach {
+            if (it["group"] == groupNo.toString()){
+                map = it
+                return@forEach
+            }
+        }
+        if (map == null) return "没有找到这个群号的验证消息！！"
+        val url = "https://web.qun.qq.com/cgi-bin/sys_msg/set_msgstate"
+        val builder = FormBody.Builder()
+                .add("seq", map!!.getValue("seq"))
+                .add("t", "2")
+                .add("gc", map!!.getValue("group"))
+                .add("uin", qqEntity.qq.toString())
+                .add("ver", "5761")
+                .add("bkn", qqEntity.getGtk())
+        return when (type){
+            "ignore" -> {
+                val response = OkHttpClientUtils.post(url,
+                        builder.add("cmd", "3").build(), qqEntity.cookie())
+                val jsonObject = OkHttpClientUtils.getJson(response)
+                when (jsonObject.getInteger("ec")){
+                    0 -> "忽略加入群聊成功！！"
+                    else -> jsonObject.getString("em")
+                }
+            }
+            "refuse" -> {
+                val response = OkHttpClientUtils.post(url,
+                        builder.add("msg", refuseMsg ?: "我拒绝加入该群")
+                                // 0为   1为不再接受邀请
+                                .add("flag", "0").build(),
+                        qqEntity.cookie()
+                )
+                val jsonObject = OkHttpClientUtils.getJson(response)
+                when (jsonObject.getInteger("ec")){
+                    0 -> "拒绝加入群聊成功！！"
+                    else -> jsonObject.getString("em")
+                }
+            }
+            "agree" -> {
+                val response = OkHttpClientUtils.post(url,
+                        builder.add("cmd", "1").build(), qqEntity.cookie())
+                val jsonObject = OkHttpClientUtils.getJson(response)
+                when (jsonObject.getInteger("ec")){
+                    0 -> "同意加入群聊成功！！"
+                    else -> jsonObject.getString("em")
+                }
+            }
+            else -> "类型不匹配！！"
+        }
     }
 }

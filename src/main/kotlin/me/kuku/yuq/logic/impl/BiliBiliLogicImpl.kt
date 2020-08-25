@@ -11,6 +11,7 @@ import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.OkHttpClientUtils
 import me.kuku.yuq.utils.QQUtils
+import me.kuku.yuq.utils.removeSuffixLine
 import org.jsoup.Jsoup
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
@@ -47,6 +48,7 @@ class BiliBiliLogicImpl: BiliBiliLogic {
         biliBiliPojo.userId = infoJsonObject.getString("uid")
         biliBiliPojo.name = infoJsonObject.getString("uname")
         biliBiliPojo.id = descJsonObject.getString("dynamic_id")
+        biliBiliPojo.rid = descJsonObject.getString("rid")
         biliBiliPojo.time = (descJsonObject.getString("timestamp") + "000").toLong()
         biliBiliPojo.bvId = descJsonObject.getString("bvid")
         biliBiliPojo.isForward = forwardJsonObject != null
@@ -94,22 +96,19 @@ class BiliBiliLogicImpl: BiliBiliLogic {
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
         val bvId = biliBiliPojo.bvId
         val forwardBvId = biliBiliPojo.forwardBvId
-        val str = """
-            ${biliBiliPojo.name}
-            发布时间：${sdf.format(Date(biliBiliPojo.time))}
-            内容：${biliBiliPojo.text}
-            动态链接：https://t.bilibili.com/${biliBiliPojo.id}
-            视频链接：${if (bvId != null) "https://www.bilibili.com/video/$bvId" else "没有发现视频"}
-        """.trimIndent()
-        return if (biliBiliPojo.isForward){
-            val sb = StringBuilder(str).appendln()
+        val sb = StringBuilder()
+                .appendln(biliBiliPojo.name)
+                .appendln("发布时间：${sdf.format(Date(biliBiliPojo.time))}")
+                .appendln("内容：${biliBiliPojo.text}")
+                .appendln("动态链接：https://t.bilibili.com/${biliBiliPojo.id}")
+                .appendln("视频链接：${if (bvId != null) "https://www.bilibili.com/video/$bvId" else "没有发现视频"}")
+        if (biliBiliPojo.isForward)
             sb.appendln("转发自：${biliBiliPojo.forwardName}")
                 .appendln("发布时间：${sdf.format(Date(biliBiliPojo.forwardTime!!))}")
                 .appendln("内容：${biliBiliPojo.forwardText}")
                 .appendln("动态链接：https://t.bilibili.com/${biliBiliPojo.forwardId}")
                 .append("视频链接：${if (forwardBvId != null) "https://www.bilibili.com/video/$forwardBvId" else "没有发现视频"}")
-            sb.toString()
-        }else str
+        return sb.removeSuffixLine().toString()
     }
 
     override fun getDynamicById(id: String): CommonResult<List<BiliBiliPojo>> {

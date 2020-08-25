@@ -152,6 +152,7 @@ class QQZoneLogicImpl: QQZoneLogic {
         ))
         val secondJsonObject = OkHttpClientUtils.getJson(secondResponse, "(?<=frameElement.callback\\()[\\s\\S]*?(?=\\);)")
         if (secondJsonObject.getInteger("code") == 0){
+            if (secondJsonObject.getJSONObject("data").getInteger("state") == 2) return "主人设置了权限，无法添加为好友！！"
             val builder = FormBody.Builder()
                     .add("sid", "3")
                     .add("ouin", qq.toString())

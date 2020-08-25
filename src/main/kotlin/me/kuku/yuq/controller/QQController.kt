@@ -57,11 +57,11 @@ class QQController: QQController() {
             val qqEntity = qqService.findByQQ(qq)
             when {
                 str.toLowerCase() == "qq" -> return
-                qqEntity?.status == false -> throw "您的QQ已失效，请更新QQ！！".toMessage()
+                qqEntity?.status == false -> throw mif.at(qq).plus("您的QQ已失效，请更新QQ！！")
                 qqEntity != null -> actionContext.session["qqEntity"] = qqEntity
                 else -> throw mif.at(qq).plus("没有绑定QQ！，请先发送qq进行扫码登录绑定，如需密码登录绑定请私聊机器人发送qq")
             }
-        }else throw "QQ功能已关闭！！请联系管理员开启！！".toMessage()
+        }else throw mif.at(qq).plus("QQ功能已关闭！！")
     }
 
     @Action("qq")

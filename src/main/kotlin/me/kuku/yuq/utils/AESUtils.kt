@@ -11,9 +11,9 @@ import kotlin.experimental.and
 
 object AESUtils {
     //认证密钥(自行随机生成)
-    const val AK = "s2ip9g3y3bjr5zz7ws6kjgx3ysr82zzw" //AccessKey
+    private const val AK = "s2ip9g3y3bjr5zz7ws6kjgx3ysr82zzw" //AccessKey
 
-    const val SK = "uv8zr0uen7aim8m7umcuooqzdv8cbvtf" //SecretKey
+    private const val SK = "uv8zr0uen7aim8m7umcuooqzdv8cbvtf" //SecretKey
 
 
     //加密

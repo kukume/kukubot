@@ -22,7 +22,7 @@ import me.kuku.yuq.logic.QQLogic
 import me.kuku.yuq.logic.QQZoneLogic
 import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.service.QQGroupService
-import me.kuku.yuq.utils.QQUtils
+import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.removeSuffixLine
 import java.text.SimpleDateFormat
 import java.util.*
@@ -64,18 +64,8 @@ class BotController: QQController() {
                 }
             }
         }
-        val concurrentHashMap = web.domainMap
-        val qunMap = concurrentHashMap.getValue("qun.qq.com")
-        val groupPsKey = qunMap.getValue("p_skey").value
-        val qqMap = concurrentHashMap.getValue("qq.com")
-        val sKey = qqMap.getValue("skey").value
-        val qZoneMap = concurrentHashMap.getValue("qzone.qq.com")
-        val psKey = qZoneMap.getValue("p_skey").value
-        val vipMap = concurrentHashMap.getValue("vip.qq.com")
-        val vipPsKey = vipMap.getValue("p_skey").value
-        val qqEntity = QQEntity(null, this.qq.toLong(), 0L, "", sKey, psKey, groupPsKey, miraiBot.superKey, QQUtils.getToken(miraiBot.superKey).toString())
+        val qqEntity = BotUtils.toQQEntity(web, miraiBot)
         actionContext["qqEntity"] = qqEntity
-        actionContext["vipPsKey"] = vipPsKey
     }
 
     @Action("签个到 {img}")
@@ -102,7 +92,7 @@ class BotController: QQController() {
     }
 
     @Action("查业务 {qqNo}")
-    fun queryVip(qqNo: Long, qqEntity: QQEntity, vipPsKey: String) = qqLogic.queryFriendVip(qqEntity, qqNo, vipPsKey)
+    fun queryVip(qqNo: Long, qqEntity: QQEntity) = qqLogic.queryFriendVip(qqEntity, qqNo, null)
 
     @QMsg(at = true)
     @Action("群接龙")
@@ -133,7 +123,7 @@ class BotController: QQController() {
     }
 
     @Action("列出{level}级以下")
-    fun level(qqEntity: QQEntity, group: Long, vipPsKey: String, level: String, session: ContextSession, qq: Long): String?{
+    fun level(qqEntity: QQEntity, group: Long, level: String, session: ContextSession, qq: Long): String?{
         val members = yuq.groups[group]?.members ?: return "获取用户列表失败，请稍后再试！！"
         val levelNum = try {
             level.toInt()
@@ -144,7 +134,7 @@ class BotController: QQController() {
         val list = mutableListOf<Member>()
         for ((k, v) in members){
             if (k == this.qq.toLong()) continue
-            val userLevel = qqLogic.queryLevel(qqEntity, k, vipPsKey)
+            val userLevel = qqLogic.queryLevel(qqEntity, k, null)
             if (userLevel.contains("更新QQ")) continue
             if (levelNum > userLevel.toInt()) {
                 list.add(v)
@@ -277,8 +267,8 @@ class BotController: QQController() {
     fun dragonKing(group: Long, qq: Long): Message{
         val qqGroupEntity = qqGroupService.findByGroup(group)
         if (qqGroupEntity?.dragonKing == false) return mif.at(qq).plus("迫害龙王已关闭！！")
-        val commonResult = qqGroupLogic.groupDragonKing(group)
-        val map = commonResult.t ?: return commonResult.msg.toMessage()
+        val list = qqGroupLogic.groupHonor(group, "talkAtIve")
+        if (list.isEmpty()) return mif.at(qq).plus("昨天没有龙王！！")
         val urlArr = arrayOf(
                 "https://u.iheit.com/kuku/61f600415023300.jpg",
                 "https://u.iheit.com/kuku/449ab0415103619.jpg",
@@ -303,8 +293,9 @@ class BotController: QQController() {
                 "https://u.iheit.com/images/2020/08/05/image.png",
                 "https://u.iheit.com/images/2020/08/05/image4046ccd0c6179229.png"
         )
+        val map = list[0]
         val url = urlArr[Random.nextInt(urlArr.size)]
-        return mif.at(map.getValue("qq")).plus(mif.image(url)).plus("龙王（已蝉联${map.getValue("day")}天）快喷水！")
+        return mif.at(map.getValue("qq").toLong()).plus(mif.image(url)).plus("龙王，已蝉联${map.getValue("desc")}，快喷水！！")
     }
 
     @Action("加个好友 {qqNo}")

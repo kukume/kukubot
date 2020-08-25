@@ -150,6 +150,7 @@ class ToolController: QQController() {
     fun search(question: String) = toolLogic.searchQuestion(question)
 
     @Action("\\.*B407F708-A2C6-A506-3420-98DF7CAC4A57.*\\")
+    @Synonym(["\\.*65B7E786-ABB3-135D-15DF-2B1032B9A06D.*\\"])
     fun pic(group: Long, qq: Long) = this.colorPic(group, qq)
 
     @Action("涩图")

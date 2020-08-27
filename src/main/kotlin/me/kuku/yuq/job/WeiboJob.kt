@@ -72,13 +72,11 @@ class WeiboJob {
                     if (likeList.isNotEmpty())
                         weiboLogic.like(weiboEntity, id)
                     val commentJsonArray = weiboEntity.getCommentJsonArray()
-                    val commentList = this.isMatch(commentJsonArray, userId)
-                    commentList.forEach {
+                    this.isMatch(commentJsonArray, userId).forEach {
                         weiboLogic.comment(weiboEntity, id, it.getString("content"))
                     }
                     val forwardJsonArray = weiboEntity.getForwardJsonArray()
-                    val forwardList = this.isMatch(forwardJsonArray, userId)
-                    forwardList.forEach {
+                    this.isMatch(forwardJsonArray, userId).forEach {
                         weiboLogic.forward(weiboEntity, id, it.getString("content"), null)
                     }
                     val group = weiboEntity.group_

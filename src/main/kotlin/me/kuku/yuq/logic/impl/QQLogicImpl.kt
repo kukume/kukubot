@@ -18,21 +18,37 @@ import java.util.*
 import kotlin.random.Random
 
 class QQLogicImpl: QQLogic {
-    /**
-     * {"category_id":9,"page":0,"pic_id":178}  坚持戴口罩
-     * 9    0     124   学习打卡
-     * 9    0     120    上班打卡
-     * 180  自习开始
-     * 181  自习结束
-     * 127  每天早起
-     * 125  每天运动
-     * 126  每天早睡
-     * 8   0     100  晚安  4
-     * 2   0    18  心情   5
-     * ""  ""   ""  运势   template_id   8
-     * template_id 1 天气
-     */
-    override fun groupSign(qqEntity: QQEntity, group: Long, place: String, text: String, info: String, url: String?): String {
+    override fun groupSign(qqEntity: QQEntity, group: Long, place: String, text: String, name: String, url: String?): String {
+        var info: String? = null
+        var templateId: String? = null
+        val templateResponse = OkHttpClientUtils.get("https://qun.qq.com/cgi-bin/qiandao/gallery_template?gc=$group&bkn=${qqEntity.getGtk()}&time=1014", qqEntity.cookieWithGroup())
+        val templateJsonObject = OkHttpClientUtils.getJson(templateResponse)
+        if (templateJsonObject.getInteger("retcode") != 0) return "qq群签到失败，请更新QQ！！"
+        templateJsonObject.getJSONObject("data").getJSONArray("list").forEach {
+            val singleJsonObject = it as JSONObject
+            if (singleJsonObject.getString("name") == name){
+                info = if (singleJsonObject.containsKey("gallery_info")){
+                    val infoJsonObject = singleJsonObject.getJSONObject("gallery_info")
+                    "{\"category_id\":${infoJsonObject.getInteger("category_id")},\"page\":${infoJsonObject.getInteger("page")},\"pic_id\":${infoJsonObject.getInteger("pic_id")}}"
+                }else "{\"category_id\":\"\",\"page\":\"\",\"pic_id\":\"\"}"
+                templateId = singleJsonObject.getString("id")
+                return@forEach
+            }
+        }
+        if (info == null || templateId == null){
+            val template2Response = OkHttpClientUtils.get("https://qun.qq.com/cgi-bin/qiandao/gallery_list?bkn=${qqEntity.getGtk()}&category_ids=[9]&start=0&num=50", qqEntity.cookieWithGroup())
+            val template2JsonObject = OkHttpClientUtils.getJson(template2Response)
+            val picJsonObject = template2JsonObject.getJSONObject("data").getJSONArray("picture_list").getJSONObject(0)
+            picJsonObject.getJSONArray("picture_item").forEach {
+                val singleJsonObject = it as JSONObject
+                if (singleJsonObject.getString("name") == name){
+                    info = "{\"category_id\":${picJsonObject.getInteger("category_id")},\"page\":${singleJsonObject.getInteger("page")},\"pic_id\":${singleJsonObject.getInteger("picture_id")}}"
+                    templateId = "[object Object]"
+                    return@forEach
+                }
+            }
+        }
+        if (info == null || templateId == null) return "没有${name}这个类型，请重试！！"
         var imgId = ""
         if (url != null) {
             val bytes = OkHttpClientUtils.getBytes(OkHttpClientUtils.get(url))
@@ -46,8 +62,8 @@ class QQLogicImpl: QQLogic {
         val response = OkHttpClientUtils.post("https://qun.qq.com/cgi-bin/qiandao/sign/publish", OkHttpClientUtils.addForms(
                 "btn", qqEntity.getGtk(),
                 "template_data", "",
-                "gallery_info", info,
-                "template_id", "[object Object]",
+                "gallery_info", info!!,
+                "template_id", templateId!!,
                 "gc", group.toString(),
                 "client", "2",
                 "lgt", "0",
@@ -55,7 +71,10 @@ class QQLogicImpl: QQLogic {
                 "poi", place,
                 "text", text,
                 "pic_id", imgId
-        ), qqEntity.cookieWithGroup())
+        ), OkHttpClientUtils.addHeaders(
+                "cookie", qqEntity.getCookieWithGroup(),
+                "user-agent", OkHttpClientUtils.QQ_UA
+        ))
         val jsonObject = OkHttpClientUtils.getJson(response)
         return when (jsonObject.getInteger("retcode")){
             0 -> "qq群${group}签到成功"
@@ -1223,6 +1242,10 @@ class QQLogicImpl: QQLogic {
         val list = mutableListOf<Map<String, String>>()
         elements.forEach { ele ->
             val ddEle = ele.getElementsByTag("dd").first()
+            // 如果不是被邀请加入群聊，跳过
+            if (ddEle.attr("type") != "2") return@forEach
+            // 如果已经操作过的消息，跳过
+            if (ddEle.getElementsByClass("btn_group").first().children().size == 0) return@forEach
             val seq = ddEle.attr("seq")
             val group = ddEle.attr("qid")
             val authKey = ddEle.attr("authKey")
@@ -1251,7 +1274,8 @@ class QQLogicImpl: QQLogic {
                 .add("t", "2")
                 .add("gc", map!!.getValue("group"))
                 .add("uin", qqEntity.qq.toString())
-                .add("ver", "5761")
+                .add("ver", "false")
+                .add("from", "2")
                 .add("bkn", qqEntity.getGtk())
         return when (type){
             "ignore" -> {

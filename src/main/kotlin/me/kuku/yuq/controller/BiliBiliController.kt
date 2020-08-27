@@ -2,6 +2,7 @@ package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Before
+import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
 import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.annotation.PathVar
@@ -10,6 +11,7 @@ import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.mif
 import com.icecreamqaq.yuq.toMessage
+import kotlinx.serialization.json.JsonArray
 import me.kuku.yuq.entity.BiliBiliEntity
 import me.kuku.yuq.logic.BiliBiliLogic
 import me.kuku.yuq.pojo.BiliBiliPojo
@@ -103,6 +105,97 @@ class BiliBiliController {
     @QMsg(at = true)
     fun biliBiliLiveSign(biliBiliEntity: BiliBiliEntity) = biliBiliLogic.liveSign(biliBiliEntity)
 
+    @Action("哔哩哔哩{op} {username}")
+    @QMsg(at = true)
+    fun autoComment(biliBiliEntity: BiliBiliEntity, op: String, username: String, @PathVar(2) content: String?): String?{
+        if (!arrayOf("自动赞", "自动投硬币").contains(op) && content == null) return "缺少${op}的内容！！"
+        val commonResult = this.searchToJsonObject(username, if (content == null) null else mapOf("content" to content))
+        val jsonObject = commonResult.t ?: return commonResult.msg
+        when (op) {
+            "自动赞" -> {
+                val likeJsonArray = biliBiliEntity.getLikeJsonArray()
+                likeJsonArray.add(jsonObject)
+                biliBiliEntity.likeList = likeJsonArray.toString()
+            }
+            "自动评论" -> {
+                val commentJsonArray = biliBiliEntity.getCommentJsonArray()
+                commentJsonArray.add(jsonObject)
+                biliBiliEntity.commentList = commentJsonArray.toString()
+            }
+            "自动转发" -> {
+                val forwardJsonArray = biliBiliEntity.getForwardJsonArray()
+                forwardJsonArray.add(jsonObject)
+                biliBiliEntity.forwardList = forwardJsonArray.toString()
+            }
+            "自动投硬币" -> {
+                val tossCoinJsonArray = biliBiliEntity.getTossCoinJsonArray()
+                tossCoinJsonArray.add(jsonObject)
+                biliBiliEntity.tossCoinList = tossCoinJsonArray.toString()
+            }
+            "自动收藏" -> {
+                val favoritesJsonArray = biliBiliEntity.getFavoritesJsonArray()
+                favoritesJsonArray.add(jsonObject)
+                biliBiliEntity.favoritesList = favoritesJsonArray.toString()
+            }
+            else -> return null
+        }
+        biliBiliService.save(biliBiliEntity)
+        return "添加哔哩哔哩用户[${jsonObject["name"]}]的${op}成功！！"
+    }
+
+    @Action("删哔哩哔哩{op} {username}")
+    fun delAuto(biliBiliEntity: BiliBiliEntity, op: String, username: String): String?{
+        when (op) {
+            "自动赞" -> {
+                val likeJsonArray = biliBiliEntity.getLikeJsonArray()
+                BotUtils.delAuto(likeJsonArray, username)
+                biliBiliEntity.likeList = likeJsonArray.toString()
+            }
+            "自动评论" -> {
+                val commentJsonArray = biliBiliEntity.getCommentJsonArray()
+                BotUtils.delAuto(commentJsonArray, username)
+                biliBiliEntity.commentList = commentJsonArray.toString()
+            }
+            "自动转发" -> {
+                val forwardJsonArray = biliBiliEntity.getForwardJsonArray()
+                BotUtils.delAuto(forwardJsonArray, username)
+                biliBiliEntity.forwardList = forwardJsonArray.toString()
+            }
+            "自动投硬币" -> {
+                val tossCoinJsonArray = biliBiliEntity.getTossCoinJsonArray()
+                BotUtils.delAuto(tossCoinJsonArray, username)
+                biliBiliEntity.tossCoinList = tossCoinJsonArray.toString()
+            }
+            "自动收藏" -> {
+                val favoritesJsonArray = biliBiliEntity.getFavoritesJsonArray()
+                BotUtils.delAuto(favoritesJsonArray, username)
+                biliBiliEntity.favoritesList = favoritesJsonArray.toString()
+            }
+            else -> return null
+        }
+        biliBiliService.save(biliBiliEntity)
+        return "删除哔哩哔哩用户[$username]的${op}成功！！"
+    }
+
+    @Action("查哔哩哔哩{op}")
+    @QMsg(at = true)
+    fun queryAuto(biliBiliEntity: BiliBiliEntity, op: String): String?{
+        val jsonArray= when (op){
+            "自动评论" -> biliBiliEntity.getCommentJsonArray()
+            "自动赞" -> biliBiliEntity.getLikeJsonArray()
+            "自动转发" -> biliBiliEntity.getForwardJsonArray()
+            "自动投硬币" -> biliBiliEntity.getTossCoinJsonArray()
+            "自动收藏" -> biliBiliEntity.getFavoritesJsonArray()
+            else -> return null
+        }
+        val sb = StringBuilder().appendln("您的哔哩哔哩${op}列表如下：")
+        jsonArray.forEach {
+            val jsonObject = it as JSONObject
+            sb.appendln("${jsonObject.getString("name")}-${jsonObject.getString("id")}-${jsonObject.getString("content") ?: ""}")
+        }
+        return sb.removeSuffixLine().toString()
+    }
+
     private fun parseNum(list: List<*>, num: Int?): Int{
         var newNum = num ?: 1
         if (newNum > list.size - 1) newNum = 1
@@ -120,13 +213,18 @@ class BiliBiliController {
         return CommonResult(200, "", biliBiliList[newNum - 1])
     }
 
-    private fun searchToJsonObject(username: String): CommonResult<JSONObject>{
+    private fun searchToJsonObject(username: String, map: Map<String, String>? = null): CommonResult<JSONObject>{
         val commonResult = biliBiliLogic.getIdByName(username)
         val list = commonResult.t ?: return CommonResult(500, commonResult.msg)
         val biliBiliPojo = list[0]
         val jsonObject = JSONObject()
         jsonObject["id"] = biliBiliPojo.userId
         jsonObject["name"] = biliBiliPojo.name
+        if (map != null) {
+            for ((k, v) in map){
+                jsonObject[k] = v
+            }
+        }
         return CommonResult(200, "", jsonObject)
     }
 }

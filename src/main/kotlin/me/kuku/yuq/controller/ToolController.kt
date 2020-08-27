@@ -24,7 +24,6 @@ import javax.inject.Inject
 import kotlin.random.Random
 
 @GroupController
-@ContextController
 class ToolController: QQController() {
     @Inject
     private lateinit var toolLogic: ToolLogic
@@ -167,7 +166,7 @@ class ToolController: QQController() {
                     mif.image(bytes).toMessage()
                 }else url.toMessage()
             }
-            "danbooru" -> mif.image(toolLogic.danBooRuPic()).toMessage()
+            "danbooru" -> mif.imageByUrl(toolLogic.danBooRuPic()).toMessage()
             else -> "涩图类型不匹配！！".toMessage()
         }
     }
@@ -210,16 +209,16 @@ class ToolController: QQController() {
     }
 
     @Action("菜单")
-    fun menu() = "菜单？没有菜单啊！我不会写菜单啊，要不你帮写一个？"
+    fun menu() = "菜单它来了：https://w.url.cn/s/Adt25oJ"
 
     @Action("qr/{content}")
     fun creatQrCode(content: String): Message{
         val url = toolLogic.creatQr(content)
-        return mif.image(url).toMessage()
+        return mif.imageByUrl(url).toMessage()
     }
 
     @Action("看美女")
-    fun girl() = mif.image(toolLogic.girlImage())
+    fun girl() = mif.imageByUrl(toolLogic.girlImage())
 
     @QMsg(at = true)
     @Action("蓝奏/{url}")
@@ -262,7 +261,7 @@ class ToolController: QQController() {
         val commonResult = toolLogic.bvToAv(bv)
         return if (commonResult.code == 200){
             val map = commonResult.t!!
-            mif.image(map.getValue("pic")).plus(
+            mif.imageByUrl(map.getValue("pic")).plus(
                     StringBuilder().appendln("标题：${map["title"]}")
                             .appendln("描述：${map["desc"]}")
                             .append("链接：${map["url"]}").toString()
@@ -297,13 +296,13 @@ class ToolController: QQController() {
     }
 
     @Action("acg")
-    fun acgPic() = mif.image(toolLogic.acgPic())
+    fun acgPic() = mif.imageByUrl(toolLogic.acgPic())
 
     @Action("搜图 {img}")
     @QMsg(at = true)
     fun searchImage(img: Image): Message {
         val url = toolLogic.identifyPic(img.url)
-        return if (url != null) mif.image(img.url).plus(url)
+        return if (url != null) mif.imageByUrl(img.url).plus(url)
         else "没有找到这张图片！！！".toMessage()
     }
 

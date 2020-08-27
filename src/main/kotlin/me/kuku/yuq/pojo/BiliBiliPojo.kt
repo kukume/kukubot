@@ -5,6 +5,7 @@ data class BiliBiliPojo(
         var name: String = "",
         var id: String = "",
         var rid: String = "",
+        var type: Int = 17,
         var time: Long = 0,
         var text: String = "",
         var bvId: String? = null,

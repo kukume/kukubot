@@ -19,6 +19,7 @@ import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.pojo.WeiboPojo
 import me.kuku.yuq.service.BiliBiliService
 import me.kuku.yuq.service.WeiboService
+import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.removeSuffixLine
 import java.lang.ClassCastException
 import javax.inject.Inject
@@ -197,7 +198,7 @@ class WeiboController {
     @QMsg(at = true)
     fun delAutoLike(weiboEntity: WeiboEntity, username: String): String{
         val likeJsonArray = weiboEntity.getLikeJsonArray()
-        this.delAuto(likeJsonArray, username)
+        BotUtils.delAuto(likeJsonArray, username)
         weiboEntity.likeList = likeJsonArray.toString()
         weiboService.save(weiboEntity)
         return "删除该用户的微博自动赞成功！！"
@@ -232,7 +233,7 @@ class WeiboController {
     @QMsg(at = true)
     fun delAutoComment(weiboEntity: WeiboEntity, username: String): String{
         val commentJsonArray = weiboEntity.getCommentJsonArray()
-        this.delAuto(commentJsonArray, username)
+        BotUtils.delAuto(commentJsonArray, username)
         weiboEntity.commentList = commentJsonArray.toString()
         weiboService.save(weiboEntity)
         return "删除该用户的微博自动评论成功！！"
@@ -267,7 +268,7 @@ class WeiboController {
     @QMsg(at = true)
     fun delAutoForward(weiboEntity: WeiboEntity, username: String): String{
         val forwardJsonArray = weiboEntity.getForwardJsonArray()
-        this.delAuto(forwardJsonArray, username)
+        BotUtils.delAuto(forwardJsonArray, username)
         weiboEntity.forwardList = forwardJsonArray.toString()
         weiboService.save(weiboEntity)
         return "删除该用户的微博自动转发成功！！"
@@ -277,10 +278,12 @@ class WeiboController {
     @Action("bilibililoginbyweibo")
     fun biliBiliLogin(weiboEntity: WeiboEntity, qq: Long, group: Long): String{
         val commonResult = biliBiliLogic.loginByWeibo(weiboEntity)
-        val cookie = commonResult.t ?: return commonResult.msg
+        val resultBiliBiliEntity = commonResult.t ?: return commonResult.msg
         val biliBiliEntity = biliBiliService.findByQQ(qq) ?: BiliBiliEntity(null, qq)
-        biliBiliEntity.cookie = cookie
+        biliBiliEntity.cookie = resultBiliBiliEntity.cookie
         biliBiliEntity.group_ = group
+        biliBiliEntity.userId = resultBiliBiliEntity.userId
+        biliBiliEntity.token = resultBiliBiliEntity.token
         biliBiliService.save(biliBiliEntity)
         return "绑定或者更新哔哩哔哩成功！！"
     }
@@ -292,16 +295,6 @@ class WeiboController {
             num <= 0 -> list[0]
             else -> list[num - 1]
         }
-    }
-
-    private fun delAuto(jsonArray: JSONArray, username: String): JSONArray{
-        val delList = mutableListOf<JSONObject>()
-        for (i in jsonArray.indices){
-            val jsonObject = jsonArray.getJSONObject(i)
-            if (jsonObject.getString("name") == username) delList.add(jsonObject)
-        }
-        delList.forEach { jsonArray.remove(it) }
-        return jsonArray
     }
 
     private fun searchToJsonObject(username: String): CommonResult<JSONObject>{

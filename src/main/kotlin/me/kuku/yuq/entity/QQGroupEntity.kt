@@ -54,7 +54,7 @@ data class QQGroupEntity(
         var mouthOdor: Boolean? = false,
         var autoReview: Boolean? = false,
         var onTimeAlarm: Boolean? = false,
-        var colorPicType: String? = "remote",
+        var colorPicType: String? = "native",
         var maxViolationCount: Int? = 0,
         var dragonKing: Boolean? = true,
         var repeat: Boolean? = true,

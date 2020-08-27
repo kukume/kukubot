@@ -10,7 +10,7 @@ fun MessageItemFactory.image(byteArray: ByteArray): Image {
     val md5Str = MD5Utils.toMD5(byteArray)
     val file = File("tmp/$md5Str")
     IO.writeFile(file, byteArray)
-    return this.image(file)
+    return this.imageByFile(file)
 }
 
 fun StringBuilder.removeSuffixLine() = this.removeSuffix(System.getProperty("line.separator"))

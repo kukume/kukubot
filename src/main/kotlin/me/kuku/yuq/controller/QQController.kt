@@ -361,9 +361,11 @@ class QQController: QQController() {
     @QMsg(at = true)
     fun biliBiliLogin(qqEntity: QQEntity, qq: Long, group: Long): String{
         val commonResult = biliBiliLogic.loginByQQ(qqEntity)
-        val cookie = commonResult.t ?: return commonResult.msg
+        val resultBiliBiliEntity = commonResult.t ?: return commonResult.msg
         val biliBiliEntity = biliBiliService.findByQQ(qq) ?: BiliBiliEntity(null, qq)
-        biliBiliEntity.cookie = cookie
+        biliBiliEntity.cookie = resultBiliBiliEntity.cookie
+        biliBiliEntity.token = resultBiliBiliEntity.token
+        biliBiliEntity.userId = resultBiliBiliEntity.userId
         biliBiliEntity.group_ = group
         biliBiliService.save(biliBiliEntity)
         return "绑定或者更新成功！！"

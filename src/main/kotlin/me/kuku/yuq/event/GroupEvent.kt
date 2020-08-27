@@ -110,7 +110,7 @@ class GroupEvent {
                     您是本群的第${e.group.members.size + 1}位成员
                     您可以愉快的与大家交流啦
                 """.trimIndent()
-                    ).plus(mif.image("https://q.qlogo.cn/g?b=qq&nk=$qq&s=640")).plus(
+                    ).plus(mif.imageByUrl("https://q.qlogo.cn/g?b=qq&nk=$qq&s=640")).plus(
                             "一言：${toolLogic.hiToKoTo().getValue("text")}\n" +
                                     SimpleDateFormat("yyyy年MM月dd日HH时mm分ss秒", Locale.CHINA).format(Date())
                     )

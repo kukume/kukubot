@@ -83,6 +83,15 @@ object BotUtils {
                     aJsonObject["type"] = "at"
                     aJsonObject["content"] = messageItem.user
                 }
+                is XmlEx -> {
+                    aJsonObject["type"] = "xml"
+                    aJsonObject["content"] = messageItem.value
+                    aJsonObject["serviceId"] = messageItem.serviceId
+                }
+                is JsonEx -> {
+                    aJsonObject["type"] = "json"
+                    aJsonObject["content"] = messageItem.value
+                }
             }
             if (aJsonObject.size != 0)
                 aJsonArray.add(aJsonObject)
@@ -96,9 +105,11 @@ object BotUtils {
             val aJsonObject = jsonArray.getJSONObject(j)
             when (aJsonObject.getString("type")){
                 "text" -> msg.plus(aJsonObject.getString("content"))
-                "image" -> msg.plus(mif.image(aJsonObject.getString("content")))
+                "image" -> msg.plus(mif.imageByUrl(aJsonObject.getString("content")))
                 "face" -> msg.plus(mif.face(aJsonObject.getInteger("content")))
                 "at" -> msg.plus(mif.at(aJsonObject.getLong("content")))
+                "xml" -> msg.plus(mif.xmlEx(aJsonObject.getInteger("serviceId"), aJsonObject.getString("content")))
+                "json" -> msg.plus(mif.jsonEx(aJsonObject.getString("content")))
             }
         }
         return msg
@@ -123,5 +134,15 @@ object BotUtils {
         val qZoneMap = concurrentHashMap.getValue("qzone.qq.com")
         val psKey = qZoneMap.getValue("p_skey").value
         return QQEntity(null, qq.toLong(), 0L, "", sKey, psKey, groupPsKey, miraiBot.superKey, QQUtils.getToken(miraiBot.superKey).toString())
+    }
+
+    fun delAuto(jsonArray: JSONArray, username: String): JSONArray{
+        val delList = mutableListOf<JSONObject>()
+        for (i in jsonArray.indices){
+            val jsonObject = jsonArray.getJSONObject(i)
+            if (jsonObject.getString("name") == username) delList.add(jsonObject)
+        }
+        delList.forEach { jsonArray.remove(it) }
+        return jsonArray
     }
 }

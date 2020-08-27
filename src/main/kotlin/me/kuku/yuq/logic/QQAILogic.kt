@@ -9,4 +9,6 @@ interface QQAILogic {
     fun generalOCR(imageUrl: String)
     fun generalOCRToCaptcha(byteArray: ByteArray): CommonResult<String>
     fun textChat(question: String, session: String): String
+    fun echoSpeechRecognition(url: String): String
+    fun aiLabSpeechRecognition(url: String): String
 }

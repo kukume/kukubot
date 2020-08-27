@@ -215,34 +215,40 @@ class QQGroupLogicImpl: QQGroupLogic {
     }
 
     override fun groupHonor(group: Long, type: String): List<Map<String, String>> {
-        val typeNum: Int?
-        val wwv: Int?
-        val param: String?
+        val typeNum: Int
+        val wwv: Int
+        val param: String
+        val image: String
         when (type){
             "talkAtIve" -> {
                 typeNum = 1
                 wwv = 129
                 param = "talkativeList"
+                image = "https://qq-web.cdn-go.cn/qun.qq.com_interactive/067dafcc/app/qunhonor/dist/cdn/assets/images/icon-drgon.png"
             }
             "legend" -> {
                 typeNum = 3
                 wwv = 128
                 param = "legendList"
+                image = "https://qq-web.cdn-go.cn/qun.qq.com_interactive/067dafcc/app/qunhonor/dist/cdn/assets/images/icon-fire-big.png"
             }
             "actor" -> {
                 typeNum = 2
                 wwv = 128
                 param = "actorList"
+                image = "https://qq-web.cdn-go.cn/qun.qq.com_interactive/067dafcc/app/qunhonor/dist/cdn/assets/images/icon-fire-small.png"
             }
             "strongNewBie" -> {
                 typeNum = 5
                 wwv = 128
                 param = "strongnewbieList"
+                image = "https://qq-web.cdn-go.cn/qun.qq.com_interactive/067dafcc/app/qunhonor/dist/cdn/assets/images/icon-shoots-small.png"
             }
             "emotion" -> {
                 typeNum = 6
                 wwv = 128
                 param = "emotionList"
+                image = "https://qq-web.cdn-go.cn/qun.qq.com_interactive/067dafcc/app/qunhonor/dist/cdn/assets/images/icon-happy-stream.png"
             }
             else -> return listOf()
         }
@@ -256,7 +262,8 @@ class QQGroupLogicImpl: QQGroupLogic {
             list.add(mapOf(
                     "qq" to singleJsonObject.getString("uin"),
                     "name" to singleJsonObject.getString("name"),
-                    "desc" to singleJsonObject.getString("desc")
+                    "desc" to singleJsonObject.getString("desc"),
+                    "image" to image
             ))
         }
         return list

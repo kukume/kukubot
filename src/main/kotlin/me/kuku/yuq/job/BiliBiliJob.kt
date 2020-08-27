@@ -2,6 +2,7 @@ package me.kuku.yuq.job
 
 import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
+import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
 import com.icecreamqaq.yuq.toMessage
 import com.icecreamqaq.yuq.yuq
@@ -65,6 +66,21 @@ class BiliBiliJob {
             if (firstId > oldId) qqMap[qq] = firstId
             biliBiliList.forEach inner@{ biliBiliPojo ->
                 if (biliBiliPojo.id.toLong() > oldId){
+                    val userId = biliBiliPojo.userId
+                    val id = biliBiliPojo.id
+                    val rid = biliBiliPojo.rid
+                    val likeJsonArray = biliBiliEntity.getLikeJsonArray()
+                    if (this.match(likeJsonArray, userId).isNotEmpty()) biliBiliLogic.like(biliBiliEntity, id, true)
+                    val commentJsonArray = biliBiliEntity.getCommentJsonArray()
+                    this.match(commentJsonArray, userId).forEach { biliBiliLogic.comment(biliBiliEntity, id, biliBiliPojo.type.toString(), it.getString("content")) }
+                    val forwardJsonArray = biliBiliEntity.getForwardJsonArray()
+                    this.match(forwardJsonArray, userId).forEach { biliBiliLogic.forward(biliBiliEntity, id, it.getString("content")) }
+                    if (biliBiliPojo.bvId != null){
+                        val tossCoinJsonArray = biliBiliEntity.getTossCoinJsonArray()
+                        if (this.match(tossCoinJsonArray, userId).isNotEmpty()) { biliBiliLogic.tossCoin(biliBiliEntity, rid, 2) }
+                        val favoritesJsonArray = biliBiliEntity.getFavoritesJsonArray()
+                        this.match(favoritesJsonArray, userId).forEach { biliBiliLogic.favorites(biliBiliEntity, rid, it.getString("content")) }
+                    }
                     val group = biliBiliEntity.group_
                     yuq.groups[group]?.get(qq)?.sendMessage(biliBiliLogic.convertStr(biliBiliPojo).toMessage())
                 }else return@inner
@@ -93,6 +109,15 @@ class BiliBiliJob {
                 }else map[id] = b
             }
         }
+    }
+
+    private fun match(jsonArray: JSONArray, userId: String): List<JSONObject>{
+        val list = mutableListOf<JSONObject>()
+        for (i in jsonArray.indices){
+            val jsonObject = jsonArray.getJSONObject(i)
+            if (jsonObject.getString("id") == userId) list.add(jsonObject)
+        }
+        return list
     }
 
 }

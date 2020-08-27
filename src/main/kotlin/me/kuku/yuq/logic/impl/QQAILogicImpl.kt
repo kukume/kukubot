@@ -40,14 +40,14 @@ class QQAILogicImpl: QQAILogic {
         return builder.build()
     }
 
-    private fun imageUrlToBase64(imageUrl: String): String{
+    private fun urlToBase64(imageUrl: String): String{
         val response = OkHttpClientUtils.get(imageUrl)
         val bytes = OkHttpClientUtils.getBytes(response)
         return Base64.getEncoder().encodeToString(bytes)
     }
 
     override fun pornIdentification(imageUrl: String): Boolean{
-        val baseStr = this.imageUrlToBase64(imageUrl)
+        val baseStr = this.urlToBase64(imageUrl)
         val response = OkHttpClientUtils.post("https://api.ai.qq.com/fcgi-bin/vision/vision_porn",
                 addParams(mapOf("image" to baseStr)))
         val jsonObject = OkHttpClientUtils.getJson(response)
@@ -61,7 +61,7 @@ class QQAILogicImpl: QQAILogic {
     }
 
     override fun generalOCR(imageUrl: String){
-        val baseStr = this.imageUrlToBase64(imageUrl)
+        val baseStr = this.urlToBase64(imageUrl)
         val response = OkHttpClientUtils.post("https://api.ai.qq.com/fcgi-bin/ocr/ocr_generalocr",
                 addParams(mapOf("image" to baseStr)))
         val jsonObject = OkHttpClientUtils.getJson(response)
@@ -96,5 +96,47 @@ class QQAILogicImpl: QQAILogic {
             16385 -> "您没有填入appid"
             else -> jsonObject.getString("msg")
         }
+    }
+
+    override fun echoSpeechRecognition(url: String): String {
+        val speechResponse = OkHttpClientUtils.get(url)
+        val bytes = OkHttpClientUtils.getBytes(speechResponse)
+        val b64Str = Base64.getEncoder().encodeToString(bytes)
+        val response = OkHttpClientUtils.post(
+            "https://api.ai.qq.com/fcgi-bin/aai/aai_asr",
+            addParams(
+                mapOf(
+                    "format" to "3",
+                    "speech" to b64Str,
+                    "rate" to "16000"
+                )
+            )
+        )
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        println(jsonObject)
+        return ""
+    }
+
+    override fun aiLabSpeechRecognition(url: String): String {
+        val speechResponse = OkHttpClientUtils.get(url)
+        val bytes = OkHttpClientUtils.getBytes(speechResponse)
+        val b64Str = Base64.getEncoder().encodeToString(bytes)
+        val response = OkHttpClientUtils.post(
+            "https://api.ai.qq.com/fcgi-bin/aai/aai_asrs",
+            addParams(
+                mapOf(
+                    "format" to "3",
+                    "rate" to "16000",
+                    "seq" to "0",
+                    "len" to bytes.size.toString(),
+                    "end" to "1",
+                    "speech_id" to "123213123",
+                    "speech_chunk" to b64Str
+                )
+            )
+        )
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        println(jsonObject)
+        return ""
     }
 }

@@ -84,11 +84,9 @@ class GroupManagerEvent {
         for (i in qaJsonArray.indices){
             val jsonObject = qaJsonArray.getJSONObject(i)
             if (jsonObject.getString("q") in message.body[0].toPath()){
-                val textAnswer = jsonObject.get("a")
+                val textAnswer = jsonObject["a"]
                 if (textAnswer is String) {
-                    if (textAnswer.startsWith("<?xml version=")) {
-                        e.group.sendMessage(mif.xmlEx(BotUtils.regex("serviceID=\"", "\"", textAnswer)!!.toInt(), textAnswer).toMessage())
-                    } else e.group.sendMessage(textAnswer.toMessage())
+                    e.group.sendMessage(textAnswer.toMessage())
                 } else {
                     val aJsonArray = textAnswer as JSONArray
                     val msg = BotUtils.jsonArrayToMessage(aJsonArray)

@@ -11,15 +11,15 @@
 * QQ签到
 * 超级萌宠养成
 * 推送最新微博到群聊（指定用户名）、私聊（我的关注），微博自动赞、评论、转发
-* 推送最新哔哩哔哩动态到群聊（指定用户名）、私聊（我的关注），开播提醒
+* 推送最新哔哩哔哩动态到群聊（指定用户名）、私聊（我的关注），开播提醒，哔哩哔哩自动赞、评论、转发、投硬币、收藏
 * 修改步数（wx and alipay）
 * 网易云音乐打卡和每日300首听歌量
 * 群管功能
 * 一些小工具
 
-指令：[https://u.iheit.com/kuku/bot/menu.html](https://u.iheit.com/kuku/bot/menu.html)
+指令：[https://w.url.cn/s/Adt25oJ](https://w.url.cn/s/Adt25oJ)
 
-安装教程：[https://blog.kuku.me/index.php/archives/3/](https://blog.kuku.me/index.php/archives/3/)
+安装教程：[https://uxy.me/ydmX7](https://uxy.me/ydmX7)
 
 ## 配置文件
 ```properties
@@ -59,7 +59,7 @@ YuQ.Mirai.bot.ai.appKey=
 > [IntelliJ IDEA](https://zh.wikipedia.org/zh-hans/IntelliJ_IDEA) 是一个在各个方面都最大程度地提高开发人员的生产力的 IDE，适用于 JVM 平台语言。
 
 特别感谢 [JetBrains](https://www.jetbrains.com/?from=kuku-bot) 为开源项目提供免费的 [IntelliJ IDEA](https://www.jetbrains.com/idea/?from=kuku-bot) 等 IDE 的授权  
-[<img src="https://u.iheit.com/images/jetbrains-variant-3.png" width="200"/>](https://www.jetbrains.com/?from=mirai)
+[<img src="https://u.iheit.com/images/jetbrains-variant-3.png" width="200"/>](https://www.jetbrains.com/?from=kuku-bot)
 
 ## 协议
 **一切开发旨在学习，请勿用于非法用途**

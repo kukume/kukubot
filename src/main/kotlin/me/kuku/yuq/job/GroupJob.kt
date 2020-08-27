@@ -29,7 +29,7 @@ class GroupJob {
         if (hour == 0) hour = 12
         if (hour > 12) hour -= 12
         val url = "https://u.iheit.com/kuku/bot/time/$hour.jpg"
-        list.forEach { yuq.groups[it.group_]?.sendMessage(mif.image(url).toMessage()) }
+        list.forEach { yuq.groups[it.group_]?.sendMessage(mif.imageByUrl(url).toMessage()) }
     }
 
     @Cron("1m")

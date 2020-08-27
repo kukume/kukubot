@@ -22,7 +22,7 @@ class ToolLogicImpl: ToolLogic {
     private val appSecret = "N2hNMC93empxb0twUW1jd1FRbVVtQT09"
     private val params = "&app_id=$appId&app_secret=$appSecret"
 
-    private val neTeaseUrl = "https://netease.iheit.com"
+    private val neTeaseUrl = "https://netease.kuku.me"
     @Config("YuQ.Mirai.bot.myApi")
     private lateinit var myApi: String
 

@@ -89,6 +89,10 @@ class BiliBiliLogicImpl: BiliBiliLogic {
                 biliBiliPojo.forwardName = forwardOwnerJsonObject.getString("name")
             }
         }
+        biliBiliPojo.type = if (biliBiliPojo.bvId == null){
+            if (biliBiliPojo.picList.size == 0) 17
+            else 11
+        }else 1
         return biliBiliPojo
     }
 
@@ -125,7 +129,7 @@ class BiliBiliLogicImpl: BiliBiliLogic {
         return CommonResult(200, "", list)
     }
 
-    override fun loginByQQ(qqEntity: QQEntity): CommonResult<String> {
+    override fun loginByQQ(qqEntity: QQEntity): CommonResult<BiliBiliEntity> {
         val dfcResponse = OkHttpClientUtils.post("https://passport.bilibili.com/captcha/dfc")
         val dfcToken = OkHttpClientUtils.getJson(dfcResponse).getJSONObject("data").getString("dfc")
         val dfcCookie = OkHttpClientUtils.getCookie(dfcResponse)
@@ -149,12 +153,15 @@ class BiliBiliLogicImpl: BiliBiliLogic {
                 "cookie", dfcCookie,
                 "referer", superLoginUrl
         ))
-        biliBiliLoginResponse.close()
         val cookie = OkHttpClientUtils.getCookie(biliBiliLoginResponse)
-        return CommonResult(200, "登录成功", cookie)
+        val token = BotUtils.regex("bili_jct=", "; ", cookie)!!
+        biliBiliLoginResponse.close()
+        val locationUrl = biliBiliLoginResponse.header("location")!!
+        val userId = BotUtils.regex("DedeUserID=", "&", locationUrl)!!
+        return CommonResult(200, "登录成功", BiliBiliEntity(cookie = cookie, token = token, userId = userId))
     }
 
-    override fun loginByWeibo(weiboEntity: WeiboEntity): CommonResult<String> {
+    override fun loginByWeibo(weiboEntity: WeiboEntity): CommonResult<BiliBiliEntity> {
         val dfcResponse = OkHttpClientUtils.post("https://passport.bilibili.com/captcha/dfc")
         val dfcToken = OkHttpClientUtils.getJson(dfcResponse).getJSONObject("data").getString("dfc")
         val dfcCookie = OkHttpClientUtils.getCookie(dfcResponse)
@@ -211,7 +218,10 @@ class BiliBiliLogicImpl: BiliBiliLogic {
         ))
         resultResponse.close()
         val cookie = OkHttpClientUtils.getCookie(resultResponse)
-        return CommonResult(200, "登录成功", cookie)
+        val token = BotUtils.regex("bili_jct=", "; ", cookie)!!
+        val locationUrl = resultResponse.header("location")!!
+        val userId = BotUtils.regex("DedeUserID=", "&", locationUrl)!!
+        return CommonResult(200, "登录成功", BiliBiliEntity(cookie = cookie, token = token, userId = userId))
     }
 
     override fun getFriendDynamic(biliBiliEntity: BiliBiliEntity): CommonResult<List<BiliBiliPojo>> {
@@ -236,6 +246,101 @@ class BiliBiliLogicImpl: BiliBiliLogic {
         val response = OkHttpClientUtils.get("https://api.live.bilibili.com/xlive/web-ucenter/v1/sign/DoSign",
                 OkHttpClientUtils.addCookie(biliBiliEntity.cookie))
         val jsonObject = OkHttpClientUtils.getJson(response)
-        return jsonObject.getString("message")
+        return if (jsonObject.getInteger("code") == 0) "哔哩哔哩直播签到成功！！"
+        else jsonObject.getString("message")
+    }
+
+    override fun like(biliBiliEntity: BiliBiliEntity, id: String, isLike: Boolean): String {
+        val response = OkHttpClientUtils.post("https://api.vc.bilibili.com/dynamic_like/v1/dynamic_like/thumb", OkHttpClientUtils.addForms(
+                "uid", biliBiliEntity.userId,
+                "dynamic_id", id,
+                "up", if (isLike) "1" else "2",
+                "csrf_token", biliBiliEntity.token
+        ), OkHttpClientUtils.addCookie(biliBiliEntity.cookie))
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return if (jsonObject.getInteger("code") == 0) "赞动态成功！！"
+        else "赞动态失败，${jsonObject.getString("message")}"
+    }
+
+    override fun comment(biliBiliEntity: BiliBiliEntity, id: String, type: String, content: String): String {
+        val response = OkHttpClientUtils.post("https://api.bilibili.com/x/v2/reply/add", OkHttpClientUtils.addForms(
+                "oid", id,
+                "type", type,
+                "message", content,
+                "plat", "1",
+                "jsonp", "jsonp",
+                "csrf", biliBiliEntity.token
+        ), OkHttpClientUtils.addCookie(biliBiliEntity.cookie))
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return if (jsonObject.getInteger("code") == 0) "评论动态成功！！"
+        else "评论动态失败，${jsonObject.getString("message")}"
+    }
+
+    override fun forward(biliBiliEntity: BiliBiliEntity, id: String, content: String): String {
+        val response = OkHttpClientUtils.post("https://api.vc.bilibili.com/dynamic_repost/v1/dynamic_repost/repost", OkHttpClientUtils.addForms(
+                "uid", biliBiliEntity.userId,
+                "dynamic_id", id,
+                "content", content,
+                "extension", "{\"emoji_type\":1}",
+                "at_uids", "",
+                "ctrl", "[]",
+                "csrf_token", biliBiliEntity.token
+        ), OkHttpClientUtils.addCookie(biliBiliEntity.cookie))
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return if (jsonObject.getInteger("code") == 0) "转发动态成功！！"
+        else "转发动态失败，${jsonObject.getString("message")}"
+    }
+
+    override fun tossCoin(biliBiliEntity: BiliBiliEntity, rid: String, count: Int): String {
+        val response = OkHttpClientUtils.post("https://api.bilibili.com/x/web-interface/coin/add", OkHttpClientUtils.addForms(
+                "aid", rid,
+                "multiply", count.toString(),
+                "select_like", "1",
+                "cross_domain", "true",
+                "csrf", biliBiliEntity.token
+        ), OkHttpClientUtils.addCookie(biliBiliEntity.cookie))
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return if (jsonObject.getInteger("code") == 0) "对该动态（视频）投硬币成功！！"
+        else "对该动态（视频）投硬币成功！！，${jsonObject.getString("message")}"
+    }
+
+    override fun favorites(biliBiliEntity: BiliBiliEntity, rid: String, name: String): String {
+        val userId = biliBiliEntity.userId
+        val cookie = biliBiliEntity.cookie
+        val token = biliBiliEntity.token
+        val firstResponse = OkHttpClientUtils.get("https://api.bilibili.com/x/v3/fav/folder/created/list-all?type=2&rid=$rid&up_mid=$userId",
+                OkHttpClientUtils.addCookie(cookie))
+        val firstJsonObject = OkHttpClientUtils.getJson(firstResponse)
+        if (firstJsonObject.getInteger("code") != 0) return "收藏失败，请重新绑定哔哩哔哩！！"
+        var favoriteId: String? = null
+        firstJsonObject.getJSONObject("data").getJSONArray("list").forEach {
+            val jsonObject = it as JSONObject
+            if (jsonObject.getString("title") == name){
+                favoriteId = jsonObject.getString("id")
+                return@forEach
+            }
+        }
+        if (favoriteId == null){
+            val addFolderResponse = OkHttpClientUtils.post("https://api.bilibili.com/x/v3/fav/folder/add", OkHttpClientUtils.addForms(
+                    "title", name,
+                    "privacy", "0",
+                    "jsonp", "jsonp",
+                    "csrf", token
+            ), OkHttpClientUtils.addCookie(cookie))
+            val jsonObject = OkHttpClientUtils.getJson(addFolderResponse)
+            if (jsonObject.getInteger("code") != 0) return "您并没有该收藏夹，而且创建该收藏夹失败，请重试！！"
+            favoriteId = jsonObject.getJSONObject("data").getString("id")
+        }
+        val resultResponse = OkHttpClientUtils.post("https://api.bilibili.com/x/v3/fav/resource/deal", OkHttpClientUtils.addForms(
+                "rid", rid,
+                "type", "2",
+                "add_media_ids", favoriteId!!,
+                "del_media_ids", "",
+                "jsonp", "jsonp",
+                "csrf", token
+        ), OkHttpClientUtils.addCookie(cookie))
+        val jsonObject = OkHttpClientUtils.getJson(resultResponse)
+        return if (jsonObject.getInteger("code") == 0) "收藏该视频成功！！"
+        else "收藏视频失败，${jsonObject.getString("message")}！！"
     }
 }

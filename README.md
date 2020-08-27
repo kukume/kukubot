@@ -21,34 +21,6 @@
 
 安装教程：[https://uxy.me/ydmX7](https://uxy.me/ydmX7)
 
-## 配置文件
-```properties
-# 运行模式，该模式会影响配置文件读取，或某些模块的行为。默认为 dev
-# yu.config.runMode = dev
-
-# 扫描包路径
-yu.scanPackages=me.kuku.yuq
-
-# 机器人登录的协议，可为 Watch （手表）、Android （安卓），默认为Ipad
-YuQ.Mirai.protocol=
-
-# 机器人名，可不配置。
-# YuQ.bot.name = Yu
-
-# 登录的 QQ 号
-YuQ.Mirai.user.qq=
-# 登录的 QQ 号的密码
-YuQ.Mirai.user.pwd=
-# 机器人主人
-YuQ.Mirai.bot.master=734669014
-# api
-YuQ.Mirai.bot.myApi=api.kuku.me
-# ai.qq.com/v1的app_id，需赋予图片鉴黄、智能闲聊、通用OCR能力
-YuQ.Mirai.bot.ai.appId=
-# ai.qq.com/v1的app_key，需赋予图片鉴黄、智能闲聊、通用OCR能力
-YuQ.Mirai.bot.ai.appKey=
-```
-
 ## 说明
 * 机器人使用之前必须发送`机器人 开`才能开启机器人
 * 数据库使用h2，目录`db`下

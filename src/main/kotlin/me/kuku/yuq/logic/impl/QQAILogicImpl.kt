@@ -7,6 +7,7 @@ import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.MD5Utils
 import me.kuku.yuq.utils.OkHttpClientUtils
+import me.kuku.yuq.utils.removeSuffixLine
 import okhttp3.FormBody
 import java.net.URLEncoder
 import java.util.*
@@ -60,12 +61,21 @@ class QQAILogicImpl: QQAILogic {
         }else false
     }
 
-    override fun generalOCR(imageUrl: String){
+    override fun generalOCR(imageUrl: String): String{
         val baseStr = this.urlToBase64(imageUrl)
         val response = OkHttpClientUtils.post("https://api.ai.qq.com/fcgi-bin/ocr/ocr_generalocr",
                 addParams(mapOf("image" to baseStr)))
         val jsonObject = OkHttpClientUtils.getJson(response)
-        println(jsonObject)
+        return if (jsonObject.getInteger("ret") == 0){
+            val jsonArray = jsonObject.getJSONObject("data").getJSONArray("item_list")
+            if (jsonArray.isEmpty()) return "啥文字也没有识别到！！"
+            val sb = StringBuilder()
+            jsonArray.forEach {
+                val singleJsonObject = it as JSONObject
+                sb.appendln(singleJsonObject.getString("itemstring"))
+            }
+            sb.removeSuffixLine().toString()
+        }else jsonObject.getString("msg")
     }
 
     override fun generalOCRToCaptcha(byteArray: ByteArray): CommonResult<String> {

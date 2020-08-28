@@ -38,7 +38,7 @@ class ManagerController: QQController() {
     @Inject
     private lateinit var biliBiliLogic: BiliBiliLogic
 
-    private val version = "v1.5.3"
+    private val version = "v1.5.4"
 
     @Before
     fun before(group: Long, qq: Long, actionContext: BotActionContext, message: Message){
@@ -70,6 +70,7 @@ class ManagerController: QQController() {
     }
 
     @Action("去管 {qqNo}")
+    @Synonym(["删管 {qqNo}"])
     @QMsg(at = true)
     fun cancelAdmin(qqNo: Long, qqGroupEntity: QQGroupEntity): Message{
         val jsonArray = qqGroupEntity.getAdminJsonArray()
@@ -372,12 +373,11 @@ class ManagerController: QQController() {
         val msg = when (act) {
             "加" -> {
                 list.forEach { keywordJsonArray.add(it) }
-
                 "加违规词成功！！"
             }
-            "去" -> {
+            "去","删" -> {
                 list.forEach { keywordJsonArray.remove(it) }
-                "去违规词成功！！"
+                "删违规词成功！！"
             }
             else -> null
         }
@@ -402,6 +402,7 @@ class ManagerController: QQController() {
     }
 
     @Action("去黑 {qqNo}")
+    @Synonym(["删黑 {qqNo}"])
     @QMsg(at = true)
     fun delBlack(qqNo: Long, qqGroupEntity: QQGroupEntity): String{
         val blackJsonArray = qqGroupEntity.getBlackJsonArray()
@@ -433,6 +434,7 @@ class ManagerController: QQController() {
     }
 
     @Action("去白 {qqNo}")
+    @Synonym(["删白 {qqNo}"])
     @QMsg(at = true)
     fun delWhite(qqNo: Long, qqGroupEntity: QQGroupEntity): String{
         val whiteJsonArray = qqGroupEntity.getWhiteJsonArray()
@@ -454,6 +456,7 @@ class ManagerController: QQController() {
     }
 
     @Action("违规词")
+    @Synonym(["查违规词"])
     fun keywords(qqGroupEntity: QQGroupEntity): String{
         val keywordJsonArray = qqGroupEntity.getKeywordJsonArray()
         val sb = StringBuilder().appendln("本群违规词如下：")
@@ -529,6 +532,7 @@ class ManagerController: QQController() {
     }
 
     @Action("问答")
+    @Synonym(["查问答"])
     fun qaList(qqGroupEntity: QQGroupEntity): String{
         val sb = StringBuilder().appendln("本群问答列表如下：")
         val qaJsonArray = qqGroupEntity.getQaJsonArray()
@@ -596,7 +600,8 @@ class ManagerController: QQController() {
             sb.appendln("更新日志：https://github.com/kukume/kuku-bot/releases/tag/$gitVersion")
             sb.append("发现程序可更新，正在下载中！！！")
             reply(sb.toString())
-            val response = OkHttpClientUtils.get("https://u.iheit.com/kuku/bot/kukubot.jar")
+            val gitUrl = "https://github.com/kukume/kuku-bot/releases/download/$gitVersion/kukubot.jar"
+            val response = OkHttpClientUtils.get(toolLogic.githubQuicken(gitUrl))
             val bytes = OkHttpClientUtils.getBytes(response)
             IO.writeFile(File("${System.getProperty("user.dir")}${File.separator}kukubot.jar"), bytes)
             reply("更新完成，请前往控制台手动启动程序！！")

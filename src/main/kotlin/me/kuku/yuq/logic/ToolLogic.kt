@@ -47,4 +47,5 @@ interface ToolLogic {
     fun acgPic(): String
     fun danBooRuPic(): String
     fun identifyPic(url: String): String?
+    fun githubQuicken(gitUrl: String): String
 }

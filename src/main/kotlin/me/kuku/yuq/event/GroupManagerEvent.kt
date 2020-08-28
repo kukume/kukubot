@@ -6,6 +6,9 @@ import com.IceCreamQAQ.Yu.annotation.EventListener
 import com.alibaba.fastjson.JSONArray
 import com.icecreamqaq.yuq.event.GroupMessageEvent
 import com.icecreamqaq.yuq.message.Image
+import com.icecreamqaq.yuq.message.JsonEx
+import com.icecreamqaq.yuq.message.Text
+import com.icecreamqaq.yuq.message.XmlEx
 import com.icecreamqaq.yuq.mif
 import com.icecreamqaq.yuq.toMessage
 import com.icecreamqaq.yuq.yuq
@@ -61,7 +64,22 @@ class GroupManagerEvent {
         val keywordJsonArray = qqGroupEntity.getKeywordJsonArray()
         for (i in keywordJsonArray.indices){
             val keyword = keywordJsonArray.getString(i)
-            if (keyword in e.message.sourceMessage.toString()){
+            val body = e.message.body
+            var status = false
+            loop@ for (item in body){
+                when (item){
+                    is Text -> if (item.text.contains(keyword)) status = true
+                    is Image -> {
+                        val result = qqAiLogic.generalOCR(item.url)
+                        if (keyword in result) status = true
+                    }
+                    is XmlEx -> if (keyword in item.value) status = true
+                    is JsonEx -> if (keyword in item.value) status = true
+                }
+                if (status) break@loop
+            }
+            if (status){
+                e.cancel = true
                 e.message.recall()
                 val maxCount = qqGroupEntity.maxViolationCount ?: 5
                 val violation = this.violation(qq, group, maxCount, e)
@@ -69,7 +87,6 @@ class GroupManagerEvent {
                 e.sender.ban(10 * 60)
                 e.group.sendMessage(mif.at(qq).plus(
                         "检测到违规词\"$keyword\"，您已被禁言。\n您当前的违规次数为${violation}次。\n累计违规${maxCount}次会被踢出本群哦！！"))
-                e.cancel = true
             }
         }
     }

@@ -19,7 +19,7 @@ object BotUtils {
     fun shortUrl(url: String): String{
         val newUrl = if (url.startsWith("http")) url
         else "http://$url"
-        return if (url.contains("iheit.com") || url.contains("kuku.me")) {
+        return if (url.contains("iheit.com") || url.contains("kuku.me") || url.contains("workers.dev")) {
             val response = OkHttpClientUtils.get("https://uxy.me/api.php?url=${URLEncoder.encode(newUrl, "utf-8")}")
             val jsonObject = OkHttpClientUtils.getJson(response)
             val shortUrl = jsonObject.getString("shorturl")

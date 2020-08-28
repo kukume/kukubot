@@ -539,4 +539,6 @@ class ToolLogicImpl: ToolLogic {
         val resultJsonObject = jsonObject.getJSONArray("results")
         return resultJsonObject?.getJSONObject(0)?.getJSONObject("data")?.getJSONArray("ext_urls")?.getString(0)
     }
+
+    override fun githubQuicken(gitUrl: String) = "https://github.kuku.workers.dev/$gitUrl"
 }

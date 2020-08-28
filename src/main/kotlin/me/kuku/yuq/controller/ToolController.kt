@@ -320,4 +320,17 @@ class ToolController: QQController() {
         }
         return null
     }
+
+    @Action("OCR {img}")
+    @Synonym(["ocr {img}"])
+    @QMsg(at = true)
+    fun ocr(img: Image) = qqAiLogic.generalOCR(img.url)
+
+    @Action("github加速")
+    @QMsg(at = true)
+    fun githubQuicken(session: ContextSession, qq: Long): String{
+        reply(mif.at(qq).plus("请输入github文件下载链接"))
+        val url = session.waitNextMessage().firstString()
+        return BotUtils.shortUrl(toolLogic.githubQuicken(url))
+    }
 }

@@ -19,10 +19,15 @@ object BotUtils {
     fun shortUrl(url: String): String{
         val newUrl = if (url.startsWith("http")) url
         else "http://$url"
-        val response = OkHttpClientUtils.get("https://uxy.me/api.php?url=${URLEncoder.encode(newUrl, "utf-8")}")
-        val jsonObject = OkHttpClientUtils.getJson(response)
-        val shortUrl = jsonObject.getString("shorturl")
-        return shortUrl ?: "生成失败！！！"
+        return if (url.contains("iheit.com") || url.contains("kuku.me")) {
+            val response = OkHttpClientUtils.get("https://uxy.me/api.php?url=${URLEncoder.encode(newUrl, "utf-8")}")
+            val jsonObject = OkHttpClientUtils.getJson(response)
+            val shortUrl = jsonObject.getString("shorturl")
+            shortUrl ?: "生成失败！！！"
+        }else {
+            val response = OkHttpClientUtils.get("https://api.kuku.me/tool/shorturl?url=${URLEncoder.encode(newUrl, "utf-8")}")
+            OkHttpClientUtils.getStr(response)
+        }
     }
 
     fun randomStr(len: Int): String{

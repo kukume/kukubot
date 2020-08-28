@@ -1,11 +1,13 @@
 package me.kuku.yuq.logic
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind
+import com.alibaba.fastjson.JSONObject
 import me.kuku.yuq.entity.BiliBiliEntity
 import me.kuku.yuq.entity.QQEntity
 import me.kuku.yuq.entity.WeiboEntity
 import me.kuku.yuq.pojo.BiliBiliPojo
 import me.kuku.yuq.pojo.CommonResult
+import okio.ByteString
 
 @AutoBind
 interface BiliBiliLogic {
@@ -22,4 +24,6 @@ interface BiliBiliLogic {
     fun forward(biliBiliEntity: BiliBiliEntity, id: String, content: String): String
     fun tossCoin(biliBiliEntity: BiliBiliEntity, rid: String, count: Int): String
     fun favorites(biliBiliEntity: BiliBiliEntity, rid: String, name: String): String
+    fun uploadImage(biliBiliEntity: BiliBiliEntity, byteString: ByteString): CommonResult<JSONObject>
+    fun publishDynamic(biliBiliEntity: BiliBiliEntity, content: String, images: List<String>): String
 }

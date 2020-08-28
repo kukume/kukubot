@@ -2,27 +2,28 @@ package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Before
-import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
 import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.controller.BotActionContext
+import com.icecreamqaq.yuq.controller.ContextSession
+import com.icecreamqaq.yuq.controller.QQController
+import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.message.Message
-import com.icecreamqaq.yuq.mif
 import com.icecreamqaq.yuq.toMessage
-import kotlinx.serialization.json.JsonArray
 import me.kuku.yuq.entity.BiliBiliEntity
 import me.kuku.yuq.logic.BiliBiliLogic
 import me.kuku.yuq.pojo.BiliBiliPojo
 import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.service.BiliBiliService
 import me.kuku.yuq.utils.BotUtils
+import me.kuku.yuq.utils.OkHttpClientUtils
 import me.kuku.yuq.utils.removeSuffixLine
 import javax.inject.Inject
 
 @GroupController
-class BiliBiliController {
+class BiliBiliController: QQController() {
     @Inject
     private lateinit var biliBiliLogic: BiliBiliLogic
     @Inject
@@ -38,7 +39,7 @@ class BiliBiliController {
         var biliBiliEntity = biliBiliService.findByQQ(qq)
         if (biliBiliEntity == null && list[0] == "哔哩哔哩开播提醒")
             biliBiliEntity = BiliBiliEntity(null, qq, group)
-        else if (biliBiliEntity == null || biliBiliEntity.cookie == "") throw mif.at(qq).plus("您还没有绑定哔哩哔哩账号，无法继续！！！")
+        else if (biliBiliEntity == null || biliBiliEntity.cookie == "") throw mif.at(qq).plus("您还没有绑定哔哩哔哩账号，无法继续！！！，如需绑定请发送[bilibililogin]或[bilibililoginbyweibo]")
         actionContext["biliBiliEntity"] = biliBiliEntity
     }
 
@@ -192,6 +193,24 @@ class BiliBiliController {
         jsonArray.forEach {
             val jsonObject = it as JSONObject
             sb.appendln("${jsonObject.getString("name")}-${jsonObject.getString("id")}-${jsonObject.getString("content") ?: ""}")
+        }
+        return sb.removeSuffixLine().toString()
+    }
+
+    @Action("哔哩哔哩上传")
+    @QMsg(at = true)
+    fun uploadImage(qq: Long, session: ContextSession, biliBiliEntity: BiliBiliEntity): String{
+        reply(mif.at(qq).plus("请输入需要上传的图片"))
+        val body = session.waitNextMessage().body
+        val sb = StringBuilder().appendln("您上传的图片链接如下：")
+        var i = 1
+        for (item in body) {
+            if (item is Image){
+                val response = OkHttpClientUtils.get(item.url)
+                val commonResult = biliBiliLogic.uploadImage(biliBiliEntity, OkHttpClientUtils.getByteStr(response))
+                val result = commonResult.t?.getString("image_url") ?: commonResult.msg
+                sb.appendln("${i++}、$result")
+            }
         }
         return sb.removeSuffixLine().toString()
     }

@@ -221,8 +221,13 @@ class ToolController: QQController() {
     fun girl() = mif.imageByUrl(toolLogic.girlImage())
 
     @QMsg(at = true)
-    @Action("蓝奏/{url}")
-    fun lanZou(url: String) = BotUtils.shortUrl("https://api.iheit.com/lanZou?url=${URLEncoder.encode(url, "utf-8")}")
+    @Action("蓝奏 {url}")
+    fun lanZou(url: String, @PathVar(2) pwd: String?): String{
+        val resultUrl =  if (pwd == null){
+            "https://v1.alapi.cn/api/lanzou?url=${URLEncoder.encode(url, "utf-8")}"
+        }else "https://v1.alapi.cn/api/lanzou?url=${URLEncoder.encode(url, "utf-8")}&pwd=$pwd"
+        return BotUtils.shortUrl(resultUrl)
+    }
 
     @Action("lol周免")
     fun lolFree() = toolLogic.lolFree()

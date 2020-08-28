@@ -1,6 +1,7 @@
 package me.kuku.yuq.logic.impl
 
 import com.alibaba.fastjson.JSON
+import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
 import me.kuku.yuq.entity.BiliBiliEntity
 import me.kuku.yuq.entity.QQEntity
@@ -12,6 +13,8 @@ import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.OkHttpClientUtils
 import me.kuku.yuq.utils.QQUtils
 import me.kuku.yuq.utils.removeSuffixLine
+import okhttp3.MultipartBody
+import okio.ByteString
 import org.jsoup.Jsoup
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
@@ -342,5 +345,45 @@ class BiliBiliLogicImpl: BiliBiliLogic {
         val jsonObject = OkHttpClientUtils.getJson(resultResponse)
         return if (jsonObject.getInteger("code") == 0) "收藏该视频成功！！"
         else "收藏视频失败，${jsonObject.getString("message")}！！"
+    }
+
+    override fun uploadImage(biliBiliEntity: BiliBiliEntity, byteString: ByteString): CommonResult<JSONObject> {
+        val body = MultipartBody.Builder().setType(MultipartBody.FORM)
+                .addFormDataPart("file_up", "${BotUtils.randomStr(8)}.jpg", OkHttpClientUtils.addStream(byteString))
+                .addFormDataPart("biz", "draw")
+                .addFormDataPart("category", "daily").build()
+        val response = OkHttpClientUtils.post("https://api.vc.bilibili.com/api/v1/drawImage/upload", body,
+                OkHttpClientUtils.addCookie(biliBiliEntity.cookie))
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return if (jsonObject.getInteger("code") == 0) CommonResult(200, "", jsonObject.getJSONObject("data"))
+        else CommonResult(500, "图片上传失败，${jsonObject.getString("message")}")
+     }
+
+    override fun publishDynamic(biliBiliEntity: BiliBiliEntity, content: String, images: List<String>): String {
+        val jsonArray = JSONArray()
+        images.forEach {
+            val response = OkHttpClientUtils.get(it)
+            jsonArray.add(this.uploadImage(biliBiliEntity, OkHttpClientUtils.getByteStr(response)))
+        }
+        val response = OkHttpClientUtils.post("https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/create_draw", OkHttpClientUtils.addForms(
+                "biz", "3",
+                "category", "3",
+                "type", "0",
+                "pictures", jsonArray.toString(),
+                "title", "",
+                "tags", "",
+                "description", content,
+                "content", content,
+                "setting", "{\"copy_forbidden\":0,\"cachedTime\":0}",
+                "from", "create.dynamic.web",
+                "up_choose_comment", "0",
+                "extension", "{\"emoji_type\":1,\"from\":{\"emoji_type\":1},\"flag_cfg\":{}}",
+                "at_uids", "",
+                "at_control", "",
+                "csrf_token", biliBiliEntity.token
+        ), OkHttpClientUtils.addCookie(biliBiliEntity.cookie))
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return if (jsonObject.getInteger("code") == 0) "发布动态成功！！！"
+        else "发布动态失败，${jsonObject.getString("message")}"
     }
 }

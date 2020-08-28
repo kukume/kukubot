@@ -1036,7 +1036,7 @@ class QQLogicImpl: QQLogic {
             for (map in list){
                 val url = this.getGroupFileUrl(qqEntity, group, map.getValue("busId"), map.getValue("id"))
                 sb.appendln("文件名：${map.getValue("name")}")
-                sb.appendln("链接：${BotUtils.shortUrl(url)}")
+                sb.appendln("链接：${BotUtils.shortUrl(url + "/" + URLEncoder.encode(map.getValue("name"), "utf-8"))}")
                 sb.appendln("--------------")
             }
             sb.removeSuffix("\r\n").toString()

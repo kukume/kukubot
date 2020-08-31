@@ -69,7 +69,7 @@ object BotUtils {
     fun messageToJsonArray(rm: Message): JSONArray{
         val body = rm.body
         val aJsonArray = JSONArray()
-        for (messageItem in body){
+        loop@ for (messageItem in body){
             val aJsonObject = JSONObject()
             when (messageItem) {
                 is Text -> {
@@ -97,9 +97,9 @@ object BotUtils {
                     aJsonObject["type"] = "json"
                     aJsonObject["content"] = messageItem.value
                 }
+                else -> continue@loop
             }
-            if (aJsonObject.size != 0)
-                aJsonArray.add(aJsonObject)
+            aJsonArray.add(aJsonObject)
         }
         return aJsonArray
     }
@@ -120,13 +120,14 @@ object BotUtils {
         return msg
     }
 
-    fun delMonitorList(jsonArray: JSONArray, username: String): List<JSONObject>{
+    fun delMonitorList(jsonArray: JSONArray, username: String): JSONArray{
         val list = mutableListOf<JSONObject>()
         jsonArray.forEach {
             val jsonObject = it as JSONObject
             if (jsonObject.getString("name") == username) list.add(jsonObject)
         }
-        return list
+        list.forEach { jsonArray.remove(it) }
+        return jsonArray
     }
 
     fun toQQEntity(web: OkHttpWebImpl, miraiBot: MiraiBot): QQEntity{
@@ -148,6 +149,17 @@ object BotUtils {
             if (jsonObject.getString("name") == username) delList.add(jsonObject)
         }
         delList.forEach { jsonArray.remove(it) }
+        return jsonArray
+    }
+
+    fun delManager(jsonArray: JSONArray, content: String): JSONArray{
+        for (i in jsonArray.indices){
+            val str = jsonArray.getString(i)
+            if (str == content) {
+                jsonArray.remove(str)
+                break
+            }
+        }
         return jsonArray
     }
 }

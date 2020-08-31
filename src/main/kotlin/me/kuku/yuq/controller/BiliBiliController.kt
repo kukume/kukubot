@@ -30,16 +30,14 @@ class BiliBiliController: QQController() {
     private lateinit var biliBiliService: BiliBiliService
 
     @Before
-    fun before(qq: Long, message: Message, actionContext: BotActionContext, group: Long){
+    fun before(qq: Long, message: Message, actionContext: BotActionContext){
         val whiteList = arrayOf("bilibili")
         val list = message.toPath()
         if (list.isNotEmpty() && whiteList.contains(list[0])){
             return
         }
-        var biliBiliEntity = biliBiliService.findByQQ(qq)
-        if (biliBiliEntity == null && list[0] == "哔哩哔哩开播提醒")
-            biliBiliEntity = BiliBiliEntity(null, qq, group)
-        else if (biliBiliEntity == null || biliBiliEntity.cookie == "") throw mif.at(qq).plus("您还没有绑定哔哩哔哩账号，无法继续！！！，如需绑定请发送[bilibililogin]或[bilibililoginbyweibo]")
+        val biliBiliEntity = biliBiliService.findByQQ(qq)
+        if (biliBiliEntity == null || biliBiliEntity.cookie == "") throw mif.at(qq).plus("您还没有绑定哔哩哔哩账号，无法继续！！！，如需绑定请发送[bilibililogin]或[bilibililoginbyweibo]")
         actionContext["biliBiliEntity"] = biliBiliEntity
     }
 
@@ -95,8 +93,7 @@ class BiliBiliController: QQController() {
     @QMsg(at = true)
     fun delBiliBiliLive(biliBiliEntity: BiliBiliEntity, username: String): String{
         val liveJsonArray = biliBiliEntity.getLiveJsonArray()
-        val list = BotUtils.delMonitorList(liveJsonArray, username)
-        list.forEach { liveJsonArray.remove(it) }
+        BotUtils.delMonitorList(liveJsonArray, username)
         biliBiliEntity.liveList = liveJsonArray.toString()
         biliBiliService.save(biliBiliEntity)
         return "删除用户[$username]的开播提醒成功！！"
@@ -106,34 +103,34 @@ class BiliBiliController: QQController() {
     @QMsg(at = true)
     fun biliBiliLiveSign(biliBiliEntity: BiliBiliEntity) = biliBiliLogic.liveSign(biliBiliEntity)
 
-    @Action("哔哩哔哩{op} {username}")
+    @Action("哔哩哔哩自动{op} {username}")
     @QMsg(at = true)
     fun autoComment(biliBiliEntity: BiliBiliEntity, op: String, username: String, @PathVar(2) content: String?): String?{
         if (!arrayOf("自动赞", "自动投硬币").contains(op) && content == null) return "缺少${op}的内容！！"
         val commonResult = this.searchToJsonObject(username, if (content == null) null else mapOf("content" to content))
         val jsonObject = commonResult.t ?: return commonResult.msg
         when (op) {
-            "自动赞" -> {
+            "赞" -> {
                 val likeJsonArray = biliBiliEntity.getLikeJsonArray()
                 likeJsonArray.add(jsonObject)
                 biliBiliEntity.likeList = likeJsonArray.toString()
             }
-            "自动评论" -> {
+            "评论" -> {
                 val commentJsonArray = biliBiliEntity.getCommentJsonArray()
                 commentJsonArray.add(jsonObject)
                 biliBiliEntity.commentList = commentJsonArray.toString()
             }
-            "自动转发" -> {
+            "转发" -> {
                 val forwardJsonArray = biliBiliEntity.getForwardJsonArray()
                 forwardJsonArray.add(jsonObject)
                 biliBiliEntity.forwardList = forwardJsonArray.toString()
             }
-            "自动投硬币" -> {
+            "投硬币" -> {
                 val tossCoinJsonArray = biliBiliEntity.getTossCoinJsonArray()
                 tossCoinJsonArray.add(jsonObject)
                 biliBiliEntity.tossCoinList = tossCoinJsonArray.toString()
             }
-            "自动收藏" -> {
+            "收藏" -> {
                 val favoritesJsonArray = biliBiliEntity.getFavoritesJsonArray()
                 favoritesJsonArray.add(jsonObject)
                 biliBiliEntity.favoritesList = favoritesJsonArray.toString()
@@ -145,6 +142,7 @@ class BiliBiliController: QQController() {
     }
 
     @Action("删哔哩哔哩{op} {username}")
+    @QMsg(at = true)
     fun delAuto(biliBiliEntity: BiliBiliEntity, op: String, username: String): String?{
         when (op) {
             "自动赞" -> {
@@ -178,15 +176,15 @@ class BiliBiliController: QQController() {
         return "删除哔哩哔哩用户[$username]的${op}成功！！"
     }
 
-    @Action("查哔哩哔哩{op}")
+    @Action("查哔哩哔哩自动{op}")
     @QMsg(at = true)
     fun queryAuto(biliBiliEntity: BiliBiliEntity, op: String): String?{
         val jsonArray= when (op){
-            "自动评论" -> biliBiliEntity.getCommentJsonArray()
-            "自动赞" -> biliBiliEntity.getLikeJsonArray()
-            "自动转发" -> biliBiliEntity.getForwardJsonArray()
-            "自动投硬币" -> biliBiliEntity.getTossCoinJsonArray()
-            "自动收藏" -> biliBiliEntity.getFavoritesJsonArray()
+            "评论" -> biliBiliEntity.getCommentJsonArray()
+            "赞" -> biliBiliEntity.getLikeJsonArray()
+            "转发" -> biliBiliEntity.getForwardJsonArray()
+            "投硬币" -> biliBiliEntity.getTossCoinJsonArray()
+            "收藏" -> biliBiliEntity.getFavoritesJsonArray()
             else -> return null
         }
         val sb = StringBuilder().appendln("您的哔哩哔哩${op}列表如下：")
@@ -213,6 +211,25 @@ class BiliBiliController: QQController() {
             }
         }
         return sb.removeSuffixLine().toString()
+    }
+
+    @Action("哔哩哔哩{op} {username}")
+    @QMsg(at = true)
+    fun biliBiliComment(biliBiliEntity: BiliBiliEntity, username: String, op: String, @PathVar(2) content: String?, @PathVar(3) numStr: String?): String?{
+        val num = numStr?.toInt() ?: content?.toInt()
+        val commonResult = this.queryDynamic(username, num)
+        val biliBiliPojo = commonResult.t ?: return commonResult.msg
+        val id = biliBiliPojo.id
+        val rid = biliBiliPojo.rid
+        val bvId = biliBiliPojo.bvId
+        return when (op){
+            "赞" -> biliBiliLogic.like(biliBiliEntity, id, true)
+            "评论" -> biliBiliLogic.comment(biliBiliEntity, rid, biliBiliPojo.type.toString(), content ?: "我来评论了！！")
+            "转发" -> biliBiliLogic.forward(biliBiliEntity, id, content ?: "转发")
+            "投硬币" -> if (bvId != null) biliBiliLogic.tossCoin(biliBiliEntity, rid, bvId, 2) else "该动态没有视频，不能投硬币！！"
+            "收藏" -> if (bvId != null) biliBiliLogic.favorites(biliBiliEntity, rid, content ?: "我的收藏夹") else "该动态没有视频，不能收藏！！"
+            else -> null
+        }
     }
 
     private fun parseNum(list: List<*>, num: Int?): Int{

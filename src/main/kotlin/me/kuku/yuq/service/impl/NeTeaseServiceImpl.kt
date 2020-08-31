@@ -18,4 +18,7 @@ class NeTeaseServiceImpl: NeTeaseService {
 
     @Transactional
     override fun findAll() = neTeaseDao.findAll()
+
+    @Transactional
+    override fun delByQQ(qq: Long) = neTeaseDao.delByQQ(qq)
 }

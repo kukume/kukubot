@@ -138,10 +138,14 @@ class ToolController: QQController() {
     fun chat(message: Message, qq: Contact): String?{
         val body = message.body
         val at = body[0]
-        return if (at is At && at.user == this.qq.toLong()){
-            val msg = message.body[1].toPath()
-            qqAiLogic.textChat(msg, qq.id.toString())
-        }else null
+        if (at is At && at.user == this.qq.toLong()){
+            for (item in body){
+                if (item is Text && item.text.trim() != "") {
+                    return qqAiLogic.textChat(item.text, qq.id.toString())
+                }
+            }
+        }
+        return null
     }
 
     @Action("搜 {question}")

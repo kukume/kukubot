@@ -20,9 +20,9 @@ interface BiliBiliLogic {
     fun isLiveOnline(id: String): Boolean
     fun liveSign(biliBiliEntity: BiliBiliEntity): String
     fun like(biliBiliEntity: BiliBiliEntity, id: String, isLike: Boolean): String
-    fun comment(biliBiliEntity: BiliBiliEntity, id: String, type: String, content: String): String
+    fun comment(biliBiliEntity: BiliBiliEntity, rid: String, type: String, content: String): String
     fun forward(biliBiliEntity: BiliBiliEntity, id: String, content: String): String
-    fun tossCoin(biliBiliEntity: BiliBiliEntity, rid: String, count: Int): String
+    fun tossCoin(biliBiliEntity: BiliBiliEntity, rid: String, bvId: String, count: Int): String
     fun favorites(biliBiliEntity: BiliBiliEntity, rid: String, name: String): String
     fun uploadImage(biliBiliEntity: BiliBiliEntity, byteString: ByteString): CommonResult<JSONObject>
     fun publishDynamic(biliBiliEntity: BiliBiliEntity, content: String, images: List<String>): String

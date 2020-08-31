@@ -9,5 +9,6 @@ interface NeTeaseService {
     fun findByQQ(qq: Long): NeTeaseEntity?
     fun save(neTeaseEntity: NeTeaseEntity)
     fun findAll(): List<NeTeaseEntity>
+    fun delByQQ(qq: Long): Int
 
 }

@@ -15,7 +15,7 @@ import javax.inject.Inject
 import javax.inject.Named
 
 @EventListener
-class RecallMonitor {
+class MonitorEvent {
 
     @Inject
     @field:Named("MessageSaved")
@@ -49,6 +49,25 @@ class RecallMonitor {
         if (qqGroupEntity.recall == true) {
             if (e.sender != e.operator) return
             e.group.sendMessage(mif.text("群成员：").plus(mif.at(qq)).plus("\n妄图撤回一条消息。\n消息内容为：\n").plus(rm))
+        }
+    }
+
+    @Event
+    fun flashNotify(e: GroupMessageEvent){
+        val group = e.group.id
+        val qqGroupEntity = qqGroupService.findByGroup(group) ?: return
+        if (qqGroupEntity.flashNotify == true) {
+            val body = e.message.body
+            val qq = e.sender.id
+            for (item in body) {
+                if (item is FlashImage) {
+                    val line = System.getProperty("line.separator")
+                    val msg = mif.text("群成员：").plus(mif.at(qq))
+                            .plus("${line}妄图发送闪照：$line")
+                            .plus(mif.imageByUrl(item.url))
+                    e.group.sendMessage(msg)
+                }
+            }
         }
     }
 

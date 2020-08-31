@@ -103,7 +103,8 @@ class QQAILogicImpl: QQAILogic {
         val jsonObject = OkHttpClientUtils.getJson(response)
         return when (jsonObject.getInteger("ret")){
             0 -> jsonObject.getJSONObject("data").getString("answer")
-            16385 -> "您没有填入appid"
+            16385 -> "您还没有填入appid！！"
+            16394 -> "没有发现匹配的答案！！"
             else -> jsonObject.getString("msg")
         }
     }

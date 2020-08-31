@@ -265,9 +265,9 @@ class BiliBiliLogicImpl: BiliBiliLogic {
         else "赞动态失败，${jsonObject.getString("message")}"
     }
 
-    override fun comment(biliBiliEntity: BiliBiliEntity, id: String, type: String, content: String): String {
+    override fun comment(biliBiliEntity: BiliBiliEntity, rid: String, type: String, content: String): String {
         val response = OkHttpClientUtils.post("https://api.bilibili.com/x/v2/reply/add", OkHttpClientUtils.addForms(
-                "oid", id,
+                "oid", rid,
                 "type", type,
                 "message", content,
                 "plat", "1",
@@ -294,14 +294,17 @@ class BiliBiliLogicImpl: BiliBiliLogic {
         else "转发动态失败，${jsonObject.getString("message")}"
     }
 
-    override fun tossCoin(biliBiliEntity: BiliBiliEntity, rid: String, count: Int): String {
+    override fun tossCoin(biliBiliEntity: BiliBiliEntity, rid: String, bvId: String, count: Int): String {
         val response = OkHttpClientUtils.post("https://api.bilibili.com/x/web-interface/coin/add", OkHttpClientUtils.addForms(
                 "aid", rid,
                 "multiply", count.toString(),
                 "select_like", "1",
                 "cross_domain", "true",
                 "csrf", biliBiliEntity.token
-        ), OkHttpClientUtils.addCookie(biliBiliEntity.cookie))
+        ), OkHttpClientUtils.addHeaders(
+                "cookie", biliBiliEntity.cookie,
+                "referer", "https://www.bilibili.com/video/$"
+        ))
         val jsonObject = OkHttpClientUtils.getJson(response)
         return if (jsonObject.getInteger("code") == 0) "对该动态（视频）投硬币成功！！"
         else "对该动态（视频）投硬币成功！！，${jsonObject.getString("message")}"

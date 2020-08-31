@@ -2,6 +2,7 @@ package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.*
 import com.IceCreamQAQ.Yu.util.IO
+import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
 import com.icecreamqaq.yuq.*
 import com.icecreamqaq.yuq.annotation.GroupController
@@ -38,7 +39,7 @@ class ManagerController: QQController() {
     @Inject
     private lateinit var biliBiliLogic: BiliBiliLogic
 
-    private val version = "v1.5.4"
+    private val version = "v1.5.5"
 
     @Before
     fun before(group: Long, qq: Long, actionContext: BotActionContext, message: Message){
@@ -49,7 +50,7 @@ class ManagerController: QQController() {
         }
         actionContext.session["qqGroupEntity"] = qqGroupEntity
         val msg = message.toPath()[0]
-        val whiteList = arrayOf("问答", "违规词", "黑名单", "查黑", "白名单", "查白", "开关", "查撤回", "查管", "查微博监控")
+        val whiteList = arrayOf("问答", "违规词", "黑名单", "查黑", "白名单", "查白", "开关", "查撤回", "查管", "查微博监控", "检查更新")
         val adminWhiteList = qqGroupEntity.getAllowedCommandsJsonArray()
         if (!whiteList.contains(msg)) {
             val adminJsonArray = qqGroupEntity.getAdminJsonArray()
@@ -59,162 +60,241 @@ class ManagerController: QQController() {
         }
     }
 
-    @Action("加管 {qqNo}")
+    @Action("查{op}")
     @QMsg(at = true)
-    fun setAdmin(qqNo: Long, qqGroupEntity: QQGroupEntity): Message{
-        val jsonArray = qqGroupEntity.getAdminJsonArray()
-        jsonArray.add(qqNo.toString())
-        qqGroupEntity.adminList = jsonArray.toString()
-        qqGroupService.save(qqGroupEntity)
-        return mif.text("设置").plus(mif.at(qqNo)).plus("为管理员成功！！")
-    }
-
-    @Action("去管 {qqNo}")
-    @Synonym(["删管 {qqNo}"])
-    @QMsg(at = true)
-    fun cancelAdmin(qqNo: Long, qqGroupEntity: QQGroupEntity): Message{
-        val jsonArray = qqGroupEntity.getAdminJsonArray()
-        jsonArray.remove(qqNo.toString())
-        qqGroupEntity.adminList = jsonArray.toString()
-        qqGroupService.save(qqGroupEntity)
-        return mif.text("取消").plus(mif.at(qqNo)).plus("的管理员成功！！")
-    }
-
-    @Action("查管")
-    fun queryAdmin(qqGroupEntity: QQGroupEntity): String{
-        val jsonArray = qqGroupEntity.getAdminJsonArray()
-        val sb = StringBuilder().appendln("本群机器人的管理员如下：")
+    fun query(qqGroupEntity: QQGroupEntity, op: String): String?{
+        val jsonArray: JSONArray
+        val msg: String
+        when (op){
+            "管" -> {
+                jsonArray = qqGroupEntity.getAdminJsonArray()
+                msg = "本群机器人的管理员如下："
+            }
+            "admin命令" -> {
+                jsonArray = qqGroupEntity.getAllowedCommandsJsonArray()
+                msg = "本群管理员拥有的管理命令使用权限如下："
+            }
+            "黑" -> {
+                jsonArray = qqGroupEntity.getBlackJsonArray()
+                msg = "本群黑名单如下："
+            }
+            "白" -> {
+                jsonArray = qqGroupEntity.getWhiteJsonArray()
+                msg = "本群白名单如下："
+            }
+            "违规词" -> {
+                jsonArray = qqGroupEntity.getKeywordJsonArray()
+                msg = "本群违规词如下："
+            }
+            "拦截" -> {
+                jsonArray = qqGroupEntity.getInterceptJsonArray()
+                msg = "本群以下指令不会被响应："
+            }
+            else -> return null
+        }
+        val sb = StringBuilder().appendln(msg)
         jsonArray.forEach { sb.appendln(it) }
         return sb.removeSuffixLine().toString()
     }
 
-    @Action("加admin命令 {command}")
+    @Action("加{op} {content}")
     @QMsg(at = true)
-    fun addCommands(command: String, qqGroupEntity: QQGroupEntity): String{
-        val jsonArray = qqGroupEntity.getAllowedCommandsJsonArray()
-        jsonArray.add(command)
-        qqGroupEntity.allowedCommandsList = jsonArray.toString()
+    fun add(qqGroupEntity: QQGroupEntity, op: String, content: String, group: Long): Message?{
+        val msg = when (op){
+            "管" -> {
+                val adminJsonArray = qqGroupEntity.getAdminJsonArray()
+                adminJsonArray.add(content)
+                qqGroupEntity.adminList = adminJsonArray.toString()
+                mif.text("设置").plus(mif.at(content.toLong())).plus("为管理员成功！！")
+            }
+            "admin命令" -> {
+                val allowedCommandsJsonArray = qqGroupEntity.getAllowedCommandsJsonArray()
+                allowedCommandsJsonArray.add(content)
+                qqGroupEntity.allowedCommandsList = allowedCommandsJsonArray.toString()
+                "添加管理员${content}的命令权限成功！！".toMessage()
+            }
+            "违规词" -> {
+                val keywordJsonArray = qqGroupEntity.getKeywordJsonArray()
+                keywordJsonArray.add(content)
+                qqGroupEntity.keyword = keywordJsonArray.toString()
+                "添加违规词[${content}]成功！！".toMessage()
+            }
+            "黑" -> {
+                val blackJsonArray = qqGroupEntity.getBlackJsonArray()
+                blackJsonArray.add(content)
+                qqGroupEntity.blackList = blackJsonArray.toString()
+                val members = yuq.groups[group]?.members
+                val qqNo = content.toLong()
+                if (members!!.containsKey(qqNo))
+                    this.kick(qqNo, group)
+                "添加黑名单成功！！".toMessage()
+            }
+            "白" -> {
+                val whiteJsonArray = qqGroupEntity.getWhiteJsonArray()
+                whiteJsonArray.add(content)
+                qqGroupEntity.whiteList = whiteJsonArray.toString()
+                "添加白名单成功！！".toMessage()
+            }
+            "拦截" -> {
+                val interceptJsonArray = qqGroupEntity.getInterceptJsonArray()
+                interceptJsonArray.add(content)
+                qqGroupEntity.interceptList = interceptJsonArray.toString()
+                "${content}指令将不会再响应".toMessage()
+            }
+            else -> return null
+        }
         qqGroupService.save(qqGroupEntity)
-        return "添加管理员${command}的命令权限成功！！"
+        return msg
     }
 
-    @Action("删admin命令 {command}")
+    @Action("删{op} {content}")
     @QMsg(at = true)
-    fun delCommands(command: String, qqGroupEntity: QQGroupEntity): String{
-        val jsonArray = qqGroupEntity.getAllowedCommandsJsonArray()
-        jsonArray.remove(command)
-        qqGroupEntity.allowedCommandsList = jsonArray.toString()
+    fun del(qqGroupEntity: QQGroupEntity, op: String, content: String): Message?{
+        val msg = when (op){
+            "管" -> {
+                val adminJsonArray = qqGroupEntity.getAdminJsonArray()
+                BotUtils.delManager(adminJsonArray, content)
+                qqGroupEntity.adminList = adminJsonArray.toString()
+                mif.text("取消").plus(mif.at(content.toLong())).plus("的管理员成功！！")
+            }
+            "admin命令" -> {
+                val allowedCommandsJsonArray = qqGroupEntity.getAllowedCommandsJsonArray()
+                BotUtils.delManager(allowedCommandsJsonArray, content)
+                qqGroupEntity.allowedCommandsList = allowedCommandsJsonArray.toString()
+                "删除管理员${content}的命令权限成功！！".toMessage()
+            }
+            "违规词" -> {
+                val keywordJsonArray = qqGroupEntity.getKeywordJsonArray()
+                BotUtils.delManager(keywordJsonArray, content)
+                qqGroupEntity.keyword = keywordJsonArray.toString()
+                "删除违规词[${content}]成功！！".toMessage()
+            }
+            "黑" -> {
+                val blackJsonArray = qqGroupEntity.getBlackJsonArray()
+                BotUtils.delManager(blackJsonArray, content)
+                qqGroupEntity.blackList = blackJsonArray.toString()
+                "删除黑名单成功！！".toMessage()
+            }
+            "白" -> {
+                val whiteJsonArray = qqGroupEntity.getWhiteJsonArray()
+                BotUtils.delManager(whiteJsonArray, content)
+                qqGroupEntity.whiteList = whiteJsonArray.toString()
+                "加白名单成功！！".toMessage()
+            }
+            "拦截" -> {
+                val interceptJsonArray = qqGroupEntity.getInterceptJsonArray()
+                BotUtils.delManager(interceptJsonArray, content)
+                qqGroupEntity.interceptList = interceptJsonArray.toString()
+                "${content}指令将不会再被拦截".toMessage()
+            }
+            else -> return null
+        }
         qqGroupService.save(qqGroupEntity)
-        return "删除管理员${command}的命令权限成功！！"
-    }
-
-    @Action("查admin命令")
-    fun queryCommands(qqGroupEntity: QQGroupEntity): String{
-        val jsonArray = qqGroupEntity.getAllowedCommandsJsonArray()
-        val sb = StringBuilder().appendln("本群管理员拥有的管理命令使用权限如下：")
-        jsonArray.forEach { sb.appendln(it) }
-        return sb.removeSuffixLine().toString()
+        return msg
     }
 
     @Action("机器人 {status}")
+    @Synonym(["机器人 {status}", "loc监控 {status}", "复读 {status}", "整点报时 {status}", "自动审核 {status}",
+        "#龙王 {status}", "#qq {status}", "欢迎语 {status}", "萌宠 {status}", "退群拉黑 {status}", "#嘴臭 {status}",
+        "#祖安语录 {status}", "鉴黄 {status}", "#涩图 {status}", "撤回通知 {status}", "闪照通知 {status}"])
     @QMsg(at = true)
-    fun switchGroup(qqGroupEntity: QQGroupEntity, status: Boolean): String{
-        qqGroupEntity.status = status
+    fun onOrOff(qqGroupEntity: QQGroupEntity, status: Boolean, @PathVar(0) op: String): String?{
+        when (op){
+            "机器人" -> qqGroupEntity.status = status
+            "loc监控" -> qqGroupEntity.locMonitor = status
+            "复读" -> qqGroupEntity.repeat = status
+            "整点报时" -> qqGroupEntity.onTimeAlarm = status
+            "自动审核" -> qqGroupEntity.autoReview = status
+            "#龙王" -> qqGroupEntity.dragonKing = status
+            "#qq" -> qqGroupEntity.qqStatus = status
+            "欢迎语" -> qqGroupEntity.welcomeMsg = status
+            "萌宠" -> qqGroupEntity.superCute = status
+            "退群拉黑" -> qqGroupEntity.leaveGroupBlack = status
+            "#嘴臭", "#祖安语录" -> qqGroupEntity.mouthOdor = status
+            "鉴黄" -> qqGroupEntity.pic = status
+            "#涩图" -> qqGroupEntity.colorPic = status
+            "撤回通知" -> qqGroupEntity.recall = status
+            "闪照通知" -> qqGroupEntity.flashNotify = status
+            else -> return null
+        }
         qqGroupService.save(qqGroupEntity)
-        return if (status) "机器人开启成功" else "机器人关闭成功"
+        return if (status) "${op}开启成功" else "${op}关闭成功"
     }
 
-    @Action("loc监控 {status}")
+    @Action("{op}监控 {name}")
     @QMsg(at = true)
-    fun locMonitor(qqGroupEntity: QQGroupEntity, status: Boolean): String{
-        qqGroupEntity.locMonitor = status
-        qqGroupService.save(qqGroupEntity)
-        return if (status) "loc监控开启成功！！" else "loc监控关闭成功"
-    }
-
-    @Action("复读 {status}")
-    @QMsg(at = true)
-    fun repeat(qqGroupEntity: QQGroupEntity, status: Boolean): String{
-        qqGroupEntity.repeat = status
-        qqGroupService.save(qqGroupEntity)
-        return if (status) "复读开启成功" else "复读关闭成功"
-    }
-
-    @Action("wbmonitor {name}")
-    @Synonym(["微博监控 {name}"])
-    @QMsg(at = true)
-    fun wbMonitor(name: String, qqGroupEntity: QQGroupEntity): String{
-        val commonResult = weiboLogic.getIdByName(name)
-        val weiboPojo = commonResult.t?.get(0) ?: return commonResult.msg
-        val weiboJsonArray = qqGroupEntity.getWeiboJsonArray()
+    fun addMonitor(qqGroupEntity: QQGroupEntity, op: String, name: String): String?{
         val jsonObject = JSONObject()
-        jsonObject["name"] = weiboPojo.name
-        jsonObject["id"] = weiboPojo.userId
-        weiboJsonArray.add(jsonObject)
-        qqGroupEntity.weiboList = weiboJsonArray.toString()
+        when (op){
+            "微博" -> {
+                val commonResult = weiboLogic.getIdByName(name)
+                val weiboPojo = commonResult.t?.get(0) ?: return commonResult.msg
+                val weiboJsonArray = qqGroupEntity.getWeiboJsonArray()
+                jsonObject["name"] = weiboPojo.name
+                jsonObject["id"] = weiboPojo.userId
+                weiboJsonArray.add(jsonObject)
+                qqGroupEntity.weiboList = weiboJsonArray.toString()
+            }
+            "哔哩哔哩" -> {
+                val commonResult = biliBiliLogic.getIdByName(name)
+                val list = commonResult.t ?: return commonResult.msg
+                val biliBiliPojo = list[0]
+                jsonObject["name"] = biliBiliPojo.name
+                jsonObject["id"] = biliBiliPojo.userId
+                val biliBiliJsonArray = qqGroupEntity.getBiliBiliJsonArray()
+                biliBiliJsonArray.add(jsonObject)
+                qqGroupEntity.biliBiliList = biliBiliJsonArray.toString()
+            }
+            else -> return null
+        }
         qqGroupService.save(qqGroupEntity)
-        return "微博监控添加成功！！！"
+        return "添加${op}的用户[${jsonObject["name"]}]的监控成功！！"
     }
 
     @Action("删微博监控 {name}")
+    @Synonym(["删哔哩哔哩监控 {name}"])
     @QMsg(at = true)
-    fun delWbMonitor(name: String, qqGroupEntity: QQGroupEntity): String{
-        val weiboJsonArray = qqGroupEntity.getWeiboJsonArray()
-        val list = BotUtils.delMonitorList(weiboJsonArray, name)
-        list.forEach { weiboJsonArray.remove(it) }
-        qqGroupEntity.weiboList = weiboJsonArray.toString()
+    fun delMonitor(qqGroupEntity: QQGroupEntity, name: String, @PathVar(0) op: String): String?{
+        when {
+            "微博" in op -> {
+                val weiboJsonArray = qqGroupEntity.getWeiboJsonArray()
+                BotUtils.delMonitorList(weiboJsonArray, name)
+                qqGroupEntity.weiboList = weiboJsonArray.toString()
+            }
+            "哔哩哔哩" in op -> {
+                val biliBiliJsonArray = qqGroupEntity.getBiliBiliJsonArray()
+                BotUtils.delMonitorList(biliBiliJsonArray, name)
+                qqGroupEntity.biliBiliList = biliBiliJsonArray.toString()
+            }
+            else -> return null
+        }
         qqGroupService.save(qqGroupEntity)
-        return "删除微博监控成功"
+        return "删除用户[${name}]的监控成功！！"
     }
 
     @Action("查微博监控")
+    @Synonym(["查哔哩哔哩监控"])
     @QMsg(at = true)
-    fun queryWbMonitor(qqGroupEntity: QQGroupEntity): String{
-        val sb = StringBuilder().appendln("该群微博监控如下：")
-        val weiboJsonArray = qqGroupEntity.getWeiboJsonArray()
-        for (i in weiboJsonArray.indices){
-            val jsonObject = weiboJsonArray.getJSONObject(i)
+    fun queryMonitor(qqGroupEntity: QQGroupEntity, @PathVar(0) op: String): String?{
+        val jsonArray: JSONArray
+        val msg: String
+        when {
+            "微博" in op -> {
+                msg = "该群微博监控如下："
+                jsonArray = qqGroupEntity.getWeiboJsonArray()
+            }
+            "哔哩哔哩" in op -> {
+                msg = "本群的哔哩哔哩用户监控如下："
+                jsonArray = qqGroupEntity.getBiliBiliJsonArray()
+            }
+            else -> return null
+        }
+        val sb = StringBuilder().appendln(msg)
+        for (i in jsonArray.indices){
+            val jsonObject = jsonArray.getJSONObject(i)
             sb.appendln("${jsonObject.getString("name")}-${jsonObject.getString("id")}")
         }
         return sb.removeSuffixLine().toString()
-    }
-
-    @Action("哔哩哔哩监控 {username}")
-    @QMsg(at = true)
-    fun biliBiliMonitor(qqGroupEntity: QQGroupEntity, username:String): String{
-        val commonResult = biliBiliLogic.getIdByName(username)
-        val list = commonResult.t ?: return commonResult.msg
-        val biliBiliPojo = list[0]
-        val jsonObject = JSONObject()
-        jsonObject["name"] = biliBiliPojo.name
-        jsonObject["id"] = biliBiliPojo.userId
-        val biliBiliJsonArray = qqGroupEntity.getBiliBiliJsonArray()
-        biliBiliJsonArray.add(jsonObject)
-        qqGroupEntity.biliBiliList = biliBiliJsonArray.toString()
-        qqGroupService.save(qqGroupEntity)
-        return "添加哔哩哔哩用户${biliBiliPojo.name}的监控成功！！"
-    }
-
-    @Action("查哔哩哔哩监控")
-    fun queryBiliBiliMonitor(qqGroupEntity: QQGroupEntity): String{
-        val biliBiliJsonArray = qqGroupEntity.getBiliBiliJsonArray()
-        val sb = StringBuilder().appendln("本群的哔哩哔哩用户监控如下：")
-        biliBiliJsonArray.forEach {
-            val jsonObject = it as JSONObject
-            sb.appendln("${jsonObject["name"]}-${jsonObject["id"]}")
-        }
-        return sb.removeSuffixLine().toString()
-    }
-
-    @Action("删哔哩哔哩监控 {name}")
-    @QMsg(at = true)
-    fun delBiliBiliMonitor(qqGroupEntity: QQGroupEntity, name: String): String{
-        val biliBiliJsonArray = qqGroupEntity.getBiliBiliJsonArray()
-        val delList = BotUtils.delMonitorList(biliBiliJsonArray, name)
-        delList.forEach { biliBiliJsonArray.remove(it) }
-        qqGroupEntity.biliBiliList = biliBiliJsonArray.toString()
-        qqGroupService.save(qqGroupEntity)
-        return "删除该用户的哔哩哔哩监控成功！！"
     }
 
     @Action("违规次数 {count}")
@@ -242,6 +322,7 @@ class ManagerController: QQController() {
         sb.appendln("自动审核：" + this.boolToStr(qqGroupEntity.autoReview))
         sb.appendln("撤回通知：" + this.boolToStr(qqGroupEntity.recall))
         sb.appendln("整点报时：" + this.boolToStr(qqGroupEntity.onTimeAlarm))
+        sb.appendln("闪照通知：" + this.boolToStr(qqGroupEntity.flashNotify))
         sb.append("最大违规次数：${qqGroupEntity.maxViolationCount ?: "5次"}")
         return sb.toString()
     }
@@ -266,77 +347,6 @@ class ManagerController: QQController() {
         }
     }
 
-    @Action("整点报时 {status}")
-    @QMsg(at = true)
-    fun onTimeAlarm(qqGroupEntity: QQGroupEntity, status: Boolean): String{
-        qqGroupEntity.onTimeAlarm = status
-        qqGroupService.save(qqGroupEntity)
-        return if (status) "整点报时开启成功" else "整点报时关闭成功"
-    }
-
-    @Action("自动审核 {status}")
-    @QMsg(at = true)
-    fun autoReview(qqGroupEntity: QQGroupEntity, status: Boolean): String{
-        qqGroupEntity.autoReview = status
-        qqGroupService.save(qqGroupEntity)
-        return if (status) "自动审核开启成功" else "自动审核关闭成功"
-    }
-
-    @Action("#龙王 {status}")
-    @QMsg(at = true)
-    fun dragonKing(qqGroupEntity: QQGroupEntity, status: Boolean): String{
-        qqGroupEntity.dragonKing = status
-        qqGroupService.save(qqGroupEntity)
-        return if (status) "迫害龙王开启成功" else "迫害龙王关闭成功"
-    }
-
-    @Action("#qq {status}")
-    @QMsg(at = true)
-    fun qqStatus(qqGroupEntity: QQGroupEntity, status: Boolean): String{
-        qqGroupEntity.qqStatus = status
-        qqGroupService.save(qqGroupEntity)
-        return if (status) "qq功能开启成功" else "qq功能关闭成功"
-    }
-
-    @Action("欢迎语 {status}")
-    @QMsg(at = true)
-    fun welcome(qqGroupEntity: QQGroupEntity, status: Boolean): String{
-        qqGroupEntity.welcomeMsg = status
-        qqGroupService.save(qqGroupEntity)
-        return if (status) "欢迎语开启成功" else "欢迎语关闭成功"
-    }
-
-    @Action("萌宠 {status}")
-    @QMsg(at = true)
-    fun superCute(qqGroupEntity: QQGroupEntity, status: Boolean): String{
-        qqGroupEntity.superCute = status
-        qqGroupService.save(qqGroupEntity)
-        return if (status) "萌宠功能开启成功" else "萌宠功能关闭成功"
-    }
-
-    @Action("退群拉黑 {status}")
-    @QMsg(at = true)
-    fun leaveGroupBlack(qqGroupEntity: QQGroupEntity, status: Boolean): String{
-        qqGroupEntity.leaveGroupBlack = status
-        qqGroupService.save(qqGroupEntity)
-        return if (status) "退群拉黑已开启！！" else "退群拉黑已关闭！！"
-    }
-
-    @Action("#嘴臭 {status}")
-    @QMsg(at = true)
-    fun mouthOdor(qqGroupEntity: QQGroupEntity, status: Boolean): String{
-        qqGroupEntity.mouthOdor = status
-        qqGroupService.save(qqGroupEntity)
-        return if (status) "嘴臭（祖安语录）已开启！！" else "嘴臭（祖安语录）已关闭！！"
-    }
-
-    @Action("鉴黄 {open}")
-    @QMsg(at = true)
-    fun pic(qqGroupEntity: QQGroupEntity, open: Boolean): String{
-        qqGroupEntity.pic = open
-        qqGroupService.save(qqGroupEntity)
-        return if (open) "鉴黄已开启！！" else "鉴黄已关闭！！"
-    }
 
     @Action("禁言 {qqNo}")
     @QMsg(at = true)
@@ -362,116 +372,6 @@ class ManagerController: QQController() {
     fun kick(qqNo: Long, group: Long): String{
         yuq.groups[group]?.get(qqNo)?.kick()
         return "踢出成功！！"
-    }
-
-    @Action("{act}违规词")
-    @QMsg(at = true)
-    fun addKey(message: Message, act: String, qqGroupEntity: QQGroupEntity): String?{
-        val keywordJsonArray = qqGroupEntity.getKeywordJsonArray()
-        val list = message.toPath().toMutableList()
-        list.removeAt(0)
-        val msg = when (act) {
-            "加" -> {
-                list.forEach { keywordJsonArray.add(it) }
-                "加违规词成功！！"
-            }
-            "去","删" -> {
-                list.forEach { keywordJsonArray.remove(it) }
-                "删违规词成功！！"
-            }
-            else -> null
-        }
-        return if (msg != null) {
-            qqGroupEntity.keyword = keywordJsonArray.toString()
-            qqGroupService.save(qqGroupEntity)
-            msg
-        }else null
-    }
-
-    @Action("加黑 {qqNo}")
-    @QMsg(at = true)
-    fun addBlack(qqNo: Long, qqGroupEntity: QQGroupEntity, group: Long): String{
-        val blackJsonArray = qqGroupEntity.getBlackJsonArray()
-        blackJsonArray.add(qqNo.toString())
-        qqGroupEntity.blackList = blackJsonArray.toString()
-        qqGroupService.save(qqGroupEntity)
-        val members = yuq.groups[group]?.members
-        if (members!!.containsKey(qqNo))
-            this.kick(qqNo, group)
-        return "加黑名单成功！！"
-    }
-
-    @Action("去黑 {qqNo}")
-    @Synonym(["删黑 {qqNo}"])
-    @QMsg(at = true)
-    fun delBlack(qqNo: Long, qqGroupEntity: QQGroupEntity): String{
-        val blackJsonArray = qqGroupEntity.getBlackJsonArray()
-        blackJsonArray.remove(qqNo.toString())
-        qqGroupEntity.blackList = blackJsonArray.toString()
-        qqGroupService.save(qqGroupEntity)
-        return "删除黑名单成功！！"
-    }
-
-    @Action("黑名单")
-    @Synonym(["查黑"])
-    fun blackList(qqGroupEntity: QQGroupEntity): String{
-        val blackJsonArray = qqGroupEntity.getBlackJsonArray()
-        val sb = StringBuilder().appendln("本群黑名单如下：")
-        blackJsonArray.forEach {
-            sb.appendln(it)
-        }
-        return sb.removeSuffixLine().toString()
-    }
-
-    @Action("加白 {qqNo}")
-    @QMsg(at = true)
-    fun addWhite(qqNo: Long, qqGroupEntity: QQGroupEntity): String{
-        val whiteJsonArray = qqGroupEntity.getWhiteJsonArray()
-        whiteJsonArray.add(qqNo.toString())
-        qqGroupEntity.whiteList = whiteJsonArray.toString()
-        qqGroupService.save(qqGroupEntity)
-        return "加白名单成功！！"
-    }
-
-    @Action("去白 {qqNo}")
-    @Synonym(["删白 {qqNo}"])
-    @QMsg(at = true)
-    fun delWhite(qqNo: Long, qqGroupEntity: QQGroupEntity): String{
-        val whiteJsonArray = qqGroupEntity.getWhiteJsonArray()
-        whiteJsonArray.remove(qqNo.toString())
-        qqGroupEntity.whiteList = whiteJsonArray.toString()
-        qqGroupService.save(qqGroupEntity)
-        return "删除白名单成功！！"
-    }
-
-    @Action("白名单")
-    @Synonym(["查白"])
-    fun whiteList(qqGroupEntity: QQGroupEntity): String{
-        val whiteJsonArray = qqGroupEntity.getWhiteJsonArray()
-        val sb = StringBuilder().appendln("本群白名单如下：")
-        whiteJsonArray.forEach {
-            sb.appendln(it)
-        }
-        return sb.removeSuffixLine().toString()
-    }
-
-    @Action("违规词")
-    @Synonym(["查违规词"])
-    fun keywords(qqGroupEntity: QQGroupEntity): String{
-        val keywordJsonArray = qqGroupEntity.getKeywordJsonArray()
-        val sb = StringBuilder().appendln("本群违规词如下：")
-        keywordJsonArray.forEach {
-            sb.appendln(it)
-        }
-        return sb.removeSuffixLine().toString()
-    }
-
-    @Action("#涩图 {status}")
-    @QMsg(at = true)
-    fun colorPicSwitch(status: Boolean, qqGroupEntity: QQGroupEntity): String?{
-        qqGroupEntity.colorPic = status
-        qqGroupService.save(qqGroupEntity)
-        return if (status) "涩图功能已开启！" else "涩图功能已关闭！"
     }
 
     @Action("清屏")
@@ -503,14 +403,6 @@ class ManagerController: QQController() {
         }else null
     }
 
-    @Action("撤回通知 {b}")
-    @QMsg(at = true)
-    fun recall(qqGroupEntity: QQGroupEntity, b: Boolean): String?{
-        qqGroupEntity.recall = b
-        qqGroupService.save(qqGroupEntity)
-        return if (b) "撤回通知已开启！！" else "撤回通知已关闭!!"
-    }
-
     @Action("问")
     @QMsg(at = true)
     fun qa(session: ContextSession, qq: Long, qqGroupEntity: QQGroupEntity): String{
@@ -521,7 +413,7 @@ class ManagerController: QQController() {
         val a = session.waitNextMessage(300000)
         val jsonObject = JSONObject()
         val aJsonArray = BotUtils.messageToJsonArray(a)
-        if (aJsonArray.size == 0) return "回答的语句暂只支持文本和图片和表情！！"
+        if (aJsonArray.size == 0) return "回答的语句暂只支持文本、图片、表情、xml消息、json消息！！"
         jsonObject["q"] =  qStr
         jsonObject["a"] = aJsonArray
         val jsonArray = qqGroupEntity.getQaJsonArray()
@@ -562,51 +454,25 @@ class ManagerController: QQController() {
         return "没有找到该问答，请检查！！！"
     }
 
-    @Action("拦截 {text}")
-    @QMsg(at = true)
-    fun addIntercept(qqGroupEntity: QQGroupEntity, text: String): String{
-        val interceptJsonArray = qqGroupEntity.getInterceptJsonArray()
-        interceptJsonArray.add(text)
-        qqGroupEntity.interceptList = interceptJsonArray.toString()
-        qqGroupService.save(qqGroupEntity)
-        return "${text}指令将不会再响应"
-    }
-
-    @Action("删拦截 {text}")
-    @QMsg(at = true)
-    fun delIntercept(qqGroupEntity: QQGroupEntity, text: String): String{
-        val interceptJsonArray = qqGroupEntity.getInterceptJsonArray()
-        interceptJsonArray.remove(text)
-        qqGroupEntity.interceptList = interceptJsonArray.toString()
-        qqGroupService.save(qqGroupEntity)
-        return "${text}指令将不会再被拦截"
-    }
-
-    @Action("查拦截")
-    fun queryIntercept(qqGroupEntity: QQGroupEntity): String{
-        val sb = StringBuilder().appendln("本群以下指令不会被响应：")
-        val interceptJsonArray = qqGroupEntity.getInterceptJsonArray()
-        interceptJsonArray.forEach { sb.appendln(it) }
-        return sb.removeSuffixLine().toString()
-    }
-
     @Action("检查更新")
-    fun checkUpdate(): String{
+    fun checkUpdate(qq: Long): String{
         val gitVersion = toolLogic.queryVersion()
         val sb = StringBuilder()
         sb.appendln("当前程序版本：$version")
         sb.appendln("最新程序版本：$gitVersion")
-        if (gitVersion > version){
-            sb.appendln("更新日志：https://github.com/kukume/kuku-bot/releases/tag/$gitVersion")
-            sb.append("发现程序可更新，正在下载中！！！")
-            reply(sb.toString())
-            val gitUrl = "https://github.com/kukume/kuku-bot/releases/download/$gitVersion/kukubot.jar"
-            val response = OkHttpClientUtils.get(toolLogic.githubQuicken(gitUrl))
-            val bytes = OkHttpClientUtils.getBytes(response)
-            IO.writeFile(File("${System.getProperty("user.dir")}${File.separator}kukubot.jar"), bytes)
-            reply("更新完成，请前往控制台手动启动程序！！")
-            exitProcess(0)
-        }else sb.append("暂未发现需要更新")
+        if (qq == master.toLong()) {
+            if (gitVersion > version) {
+                sb.appendln("更新日志：https://github.com/kukume/kuku-bot/releases/tag/$gitVersion")
+                sb.append("发现程序可更新，正在下载中！！！")
+                reply(sb.toString())
+                val gitUrl = "https://github.com/kukume/kuku-bot/releases/download/$gitVersion/kukubot.jar"
+                val response = OkHttpClientUtils.get(toolLogic.githubQuicken(gitUrl))
+                val bytes = OkHttpClientUtils.getBytes(response)
+                IO.writeFile(File("${System.getProperty("user.dir")}${File.separator}kukubot.jar"), bytes)
+                reply("更新完成，请前往控制台手动启动程序！！")
+                exitProcess(0)
+            } else sb.append("暂未发现需要更新")
+        }
         return sb.toString()
     }
 

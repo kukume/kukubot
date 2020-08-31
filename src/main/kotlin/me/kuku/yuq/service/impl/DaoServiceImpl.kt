@@ -1,12 +1,10 @@
 package me.kuku.yuq.service.impl
 
-import com.IceCreamQAQ.Yu.annotation.AutoBind
 import com.icecreamqaq.yudb.jpa.annotation.Transactional
 import me.kuku.yuq.dao.*
 import me.kuku.yuq.service.DaoService
 import javax.inject.Inject
 
-@AutoBind
 class DaoServiceImpl: DaoService {
     @Inject
     private lateinit var qqJobDao: QQJobDao
@@ -18,6 +16,12 @@ class DaoServiceImpl: DaoService {
     private lateinit var superCuteDao: SuperCuteDao
     @Inject
     private lateinit var steamDao: SteamDao
+    @Inject
+    private lateinit var biliBiliDao: BiliBiliDao
+    @Inject
+    private lateinit var neTeaseDao: NeTeaseDao
+    @Inject
+    private lateinit var weiboDao: WeiboDao
 
     @Transactional
     override fun delQQ(qq: Long) {
@@ -26,5 +30,8 @@ class DaoServiceImpl: DaoService {
         motionDao.delByQQ(qq)
         superCuteDao.delByQQ(qq)
         steamDao.delByQQ(qq)
+        biliBiliDao.delByQQ(qq)
+        neTeaseDao.delByQQ(qq)
+        weiboDao.delByQQ(qq)
     }
 }

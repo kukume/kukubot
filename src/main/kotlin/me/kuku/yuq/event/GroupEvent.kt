@@ -57,7 +57,7 @@ class GroupEvent {
             val blackJsonArray = qqGroupEntity.getBlackJsonArray()
             for (i in blackJsonArray.indices) {
                 val black = blackJsonArray.getLong(i)
-                if (black == e.qq) {
+                if (black == e.qq.id) {
                     status = false
                     break
                 }

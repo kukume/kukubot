@@ -75,9 +75,10 @@ class BiliBiliJob {
                     this.match(commentJsonArray, userId).forEach { biliBiliLogic.comment(biliBiliEntity, id, biliBiliPojo.type.toString(), it.getString("content")) }
                     val forwardJsonArray = biliBiliEntity.getForwardJsonArray()
                     this.match(forwardJsonArray, userId).forEach { biliBiliLogic.forward(biliBiliEntity, id, it.getString("content")) }
-                    if (biliBiliPojo.bvId != null){
+                    val bvId = biliBiliPojo.bvId
+                    if (bvId != null){
                         val tossCoinJsonArray = biliBiliEntity.getTossCoinJsonArray()
-                        if (this.match(tossCoinJsonArray, userId).isNotEmpty()) { biliBiliLogic.tossCoin(biliBiliEntity, rid, 2) }
+                        if (this.match(tossCoinJsonArray, userId).isNotEmpty()) { biliBiliLogic.tossCoin(biliBiliEntity, rid, bvId, 2) }
                         val favoritesJsonArray = biliBiliEntity.getFavoritesJsonArray()
                         this.match(favoritesJsonArray, userId).forEach { biliBiliLogic.favorites(biliBiliEntity, rid, it.getString("content")) }
                     }

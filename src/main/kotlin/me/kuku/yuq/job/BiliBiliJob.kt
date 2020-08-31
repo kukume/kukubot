@@ -72,7 +72,7 @@ class BiliBiliJob {
                     val likeJsonArray = biliBiliEntity.getLikeJsonArray()
                     if (this.match(likeJsonArray, userId).isNotEmpty()) biliBiliLogic.like(biliBiliEntity, id, true)
                     val commentJsonArray = biliBiliEntity.getCommentJsonArray()
-                    this.match(commentJsonArray, userId).forEach { biliBiliLogic.comment(biliBiliEntity, id, biliBiliPojo.type.toString(), it.getString("content")) }
+                    this.match(commentJsonArray, userId).forEach { biliBiliLogic.comment(biliBiliEntity, rid, biliBiliPojo.type.toString(), it.getString("content")) }
                     val forwardJsonArray = biliBiliEntity.getForwardJsonArray()
                     this.match(forwardJsonArray, userId).forEach { biliBiliLogic.forward(biliBiliEntity, id, it.getString("content")) }
                     val bvId = biliBiliPojo.bvId

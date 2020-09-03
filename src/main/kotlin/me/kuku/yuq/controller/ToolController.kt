@@ -46,15 +46,15 @@ class ToolController: QQController() {
     fun teachYouGoogle(content: String) =
         "点击以下链接即可教您使用谷歌搜索“$content”\n${BotUtils.shortUrl("https://u.iheit.com/google/index.html?${URLEncoder.encode(content, "utf-8")}")}"
 
-    @QMsg(at = true)
+    @QMsg(at = true, atNewLine = true)
     @Action("舔狗日记")
     fun dogLicking() = toolLogic.dogLicking()
 
-    @QMsg(at = true)
+    @QMsg(at = true, atNewLine = true)
     @Action("百科 {params}")
     fun baiKe(params: String) = toolLogic.baiKe(params)
 
-    @QMsg(at = true)
+    @QMsg(at = true, atNewLine = true)
     @Action("嘴臭")
     @Synonym(["祖安语录"])
     fun mouthOdor(group: Long): String {
@@ -84,27 +84,30 @@ class ToolController: QQController() {
     fun queryIp(params: String) = toolLogic.queryIp(params)
 
     @Action("whois/{params}")
+    @QMsg(at = true, atNewLine = true)
     fun queryWhois(params: String) = toolLogic.queryWhois(params)
 
     @Action("icp/{params}")
+    @QMsg(at = true, atNewLine = true)
     fun queryIcp(params: String) = toolLogic.queryIcp(params)
 
     @Action("知乎日报")
+    @QMsg(at = true, atNewLine = true)
     fun zhiHuDaily() = toolLogic.zhiHuDaily()
 
-    @QMsg(at = true)
+    @QMsg(at = true, atNewLine = true)
     @Action("测吉凶")
     fun qqGodLock(qq: Long) = toolLogic.qqGodLock(qq)
 
-    @QMsg(at = true)
+    @QMsg(at = true, atNewLine = true)
     @Action("拼音/{params}")
     fun convertPinYin(params: String) = toolLogic.convertPinYin(params)
 
-    @QMsg(at = true)
+    @QMsg(at = true, atNewLine = true)
     @Action("笑话")
     fun jokes() = toolLogic.jokes()
 
-    @QMsg(at = true)
+    @QMsg(at = true, atNewLine = true)
     @Action("垃圾/{params}")
     fun rubbish(params: String) = toolLogic.rubbish(params)
 
@@ -124,6 +127,7 @@ class ToolController: QQController() {
     }
 
     @Action("解析/{url}")
+    @QMsg(at = true, atNewLine = true)
     fun parseVideo(url: String) = toolLogic.parseVideo(url)
 
     @Action("还原/{url}")
@@ -131,6 +135,7 @@ class ToolController: QQController() {
     fun restoreShortUrl(url: String) = toolLogic.restoreShortUrl(url)
 
     @Action("ping/{domain}")
+    @QMsg(at = true, atNewLine = true)
     fun ping(domain: String) = toolLogic.ping(domain)
 
     @Action("\\.*\\")
@@ -167,10 +172,10 @@ class ToolController: QQController() {
                 if (url.startsWith("http")){
                     val response = OkHttpClientUtils.get(url)
                     val bytes = OkHttpClientUtils.getBytes(response)
-                    mif.image(bytes).toMessage()
+                    mif.imageToFlash(mif.image(bytes)).toMessage()
                 }else url.toMessage()
             }
-            "danbooru" -> mif.imageByUrl(toolLogic.danBooRuPic()).toMessage()
+            "danbooru" -> mif.imageToFlash(mif.imageByUrl(toolLogic.danBooRuPic())).toMessage()
             else -> "涩图类型不匹配！！".toMessage()
         }
     }
@@ -216,6 +221,7 @@ class ToolController: QQController() {
     fun menu() = "菜单它来了：https://w.url.cn/s/Adt25oJ"
 
     @Action("qr/{content}")
+    @QMsg(at = true, atNewLine = true)
     fun creatQrCode(content: String): Message{
         val url = toolLogic.creatQr(content)
         return mif.imageByUrl(url).toMessage()
@@ -234,9 +240,11 @@ class ToolController: QQController() {
     }
 
     @Action("lol周免")
+    @QMsg(at = true, atNewLine = true)
     fun lolFree() = toolLogic.lolFree()
 
     @Action("缩写/{content}")
+    @QMsg(at = true, atNewLine = true)
     fun abbreviation(content: String) = toolLogic.abbreviation(content)
 
     @Action("几点了")
@@ -279,6 +287,7 @@ class ToolController: QQController() {
     }
 
     @Action("知乎热榜")
+    @QMsg(at = true, atNewLine = true)
     fun zhiHuHot(): String{
         val list = toolLogic.zhiHuHot()
         val sb = StringBuilder()
@@ -290,6 +299,7 @@ class ToolController: QQController() {
     }
 
     @Action("loc")
+    @QMsg(at = true, atNewLine = true)
     fun loc(): String{
         val list = toolLogic.hostLocPost()
         val sb = StringBuilder()
@@ -298,6 +308,7 @@ class ToolController: QQController() {
     }
 
     @Action("分词")
+    @QMsg(at = true, atNewLine = true)
     fun wordSegmentation(qq: Long, session: ContextSession): String{
         reply(mif.at(qq).plus("请输入需要中文分词的内容！！"))
         val nextMessage = session.waitNextMessage()
@@ -327,7 +338,7 @@ class ToolController: QQController() {
 
     @Action("OCR {img}")
     @Synonym(["ocr {img}"])
-    @QMsg(at = true)
+    @QMsg(at = true, atNewLine = true)
     fun ocr(img: Image) = qqAiLogic.generalOCR(img.url)
 
     @Action("github加速")

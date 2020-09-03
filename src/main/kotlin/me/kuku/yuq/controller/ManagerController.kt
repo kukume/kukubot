@@ -39,7 +39,7 @@ class ManagerController: QQController() {
     @Inject
     private lateinit var biliBiliLogic: BiliBiliLogic
 
-    private val version = "v1.5.6"
+    private val version = "v1.5.7"
 
     @Before
     fun before(group: Long, qq: Long, actionContext: BotActionContext, message: Message){
@@ -50,7 +50,7 @@ class ManagerController: QQController() {
         }
         actionContext.session["qqGroupEntity"] = qqGroupEntity
         val msg = message.toPath()[0]
-        val whiteList = arrayOf("问答", "违规词", "黑名单", "查黑", "白名单", "查白", "开关", "查撤回", "查管", "查微博监控", "检查更新")
+        val whiteList = arrayOf("问答", "违规词", "黑名单", "查黑", "白名单", "查白", "开关", "查撤回", "查管", "查微博监控", "检查更新", "查拦截")
         val adminWhiteList = qqGroupEntity.getAllowedCommandsJsonArray()
         if (!whiteList.contains(msg)) {
             val adminJsonArray = qqGroupEntity.getAdminJsonArray()
@@ -61,7 +61,7 @@ class ManagerController: QQController() {
     }
 
     @Action("查{op}")
-    @QMsg(at = true)
+    @QMsg(at = true, atNewLine = true)
     fun query(qqGroupEntity: QQGroupEntity, op: String): String?{
         val jsonArray: JSONArray
         val msg: String
@@ -221,12 +221,13 @@ class ManagerController: QQController() {
         return if (status) "${op}开启成功" else "${op}关闭成功"
     }
 
-    @Action("{op}监控 {name}")
+    @Action("微博监控 {name}")
+    @Synonym(["哔哩哔哩监控 {name}"])
     @QMsg(at = true)
-    fun addMonitor(qqGroupEntity: QQGroupEntity, op: String, name: String): String?{
+    fun addMonitor(qqGroupEntity: QQGroupEntity, name: String, @PathVar(0) op: String): String?{
         val jsonObject = JSONObject()
-        when (op){
-            "微博" -> {
+        when {
+            "微博" in op -> {
                 val commonResult = weiboLogic.getIdByName(name)
                 val weiboPojo = commonResult.t?.get(0) ?: return commonResult.msg
                 val weiboJsonArray = qqGroupEntity.getWeiboJsonArray()
@@ -235,7 +236,7 @@ class ManagerController: QQController() {
                 weiboJsonArray.add(jsonObject)
                 qqGroupEntity.weiboList = weiboJsonArray.toString()
             }
-            "哔哩哔哩" -> {
+            "哔哩哔哩" in op -> {
                 val commonResult = biliBiliLogic.getIdByName(name)
                 val list = commonResult.t ?: return commonResult.msg
                 val biliBiliPojo = list[0]
@@ -274,7 +275,7 @@ class ManagerController: QQController() {
 
     @Action("查微博监控")
     @Synonym(["查哔哩哔哩监控"])
-    @QMsg(at = true)
+    @QMsg(at = true, atNewLine = true)
     fun queryMonitor(qqGroupEntity: QQGroupEntity, @PathVar(0) op: String): String?{
         val jsonArray: JSONArray
         val msg: String
@@ -306,7 +307,7 @@ class ManagerController: QQController() {
     }
 
     @Action("开关")
-    @QMsg(at = true)
+    @QMsg(at = true, atNewLine = true)
     fun kai(qqGroupEntity: QQGroupEntity): String{
         val sb = StringBuilder("本群开关情况如下：\n")
         sb.appendln("音乐：${qqGroupEntity.musicType}")
@@ -425,6 +426,7 @@ class ManagerController: QQController() {
 
     @Action("问答")
     @Synonym(["查问答"])
+    @QMsg(at = true, atNewLine = true)
     fun qaList(qqGroupEntity: QQGroupEntity): String{
         val sb = StringBuilder().appendln("本群问答列表如下：")
         val qaJsonArray = qqGroupEntity.getQaJsonArray()

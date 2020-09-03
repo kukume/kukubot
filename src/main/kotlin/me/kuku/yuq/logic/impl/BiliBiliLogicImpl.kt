@@ -14,6 +14,7 @@ import me.kuku.yuq.utils.OkHttpClientUtils
 import me.kuku.yuq.utils.QQUtils
 import me.kuku.yuq.utils.removeSuffixLine
 import okhttp3.MultipartBody
+import okhttp3.Response
 import okio.ByteString
 import org.jsoup.Jsoup
 import java.net.URLEncoder
@@ -63,7 +64,7 @@ class BiliBiliLogicImpl: BiliBiliLogic {
         val cardStr = jsonObject.getString("card")
         val cardJsonObject = JSON.parseObject(cardStr)
         val itemJsonObject = cardJsonObject?.getJSONObject("item")
-        biliBiliPojo.text = cardJsonObject.getString("dynamic") ?: itemJsonObject?.getString("description") ?: itemJsonObject?.getString("content") ?: "没有发现内容！！"
+        biliBiliPojo.text = cardJsonObject.getString("dynamic") ?: itemJsonObject?.getString("description") ?: itemJsonObject?.getString("content") ?: cardJsonObject?.getJSONObject("vest")?.getString("content") ?: "没有发现内容！！"
         val picJsonArray = itemJsonObject?.getJSONArray("pictures")
         val picList = biliBiliPojo.picList
         picJsonArray?.forEach {
@@ -88,8 +89,14 @@ class BiliBiliLogicImpl: BiliBiliLogic {
             }else {
                 biliBiliPojo.forwardText = forwardContentJsonObject.getString("dynamic")
                 val forwardOwnerJsonObject = forwardContentJsonObject.getJSONObject("owner")
-                biliBiliPojo.forwardUserId = forwardOwnerJsonObject.getString("mid")
-                biliBiliPojo.forwardName = forwardOwnerJsonObject.getString("name")
+                if (forwardOwnerJsonObject != null) {
+                    biliBiliPojo.forwardUserId = forwardOwnerJsonObject.getString("mid")
+                    biliBiliPojo.forwardName = forwardOwnerJsonObject.getString("name")
+                }else{
+                    biliBiliPojo.forwardName = forwardContentJsonObject.getString("uname")
+                    biliBiliPojo.forwardUserId = forwardContentJsonObject.getString("uid")
+                    biliBiliPojo.forwardText = forwardContentJsonObject.getString("title")
+                }
             }
         }
         biliBiliPojo.type = if (biliBiliPojo.bvId == null){
@@ -127,6 +134,7 @@ class BiliBiliLogicImpl: BiliBiliLogic {
         val list = mutableListOf<BiliBiliPojo>()
         for (i in jsonArray.indices){
             val singleJsonObject = jsonArray.getJSONObject(i)
+            if (singleJsonObject.getJSONObject("extra")?.getInteger("is_space_top") == 1) continue
             list.add(this.convert(singleJsonObject))
         }
         return CommonResult(200, "", list)
@@ -156,12 +164,9 @@ class BiliBiliLogicImpl: BiliBiliLogic {
                 "cookie", dfcCookie,
                 "referer", superLoginUrl
         ))
-        val cookie = OkHttpClientUtils.getCookie(biliBiliLoginResponse)
-        val token = BotUtils.regex("bili_jct=", "; ", cookie)!!
-        biliBiliLoginResponse.close()
-        val locationUrl = biliBiliLoginResponse.header("location")!!
-        val userId = BotUtils.regex("DedeUserID=", "&", locationUrl)!!
-        return CommonResult(200, "登录成功", BiliBiliEntity(cookie = cookie, token = token, userId = userId))
+        val biliBiliEntity = this.getBiliBiliEntityByResponse(biliBiliLoginResponse)
+        return if (biliBiliEntity == null) CommonResult(500, "您可能没有使用哔哩哔哩绑定您的QQ账号，请绑定后再试！！")
+        else CommonResult(200, "登录成功", biliBiliEntity)
     }
 
     override fun loginByWeibo(weiboEntity: WeiboEntity): CommonResult<BiliBiliEntity> {
@@ -219,12 +224,49 @@ class BiliBiliLogicImpl: BiliBiliLogic {
                 "cookie", dfcCookie,
                 "referer", loginUrl
         ))
-        resultResponse.close()
-        val cookie = OkHttpClientUtils.getCookie(resultResponse)
-        val token = BotUtils.regex("bili_jct=", "; ", cookie)!!
-        val locationUrl = resultResponse.header("location")!!
+        val biliBiliEntity = this.getBiliBiliEntityByResponse(resultResponse)
+        return if (biliBiliEntity == null) CommonResult(500, "您可能没有使用哔哩哔哩绑定您的微博账号，请绑定后重试！！")
+        else CommonResult(200, "登录成功", biliBiliEntity)
+    }
+
+    override fun loginByQr1(): String {
+        val response = OkHttpClientUtils.get("https://passport.bilibili.com/qrcode/getLoginUrl")
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return jsonObject.getJSONObject("data").getString("url")
+    }
+
+    override fun loginByQr2(url: String): CommonResult<BiliBiliEntity> {
+        val oauthKey = BotUtils.regex("(?<=oauthKey\\=).*", url) ?: return CommonResult(500, "链接格式不正确！！")
+        val response = OkHttpClientUtils.post(
+            "https://passport.bilibili.com/qrcode/getLoginInfo", OkHttpClientUtils.addForms(
+                "oauthKey", oauthKey,
+                "gourl", "https://www.bilibili.com"
+            )
+        )
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        val status = jsonObject.getBoolean("status")
+        return if (!status){
+            when (jsonObject.getInteger("data")){
+                -2 -> CommonResult(500, "oauthKey不正确，请重试！！")
+                -4 -> CommonResult(1, "二维码未被扫描！！")
+                -5 -> CommonResult(2, "二维码已被扫描！！")
+                else -> CommonResult(500, jsonObject.getString("message"))
+            }
+        }else{
+            val successUrl = jsonObject.getJSONObject("data").getString("url")
+            val sucResponse = OkHttpClientUtils.get(successUrl, OkHttpClientUtils.addReferer("https://passport.bilibili.com/login"))
+            val biliBiliEntity = this.getBiliBiliEntityByResponse(sucResponse)!!
+            CommonResult(200, "", biliBiliEntity)
+        }
+    }
+
+    private fun getBiliBiliEntityByResponse(response: Response): BiliBiliEntity?{
+        response.close()
+        val cookie = OkHttpClientUtils.getCookie(response)
+        val token = BotUtils.regex("bili_jct=", "; ", cookie) ?: return null
+        val locationUrl = response.header("location")!!
         val userId = BotUtils.regex("DedeUserID=", "&", locationUrl)!!
-        return CommonResult(200, "登录成功", BiliBiliEntity(cookie = cookie, token = token, userId = userId))
+        return BiliBiliEntity(cookie = cookie, token = token, userId = userId)
     }
 
     override fun getFriendDynamic(biliBiliEntity: BiliBiliEntity): CommonResult<List<BiliBiliPojo>> {

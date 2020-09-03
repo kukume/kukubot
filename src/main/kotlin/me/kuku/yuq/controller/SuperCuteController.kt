@@ -42,7 +42,7 @@ class SuperCuteController: QQController() {
     fun dailySign(map: Map<String, String>) = superCuteLogic.dailySign(map)
 
     @Action("萌宠元气")
-    @QMsg(at = true)
+    @QMsg(at = true, atNewLine = true)
     fun dailyVitality(map: Map<String, String>, qq: Long): String{
         reply(mif.at(qq).plus("正在为您领取元气中~~~请稍后~~~"))
         val str1 = superCuteLogic.dailyVitality(map)
@@ -87,11 +87,11 @@ class SuperCuteController: QQController() {
     }
 
     @Action("萌宠信息")
-    @QMsg(at = true)
+    @QMsg(at = true, atNewLine = true)
     fun profile(map: Map<String, String>) = superCuteLogic.getProfile(map)
 
     @Action("萌宠一键")
-    @QMsg(at = true)
+    @QMsg(at = true, atNewLine = true)
     @Synchronized fun all(map: Map<String, String>, qq: Long): String{
         reply(mif.at(qq).plus("正在为您的萌宠完成任务~~~时间会很长~~~请稍后~~~"))
         val str1 = superCuteLogic.findCute(map)

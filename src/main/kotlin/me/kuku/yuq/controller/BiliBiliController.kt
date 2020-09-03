@@ -2,6 +2,7 @@ package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Before
+import com.IceCreamQAQ.Yu.annotation.Synonym
 import com.alibaba.fastjson.JSONObject
 import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.annotation.PathVar
@@ -9,18 +10,22 @@ import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.controller.QQController
+import com.icecreamqaq.yuq.entity.Group
 import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.toMessage
 import me.kuku.yuq.entity.BiliBiliEntity
 import me.kuku.yuq.logic.BiliBiliLogic
+import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.pojo.BiliBiliPojo
 import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.service.BiliBiliService
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.OkHttpClientUtils
 import me.kuku.yuq.utils.removeSuffixLine
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import kotlin.concurrent.thread
 
 @GroupController
 class BiliBiliController: QQController() {
@@ -28,20 +33,59 @@ class BiliBiliController: QQController() {
     private lateinit var biliBiliLogic: BiliBiliLogic
     @Inject
     private lateinit var biliBiliService: BiliBiliService
+    @Inject
+    private lateinit var toolLogic: ToolLogic
 
     @Before
     fun before(qq: Long, message: Message, actionContext: BotActionContext){
-        val whiteList = arrayOf("bilibili")
+        val whiteList = arrayOf("bilibili", "哔哩哔哩", "bilibililoginbyqr")
         val list = message.toPath()
         if (list.isNotEmpty() && whiteList.contains(list[0])){
             return
         }
         val biliBiliEntity = biliBiliService.findByQQ(qq)
-        if (biliBiliEntity == null || biliBiliEntity.cookie == "") throw mif.at(qq).plus("您还没有绑定哔哩哔哩账号，无法继续！！！，如需绑定请发送[bilibililogin]或[bilibililoginbyweibo]")
+        if (biliBiliEntity == null || biliBiliEntity.cookie == "") throw mif.at(qq).plus("您还没有绑定哔哩哔哩账号，无法继续！！！，如需绑定请发送[bilibililoginbyqq]或[bilibililoginbyweibo]或[]bilibililoginbyqr")
         actionContext["biliBiliEntity"] = biliBiliEntity
     }
 
+    @Action("bilibililoginbyqr")
+    @QMsg(at = true)
+    fun biliBiliLoginByQr(group: Group, qq: Long): Message{
+        val url = biliBiliLogic.loginByQr1()
+        val qrUrl = toolLogic.creatQr(url)
+        var count = 0
+        thread {
+            while (true){
+                if (++count >= 20){
+                    group.sendMessage(mif.at(qq).plus("您不能使用使用这个二维码登录哔哩哔哩了！！"))
+                    return@thread
+                }
+                TimeUnit.SECONDS.sleep(3)
+                val commonResult = biliBiliLogic.loginByQr2(url)
+                when (commonResult.code){
+                    500 -> {
+                        group.sendMessage(mif.at(qq).plus(commonResult.msg))
+                        return@thread
+                    }
+                    200 -> {
+                        val biliBiliEntity = biliBiliService.findByQQ(qq) ?: BiliBiliEntity(null, qq, group.id)
+                        val newBiliBiliEntity = commonResult.t!!
+                        biliBiliEntity.cookie = newBiliBiliEntity.cookie
+                        biliBiliEntity.token = newBiliBiliEntity.token
+                        biliBiliEntity.userId = newBiliBiliEntity.userId
+                        biliBiliService.save(biliBiliEntity)
+                        group.sendMessage(mif.at(qq).plus("绑定或者更新哔哩哔哩成功！！"))
+                        return@thread
+                    }
+                }
+            }
+        }
+        return mif.text("请使用哔哩哔哩APP扫码登录：").plus(mif.imageByUrl(qrUrl))
+    }
+
     @Action("bilibili {username}")
+    @Synonym(["哔哩哔哩 {username}"])
+    @QMsg(at = true, atNewLine = true)
     fun searchDynamic(username: String, @PathVar(value = 2, type = PathVar.Type.Integer) num: Int?, qq: Long): Message{
         val commonResult = this.queryDynamic(username, num)
         val biliBiliPojo = commonResult.t ?: return mif.at(qq).plus(commonResult.msg)
@@ -49,6 +93,7 @@ class BiliBiliController: QQController() {
     }
 
     @Action("bilibilimy")
+    @QMsg(at = true, atNewLine = true)
     fun searchMyFriendDynamic(biliBiliEntity: BiliBiliEntity, @PathVar(value = 1, type = PathVar.Type.Integer) num :Int?, qq: Long): Message{
         val commonResult = biliBiliLogic.getFriendDynamic(biliBiliEntity)
         val list = commonResult.t ?: return mif.at(qq).plus(commonResult.msg)
@@ -78,7 +123,7 @@ class BiliBiliController: QQController() {
     }
 
     @Action("查哔哩哔哩开播提醒")
-    @QMsg(at = true)
+    @QMsg(at = true, atNewLine = true)
     fun queryBiliBiliLive(biliBiliEntity: BiliBiliEntity): String{
         val liveJsonArray = biliBiliEntity.getLiveJsonArray()
         val sb = StringBuilder().appendln("您的开播提醒的用户如下：")
@@ -106,6 +151,7 @@ class BiliBiliController: QQController() {
     @Action("哔哩哔哩自动{op} {username}")
     @QMsg(at = true)
     fun autoComment(biliBiliEntity: BiliBiliEntity, op: String, username: String, @PathVar(2) content: String?): String?{
+        if (op == "三连" && content == null) return "添加哔哩哔哩自动三连需要收藏到的收藏夹名称！！"
         if (!arrayOf("自动赞", "自动投硬币").contains(op) && content == null) return "缺少${op}的内容！！"
         val commonResult = this.searchToJsonObject(username, if (content == null) null else mapOf("content" to content))
         val jsonObject = commonResult.t ?: return commonResult.msg
@@ -131,6 +177,17 @@ class BiliBiliController: QQController() {
                 biliBiliEntity.tossCoinList = tossCoinJsonArray.toString()
             }
             "收藏" -> {
+                val favoritesJsonArray = biliBiliEntity.getFavoritesJsonArray()
+                favoritesJsonArray.add(jsonObject)
+                biliBiliEntity.favoritesList = favoritesJsonArray.toString()
+            }
+            "三连" -> {
+                val likeJsonArray = biliBiliEntity.getLikeJsonArray()
+                likeJsonArray.add(jsonObject)
+                biliBiliEntity.likeList = likeJsonArray.toString()
+                val tossCoinJsonArray = biliBiliEntity.getTossCoinJsonArray()
+                tossCoinJsonArray.add(jsonObject)
+                biliBiliEntity.tossCoinList = tossCoinJsonArray.toString()
                 val favoritesJsonArray = biliBiliEntity.getFavoritesJsonArray()
                 favoritesJsonArray.add(jsonObject)
                 biliBiliEntity.favoritesList = favoritesJsonArray.toString()
@@ -170,6 +227,17 @@ class BiliBiliController: QQController() {
                 BotUtils.delAuto(favoritesJsonArray, username)
                 biliBiliEntity.favoritesList = favoritesJsonArray.toString()
             }
+            "自动三连" -> {
+                val likeJsonArray = biliBiliEntity.getLikeJsonArray()
+                BotUtils.delAuto(likeJsonArray, username)
+                biliBiliEntity.likeList = likeJsonArray.toString()
+                val tossCoinJsonArray = biliBiliEntity.getTossCoinJsonArray()
+                BotUtils.delAuto(tossCoinJsonArray, username)
+                biliBiliEntity.tossCoinList = tossCoinJsonArray.toString()
+                val favoritesJsonArray = biliBiliEntity.getFavoritesJsonArray()
+                BotUtils.delAuto(favoritesJsonArray, username)
+                biliBiliEntity.favoritesList = favoritesJsonArray.toString()
+            }
             else -> return null
         }
         biliBiliService.save(biliBiliEntity)
@@ -177,7 +245,7 @@ class BiliBiliController: QQController() {
     }
 
     @Action("查哔哩哔哩自动{op}")
-    @QMsg(at = true)
+    @QMsg(at = true, atNewLine = true)
     fun queryAuto(biliBiliEntity: BiliBiliEntity, op: String): String?{
         val jsonArray= when (op){
             "评论" -> biliBiliEntity.getCommentJsonArray()
@@ -196,7 +264,7 @@ class BiliBiliController: QQController() {
     }
 
     @Action("哔哩哔哩上传")
-    @QMsg(at = true)
+    @QMsg(at = true, atNewLine = true)
     fun uploadImage(qq: Long, session: ContextSession, biliBiliEntity: BiliBiliEntity): String{
         reply(mif.at(qq).plus("请输入需要上传的图片"))
         val body = session.waitNextMessage().body

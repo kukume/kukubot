@@ -100,6 +100,7 @@ class BotController: QQController() {
     }
 
     @Action("查业务 {qqNo}")
+    @QMsg(at = true, atNewLine = true)
     fun queryVip(qqNo: Long, qqEntity: QQEntity) = qqLogic.queryFriendVip(qqEntity, qqNo, null)
 
     @QMsg(at = true)
@@ -120,6 +121,7 @@ class BotController: QQController() {
     }
 
     @Action("群等级")
+    @QMsg(at = true, atNewLine = true)
     fun groupLevel(group: Long): String{
         val commonResult = qqGroupLogic.groupLevel(group)
         val list = commonResult.t ?: return commonResult.msg
@@ -131,7 +133,8 @@ class BotController: QQController() {
     }
 
     @Action("列出{level}级以下")
-    fun level(qqEntity: QQEntity, group: Long, level: String, session: ContextSession, qq: Long): String?{
+    @QMsg(at = true, atNewLine = true)
+    fun level(qqEntity: QQEntity, group: Long, level: String): String?{
         val members = yuq.groups[group]?.members ?: return "获取用户列表失败，请稍后再试！！"
         val levelNum = try {
             level.toInt()
@@ -149,22 +152,14 @@ class BotController: QQController() {
                 sb.appendln(k)
             }
         }
-        reply(sb.removeSuffixLine().toString())
-        val nextMessage = session.waitNextMessage(60 * 1000)
-        return if (this.judgmentKick(qq, nextMessage.firstString())) {
-            val whiteJsonArray = qqGroupService.findByGroup(group)?.getWhiteJsonArray() ?: JSONArray()
-            list.forEach {
-                if (it.toString() in whiteJsonArray) return@forEach
-                try{it.kick()}catch (e: Exception){e.printStackTrace()}
-            }
-            "踢出成功！！"
-        } else null
+        return sb.removeSuffixLine().toString()
     }
 
     @Action("列出{day}天未发言")
-    fun notSpeak(group: Long, day: String, session: ContextSession, qq: Long, qqEntity: QQEntity): String? {
+    @QMsg(at = true, atNewLine = true)
+    fun notSpeak(group: Long, day: String, qqEntity: QQEntity): String? {
         val commonResult = qqLogic.groupMemberInfo(qqEntity, group)
-        if (commonResult.code == 200) {
+        return if (commonResult.code == 200) {
             val list = commonResult.t!!
             val qqList = mutableListOf<Long>()
             val sb = StringBuilder().appendln("本群${day}天未发言的成员如下：")
@@ -174,21 +169,13 @@ class BotController: QQController() {
                     qqList.add(it.qq)
                 }
             }
-            reply(sb.removeSuffixLine().toString())
-            val nextMessage = session.waitNextMessage(30 * 1000)
-            return if (nextMessage.firstString() == "一键踢出" && qq.toString() == master) {
-                val whiteList = qqGroupService.findByGroup(group)?.whiteList ?: "查询群失败，踢出失败！！"
-                qqList.forEach {
-                    if (it.toString() in whiteList) return@forEach
-                    try{yuq.groups[group]?.get(it)?.kick()}catch (e: Exception){e.printStackTrace()}
-                }
-                "踢出成功！！"
-            } else null
+            sb.removeSuffixLine().toString()
         } else return commonResult.msg
     }
 
     @Action("列出从未发言")
-    fun neverSpeak(group: Long, session: ContextSession, qqEntity: QQEntity, qq: Long): String?{
+    @QMsg(at = true, atNewLine = true)
+    fun neverSpeak(group: Long, qqEntity: QQEntity): String?{
         val commonResult = qqLogic.groupMemberInfo(qqEntity, group)
         val list = commonResult.t ?: return commonResult.msg
         val qqList = mutableListOf<Long>()
@@ -199,17 +186,7 @@ class BotController: QQController() {
                 qqList.add(it.qq)
             }
         }
-        reply(sb.removeSuffixLine().toString())
-        val nextMessage = session.waitNextMessage(40 * 1000)
-        return if (nextMessage.firstString() == "一键踢出" && qq.toString() == master) {
-            val whiteList = qqGroupService.findByGroup(group)?.whiteList ?: "查询群失败，踢出失败！！"
-            qqList.forEach {
-                if (it.toString() in whiteList) return@forEach
-                yuq.groups[group]?.get(it)?.kick()
-            }
-            qqList.forEach { try{yuq.groups[group]?.get(it)?.kick()}catch (e: Exception){e.printStackTrace()} }
-            "踢出成功！！"
-        } else null
+        return sb.removeSuffixLine().toString()
     }
 
     @QMsg(at = true)
@@ -222,6 +199,7 @@ class BotController: QQController() {
     }
 
     @Action("查询 {qqNo}")
+    @QMsg(at = true, atNewLine = true)
     fun query(group: Long, qqNo: Long, qqEntity: QQEntity): String{
         val commonResult = qqGroupLogic.queryMemberInfo(group, qqNo)
         val groupMember = commonResult.t
@@ -247,9 +225,11 @@ class BotController: QQController() {
     fun groupLink(group: Long, qqEntity: QQEntity) = qqLogic.getGroupLink(qqEntity, group)
 
     @Action("群活跃")
+    @QMsg(at = true, atNewLine = true)
     fun groupActive(group: Long, qqEntity: QQEntity) = qqLogic.groupActive(qqEntity, group, 0)
 
     @Action("群文件")
+    @QMsg(at = true, atNewLine = true)
     fun groupFile(@PathVar(1) fileName: String?, group: Long, qqEntity: QQEntity) = qqLogic.groupFileUrl(qqEntity, group, fileName)
 
     @QMsg(at = true)
@@ -285,7 +265,7 @@ class BotController: QQController() {
                 qq.ban(60 * 5)
                 mif.at(qq.id).plus("迫害白名单用户，您已被禁言！！")
             }catch (e: PermissionDeniedException){
-                mif.at(qq.id).plus("禁止迫害白名单用户，禁言失败，权限不足！！")
+                mif.at(qq.id).plus("禁止迫害白名单用户，禁言迫害者失败，权限不足！！")
             }
         }
         val urlArr = arrayOf(
@@ -357,6 +337,4 @@ class BotController: QQController() {
         val list = commonResult.t ?: return commonResult.msg
         return list[Random.nextInt(list.size)]
     }
-
-    private fun judgmentKick(qq: Long, msg: String) = qq == master.toLong() && msg == "一键踢出"
 }

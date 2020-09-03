@@ -47,6 +47,7 @@ class WeiboController {
     }
 
     @Action("热搜")
+    @QMsg(at = true, atNewLine = true)
     fun hotSearch(group: Long): String{
         val list = weiboLogic.hotSearch()
         hotMap[group] = list
@@ -58,6 +59,7 @@ class WeiboController {
     }
 
     @Action("hot {num}")
+    @QMsg(at = true, atNewLine = true)
     fun hot(num: Int, group: Long): String{
         val list = if (hotMap.containsKey(group)) hotMap[group]!!
         else {
@@ -79,6 +81,7 @@ class WeiboController {
     }
 
     @Action("wb {username}")
+    @QMsg(at = true, atNewLine = true)
     fun searchWeibo(username: String, @PathVar(2) numStr: String?): String{
         val commonResult = this.queryWeibo(username, numStr)
         val weiboPojo = commonResult.t ?: return commonResult.msg
@@ -95,7 +98,7 @@ class WeiboController {
     }
 
     @Action("wbmy")
-    @QMsg(at = true)
+    @QMsg(at = true, atNewLine = true)
     fun myFriendWeibo(@PathVar(value = 1, type = PathVar.Type.Integer) num: Int?, weiboEntity: WeiboEntity): String{
         val commonResult = weiboLogic.getFriendWeibo(weiboEntity)
         return if (commonResult.code == 200) {
@@ -106,6 +109,7 @@ class WeiboController {
     }
 
     @Action("mywb")
+    @QMsg(at = true, atNewLine = true)
     fun myWeibo(@PathVar(value = 1, type = PathVar.Type.Integer) num: Int?, weiboEntity: WeiboEntity): String{
         val commonResult = weiboLogic.getMyWeibo(weiboEntity)
         val list = commonResult.t ?: return commonResult.msg
@@ -114,7 +118,7 @@ class WeiboController {
     }
 
     @Action("wbinfo {username}")
-    @QMsg(at = true)
+    @QMsg(at = true, atNewLine = true)
     fun weiboInfo(username: String): String{
         val idResult = weiboLogic.getIdByName(username)
         val idList = idResult.t ?: return idResult.msg
@@ -123,6 +127,7 @@ class WeiboController {
 
     @Action("wbtopic {keyword}")
     @Synonym(["微博话题 {keyword}"])
+    @QMsg(at = true, atNewLine = true)
     fun weiboTopic(keyword: String, @PathVar(value = 2, type = PathVar.Type.Integer) num: Int?): String{
         val commonResult = weiboLogic.weiboTopic(keyword)
         if (commonResult.code != 200) return commonResult.msg

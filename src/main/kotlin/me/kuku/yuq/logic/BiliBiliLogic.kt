@@ -16,6 +16,8 @@ interface BiliBiliLogic {
     fun getDynamicById(id: String): CommonResult<List<BiliBiliPojo>>
     fun loginByQQ(qqEntity: QQEntity): CommonResult<BiliBiliEntity>
     fun loginByWeibo(weiboEntity: WeiboEntity): CommonResult<BiliBiliEntity>
+    fun loginByQr1(): String
+    fun loginByQr2(url: String): CommonResult<BiliBiliEntity>
     fun getFriendDynamic(biliBiliEntity: BiliBiliEntity): CommonResult<List<BiliBiliPojo>>
     fun isLiveOnline(id: String): Boolean
     fun liveSign(biliBiliEntity: BiliBiliEntity): String

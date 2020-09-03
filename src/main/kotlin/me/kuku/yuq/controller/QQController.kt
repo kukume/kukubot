@@ -10,7 +10,6 @@ import com.icecreamqaq.yuq.controller.QQController
 import com.icecreamqaq.yuq.entity.Group
 import com.icecreamqaq.yuq.firstString
 import com.icecreamqaq.yuq.message.*
-import com.icecreamqaq.yuq.toMessage
 import me.kuku.yuq.entity.BiliBiliEntity
 import me.kuku.yuq.entity.NeTeaseEntity
 import me.kuku.yuq.entity.QQEntity
@@ -56,7 +55,7 @@ class QQController: QQController() {
         if (qqGroupEntity?.qqStatus == true) {
             val qqEntity = qqService.findByQQ(qq)
             when {
-                str.toLowerCase() == "qq" -> return
+                str.toLowerCase() == "qq" || str.toLowerCase()=="删除qq" -> return
                 qqEntity?.status == false -> throw mif.at(qq).plus("您的QQ已失效，请更新QQ！！")
                 qqEntity != null -> actionContext.session["qqEntity"] = qqEntity
                 else -> throw mif.at(qq).plus("没有绑定QQ！，请先发送qq进行扫码登录绑定，如需密码登录绑定请私聊机器人发送qq")
@@ -93,7 +92,7 @@ class QQController: QQController() {
     }
 
     @Action("业务")
-    @QMsg(at = true)
+    @QMsg(at = true, atNewLine = true)
     fun queryVip(qqEntity: QQEntity) = qqLogic.queryVip(qqEntity)
 
     @Action("昵称")
@@ -151,7 +150,7 @@ class QQController: QQController() {
     fun refuseAdd(qqEntity: QQEntity) = qqLogic.refuseAdd(qqEntity)
 
     @Action("超级签到")
-    @QMsg(at = true)
+    @QMsg(at = true, atNewLine = true)
     @Synchronized fun allSign(qqEntity: QQEntity, group: Long, qq: Long): String{
         reply(mif.at(qq).plus("请稍后！！！正在为您签到中~~~"))
         val str1 = qqLogic.qqSign(qqEntity)
@@ -212,11 +211,11 @@ class QQController: QQController() {
     }
 
     @Action("成长")
-    @QMsg(at = true)
+    @QMsg(at = true, atNewLine = true)
     fun growth(qqEntity: QQEntity): String = qqLogic.vipGrowthAdd(qqEntity)
 
     @Action("中转站")
-    @QMsg(at = true)
+    @QMsg(at = true, atNewLine = true)
     fun mailFile(qqEntity: QQEntity, qq: Long): String {
         if (qqEntity.password == "") return "获取QQ邮箱文件中转站分享链接，需要使用密码登录QQ！"
         reply(mif.at(qq).plus("正在获取中，请稍后~~~~~"))
@@ -264,7 +263,7 @@ class QQController: QQController() {
     }
 
     @Action("群列表")
-    @QMsg(at = true)
+    @QMsg(at = true, atNewLine = true)
     fun groupList(qqEntity: QQEntity): String{
         val commonResult = qqZoneLogic.queryGroup(qqEntity)
         return if (commonResult.code == 200){
@@ -357,7 +356,7 @@ class QQController: QQController() {
         }else "已退出上下文！！"
     }
 
-    @Action("bilibililogin")
+    @Action("bilibililoginbyqq")
     @QMsg(at = true)
     fun biliBiliLogin(qqEntity: QQEntity, qq: Long, group: Long): String{
         val commonResult = biliBiliLogic.loginByQQ(qqEntity)

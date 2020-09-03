@@ -3,7 +3,6 @@ package me.kuku.yuq.utils
 import com.IceCreamQAQ.Yu.util.OkHttpWebImpl
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
-import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.entity.Contact
 import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.message.*
@@ -55,10 +54,6 @@ object BotUtils {
     fun regex(first: String, last: String , text: String): String? {
         val regex = "(?<=$first).*?(?=$last)"
         return this.regex(regex, text)
-    }
-
-    fun addAt(actionContext: BotActionContext){
-        actionContext.reMessage!!.at=true
     }
 
     fun getGroupId(qq: Contact): Long{

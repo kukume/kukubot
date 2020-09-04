@@ -39,7 +39,7 @@ class ManagerController: QQController() {
     @Inject
     private lateinit var biliBiliLogic: BiliBiliLogic
 
-    private val version = "v1.5.7"
+    private val version = "v1.5.8"
 
     @Before
     fun before(group: Long, qq: Long, actionContext: BotActionContext, message: Message){
@@ -334,7 +334,7 @@ class ManagerController: QQController() {
         var colorPicType = qqGroupEntity.colorPicType
         var status = true
         when (type){
-            "native", "r-18", "danbooru" -> colorPicType = type
+            "native", "r-18", "danbooru", "lolicon", "loliconR18" -> colorPicType = type
             else -> status = false
         }
         return if (status){

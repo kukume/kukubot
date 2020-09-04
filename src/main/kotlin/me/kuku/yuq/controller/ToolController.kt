@@ -13,6 +13,7 @@ import com.icecreamqaq.yuq.message.*
 import com.icecreamqaq.yuq.toMessage
 import me.kuku.yuq.logic.QQAILogic
 import me.kuku.yuq.logic.ToolLogic
+import me.kuku.yuq.service.ConfigService
 import me.kuku.yuq.service.QQGroupService
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.OkHttpClientUtils
@@ -31,6 +32,8 @@ class ToolController: QQController() {
     private lateinit var qqGroupService: QQGroupService
     @Inject
     private lateinit var qqAiLogic: QQAILogic
+    @Inject
+    private lateinit var configService: ConfigService
     @Config("YuQ.Mirai.user.qq")
     private lateinit var qq: String
 
@@ -176,6 +179,20 @@ class ToolController: QQController() {
                 }else url.toMessage()
             }
             "danbooru" -> mif.imageToFlash(mif.imageByUrl(toolLogic.danBooRuPic())).toMessage()
+            "lolicon", "loliconR18" -> {
+                val configEntity = configService.findByType("loLiCon") ?:
+                        return mif.at(qq).plus("您还没有配置lolicon的apiKey，无法获取色图！！")
+                val apiKey = configEntity.content
+                val commonResult = toolLogic.colorPicByLoLiCon(apiKey, type == "loliconR18")
+                val map = commonResult.t ?: return mif.at(qq).plus(commonResult.msg)
+                val bytes = toolLogic.piXivPicProxy(map.getValue("url"))
+                val line = System.getProperty("line.separator")
+                mif.at(qq)
+                        .plus(mif.image(bytes))
+                        .plus("标题：${map["title"]}$line")
+                        .plus("当日剩余额度：${map["count"]}$line")
+                        .plus("恢复额度时间：${map["time"]}秒")
+            }
             else -> "涩图类型不匹配！！".toMessage()
         }
     }

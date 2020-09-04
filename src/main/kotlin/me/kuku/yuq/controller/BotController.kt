@@ -76,9 +76,29 @@ class BotController: QQController() {
         val place = "你猜"
         val text = "mirai在线签到！！！"
         if (param is Text)
-            qqLogic.groupSign(qqEntity, group, place, text, param.text, null)
-        else if (param is Image)
-            qqLogic.groupSign(qqEntity, group, place, text, "自定义", param.url)
+            qqGroupLogic.groupSign(group, place, text, param.text, null)
+        else if (param is Image) {
+            val commonResult = qqLogic.groupUploadImage(qqEntity, param.url)
+            val picId = commonResult.t?.getValue("picId") ?: return
+            qqGroupLogic.groupSign(group, place, text, "自定义", picId)
+        }
+    }
+
+    @Action("qq上传")
+    fun groupUpload(qqEntity: QQEntity, qq: Long, session: ContextSession): String{
+        reply(mif.at(qq).plus("请发送您需要上传的图片！！"))
+        val nextMessage = session.waitNextMessage()
+        val body = nextMessage.body
+        val sb = StringBuilder().appendln("您上传的图片链接如下：")
+        val i = 1
+        for (item in body){
+            if (item is Image){
+                val commonResult = qqLogic.groupUploadImage(qqEntity, item.url)
+                val url = commonResult.t?.getValue("picUrl") ?: commonResult.msg
+                sb.appendln("$i、$url")
+            }
+        }
+        return sb.removeSuffixLine().toString()
     }
 
     @QMsg(at = true)

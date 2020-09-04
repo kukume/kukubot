@@ -28,6 +28,8 @@ interface ToolLogic {
     fun weather(local: String, cookie: String): CommonResult<String>
     fun ping(domain: String): String
     fun colorPic(type: String): String
+    fun colorPicByLoLiCon(apiKey: String, isR18: Boolean): CommonResult<Map<String, String>>
+    fun piXivPicProxy(url: String): ByteArray
     fun r18setting(cookie: String, isOpen: Boolean): String
     fun hiToKoTo(): Map<String, String>
     fun songByQQ(name: String): String

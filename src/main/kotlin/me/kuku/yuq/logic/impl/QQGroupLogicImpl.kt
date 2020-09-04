@@ -1,6 +1,6 @@
 package me.kuku.yuq.logic.impl
 
-import com.IceCreamQAQ.Yu.util.Web
+import com.IceCreamQAQ.Yu.util.OkHttpWebImpl
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
 import com.icecreamqaq.yuq.mirai.MiraiBot
@@ -8,12 +8,13 @@ import me.kuku.yuq.logic.QQGroupLogic
 import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.pojo.GroupMember
 import me.kuku.yuq.utils.BotUtils
+import me.kuku.yuq.utils.postQQUA
 import javax.inject.Inject
 
 class QQGroupLogicImpl: QQGroupLogic {
 
     @Inject
-    private lateinit var web: Web
+    private lateinit var web: OkHttpWebImpl
     @Inject
     private lateinit var miraiBot: MiraiBot
 
@@ -267,5 +268,60 @@ class QQGroupLogicImpl: QQGroupLogic {
             ))
         }
         return list
+    }
+
+    override fun groupSign(group: Long, place: String, text: String, name: String, picId: String?): String {
+        val gtk = miraiBot.gtk
+        var info: String? = null
+        var templateId: String? = null
+        val templateStr = web.get("https://qun.qq.com/cgi-bin/qiandao/gallery_template?gc=$group&bkn=$gtk&time=1014")
+        val templateJsonObject = JSON.parseObject(templateStr)
+        if (templateJsonObject.getInteger("retcode") != 0) return "qq群签到失败，请更新QQ！！"
+        templateJsonObject.getJSONObject("data").getJSONArray("list").forEach {
+            val singleJsonObject = it as JSONObject
+            if (singleJsonObject.getString("name") == name){
+                info = if (singleJsonObject.containsKey("gallery_info")){
+                    val infoJsonObject = singleJsonObject.getJSONObject("gallery_info")
+                    "{\"category_id\":${infoJsonObject.getInteger("category_id")},\"page\":${infoJsonObject.getInteger("page")},\"pic_id\":${infoJsonObject.getInteger("pic_id")}}"
+                }else "{\"category_id\":\"\",\"page\":\"\",\"pic_id\":\"\"}"
+                templateId = singleJsonObject.getString("id")
+                return@forEach
+            }
+        }
+        if (info == null || templateId == null){
+            val template2Str = web.get("https://qun.qq.com/cgi-bin/qiandao/gallery_list?bkn=$gtk&category_ids=[9]&start=0&num=50")
+            val template2JsonObject = JSON.parseObject(template2Str)
+            val picJsonObject = template2JsonObject.getJSONObject("data").getJSONArray("picture_list").getJSONObject(0)
+            picJsonObject.getJSONArray("picture_item").forEach {
+                val singleJsonObject = it as JSONObject
+                if (singleJsonObject.getString("name") == name){
+                    info = "{\"category_id\":${picJsonObject.getInteger("category_id")},\"page\":${singleJsonObject.getInteger("page")},\"pic_id\":${singleJsonObject.getInteger("picture_id")}}"
+                    templateId = "[object Object]"
+                    return@forEach
+                }
+            }
+        }
+        if (info == null || templateId == null) return "群签到类型中没有${name}这个类型，请重试！！"
+        val str = web.postQQUA("https://qun.qq.com/cgi-bin/qiandao/sign/publish", mapOf(
+                "btn" to gtk.toString(),
+                "template_data" to "",
+                "gallery_info" to info!!,
+                "template_id" to templateId!!,
+                "gc" to group.toString(),
+                "client" to "2",
+                "lgt" to "0",
+                "lat" to "0",
+                "poi" to place,
+                "text" to text,
+                "pic_id" to (picId ?: "")
+        ))
+        val jsonObject = JSON.parseObject(str)
+        return when (jsonObject.getInteger("retcode")){
+            0 -> "qq群${group}签到成功"
+            10013,10001 -> "qq群签到失败，已被禁言！"
+            10016 -> "群签到一次性只能签到5个群，请10分钟后再试！"
+            5 -> "qq群签到失败，请更新QQ！！"
+            else -> "qq群签到失败，${jsonObject.getString("msg")}"
+        }
     }
 }

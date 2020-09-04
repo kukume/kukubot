@@ -64,7 +64,12 @@ class BiliBiliLogicImpl: BiliBiliLogic {
         val cardStr = jsonObject.getString("card")
         val cardJsonObject = JSON.parseObject(cardStr)
         val itemJsonObject = cardJsonObject?.getJSONObject("item")
-        biliBiliPojo.text = cardJsonObject.getString("dynamic") ?: itemJsonObject?.getString("description") ?: itemJsonObject?.getString("content") ?: cardJsonObject?.getJSONObject("vest")?.getString("content") ?: "没有发现内容！！"
+        biliBiliPojo.text = cardJsonObject.getString("dynamic") ?:
+                itemJsonObject?.getString("description") ?:
+                itemJsonObject?.getString("content") ?:
+                cardJsonObject?.getJSONObject("vest")?.getString("content") ?:
+                if (cardJsonObject.containsKey("title")) "${cardJsonObject.getString("title")}------${cardJsonObject.getString("summary") }" else null ?:
+                "没有发现内容！！"
         val picJsonArray = itemJsonObject?.getJSONArray("pictures")
         val picList = biliBiliPojo.picList
         picJsonArray?.forEach {
@@ -76,7 +81,7 @@ class BiliBiliLogicImpl: BiliBiliLogic {
             val forwardContentJsonObject = JSON.parseObject(originStr)
             if (forwardContentJsonObject.containsKey("item")){
                 val forwardItemJsonObject = forwardContentJsonObject.getJSONObject("item")
-                biliBiliPojo.forwardText = forwardItemJsonObject.getString("description")
+                biliBiliPojo.forwardText = forwardItemJsonObject.getString("description") ?: forwardItemJsonObject.getString("content")
                 val forwardPicJsonArray = forwardItemJsonObject.getJSONArray("pictures")
                 val forwardPicList = biliBiliPojo.forwardPicList
                 forwardPicJsonArray?.forEach {
@@ -85,7 +90,7 @@ class BiliBiliLogicImpl: BiliBiliLogic {
                 }
                 val forwardUserJsonObject = forwardContentJsonObject.getJSONObject("user")
                 biliBiliPojo.forwardUserId = forwardUserJsonObject.getString("uid")
-                biliBiliPojo.forwardName = forwardUserJsonObject.getString("name")
+                biliBiliPojo.forwardName = forwardUserJsonObject.getString("name") ?: forwardUserJsonObject.getString("uname")
             }else {
                 biliBiliPojo.forwardText = forwardContentJsonObject.getString("dynamic")
                 val forwardOwnerJsonObject = forwardContentJsonObject.getJSONObject("owner")

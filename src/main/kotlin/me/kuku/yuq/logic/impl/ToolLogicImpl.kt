@@ -312,6 +312,32 @@ class ToolLogicImpl: ToolLogic {
         }else jsonObject.getString("msg")
     }
 
+    override fun colorPicByLoLiCon(apiKey: String, isR18: Boolean): CommonResult<Map<String, String>> {
+        val response = OkHttpClientUtils.get("https://api.lolicon.app/setu/?apikey=$apiKey&r18=${if (isR18) 1 else 0}")
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return when (jsonObject.getInteger("code")){
+            0 -> {
+                val dataJsonObject = jsonObject.getJSONArray("data").getJSONObject(0)
+                CommonResult(200, "", mapOf(
+                        "count" to jsonObject.getString("quota"),
+                        "time" to jsonObject.getString("quota_min_ttl"),
+                        "url" to dataJsonObject.getString("url"),
+                        "title" to dataJsonObject.getString("title"),
+                        "pid" to dataJsonObject.getString("pid"),
+                        "uid" to dataJsonObject.getString("uid")
+                ))
+            }
+            401 -> CommonResult(500, "APIKEY 不存在或被封禁")
+            429 -> CommonResult(500, "达到调用额度限制，距离下一次恢复额度时间：${jsonObject.getLong("quota_min_ttl")}秒")
+            else -> CommonResult(500, jsonObject.getString("msg"))
+        }
+    }
+
+    override fun piXivPicProxy(url: String): ByteArray {
+        val response = OkHttpClientUtils.get("https://$myApi/pixiv/picbyurl?url=${URLEncoder.encode(url, "utf-8")}")
+        return OkHttpClientUtils.getBytes(response)
+    }
+
     override fun r18setting(cookie: String, isOpen: Boolean): String {
         val response = OkHttpClientUtils.get("https://$myApi/pixiv/r18setting?cookie=$cookie&isopen=${if (isOpen) 1 else 0}")
         val jsonObject = OkHttpClientUtils.getJson(response)

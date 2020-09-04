@@ -18,71 +18,21 @@ import java.util.*
 import kotlin.random.Random
 
 class QQLogicImpl: QQLogic {
-    override fun groupSign(qqEntity: QQEntity, group: Long, place: String, text: String, name: String, url: String?): String {
-        var info: String? = null
-        var templateId: String? = null
-        val templateResponse = OkHttpClientUtils.get("https://qun.qq.com/cgi-bin/qiandao/gallery_template?gc=$group&bkn=${qqEntity.getGtk()}&time=1014", qqEntity.cookieWithGroup())
-        val templateJsonObject = OkHttpClientUtils.getJson(templateResponse)
-        if (templateJsonObject.getInteger("retcode") != 0) return "qq群签到失败，请更新QQ！！"
-        templateJsonObject.getJSONObject("data").getJSONArray("list").forEach {
-            val singleJsonObject = it as JSONObject
-            if (singleJsonObject.getString("name") == name){
-                info = if (singleJsonObject.containsKey("gallery_info")){
-                    val infoJsonObject = singleJsonObject.getJSONObject("gallery_info")
-                    "{\"category_id\":${infoJsonObject.getInteger("category_id")},\"page\":${infoJsonObject.getInteger("page")},\"pic_id\":${infoJsonObject.getInteger("pic_id")}}"
-                }else "{\"category_id\":\"\",\"page\":\"\",\"pic_id\":\"\"}"
-                templateId = singleJsonObject.getString("id")
-                return@forEach
-            }
+
+    override fun groupUploadImage(qqEntity: QQEntity, url: String): CommonResult<Map<String, String>> {
+        val bytes = OkHttpClientUtils.getBytes(OkHttpClientUtils.get(url))
+        val body = MultipartBody.Builder().setType(MultipartBody.FORM).addFormDataPart("bkn", qqEntity.getGtk())
+                .addFormDataPart("pic_up", Base64.getEncoder().encodeToString(bytes)).build()
+        val upResponse = OkHttpClientUtils.post("https://qun.qq.com/cgi-bin/qiandao/upload/pic", body, qqEntity.cookie())
+        val upJsonObject = OkHttpClientUtils.getJson(upResponse)
+        return if (upJsonObject.getInteger("retcode") == 0) {
+            val dataJsonObject = upJsonObject.getJSONObject("data")
+            CommonResult(200, "", mapOf(
+                    "picId" to dataJsonObject.getString("pic_id"),
+                    "picUrl" to dataJsonObject.getString("pic_url")
+            ))
         }
-        if (info == null || templateId == null){
-            val template2Response = OkHttpClientUtils.get("https://qun.qq.com/cgi-bin/qiandao/gallery_list?bkn=${qqEntity.getGtk()}&category_ids=[9]&start=0&num=50", qqEntity.cookieWithGroup())
-            val template2JsonObject = OkHttpClientUtils.getJson(template2Response)
-            val picJsonObject = template2JsonObject.getJSONObject("data").getJSONArray("picture_list").getJSONObject(0)
-            picJsonObject.getJSONArray("picture_item").forEach {
-                val singleJsonObject = it as JSONObject
-                if (singleJsonObject.getString("name") == name){
-                    info = "{\"category_id\":${picJsonObject.getInteger("category_id")},\"page\":${singleJsonObject.getInteger("page")},\"pic_id\":${singleJsonObject.getInteger("picture_id")}}"
-                    templateId = "[object Object]"
-                    return@forEach
-                }
-            }
-        }
-        if (info == null || templateId == null) return "没有${name}这个类型，请重试！！"
-        var imgId = ""
-        if (url != null) {
-            val bytes = OkHttpClientUtils.getBytes(OkHttpClientUtils.get(url))
-            val body = MultipartBody.Builder().setType(MultipartBody.FORM).addFormDataPart("bkn", qqEntity.getGtk())
-                    .addFormDataPart("pic_up", Base64.getEncoder().encodeToString(bytes)).build()
-            val upResponse = OkHttpClientUtils.post("https://qun.qq.com/cgi-bin/qiandao/upload/pic", body, qqEntity.cookie())
-            val upJsonObject = OkHttpClientUtils.getJson(upResponse)
-            imgId = if (upJsonObject.getInteger("retcode") == 0) upJsonObject.getJSONObject("data").getString("pic_id")
-            else return "上传图片失败，${upJsonObject.getString("msg")}"
-        }
-        val response = OkHttpClientUtils.post("https://qun.qq.com/cgi-bin/qiandao/sign/publish", OkHttpClientUtils.addForms(
-                "btn", qqEntity.getGtk(),
-                "template_data", "",
-                "gallery_info", info!!,
-                "template_id", templateId!!,
-                "gc", group.toString(),
-                "client", "2",
-                "lgt", "0",
-                "lat", "0",
-                "poi", place,
-                "text", text,
-                "pic_id", imgId
-        ), OkHttpClientUtils.addHeaders(
-                "cookie", qqEntity.getCookieWithGroup(),
-                "user-agent", OkHttpClientUtils.QQ_UA
-        ))
-        val jsonObject = OkHttpClientUtils.getJson(response)
-        return when (jsonObject.getInteger("retcode")){
-            0 -> "qq群${group}签到成功"
-            10013,10001 -> "qq群签到失败，已被禁言！"
-            10016 -> "群签到一次性只能签到5个群，请10分钟后再试！"
-            5 -> "qq群签到失败，请更新QQ！！"
-            else -> "qq群签到失败，${jsonObject.getString("msg")}"
-        }
+        else CommonResult(500, "上传图片失败，${upJsonObject.getString("msg")}")
     }
 
     override fun groupLottery(qqEntity: QQEntity, group: Long): String {

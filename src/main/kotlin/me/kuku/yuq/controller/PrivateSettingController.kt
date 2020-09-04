@@ -5,21 +5,26 @@ import com.IceCreamQAQ.Yu.annotation.Before
 import com.IceCreamQAQ.Yu.annotation.Config
 import com.IceCreamQAQ.Yu.annotation.Synonym
 import com.IceCreamQAQ.Yu.util.OkHttpWebImpl
+import com.alibaba.fastjson.JSONObject
 import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.annotation.PrivateController
 import com.icecreamqaq.yuq.controller.BotActionContext
+import com.icecreamqaq.yuq.controller.ContextSession
+import com.icecreamqaq.yuq.controller.QQController
+import com.icecreamqaq.yuq.firstString
 import com.icecreamqaq.yuq.mirai.MiraiBot
 import com.icecreamqaq.yuq.toMessage
-import com.icecreamqaq.yuq.yuq
+import me.kuku.yuq.entity.ConfigEntity
 import me.kuku.yuq.entity.QQEntity
 import me.kuku.yuq.entity.QQGroupEntity
 import me.kuku.yuq.logic.QQLogic
+import me.kuku.yuq.service.ConfigService
 import me.kuku.yuq.service.QQGroupService
 import me.kuku.yuq.utils.BotUtils
 import javax.inject.Inject
 
 @PrivateController
-class PrivateSettingController {
+class PrivateSettingController: QQController() {
     @Inject
     private lateinit var qqGroupService: QQGroupService
     @Config("YuQ.Mirai.bot.master")
@@ -30,6 +35,8 @@ class PrivateSettingController {
     private lateinit var web: OkHttpWebImpl
     @Inject
     private lateinit var miraiBot: MiraiBot
+    @Inject
+    private lateinit var configService: ConfigService
 
     @Before
     fun before(qq: Long, actionContext: BotActionContext){
@@ -60,6 +67,33 @@ class PrivateSettingController {
             groups[groupNo]?.leave()
             "退出群聊成功！！"
         }else "机器人并没有加入这个群！！"
+    }
+
+    @Action("设置qqAI")
+    fun settingQQAI(session: ContextSession): String{
+        reply("将设置QQAI的信息，请确保您的应用赋予了图片鉴黄、智能闲聊、通用OCR能力")
+        reply("请输入ai.qq.com/v1的appId")
+        val firstMessage = session.waitNextMessage()
+        val appId = firstMessage.firstString()
+        reply("请输入ai.qq.com/v1的appKey")
+        val secondMessage = session.waitNextMessage()
+        val appKey = secondMessage.firstString()
+        val jsonObject = JSONObject()
+        jsonObject["appId"] = appId
+        jsonObject["appKey"] = appKey
+        val configEntity = configService.findByType("qqAI") ?: ConfigEntity(null, "qqAI")
+        configEntity.content = jsonObject.toString()
+        configService.save(configEntity)
+        return "绑定qqAI的信息成功！！"
+    }
+
+    @Action("设置lolicon {apiKey}")
+    fun settingLoLiCon(apiKey: String): String{
+        val configEntity = configService.findByType("loLiCon") ?:
+                ConfigEntity(null, "loLiCon")
+        configEntity.content = apiKey
+        configService.save(configEntity)
+        return "绑定loLiCon的apiKey成功！！"
     }
 
 }

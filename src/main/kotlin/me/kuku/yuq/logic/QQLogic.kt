@@ -7,8 +7,8 @@ import me.kuku.yuq.pojo.GroupMember
 
 @AutoBind
 interface QQLogic {
-    //群签到
-    fun groupSign(qqEntity: QQEntity, group: Long, place: String, text: String, name: String, url: String? = null): String
+    //群上传图片
+    fun groupUploadImage(qqEntity: QQEntity, url: String): CommonResult<Map<String, String>>
     //群抽礼物
     fun groupLottery(qqEntity: QQEntity, group: Long): String
     //会员签到

@@ -1,9 +1,10 @@
 package me.kuku.yuq.logic.impl
 
-import com.IceCreamQAQ.Yu.annotation.Config
+import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
 import me.kuku.yuq.logic.QQAILogic
 import me.kuku.yuq.pojo.CommonResult
+import me.kuku.yuq.service.ConfigService
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.MD5Utils
 import me.kuku.yuq.utils.OkHttpClientUtils
@@ -11,12 +12,22 @@ import me.kuku.yuq.utils.removeSuffixLine
 import okhttp3.FormBody
 import java.net.URLEncoder
 import java.util.*
+import javax.inject.Inject
 
 class QQAILogicImpl: QQAILogic {
-    @Config("YuQ.Mirai.bot.ai.appId")
-    private lateinit var appId: String
-    @Config("YuQ.Mirai.bot.ai.appKey")
-    private lateinit var appKey: String
+
+    @Inject
+    private lateinit var configService: ConfigService
+
+    private var appId = ""
+    private var appKey = ""
+
+   private fun before(){
+       val configEntity = configService.findByType("qqAI") ?: return
+       val jsonObject = JSON.parseObject(configEntity.content)
+       appId = jsonObject.getString("appId")
+       appKey = jsonObject.getString("appKey")
+   }
 
     private fun getSign(map: Map<String, String>): String{
         val treeMap = TreeMap<String, String>()
@@ -48,6 +59,7 @@ class QQAILogicImpl: QQAILogic {
     }
 
     override fun pornIdentification(imageUrl: String): Boolean{
+        before()
         val baseStr = this.urlToBase64(imageUrl)
         val response = OkHttpClientUtils.post("https://api.ai.qq.com/fcgi-bin/vision/vision_porn",
                 addParams(mapOf("image" to baseStr)))
@@ -62,6 +74,7 @@ class QQAILogicImpl: QQAILogic {
     }
 
     override fun generalOCR(imageUrl: String): String{
+        before()
         val baseStr = this.urlToBase64(imageUrl)
         val response = OkHttpClientUtils.post("https://api.ai.qq.com/fcgi-bin/ocr/ocr_generalocr",
                 addParams(mapOf("image" to baseStr)))
@@ -79,6 +92,7 @@ class QQAILogicImpl: QQAILogic {
     }
 
     override fun generalOCRToCaptcha(byteArray: ByteArray): CommonResult<String> {
+        before()
         val b64 = Base64.getEncoder().encodeToString(byteArray)
         val response = OkHttpClientUtils.post("https://api.ai.qq.com/fcgi-bin/ocr/ocr_generalocr",
                 addParams(mapOf("image" to b64)))
@@ -98,6 +112,7 @@ class QQAILogicImpl: QQAILogic {
     }
 
     override fun textChat(question: String, session: String): String{
+        before()
         val response = OkHttpClientUtils.post("https://api.ai.qq.com/fcgi-bin/nlp/nlp_textchat",
                 addParams(mapOf("session" to session, "question" to question)))
         val jsonObject = OkHttpClientUtils.getJson(response)
@@ -110,6 +125,7 @@ class QQAILogicImpl: QQAILogic {
     }
 
     override fun echoSpeechRecognition(url: String): String {
+        before()
         val speechResponse = OkHttpClientUtils.get(url)
         val bytes = OkHttpClientUtils.getBytes(speechResponse)
         val b64Str = Base64.getEncoder().encodeToString(bytes)
@@ -129,6 +145,7 @@ class QQAILogicImpl: QQAILogic {
     }
 
     override fun aiLabSpeechRecognition(url: String): String {
+        before()
         val speechResponse = OkHttpClientUtils.get(url)
         val bytes = OkHttpClientUtils.getBytes(speechResponse)
         val b64Str = Base64.getEncoder().encodeToString(bytes)

@@ -166,6 +166,7 @@ class ToolController: QQController() {
 
     @Action("涩图")
     @Synonym(["色图", "色图来"])
+    @Synchronized
     fun colorPic(group: Long, qq: Long): Message {
         val qqGroupEntity = qqGroupService.findByGroup(group)
         if (qqGroupEntity?.colorPic != true) throw mif.at(qq).plus("该功能已关闭")
@@ -199,7 +200,6 @@ class ToolController: QQController() {
 
     @Action("涩图十连")
     @Synonym(["色图十连"])
-    @Synchronized
     fun tenColorPic(group: Long, qq: Long){
         val time = Date().time
         val timeDifference = (time - colorPicTime) / 1000

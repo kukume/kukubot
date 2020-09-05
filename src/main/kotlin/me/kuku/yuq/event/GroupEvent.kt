@@ -30,6 +30,7 @@ class GroupEvent {
     private val prefixQQ = mutableMapOf<Long, Long>()
 
     @Event
+    @Synchronized
     fun repeat(e: GroupMessageEvent){
         val group = e.group.id
         val qq = e.sender.id

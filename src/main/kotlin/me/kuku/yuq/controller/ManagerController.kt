@@ -39,7 +39,7 @@ class ManagerController: QQController() {
     @Inject
     private lateinit var biliBiliLogic: BiliBiliLogic
 
-    private val version = "v1.5.8"
+    private val version = "v1.5.9"
 
     @Before
     fun before(group: Long, qq: Long, actionContext: BotActionContext, message: Message){
@@ -58,6 +58,21 @@ class ManagerController: QQController() {
                 if (qq != master.toLong()) throw mif.at(qq).plus("抱歉，您的权限不足，无法执行！！")
             }
         }
+    }
+
+    @Action("快速加admin命令")
+    @QMsg(at = true)
+    fun addAllCommands(qqGroupEntity: QQGroupEntity): String{
+        val list = listOf("加违规词", "加黑", "加白", "加拦截", "删管", "删黑", "删白", "删拦截", "复读", "整点报时",
+                "自动审核", "#龙王", "#qq", "欢迎语", "萌宠", "退群拉黑", "#嘴臭", "鉴黄", "#涩图", "撤回通知",
+                "闪照通知", "微博监控", "哔哩哔哩监控", "删微博监控", "删哔哩哔哩监控", "违规次数", "涩图切换",
+                "禁言", "t", "清屏", "点歌切换", "问", "删问答", "改", "公告", "全体禁言", "拉", "发布作业",
+                "群接龙", "群作业")
+        val jsonArray = JSONArray()
+        list.forEach { jsonArray.add(it) }
+        qqGroupEntity.allowedCommandsList = jsonArray.toString()
+        qqGroupService.save(qqGroupEntity)
+        return "添加管理员的命令权限成功！！"
     }
 
     @Action("查{op}")
@@ -97,49 +112,53 @@ class ManagerController: QQController() {
         return sb.removeSuffixLine().toString()
     }
 
-    @Action("加{op} {content}")
+    @Action("加{op}")
     @QMsg(at = true)
-    fun add(qqGroupEntity: QQGroupEntity, op: String, content: String, group: Long): Message?{
+    fun add(qqGroupEntity: QQGroupEntity, op: String, group: Long, message: Message): String?{
+        val listStr = message.toPath()
+        val streamStr = listStr.stream().skip(1)
         val msg = when (op){
             "管" -> {
                 val adminJsonArray = qqGroupEntity.getAdminJsonArray()
-                adminJsonArray.add(content)
+                streamStr.forEach { adminJsonArray.add(it) }
                 qqGroupEntity.adminList = adminJsonArray.toString()
-                mif.text("设置").plus(mif.at(content.toLong())).plus("为管理员成功！！")
+                "设置以上用户为管理员成功！！"
             }
             "admin命令" -> {
                 val allowedCommandsJsonArray = qqGroupEntity.getAllowedCommandsJsonArray()
-                allowedCommandsJsonArray.add(content)
+                streamStr.forEach { allowedCommandsJsonArray.add(it) }
                 qqGroupEntity.allowedCommandsList = allowedCommandsJsonArray.toString()
-                "添加管理员${content}的命令权限成功！！".toMessage()
+                "添加管理员的命令权限成功！！"
             }
             "违规词" -> {
                 val keywordJsonArray = qqGroupEntity.getKeywordJsonArray()
-                keywordJsonArray.add(content)
+                streamStr.forEach { keywordJsonArray.add(it) }
                 qqGroupEntity.keyword = keywordJsonArray.toString()
-                "添加违规词[${content}]成功！！".toMessage()
+                "添加以上违规词成功！！"
             }
             "黑" -> {
                 val blackJsonArray = qqGroupEntity.getBlackJsonArray()
-                blackJsonArray.add(content)
+                streamStr.forEach {
+                    blackJsonArray.add(it)
+                    val qqNo = it.toLong()
+                    val members = yuq.groups[group]?.members
+                    if (members!!.containsKey(qqNo))
+                        this.kick(qqNo, group)
+                }
                 qqGroupEntity.blackList = blackJsonArray.toString()
-                val members = yuq.groups[group]?.members
-                val qqNo = content.toLong()
-                if (members!!.containsKey(qqNo))
-                    this.kick(qqNo, group)
-                "添加黑名单成功！！".toMessage()
+                "添加黑名单成功！！"
             }
             "白" -> {
                 val whiteJsonArray = qqGroupEntity.getWhiteJsonArray()
-                whiteJsonArray.add(content)
+                streamStr.forEach { whiteJsonArray.add(it) }
                 qqGroupEntity.whiteList = whiteJsonArray.toString()
-                "添加白名单成功！！".toMessage()
+                "添加白名单成功！！"
             }
             "拦截" -> {
                 val interceptJsonArray = qqGroupEntity.getInterceptJsonArray()
-                interceptJsonArray.add(content)
+                streamStr.forEach { interceptJsonArray.add(it) }
                 qqGroupEntity.interceptList = interceptJsonArray.toString()
-                "${content}指令将不会再响应".toMessage()
+                "以上指令将不会再响应"
             }
             else -> return null
         }

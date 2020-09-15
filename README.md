@@ -17,7 +17,7 @@
 
 指令：[https://w.url.cn/s/Adt25oJ](https://w.url.cn/s/Adt25oJ)
 
-安装教程以及说明：[https://uxy.me/ydmX7](https://uxy.me/ydmX7)
+安装教程以及说明：[https://uxy.me/9RhHX](https://uxy.me/9RhHX)
 
 ## 鸣谢
 

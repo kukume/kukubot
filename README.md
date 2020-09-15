@@ -1,7 +1,5 @@
 **基于`YuQ-Mirai`的没有菜单的而且也不好用的机器人**
-* [YuQ](https://github.com/YuQWorks/YuQ)
 * [YuQ-Mirai](https://github.com/YuQWorks/YuQ-Mirai)
-* [YuQ-Mirai-Demo](https://github.com/YuQWorks/YuQ-Mirai-Demo)
 * [YuQ-Mirai-SuperDemo](https://github.com/YuQWorks/YuQ-SuperDemo)
 * [Mirai](https://github.com/mamoe/mirai)
 
@@ -19,12 +17,7 @@
 
 指令：[https://w.url.cn/s/Adt25oJ](https://w.url.cn/s/Adt25oJ)
 
-安装教程：[https://uxy.me/ydmX7](https://uxy.me/ydmX7)
-
-## 说明
-* 机器人使用之前必须发送`机器人 开`才能开启机器人
-* 数据库使用h2，目录`db`下
-* 发送的图片保存在`tmp`目录下
+安装教程以及说明：[https://uxy.me/ydmX7](https://uxy.me/ydmX7)
 
 ## 鸣谢
 

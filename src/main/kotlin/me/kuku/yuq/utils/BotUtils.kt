@@ -8,6 +8,7 @@ import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.message.*
 import com.icecreamqaq.yuq.mif
 import com.icecreamqaq.yuq.mirai.MiraiBot
+import com.icecreamqaq.yuq.mirai.message.ImageReceive
 import com.icecreamqaq.yuq.toMessage
 import me.kuku.yuq.entity.QQEntity
 import java.net.URLEncoder
@@ -71,7 +72,7 @@ object BotUtils {
                     aJsonObject["type"] = "text"
                     aJsonObject["content"] = messageItem.text
                 }
-                is Image -> {
+                is ImageReceive -> {
                     aJsonObject["type"] = "image"
                     aJsonObject["content"] = messageItem.url
                 }

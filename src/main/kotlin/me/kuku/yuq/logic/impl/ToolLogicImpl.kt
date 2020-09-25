@@ -10,6 +10,7 @@ import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.OkHttpClientUtils
 import me.kuku.yuq.utils.removeSuffixLine
 import org.jsoup.Jsoup
+import java.io.File
 import java.net.URLEncoder
 import java.nio.charset.Charset
 import java.text.SimpleDateFormat
@@ -36,7 +37,7 @@ class ToolLogicImpl: ToolLogic {
 
     override fun baiKe(text: String): String {
         val encodeText = URLEncoder.encode(text, "utf-8")
-        val url = "https://baike.baidu.com/item/$encodeText"
+        val url = "https://baike.baidu.com/search/word?word=$encodeText"
         val commonResult = this.baiKeByUrl(url)
         return when (commonResult.code) {
             200 -> {
@@ -54,9 +55,9 @@ class ToolLogicImpl: ToolLogic {
         var response = OkHttpClientUtils.get(url)
         while (response.code == 302){
             response.close()
-            val location = response.header("Location")
-            if ("https://baike.baidu.com/error.html" == location) return CommonResult(500, "")
-            val resultUrl = "https://baike.baidu.com$location"
+            val location = response.header("Location")!!
+            if (location.startsWith("//baike.baidu.com/search/none")) return CommonResult(500, "")
+            val resultUrl = if (location.startsWith("//")) "https:$location" else "https://baike.baidu.com$location"
             response = OkHttpClientUtils.get(resultUrl)
         }
         val html = OkHttpClientUtils.getStr(response)
@@ -304,14 +305,6 @@ class ToolLogicImpl: ToolLogic {
         return "ping失败，请稍后再试！！"
     }
 
-    override fun colorPic(type: String): String {
-        val response = OkHttpClientUtils.get("https://$myApi/pixiv/random/$type")
-        val jsonObject = OkHttpClientUtils.getJson(response)
-        return if (jsonObject.getInteger("code") == 200){
-            jsonObject.getJSONObject("data").getString("url")
-        }else jsonObject.getString("msg")
-    }
-
     override fun colorPicByLoLiCon(apiKey: String, isR18: Boolean): CommonResult<Map<String, String>> {
         val response = OkHttpClientUtils.get("https://api.lolicon.app/setu/?apikey=$apiKey&r18=${if (isR18) 1 else 0}")
         val jsonObject = OkHttpClientUtils.getJson(response)
@@ -536,7 +529,7 @@ class ToolLogicImpl: ToolLogic {
         return response.header("location")!!
     }
 
-    override fun danBooRuPic(): String {
+    override fun danBooRuPic(): Map<String, String> {
         val tagResponse = OkHttpClientUtils.get("https://danbooru.donmai.us/",
                 OkHttpClientUtils.addUA(OkHttpClientUtils.PC_UA))
         val tagHtml = OkHttpClientUtils.getStr(tagResponse)
@@ -554,9 +547,16 @@ class ToolLogicImpl: ToolLogic {
                 OkHttpClientUtils.addUA(OkHttpClientUtils.PC_UA))
         val picHtml = OkHttpClientUtils.getStr(picResponse)
         val picElements = Jsoup.parse(picHtml).select("#posts-container article")
-        val urls = mutableListOf<String>()
-        picElements.forEach { urls.add(it.attr("data-file-url")) }
-        return urls[Random.nextInt(urls.size)]
+        val pics = mutableListOf<Map<String, String>>()
+        picElements.forEach {
+            pics.add(mapOf(
+                    "picUrl" to it.attr("data-file-url"),
+                    "originalUrl" to it.attr("data-source"),
+                    "detailedUrl" to it.attr("data-normalized-source"),
+                    "url" to "https://danbooru.donmai.us/posts/${it.attr("data-id")}"
+            ))
+        }
+        return pics[Random.nextInt(pics.size)]
     }
 
     override fun identifyPic(url: String): String? {
@@ -567,4 +567,46 @@ class ToolLogicImpl: ToolLogic {
     }
 
     override fun githubQuicken(gitUrl: String) = "https://github.kuku.workers.dev/$gitUrl"
+
+    override fun traceRoute(domain: String): String {
+        val osName = System.getProperty("os.name")
+        if (osName.contains("Windows")) return "不支持Windows系统！！"
+        val file = File("besttrace")
+        val runtime = Runtime.getRuntime()
+        if (!file.exists()) {
+            val response = OkHttpClientUtils.get("https://u.iheit.com/kuku/bot/besttrace")
+            val bytes = OkHttpClientUtils.getBytes(response)
+            IO.writeFile(file, bytes)
+            runtime.exec("chmod +x besttrace")
+        }
+        val process = runtime.exec("./besttrace $domain")
+        val resultBytes = IO.read(process.inputStream)
+        return String(resultBytes, Charset.forName("utf-8"))
+    }
+
+    override fun teachYou(content: String, type: String): String? {
+        val msg: String
+        val url: String
+        val suffix = URLEncoder.encode(Base64.getEncoder().encodeToString(content.toByteArray()), "utf-8")
+        when (type){
+            "baidu" -> {
+                msg = "百度"
+                url = "https://u.iheit.com/teachsearch/baidu/index.html?q=$suffix"
+            }
+            "google" -> {
+                msg = "谷歌"
+                url = "https://u.iheit.com/teachsearch/google/index.html?q=$suffix"
+            }
+            "bing" -> {
+                msg = "必应"
+                url = "https://u.iheit.com/teachsearch/bing/index.html?q=$suffix"
+            }
+            "sougou" -> {
+                msg = "搜狗"
+                url = "https://u.iheit.com/teachsearch/sougou/index.html?q=$suffix"
+            }
+            else -> return null
+        }
+        return "点击以下链接即可教您使用${msg}搜索“$content”\n${BotUtils.shortUrl(url)}"
+    }
 }

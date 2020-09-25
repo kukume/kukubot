@@ -7,5 +7,11 @@ data class WeiboPojo(
         var created: String = "",
         var text: String = "",
         var bid: String = "",
-        var imageUrl: List<String> = listOf()
+        var imageUrl: List<String> = listOf(),
+        var isForward: Boolean = false,
+        var forwardId: String = "",
+        var forwardTime: String = "",
+        var forwardName: String = "",
+        var forwardText: String = "",
+        var forwardBid: String = ""
 )

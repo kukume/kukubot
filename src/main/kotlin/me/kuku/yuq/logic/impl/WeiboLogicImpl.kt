@@ -88,16 +88,32 @@ class WeiboLogicImpl: WeiboLogic {
                 list.add(url)
             }
         }
+        if (jsonObject.containsKey("retweeted_status")){
+            val forwardJsonObject = jsonObject.getJSONObject("retweeted_status")
+            weiboPojo.isForward = true
+            weiboPojo.forwardId = forwardJsonObject.getString("id")
+            weiboPojo.forwardTime = forwardJsonObject.getString("created_at")
+            weiboPojo.forwardName = forwardJsonObject.getJSONObject("user").getString("screen_name")
+            weiboPojo.forwardText = Jsoup.parse(forwardJsonObject.getString("text")).text()
+            weiboPojo.forwardBid = forwardJsonObject.getString("bid")
+        }
         return weiboPojo
     }
 
     override fun convertStr(weiboPojo: WeiboPojo): String{
-        return """
-            ${weiboPojo.name}
-            发布时间：${weiboPojo.created}
-            内容：${weiboPojo.text}
-            链接：https://m.weibo.cn/status/${weiboPojo.bid}
-        """.trimIndent()
+        val sb = StringBuilder()
+                .appendln(weiboPojo.name)
+                .appendln("发布时间：${weiboPojo.created}")
+                .appendln("内容：${weiboPojo.text}")
+                .append("链接：https://m.weibo.cn/status/${weiboPojo.bid}")
+        if (weiboPojo.isForward){
+            sb.appendln()
+                    .appendln("转发自：${weiboPojo.forwardName}")
+                    .appendln("发布时间：${weiboPojo.forwardTime}")
+                    .appendln("内容：${weiboPojo.forwardText}")
+                    .append("链接：https://m.weibo.cn/status/${weiboPojo.forwardBid}")
+        }
+        return sb.toString()
     }
 
     override fun getWeiboById(id: String): CommonResult<List<WeiboPojo>> {
@@ -118,7 +134,8 @@ class WeiboLogicImpl: WeiboLogic {
     }
 
     private fun loginParams(username: String): MutableMap<String, String> {
-        val response = OkHttpClientUtils.get("https://login.sina.com.cn/sso/prelogin.php?entry=weibo&callback=sinaSSOController.preloginCallBack&su=${URLEncoder.encode(username, "utf-8")}&rsakt=mod&checkpin=1&client=ssologin.js(v1.4.19)&_=${Date().time}")
+        val response = OkHttpClientUtils.get("https://login.sina.com.cn/sso/prelogin.php?entry=weibo&callback=sinaSSOController.preloginCallBack&su=${URLEncoder.encode(username, "utf-8")}&rsakt=mod&checkpin=1&client=ssologin.js(v1.4.19)&_=${Date().time}",
+                OkHttpClientUtils.addReferer("https://weibo.com/"))
         val jsonObject = OkHttpClientUtils.getJsonp(response)
         val map = mutableMapOf<String, String>()
         for ((k, v) in jsonObject){
@@ -261,8 +278,7 @@ class WeiboLogicImpl: WeiboLogic {
                 "cookie", qqEntity.getCookieWithSuper() + cookie,
                 "referer", startUrl
         ))
-        val str = OkHttpClientUtils.getStr(response)
-        val commonResult = QQUtils.getResultUrl(str)
+        val commonResult = QQUtils.getResultUrl(OkHttpClientUtils.getStr(response))
         val url = commonResult.t ?: return CommonResult(500, commonResult.msg)
         val secondResponse = OkHttpClientUtils.get(url, OkHttpClientUtils.addHeaders(
                 "cookie", weiboCookie,
@@ -275,6 +291,42 @@ class WeiboLogicImpl: WeiboLogic {
         val cnCookie = OkHttpClientUtils.getCookie(thirdResponse)
         val secondUrl = BotUtils.regex("location.replace\\(\"", "\"\\);", thirdHtml) ?: return CommonResult(500, "登录失败，请稍后再试！！")
         return CommonResult(200, "", this.loginSuccess(cnCookie, refererUrl, secondUrl))
+    }
+
+    override fun loginByQr1(): Map<String, String> {
+        val response = OkHttpClientUtils.get("https://login.sina.com.cn/sso/qrcode/image?entry=weibo&size=180&callback=STK_16010457545441",
+                OkHttpClientUtils.addReferer("https://weibo.com/"))
+        val jsonObject = OkHttpClientUtils.getJsonp(response).getJSONObject("data")
+        return mapOf(
+                "id" to jsonObject.getString("qrid"),
+                "url" to jsonObject.getString("image")
+        )
+    }
+
+    override fun loginByQr2(id: String): CommonResult<WeiboEntity> {
+        val response = OkHttpClientUtils.get("https://login.sina.com.cn/sso/qrcode/check?entry=weibo&qrid=$id&callback=STK_16010457545443",
+                OkHttpClientUtils.addReferer("https://weibo.com/"))
+        val jsonObject = OkHttpClientUtils.getJsonp(response)
+        return when (jsonObject.getInteger("retcode")){
+            20000000 -> {
+                val dataJsonObject = jsonObject.getJSONObject("data")
+                val alt = dataJsonObject.getString("alt")
+                val secondResponse = OkHttpClientUtils.get("https://login.sina.com.cn/sso/login.php?entry=weibo&returntype=TEXT&crossdomain=1&cdult=3&domain=weibo.com&alt=$alt&savestate=30&callback=STK_160104719639113")
+                val cookie = OkHttpClientUtils.getCookie(secondResponse)
+                val secondJsonObject = OkHttpClientUtils.getJsonp(secondResponse)
+                val jsonArray = secondJsonObject.getJSONArray("crossDomainUrlList")
+                val url = jsonArray.getString(3)
+                val finallyResponse = OkHttpClientUtils.get(url)
+                finallyResponse.close()
+                val pcCookie = OkHttpClientUtils.getCookie(finallyResponse)
+                val mobileCookie = this.getMobileCookie(cookie)
+                return CommonResult(200, "", WeiboEntity(pcCookie = pcCookie, mobileCookie = mobileCookie))
+            }
+            50114001 -> CommonResult(201, "未扫码！！")
+            50114003 -> CommonResult(500, "二维码已过期！！")
+            50114002 -> CommonResult(202, "已扫码！！")
+            else -> CommonResult(500, "其他类型的提示！！")
+        }
     }
 
     override fun getFriendWeibo(weiboEntity: WeiboEntity): CommonResult<List<WeiboPojo>> {
@@ -474,5 +526,43 @@ class WeiboLogicImpl: WeiboLogic {
         ))
         val jsonObject = OkHttpClientUtils.getJson(response)
         return jsonObject.getString("msg")
+    }
+
+    override fun delWeibo(weiboEntity: WeiboEntity, id: String): String {
+        val commonResult = this.getToken(weiboEntity)
+        val weiboToken = commonResult.t ?: return commonResult.msg
+        val response = OkHttpClientUtils.post("https://m.weibo.cn/profile/delMyblog", OkHttpClientUtils.addForms(
+                "mid", id,
+                "st", weiboToken.token,
+                "_spr", "screen:1536x864"
+        ), OkHttpClientUtils.addHeaders(
+                "cookie", weiboToken.cookie,
+                "referer", "https://m.weibo.cn/profile/"
+        ))
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return if (jsonObject.getInteger("ok") == 1) "删除微博成功！！"
+        else jsonObject.getString("msg")
+    }
+
+    override fun shortUrl(weiboEntity: WeiboEntity, url: String): String {
+        val commonResult = this.getToken(weiboEntity)
+        val weiboToken = commonResult.t ?: return commonResult.msg
+        val publishResponse = OkHttpClientUtils.post("https://m.weibo.cn/api/statuses/update", OkHttpClientUtils.addForms(
+                "content", if (url.startsWith("http")) url else "http://$url",
+                "st", weiboToken.token,
+                "_spr", "screen:1536x864"
+        ), OkHttpClientUtils.addHeaders(
+                "cookie", weiboToken.cookie,
+                "referer", "https://m.weibo.cn/compose/"
+        ))
+        val jsonObject = OkHttpClientUtils.getJson(publishResponse)
+        return if (jsonObject.getInteger("ok") == 1){
+            val dataJsonObject = jsonObject.getJSONObject("data")
+            val id = dataJsonObject.getString("id")
+            val content = dataJsonObject.getString("text")
+            val shortUrl = Jsoup.parse(content).getElementsByTag("a").first().attr("href")
+            this.delWeibo(weiboEntity, id)
+            shortUrl
+        }else "获取短链接失败！！！"
     }
 }

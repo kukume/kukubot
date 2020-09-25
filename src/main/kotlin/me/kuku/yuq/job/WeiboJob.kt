@@ -23,7 +23,7 @@ class WeiboJob {
     private val groupMap = mutableMapOf<Long, MutableMap<Long, Long>>()
     private val qqMap = mutableMapOf<Long, Long>()
 
-    @Cron("1m")
+    @Cron("30s")
     fun groupWeibo(){
         for (qqGroupEntity in qqGroupService.findAll()) {
             val group = qqGroupEntity.group_
@@ -50,7 +50,7 @@ class WeiboJob {
         }
     }
 
-    @Cron("1m")
+    @Cron("30s")
     fun qqWeibo(){
         val list = weiboService.findByMonitor(true)
         for (weiboEntity in list) {

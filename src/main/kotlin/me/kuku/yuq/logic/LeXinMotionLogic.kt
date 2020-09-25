@@ -12,6 +12,8 @@ interface LeXinMotionLogic {
 
     fun getCaptchaCode(phone: String, captchaImageCode: String): CommonResult<String>
 
+    fun loginByPassword(phone: String, password: String): CommonResult<MotionEntity>
+
     fun loginByPhoneCaptcha(phone: String, captchaPhoneCode: String): CommonResult<MotionEntity>
 
     fun loginByQQ(qqEntity: QQEntity): CommonResult<MotionEntity>

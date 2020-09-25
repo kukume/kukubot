@@ -1,14 +1,12 @@
 package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.Action
-import com.icecreamqaq.yuq.*
+import com.IceCreamQAQ.Yu.annotation.Before
 import com.icecreamqaq.yuq.annotation.*
-import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.controller.QQController
 import me.kuku.yuq.entity.MotionEntity
 import me.kuku.yuq.logic.LeXinMotionLogic
-import me.kuku.yuq.logic.QQAILogic
-import me.kuku.yuq.pojo.CommonResult
+import me.kuku.yuq.logic.XiaomiMotionLogic
 import me.kuku.yuq.service.MotionService
 import javax.inject.Inject
 
@@ -19,93 +17,62 @@ class MotionController: QQController() {
     @Inject
     private lateinit var leXinMotionLogic: LeXinMotionLogic
     @Inject
-    private lateinit var qqAiLogic: QQAILogic
+    private lateinit var xiaomiMotionLogic: XiaomiMotionLogic
 
-    @Action("步数")
-    @QMsg(at = true)
-    fun steps(qq: Long, session: ContextSession): String{
-        val time = 30L * 1000
+    @Before
+    fun before(qq: Long): MotionEntity{
         val motionEntity = motionService.findByQQ(qq)
-        val id = motionEntity?.id
-        var step: Int? = null
-        if (motionEntity != null){
-            reply(mif.at(qq).plus("请输入需要修改的步数！！"))
-            val stepMessage = session.waitNextMessage(1000 * 30)
-            step = stepMessage.firstString().toInt()
-            val msg =  leXinMotionLogic.modifyStepCount(step, motionEntity)
-            if ("成功" in msg) return msg
-            reply(mif.at(qq).plus("您的cookie已失效，将准备重新登录！！"))
-        }
-        val phone: String
-        if (motionEntity == null || motionEntity.phone == "") {
-            reply(mif.at(qq).plus("您未绑定手机号，请输入手机号进行绑定！！"))
-            val phoneMessage = session.waitNextMessage(time)
-            phoneMessage.recall()
-            phone = phoneMessage.firstString()
-            if (phone.length != 11) return "手机号格式不正确！！"
-        }else phone = motionEntity.phone
-        val commonResult = this.identifyImageCode(phone, qq)
-        reply(mif.at(qq).plus(commonResult.t ?: return commonResult.msg))
-        var newMotionEntity: MotionEntity? = null
-        do {
-            val codeMessage = session.waitNextMessage(1000 * 60 * 2)
-            if (codeMessage.firstString().length != 6) return "您的验证码不符合规范，可能您不想登录了，已退出步数上下文！！"
-            val loginCommonResult = leXinMotionLogic.loginByPhoneCaptcha(phone, codeMessage.firstString())
-            when (loginCommonResult.code){
-                412 -> {
-                    reply(mif.at(qq).plus("验证码错误，请重新输入！！"))
-                }
-                200 -> {
-                    newMotionEntity = loginCommonResult.t!!
-                    newMotionEntity.id = id
-                    newMotionEntity.phone = phone
-                    newMotionEntity.qq = qq
-                    motionService.save(newMotionEntity)
-                }
-                else -> return loginCommonResult.msg
-            }
-        }while (loginCommonResult.code == 412)
-        if (step == null) {
-            reply(mif.at(qq).plus("请输入需要修改的步数！！"))
-            val stepMessage = session.waitNextMessage(1000 * 30)
-            step = stepMessage.firstString().toInt()
-        }
-        return leXinMotionLogic.modifyStepCount(step, newMotionEntity!!)
+        if (motionEntity == null){
+            throw mif.at(qq).plus("您还没有绑定账号，无法操作步数！！")
+        }else return motionEntity
     }
 
-    private fun identifyImageCode(phone: String, qq: Long): CommonResult<String> {
-        do {
-            val commonResult: CommonResult<String>
-            val captchaImage = leXinMotionLogic.getCaptchaImage(phone)
-            val codeCommonResult = qqAiLogic.generalOCRToCaptcha(captchaImage)
-            val code = codeCommonResult.t ?: return CommonResult(500, "", "OCR错误，${codeCommonResult.msg}")
-            commonResult = leXinMotionLogic.getCaptchaCode(phone, code)
-            when (commonResult.code) {
-                200 -> return CommonResult(200, "", "验证码发送成功，请输入验证码！！")
-                416 -> return CommonResult(500, "验证码已失效")
-                412 -> reply(mif.at(qq).plus("验证码错误，正在为您重新识别中！！"))
-                else -> return CommonResult(500, commonResult.msg)
-            }
-        } while (commonResult.code == 412)
-        return CommonResult(500, "未知原因，请稍后再试！！")
+    @Action("步数 {step}")
+    @QMsg(at = true)
+    fun steps(motionEntity: MotionEntity, step: Int): String {
+        if (motionEntity.accessToken == "") return "您还没有绑定乐心运动账号，如需绑定请私聊机器人发送<lexin 账号 密码>"
+        var result = leXinMotionLogic.modifyStepCount(step, motionEntity)
+        if (!result.contains("成功")){
+            val commonResult = leXinMotionLogic.loginByPassword(motionEntity.phone, motionEntity.password)
+            val loginMotionEntity = commonResult.t ?: return commonResult.msg
+            motionEntity.cookie = loginMotionEntity.cookie
+            motionEntity.accessToken = loginMotionEntity.accessToken
+            motionService.save(motionEntity)
+            result = leXinMotionLogic.modifyStepCount(step, motionEntity)
+        }
+        return result;
     }
 
     @Action("步数任务")
     @QMsg(at = true)
-    fun stepTask(qq: Long, session: ContextSession): String {
-        val motionEntity = motionService.findByQQ(qq) ?: return "您还没有绑定lexin运动账号！如需要绑定，请发送<步数>"
-        reply(mif.at(qq).plus("请输入需要定时修改的步数！！"))
-        val taskMessage = session.waitNextMessage(30 * 1000)
-        val step = taskMessage.firstString()
-        motionEntity.step = step.toInt()
+    fun stepTask(motionEntity: MotionEntity, @PathVar(value = 1, type = PathVar.Type.Integer) stepParam: Int?): String {
+        val step = stepParam ?: 0
+        motionEntity.step = step
         motionService.save(motionEntity)
-        return "添加修改步数定时任务成功！！"
+        return "步数定时任务设置为${step}成功！！"
     }
 
     @Action("删除步数")
     @QMsg(at = true)
-    fun del(qq: Long): String{
+    fun del(qq: Long): String {
         motionService.delByQQ(qq)
         return "删除步数成功！！"
+    }
+
+    @Action("mi步数 {step}")
+    @QMsg(at = true)
+    fun xiaomiMotion(motionEntity: MotionEntity, step: Int): String {
+        if (motionEntity.miLoginToken == "")
+            return "您还没绑定小米账号，如需绑定请私聊机器人发送<mi 账号 密码>"
+        var loginToken = motionEntity.miLoginToken
+        var result = xiaomiMotionLogic.changeStep(loginToken, step)
+        if (result.contains("登录已失效")) {
+            val loginResult = xiaomiMotionLogic.login(motionEntity.miPhone, motionEntity.miPassword)
+            loginToken = loginResult.t ?: return loginResult.msg
+            motionEntity.miLoginToken = loginToken
+            motionService.save(motionEntity)
+            result = xiaomiMotionLogic.changeStep(loginToken, step)
+        }
+        return result
     }
 }

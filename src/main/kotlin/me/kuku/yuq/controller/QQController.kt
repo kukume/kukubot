@@ -145,10 +145,6 @@ class QQController: QQController() {
         }else commonResult.msg
     }
 
-    @Action("拒绝添加")
-    @QMsg(at = true)
-    fun refuseAdd(qqEntity: QQEntity) = qqLogic.refuseAdd(qqEntity)
-
     @Action("超级签到")
     @QMsg(at = true, atNewLine = true)
     @Synchronized fun allSign(qqEntity: QQEntity, group: Long, qq: Long): String{
@@ -239,12 +235,6 @@ class QQController: QQController() {
         if (qqEntity.password == "") return "续期QQ邮箱中转站文件失败！！，需要使用密码登录QQ！"
         reply(mif.at(qq).plus("正在续期中，请稍后~~~~~"))
         return qqMailLogic.fileRenew(qqEntity)
-    }
-
-    @Action("好友 {qqNo}")
-    @QMsg(at = true)
-    fun addFriend(qqEntity: QQEntity, qqNo: Long, @PathVar(2) msg: String?, @PathVar(3) realName: String?, @PathVar(4) groupName: String?): String{
-        return qqZoneLogic.addFriend(qqEntity, qqNo, msg ?: "加个好友呗！！", realName, groupName)
     }
 
     @Action("复制 {qqNo}")
@@ -340,7 +330,7 @@ class QQController: QQController() {
         return "互访成功！！"
     }
 
-    @Action("wblogin")
+    @Action("wbloginbyqq")
     @QMsg(at = true)
     fun weiboLogin(qqEntity: QQEntity, session: ContextSession, qq: Long, group: Long): String{
         reply(mif.at(qq).plus("确保你的微博账号已绑定QQ！！如果是请发送1"))

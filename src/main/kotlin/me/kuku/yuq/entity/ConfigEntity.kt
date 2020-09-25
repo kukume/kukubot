@@ -10,5 +10,7 @@ data class ConfigEntity(
         var id: Int? = null,
         @Column(unique = true)
         var type: String = "",
+        @Lob
+        @Column(columnDefinition = "text")
         var content: String = ""
 )

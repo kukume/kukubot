@@ -7,12 +7,13 @@ import com.icecreamqaq.yuq.message.MessageItemFactory
 import okhttp3.FormBody
 import okhttp3.Request
 import java.io.File
+import java.util.*
 
 
 fun MessageItemFactory.image(byteArray: ByteArray): Image {
-    val md5Str = MD5Utils.toMD5(byteArray)
-    val file = File("tmp/$md5Str")
-    IO.writeFile(file, byteArray)
+    val uuid = UUID.randomUUID().toString()
+    val file = File("tmp/$uuid")
+    IO.writeTmpFile(uuid, byteArray)
     return this.imageByFile(file)
 }
 

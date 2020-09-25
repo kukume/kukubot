@@ -24,7 +24,7 @@ class BiliBiliJob {
     private val qqMap = mutableMapOf<Long, Long>()
     private val liveMap = mutableMapOf<Long, MutableMap<Long, Boolean>>()
 
-    @Cron("1m")
+    @Cron("30s")
     fun biliBiliGroupMonitor(){
         val groupList = qqGroupService.findAll()
         groupList.forEach { qqGroupEntity ->
@@ -52,7 +52,7 @@ class BiliBiliJob {
         }
     }
 
-    @Cron("1m")
+    @Cron("30s")
     fun biliBiliQQMonitor(){
         val list = biliBiliService.findByMonitor(true)
         list.forEach { biliBiliEntity ->
@@ -89,7 +89,7 @@ class BiliBiliJob {
         }
     }
 
-    @Cron("1m")
+    @Cron("30s")
     fun liveMonitor(){
         val list = biliBiliService.findAll()
         list.forEach { biliBiliEntity ->

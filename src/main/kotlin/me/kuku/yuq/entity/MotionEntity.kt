@@ -11,6 +11,7 @@ data class MotionEntity(
         @Column(unique = true)
         var qq: Long = 0L,
         var phone: String = "",
+        var password: String = "",
         @Lob
         @Column(columnDefinition="text")
         var cookie: String = "",
@@ -18,5 +19,10 @@ data class MotionEntity(
         @Lob
         @Column(columnDefinition="text")
         var accessToken: String = "",
-        var step: Int = 0
+        var step: Int = 0,
+        var miPhone: String = "",
+        var miPassword: String = "",
+        @Lob
+        @Column(columnDefinition="text")
+        var miLoginToken: String = ""
 )

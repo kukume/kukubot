@@ -18,6 +18,8 @@ interface WeiboLogic {
     fun loginSuccess(cookie: String, referer: String, url: String): WeiboEntity
     fun loginBySms(token: String, phone: String, code: String): CommonResult<WeiboEntity>
     fun loginByQQ(qqEntity: QQEntity): CommonResult<WeiboEntity>
+    fun loginByQr1(): Map<String, String>
+    fun loginByQr2(id: String): CommonResult<WeiboEntity>
     fun getFriendWeibo(weiboEntity: WeiboEntity): CommonResult<List<WeiboPojo>>
     fun getMyWeibo(weiboEntity: WeiboEntity): CommonResult<List<WeiboPojo>>
     fun weiboTopic(keyword: String): CommonResult<List<WeiboPojo>>
@@ -28,4 +30,6 @@ interface WeiboLogic {
     fun publishWeibo(weiboEntity: WeiboEntity, content: String, url: List<String>?): String
     fun removeWeibo(weiboEntity: WeiboEntity, id: String): String
     fun favoritesWeibo(weiboEntity: WeiboEntity, id: String): String
+    fun delWeibo(weiboEntity: WeiboEntity, id: String): String
+    fun shortUrl(weiboEntity: WeiboEntity, url: String): String
 }

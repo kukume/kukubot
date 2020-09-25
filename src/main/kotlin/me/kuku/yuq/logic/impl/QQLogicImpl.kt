@@ -46,7 +46,7 @@ class QQLogicImpl: QQLogic {
         val jsonObject = OkHttpClientUtils.getJson(response)
         return if (jsonObject.getInteger("ec") == 0){
             when {
-                jsonObject.getInteger("lucky_code") == 7779 -> "抱歉，等级不够61级，无法抽礼物"
+                jsonObject.getInteger("lucky_code") == 7779 -> "抱歉，等级不够41级，无法抽礼物"
                 "" == jsonObject.getString("name") || jsonObject.getString("name") == null -> "抱歉，没有抽到礼物"
                 else -> "抽礼物成功，抽到了${jsonObject.getString("name")}"
             }
@@ -1184,45 +1184,68 @@ class QQLogicImpl: QQLogic {
         }else "获取等级失败，请更新QQ！！"
     }
 
-    override fun operatingGroupMsg(qqEntity: QQEntity, type: String, groupNo: Long?, refuseMsg: String?): String {
+    override fun getGroupMsgList(qqEntity: QQEntity): List<Map<String, String>>{
         val htmlResponse = OkHttpClientUtils.get("https://web.qun.qq.com/cgi-bin/sys_msg/getmsg?ver=5761&filter=0&ep=0",
                 OkHttpClientUtils.addCookie(qqEntity.getCookie()))
         val html = OkHttpClientUtils.getStr(htmlResponse)
-        val elements = Jsoup.parse(html).getElementsByClass("msg_list")
+        val elements = Jsoup.parse(html).getElementById("msg_con").getElementsByTag("dd")
         val list = mutableListOf<Map<String, String>>()
         elements.forEach { ele ->
             val ddEle = ele.getElementsByTag("dd").first()
-            // 如果不是被邀请加入群聊，跳过
-            if (ddEle.attr("type") != "2") return@forEach
             // 如果已经操作过的消息，跳过
-            if (ddEle.getElementsByClass("btn_group").first().children().size == 0) return@forEach
+            val opBtn = ddEle.getElementsByClass("btn_group")?.first()?.children()?.size
+            val isOp = if (opBtn == null || opBtn == 0) 0 else 1
+            val typeInt = ele.attr("type").toInt()
+            val type = when (typeInt) {
+                1 -> "apply"
+                2 -> "beInvite"
+                13 -> "leave"
+                22 -> "invite"
+                3 -> "addManager"
+                60 -> "payAdd"
+                else -> return@forEach
+            }
             val seq = ddEle.attr("seq")
             val group = ddEle.attr("qid")
             val authKey = ddEle.attr("authKey")
-            val liEle = ele.getElementsByTag("li").first()
+            val liElements = ele.getElementsByTag("li")
+            val liEle = liElements.first()
             val msg = liEle.attr("aria-label")
             val qq = liEle.getElementsByTag("a").first().attr("uin")
-            list.add(mapOf(
+            val map = mutableMapOf(
                     "seq" to seq,
                     "group" to group,
                     "authKey" to authKey,
                     "msg" to msg,
-                    "qq" to qq
-            ))
-        }
-        var map: Map<String, String>? = null
-        list.forEach {
-            if (it["group"] == groupNo.toString()){
-                map = it
-                return@forEach
+                    "qq" to qq,
+                    "type" to type,
+                    "isOp" to isOp.toString(),
+                    "typeInt" to typeInt.toString()
+            )
+            if (liElements.size != 1){
+                val secondLiEle = liElements[1]
+                if (secondLiEle.getElementsByClass("apply_add_msg").isEmpty()){
+                    //被邀请的消息
+                    map["inviteMsg"] = secondLiEle.attr("aria-label")
+                    val memberEle = secondLiEle.getElementsByTag("a").first()
+                    map["inviteQQ"] = memberEle.attr("uin")
+                    map["inviteName"] = memberEle.text()
+                }else{
+                    //附加消息
+                    map["applyMsg"] = secondLiEle.attr("title")
+                }
             }
+            list.add(map)
         }
-        if (map == null) return "没有找到这个群号的验证消息！！"
+        return list
+    }
+
+    override fun operatingGroupMsg(qqEntity: QQEntity, type: String, map: Map<String, String>, refuseMsg: String?): String {
         val url = "https://web.qun.qq.com/cgi-bin/sys_msg/set_msgstate"
         val builder = FormBody.Builder()
-                .add("seq", map!!.getValue("seq"))
-                .add("t", "2")
-                .add("gc", map!!.getValue("group"))
+                .add("seq", map.getValue("seq"))
+                .add("t", map.getValue("typeInt"))
+                .add("gc", map.getValue("group"))
                 .add("uin", qqEntity.qq.toString())
                 .add("ver", "false")
                 .add("from", "2")
@@ -1239,7 +1262,7 @@ class QQLogicImpl: QQLogic {
             }
             "refuse" -> {
                 val response = OkHttpClientUtils.post(url,
-                        builder.add("msg", refuseMsg ?: "我拒绝加入该群")
+                        builder.add("msg", refuseMsg ?: "这是一条拒绝的消息哦！！")
                                 // 0为   1为不再接受邀请
                                 .add("flag", "0").build(),
                         qqEntity.cookie()

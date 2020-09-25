@@ -39,9 +39,6 @@ data class QQGroupEntity(
         @Lob
         @Column(columnDefinition="text")
         var interceptList: String = "[]",
-        @Lob
-        @Column(columnDefinition="text")
-        var recallMessage: String = "[]",
         var musicType: String = "qq",
         var colorPic: Boolean? = false,
         var status: Boolean? = false,
@@ -54,7 +51,7 @@ data class QQGroupEntity(
         var mouthOdor: Boolean? = false,
         var autoReview: Boolean? = false,
         var onTimeAlarm: Boolean? = false,
-        var colorPicType: String? = "native",
+        var colorPicType: String? = "danbooru",
         var maxViolationCount: Int? = 0,
         var dragonKing: Boolean? = true,
         var repeat: Boolean? = true,
@@ -77,8 +74,6 @@ data class QQGroupEntity(
         fun getAllowedCommandsJsonArray(): JSONArray = JSON.parseArray(allowedCommandsList) ?: JSON.parseArray("[]")
         @Transient
         fun getInterceptJsonArray(): JSONArray = JSON.parseArray(interceptList) ?: JSON.parseArray("[]")
-        @Transient
-        fun getRecallMessageJsonArray(): JSONArray = JSON.parseArray(recallMessage) ?: JSON.parseArray("[]")
         @Transient
         fun getBiliBiliJsonArray(): JSONArray = JSON.parseArray(biliBiliList) ?: JSON.parseArray("[]")
 }

@@ -88,6 +88,8 @@ interface QQLogic {
     fun queryFriendVip(qqEntity: QQEntity, qq: Long, psKey: String?): String
     //查询等级等信息
     fun queryLevel(qqEntity: QQEntity, qq: Long, psKey: String?): String
+    //获取通知消息
+    fun getGroupMsgList(qqEntity: QQEntity): List<Map<String, String>>
     //操作群通知信息
-    fun operatingGroupMsg(qqEntity: QQEntity, type: String, groupNo: Long?, refuseMsg: String?): String
+    fun operatingGroupMsg(qqEntity: QQEntity, type: String, map: Map<String, String>, refuseMsg: String?): String
 }

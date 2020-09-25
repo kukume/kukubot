@@ -17,12 +17,12 @@ import me.kuku.yuq.logic.BiliBiliLogic
 import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.logic.WeiboLogic
 import me.kuku.yuq.service.QQGroupService
+import me.kuku.yuq.service.RecallService
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.OkHttpClientUtils
 import me.kuku.yuq.utils.removeSuffixLine
 import java.io.File
 import java.text.SimpleDateFormat
-import java.util.*
 import javax.inject.Inject
 import kotlin.system.exitProcess
 
@@ -38,8 +38,10 @@ class ManagerController: QQController() {
     private lateinit var weiboLogic: WeiboLogic
     @Inject
     private lateinit var biliBiliLogic: BiliBiliLogic
+    @Inject
+    private lateinit var recallService: RecallService
 
-    private val version = "v1.5.9"
+    private val version = "v1.6.0"
 
     @Before
     fun before(group: Long, qq: Long, actionContext: BotActionContext, message: Message){
@@ -55,7 +57,7 @@ class ManagerController: QQController() {
         if (!whiteList.contains(msg)) {
             val adminJsonArray = qqGroupEntity.getAdminJsonArray()
             if (!adminJsonArray.contains(qq.toString()) || !adminWhiteList.contains(msg)) {
-                if (qq != master.toLong()) throw mif.at(qq).plus("抱歉，您的权限不足，无法执行！！")
+                if (qq != master.toLong()) throw mif.at(qq).plus("您的权限不足，无法执行！！")
             }
         }
     }
@@ -75,12 +77,13 @@ class ManagerController: QQController() {
         return "添加管理员的命令权限成功！！"
     }
 
-    @Action("查{op}")
+    @Action("查管")
+    @Synonym(["查admin命令", "查黑", "查白", "查违规词", "查拦截"])
     @QMsg(at = true, atNewLine = true)
-    fun query(qqGroupEntity: QQGroupEntity, op: String): String?{
+    fun query(qqGroupEntity: QQGroupEntity, @PathVar(0) str: String): String?{
         val jsonArray: JSONArray
         val msg: String
-        when (op){
+        when (str.substring(1)){
             "管" -> {
                 jsonArray = qqGroupEntity.getAdminJsonArray()
                 msg = "本群机器人的管理员如下："
@@ -112,12 +115,13 @@ class ManagerController: QQController() {
         return sb.removeSuffixLine().toString()
     }
 
-    @Action("加{op}")
+    @Action("加管")
+    @Synonym(["加admin命令", "加违规词", "加黑", "加白", "加拦截"])
     @QMsg(at = true)
-    fun add(qqGroupEntity: QQGroupEntity, op: String, group: Long, message: Message): String?{
+    fun add(qqGroupEntity: QQGroupEntity, @PathVar(0) str: String, group: Long, message: Message): String?{
         val listStr = message.toPath()
         val streamStr = listStr.stream().skip(1)
-        val msg = when (op){
+        val msg = when (str.substring(1)){
             "管" -> {
                 val adminJsonArray = qqGroupEntity.getAdminJsonArray()
                 streamStr.forEach { adminJsonArray.add(it) }
@@ -166,10 +170,11 @@ class ManagerController: QQController() {
         return msg
     }
 
-    @Action("删{op} {content}")
+    @Action("删管 {content}")
+    @Synonym(["删admin命令 {content}", "删违规词 {content}", "删黑 {content}", "删白 {content}", "删拦截 {content}"])
     @QMsg(at = true)
-    fun del(qqGroupEntity: QQGroupEntity, op: String, content: String): Message?{
-        val msg = when (op){
+    fun del(qqGroupEntity: QQGroupEntity, @PathVar(0) str: String, content: String): Message?{
+        val msg = when (str.substring(1)){
             "管" -> {
                 val adminJsonArray = qqGroupEntity.getAdminJsonArray()
                 BotUtils.delManager(adminJsonArray, content)
@@ -498,26 +503,19 @@ class ManagerController: QQController() {
     }
 
     @Action("查撤回 {qqNo}")
-    fun queryRecall(qqGroupEntity: QQGroupEntity, qqNo: Long, qq: Long, @PathVar(value = 2, type = PathVar.Type.Integer) numParam: Int?): Message{
-        val recallMessageJsonArray = qqGroupEntity.getRecallMessageJsonArray()
-        val list = mutableListOf<JSONObject>()
-        var messageSize = recallMessageJsonArray.size - 1
-        while (messageSize >= 0){
-            val jsonObject = recallMessageJsonArray.getJSONObject(messageSize--)
-            if (jsonObject.getLong("qq") == qqNo) list.add(jsonObject)
-        }
-        val all = list.size
+    fun queryRecall(group: Long, qqNo: Long, qq: Long, @PathVar(value = 2, type = PathVar.Type.Integer) numParam: Int?): Message{
+        val recallList = recallService.findByGroupAndQQ(group, qqNo)
+        val all = recallList.size
         if (all == 0) return mif.at(qq).plus("该qq并没有撤回消息")
         val num = numParam ?: 1
         if (num > all) return mif.at(qq).plus("该qq一共有${all}条消息，超过范围了！！")
-        val jsonObject = list[num - 1]
+        val recallEntity = recallList[num - 1]
         val sendMessage = mif.text("群成员：").plus(mif.at(qqNo)).plus("共有${all}条撤回消息")
-        val time = jsonObject.getLong("time")
-        val timeStr = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date(time))
-        sendMessage.plus("\n这是第${num}条撤回消息！！撤回时间为$timeStr").plus("\n消息内容为：\n")
-        val jsonArray = jsonObject.getJSONArray("message")
-        val contentMessage = BotUtils.jsonArrayToMessage(jsonArray)
-        return sendMessage.plus(contentMessage)
+        val timeStr = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(recallEntity.date)
+        val line = System.getProperty("line.separator")
+        sendMessage.plus("${line}这是第${num}条撤回消息！！撤回时间为$timeStr").plus("${line}消息内容为：")
+        reply(sendMessage)
+        return BotUtils.jsonArrayToMessage(recallEntity.messageJsonArray)
     }
 
     private fun boolToStr(b: Boolean?) = if (b == true) "开" else "关"

@@ -7,16 +7,19 @@ import com.icecreamqaq.yuq.annotation.*
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.controller.QQController
 import com.icecreamqaq.yuq.entity.Contact
+import com.icecreamqaq.yuq.entity.Group
 import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.firstString
 import com.icecreamqaq.yuq.message.*
 import com.icecreamqaq.yuq.toMessage
+import me.kuku.yuq.entity.WeiboEntity
 import me.kuku.yuq.logic.QQAILogic
 import me.kuku.yuq.logic.ToolLogic
+import me.kuku.yuq.logic.WeiboLogic
 import me.kuku.yuq.service.ConfigService
+import me.kuku.yuq.service.MessageService
 import me.kuku.yuq.service.QQGroupService
 import me.kuku.yuq.utils.BotUtils
-import me.kuku.yuq.utils.OkHttpClientUtils
 import me.kuku.yuq.utils.image
 import me.kuku.yuq.utils.removeSuffixLine
 import java.net.URLEncoder
@@ -34,6 +37,10 @@ class ToolController: QQController() {
     private lateinit var qqAiLogic: QQAILogic
     @Inject
     private lateinit var configService: ConfigService
+    @Inject
+    private lateinit var messageService: MessageService
+    @Inject
+    private lateinit var weiboLogic: WeiboLogic
     @Config("YuQ.Mirai.user.qq")
     private lateinit var qq: String
 
@@ -41,13 +48,19 @@ class ToolController: QQController() {
 
     @QMsg(at = true)
     @Action("百度 {content}")
-    fun teachYouBaidu(content: String) =
-        "点击以下链接即可教您使用百度搜索“$content”\n${BotUtils.shortUrl("https://u.iheit.com/baidu/index.html?${URLEncoder.encode(content, "utf-8")}")}"
+    fun teachYouBaidu(content: String) = toolLogic.teachYou(content, "baidu")
 
     @QMsg(at = true)
     @Action("谷歌 {content}")
-    fun teachYouGoogle(content: String) =
-        "点击以下链接即可教您使用谷歌搜索“$content”\n${BotUtils.shortUrl("https://u.iheit.com/google/index.html?${URLEncoder.encode(content, "utf-8")}")}"
+    fun teachYouGoogle(content: String) = toolLogic.teachYou(content, "google")
+
+    @QMsg(at = true)
+    @Action("bing {content}")
+    fun teachYouBing(content: String) = toolLogic.teachYou(content, "bing")
+
+    @QMsg(at = true)
+    @Action("搜狗 {content}")
+    fun teachYouSouGou(content: String) = toolLogic.teachYou(content, "sougou")
 
     @QMsg(at = true, atNewLine = true)
     @Action("舔狗日记")
@@ -141,19 +154,12 @@ class ToolController: QQController() {
     @QMsg(at = true, atNewLine = true)
     fun ping(domain: String) = toolLogic.ping(domain)
 
-    @Action("\\.*\\")
+    @Action("智能闲聊")
     @QMsg(reply = true, at = true)
-    fun chat(message: Message, qq: Contact): String?{
-        val body = message.body
-        val at = body[0]
-        if (at is At && at.user == this.qq.toLong()){
-            for (item in body){
-                if (item is Text && item.text.trim() != "") {
-                    return qqAiLogic.textChat(item.text, qq.id.toString())
-                }
-            }
-        }
-        return null
+    fun chat(session: ContextSession, qq: Contact): String?{
+        reply(mif.at(qq.id).plus("请输入智能闲聊的内容！！"))
+        val waitMessage = session.waitNextMessage()
+        return qqAiLogic.textChat(waitMessage.firstString(), qq.id.toString())
     }
 
     @Action("搜 {question}")
@@ -170,16 +176,15 @@ class ToolController: QQController() {
     fun colorPic(group: Long, qq: Long): Message {
         val qqGroupEntity = qqGroupService.findByGroup(group)
         if (qqGroupEntity?.colorPic != true) throw mif.at(qq).plus("该功能已关闭")
+        val line = System.getProperty("line.separator")
         return when (val type = qqGroupEntity.colorPicType){
-            "native","r-18" -> {
-                val url = toolLogic.colorPic(type)
-                if (url.startsWith("http")){
-                    val response = OkHttpClientUtils.get(url)
-                    val bytes = OkHttpClientUtils.getBytes(response)
-                    mif.imageToFlash(mif.image(bytes)).toMessage()
-                }else url.toMessage()
+            "danbooru" -> {
+                val map = toolLogic.danBooRuPic()
+                mif.at(qq).plus(line)
+                        .plus(mif.imageByUrl(map.getValue("picUrl")))
+                        .plus("详情：${map["detailedUrl"]}$line")
+                        .plus("链接：${map["url"]}")
             }
-            "danbooru" -> mif.imageToFlash(mif.imageByUrl(toolLogic.danBooRuPic())).toMessage()
             "lolicon", "loliconR18" -> {
                 val configEntity = configService.findByType("loLiCon") ?:
                         return mif.at(qq).plus("您还没有配置lolicon的apiKey，无法获取色图！！")
@@ -187,8 +192,7 @@ class ToolController: QQController() {
                 val commonResult = toolLogic.colorPicByLoLiCon(apiKey, type == "loliconR18")
                 val map = commonResult.t ?: return mif.at(qq).plus(commonResult.msg)
                 val bytes = toolLogic.piXivPicProxy(map.getValue("url"))
-                val line = System.getProperty("line.separator")
-                mif.at(qq)
+                mif.at(qq).plus(line)
                         .plus(mif.image(bytes))
                         .plus("标题：${map["title"]}$line")
                         .plus("当日剩余额度：${map["count"]}$line")
@@ -364,5 +368,26 @@ class ToolController: QQController() {
         reply(mif.at(qq).plus("请输入github文件下载链接"))
         val url = session.waitNextMessage().firstString()
         return BotUtils.shortUrl(toolLogic.githubQuicken(url))
+    }
+
+    @Action("traceroute {domain}")
+    @Synonym(["路由追踪 {domain}"])
+    fun traceRoute(domain: String) = toolLogic.traceRoute(domain)
+
+    @Action("查发言数")
+    fun queryMessage(group: Group): String{
+        val map = messageService.findCountQQByGroupAndToday(group.id)
+        val sb = StringBuilder().appendln("本群今日发言数统计如下：")
+        for ((k, v) in map){
+            sb.appendln("@${group[k].nameCardOrName()}（$k）：${v}条")
+        }
+        return sb.removeSuffixLine().toString()
+    }
+
+    @Action("wb缩短 {url}")
+    @QMsg(at = true)
+    fun wbShortUrl(url: String): String {
+        val configEntity = configService.findByType("wb") ?: return "当前机器人未绑定微博信息！！不能完成该操作！！"
+        return weiboLogic.shortUrl(WeiboEntity(mobileCookie = configEntity.content), url)
     }
 }

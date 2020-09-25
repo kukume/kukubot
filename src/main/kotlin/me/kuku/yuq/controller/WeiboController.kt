@@ -3,14 +3,14 @@ package me.kuku.yuq.controller
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Before
 import com.IceCreamQAQ.Yu.annotation.Synonym
-import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
 import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.annotation.QMsg
+import com.icecreamqaq.yuq.controller.QQController
+import com.icecreamqaq.yuq.entity.Group
 import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.message.Message
-import com.icecreamqaq.yuq.mif
 import me.kuku.yuq.entity.BiliBiliEntity
 import me.kuku.yuq.entity.WeiboEntity
 import me.kuku.yuq.logic.BiliBiliLogic
@@ -22,10 +22,12 @@ import me.kuku.yuq.service.WeiboService
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.removeSuffixLine
 import java.lang.ClassCastException
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import kotlin.concurrent.thread
 
 @GroupController
-class WeiboController {
+class WeiboController: QQController() {
     @Inject
     private lateinit var weiboLogic: WeiboLogic
     @Inject
@@ -40,10 +42,35 @@ class WeiboController {
     @Before
     fun before(qq: Long, message: Message): WeiboEntity?{
         val str = message.toPath()[0]
-        val whiteList = arrayOf("热搜", "hot", "wb", "微博监控", "wbinfo")
+        val whiteList = arrayOf("热搜", "hot", "wb", "微博监控", "wbinfo", "wblogin")
         return if (!whiteList.contains(str)){
             return weiboService.findByQQ(qq) ?: throw mif.at(qq).plus("您还未绑定微博，请先私聊机器人发送（wb 账号 密码）进行绑定")
         }else null
+    }
+
+    @Action("wblogin")
+    fun wbLoginByQr(qq: Long, group: Group){
+        val map = weiboLogic.loginByQr1()
+        reply(mif.at(qq).plus("请使用微博APP扫码登录").plus(mif.imageByUrl("https:" + map.getValue("url"))))
+        thread {
+            val id = map.getValue("id")
+            while (true){
+                TimeUnit.SECONDS.sleep(3)
+                val commonResult = weiboLogic.loginByQr2(id)
+                if (commonResult.code == 200){
+                    val newWeiboEntity = commonResult.t!!
+                    val weiboEntity = weiboService.findByQQ(qq) ?: WeiboEntity(null, qq, group.id)
+                    weiboEntity.pcCookie = newWeiboEntity.pcCookie
+                    weiboEntity.mobileCookie = newWeiboEntity.mobileCookie
+                    weiboService.save(weiboEntity)
+                    group.sendMessage(mif.at(qq).plus("绑定微博信息成功！！"))
+                    return@thread
+                }else if (commonResult.code == 500){
+                    group.sendMessage(mif.at(qq).plus(commonResult.msg))
+                    return@thread
+                }
+            }
+        }
     }
 
     @Action("热搜")

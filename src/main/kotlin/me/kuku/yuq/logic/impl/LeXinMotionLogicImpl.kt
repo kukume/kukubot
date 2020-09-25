@@ -5,6 +5,7 @@ import me.kuku.yuq.entity.QQEntity
 import me.kuku.yuq.logic.LeXinMotionLogic
 import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.utils.BotUtils
+import me.kuku.yuq.utils.MD5Utils
 import me.kuku.yuq.utils.OkHttpClientUtils
 import me.kuku.yuq.utils.QQUtils
 import okhttp3.Response
@@ -29,13 +30,25 @@ class LeXinMotionLogicImpl: LeXinMotionLogic {
         }
     }
 
+    override fun loginByPassword(phone: String, password: String): CommonResult<MotionEntity> {
+        val response = OkHttpClientUtils.post("https://sports.lifesense.com/sessions_service/login?screenHeight=2267&screenWidth=1080&systemType=2&version=4.5",
+                OkHttpClientUtils.addJson("{\"password\":\"$password\",\"clientId\":\"${BotUtils.randomStr(32)}\",\"appType\":6,\"loginName\":\"$phone\",\"roleType\":0}"))
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return if (jsonObject.getInteger("code") == 200){
+            CommonResult(200, "", MotionEntity(
+                    null, 0L, phone, password, OkHttpClientUtils.getCookie(response), jsonObject.getJSONObject("data").getString("userId"),
+                    jsonObject.getJSONObject("data").getString("accessToken")
+            ))
+        }else CommonResult(500, jsonObject.getString("msg"))
+    }
+
     override fun loginByPhoneCaptcha(phone: String, captchaPhoneCode: String): CommonResult<MotionEntity> {
         val response: Response = OkHttpClientUtils.post("https://sports.lifesense.com/sessions_service/loginByAuth?screenHeight=2267&screenWidth=1080&systemType=2&version=4.5",
                 OkHttpClientUtils.addJson("{\"clientId\": \"${BotUtils.randomStr(32)}\",\"authCode\": \"$captchaPhoneCode\",\"appType\": \"6\",\"loginName\": \"$phone\"}"))
         val jsonObject = OkHttpClientUtils.getJson(response)
         return when {
             jsonObject.getInteger("code") == 200 -> {
-                CommonResult(200, "登录成功", MotionEntity(null , 0L, "", OkHttpClientUtils.getCookie(response),
+                CommonResult(200, "登录成功", MotionEntity(null , 0L, "", "", OkHttpClientUtils.getCookie(response),
                         jsonObject.getJSONObject("data").getString("userId"),
                         jsonObject.getJSONObject("data").getString("accessToken")))
             }
@@ -79,6 +92,6 @@ class LeXinMotionLogicImpl: LeXinMotionLogic {
                 OkHttpClientUtils.addJson("{\"list\": [{\"active\": 1,\"calories\": ${step / 3415},\"created\": \"${dateTimeFormat.format(date)}\",\"dataSource\": 2,\"dayMeasurementTime\": \"${dateFormat.format(date)}\",\"deviceId\": \"M_NULL\",\"distance\": ${step / 100},\"id\": \"${motionEntity.accessToken}\",\"isUpload\": 0,\"measurementTime\": \"${dateTimeFormat.format(date)}\",\"priority\": 0,\"step\": $step,\"type\": 2,\"updated\": ${date.time},\"userId\":\"${motionEntity.userId}\",\"DataSource\": 2,\"exerciseTime\": 0}]}"),
                 OkHttpClientUtils.addCookie(motionEntity.cookie))
         val jsonObject = OkHttpClientUtils.getJson(response)
-        return if (jsonObject.getInteger("code") == 200) "提交成功，如若没有修改成功，请稍后再试" else jsonObject.getString("msg")
+        return if (jsonObject.getInteger("code") == 200) "步数修改成功！！" else jsonObject.getString("msg")
     }
 }

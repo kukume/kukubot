@@ -72,16 +72,23 @@ class BotController: QQController() {
     }
 
     @Action("签个到 {param}")
-    fun groupSign(qqEntity: QQEntity, param: MessageItem, group: Long){
+    fun groupSign(qqEntity: QQEntity, param: MessageItem, group: Long): Any?{
         val place = "你猜"
         val text = "mirai在线签到！！！"
-        if (param is Text)
-            qqGroupLogic.groupSign(group, place, text, param.text, null)
-        else if (param is Image) {
-            val commonResult = qqLogic.groupUploadImage(qqEntity, param.url)
-            val picId = commonResult.t?.getValue("picId") ?: return
-            qqGroupLogic.groupSign(group, place, text, "自定义", picId)
+        val str = when (param) {
+            is Text -> {
+                val commonResult = qqGroupLogic.groupSign(group, place, text, param.text, null, null)
+                commonResult.t ?: return commonResult.msg
+            }
+            is Image -> {
+                val commonResult = qqLogic.groupUploadImage(qqEntity, param.url)
+                val map = commonResult.t ?: return commonResult.msg
+                val signCommonResult = qqGroupLogic.groupSign(group, place, text, "自定义", map["picId"], map["picUrl"])
+                signCommonResult.t ?: return commonResult.msg
+            }
+            else -> return null
         }
+        return mif.jsonEx(str)
     }
 
     @Action("qq上传")
@@ -272,12 +279,15 @@ class BotController: QQController() {
     }
 
     @Action("龙王")
-    fun dragonKing(group: Long, qq: Member): Message{
+    fun dragonKing(group: Long, qq: Member, @PathVar(value = 1, type = PathVar.Type.Integer) num: Int?): Message{
         val qqGroupEntity = qqGroupService.findByGroup(group)
         if (qqGroupEntity?.dragonKing == false) return mif.at(qq.id).plus("迫害龙王已关闭！！")
         val list = qqGroupLogic.groupHonor(group, "talkAtIve")
         if (list.isEmpty()) return mif.at(qq.id).plus("昨天没有龙王！！")
-        val map = list[0]
+        if (num ?: 1 > list.size){
+            return mif.at(qq.id).plus("历史龙王只有${list.size}位哦，超过范围了！！")
+        }
+        val map = list[(num ?: 1) - 1]
         val resultQQ = map.getValue("qq").toLong()
         val jsonArray = qqGroupEntity?.getWhiteJsonArray() ?: JSONArray()
         if (jsonArray.contains(resultQQ.toString())){
@@ -318,7 +328,7 @@ class BotController: QQController() {
 
     @Action("群聊炽焰")
     @Synonym(["群聊之火", "冒尖小春笋", "快乐源泉"])
-    fun legend(group: Long, qq: Long, @PathVar(0) str: String): Message{
+    fun legend(group: Long, qq: Long, @PathVar(0) str: String, @PathVar(value = 1, type = PathVar.Type.Integer) num: Int?): Message{
         val msg: String
         val list: List<Map<String, String>>
         when (str) {
@@ -341,14 +351,12 @@ class BotController: QQController() {
             else -> return mif.at(qq).plus("类型不匹配，查询失败！！")
         }
         if (list.isEmpty()) return mif.at(qq).plus("该群还没有${str}用户！！")
-        val map = list[0]
+        if (num ?: 1 > list.size){
+            return mif.at(qq).plus("${str}只有${list.size}位哦，超过范围了！！")
+        }
+        val map = list[(num ?: 1) - 1]
         return mif.at(map.getValue("qq").toLong()).plus(mif.imageByUrl(map.getValue("image"))).plus("$str，${map.getValue("desc")}，$msg")
     }
-
-    @Action("加个好友 {qqNo}")
-    @QMsg(at = true)
-    fun addFriend(qqEntity: QQEntity, qqNo: Long) =
-        qqZoneLogic.addFriend(qqEntity, qqNo, "加个好友呗！！", null, null)
 
     @Action("群精华")
     @Synonym(["群精华消息"])

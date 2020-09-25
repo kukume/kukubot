@@ -9,13 +9,8 @@ import com.icecreamqaq.yuq.controller.QQController
 import com.icecreamqaq.yuq.entity.Contact
 import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.firstString
-import me.kuku.yuq.entity.NeTeaseEntity
-import me.kuku.yuq.entity.SteamEntity
-import me.kuku.yuq.entity.SuperCuteEntity
-import me.kuku.yuq.entity.WeiboEntity
-import me.kuku.yuq.logic.NeTeaseLogic
-import me.kuku.yuq.logic.SteamLogic
-import me.kuku.yuq.logic.WeiboLogic
+import me.kuku.yuq.entity.*
+import me.kuku.yuq.logic.*
 import me.kuku.yuq.service.*
 import me.kuku.yuq.utils.*
 import javax.inject.Inject
@@ -38,6 +33,12 @@ class BindController: QQController() {
     private lateinit var weiboLogic: WeiboLogic
     @Inject
     private lateinit var weiboService: WeiboService
+    @Inject
+    private lateinit var xiaomiMotionLogic: XiaomiMotionLogic
+    @Inject
+    private lateinit var motionService: MotionService
+    @Inject
+    private lateinit var leXinMotionLogic: LeXinMotionLogic
 
     @Action("qq")
     fun bindQQ(@PathVar(1) password: String?, qq: Contact, session: ContextSession): Any? {
@@ -98,6 +99,23 @@ class BindController: QQController() {
             steamService.save(steamEntity)
             "绑定或者更新成功"
         }else "缺少参数[账号 密码 二次验证码（令牌）]"
+    }
+
+    @Action("lexin {phone} {password}")
+    fun bindLeXin(qq: Long, phone: String, password: String): String{
+        val md5Pass = MD5Utils.toMD5(password)
+        val commonResult = leXinMotionLogic.loginByPassword(phone, md5Pass)
+        return if (commonResult.code == 200){
+            val motionEntity = commonResult.t!!
+            val newMotionEntity = motionService.findByQQ(qq) ?: MotionEntity(null, qq)
+            newMotionEntity.phone = motionEntity.phone
+            newMotionEntity.password = md5Pass
+            newMotionEntity.accessToken = motionEntity.accessToken
+            newMotionEntity.userId = motionEntity.userId
+            newMotionEntity.cookie = motionEntity.cookie
+            motionService.save(newMotionEntity)
+            "绑定乐心运动成功！！"
+        }else commonResult.msg
     }
 
     @Action("md5 {str}")
@@ -174,5 +192,19 @@ class BindController: QQController() {
             weiboService.save(weiboEntity)
             "绑定或更新成功！！！"
         }else loginCommonResult.msg
+    }
+
+    @Action("mi {phone} {password}")
+    fun bindXiaomiMotion(phone: String, password: String, qq: Long): String{
+        val loginResult = xiaomiMotionLogic.login(phone, password)
+        return if (loginResult.code == 200){
+            val loginToken = loginResult.t!!
+            val motionEntity = motionService.findByQQ(qq) ?: MotionEntity(null, qq)
+            motionEntity.miPhone = phone
+            motionEntity.miPassword = password
+            motionEntity.miLoginToken = loginToken
+            motionService.save(motionEntity)
+            "绑定或者更新小米运动信息成功！！"
+        }else "账号或密码错误，请重新绑定！！"
     }
 }

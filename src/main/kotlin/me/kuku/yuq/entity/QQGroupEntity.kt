@@ -39,7 +39,6 @@ data class QQGroupEntity(
         @Lob
         @Column(columnDefinition="text")
         var interceptList: String = "[]",
-        var musicType: String = "qq",
         var colorPic: Boolean? = false,
         var status: Boolean? = false,
         var recall: Boolean? = false,

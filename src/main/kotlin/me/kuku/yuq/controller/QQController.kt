@@ -17,6 +17,7 @@ import me.kuku.yuq.entity.WeiboEntity
 import me.kuku.yuq.logic.*
 import me.kuku.yuq.service.*
 import me.kuku.yuq.utils.*
+import java.io.IOException
 import javax.inject.Inject
 import kotlin.concurrent.thread
 
@@ -151,44 +152,47 @@ class QQController: QQController() {
         reply(mif.at(qq).plus("请稍后！！！正在为您签到中~~~"))
         val str1 = qqLogic.qqSign(qqEntity)
         return if (!str1.contains("更新QQ")){
-            val sb = StringBuilder()
-            qqLogic.anotherSign(qqEntity)
-            val str2 = qqLogic.groupLottery(qqEntity, group)
-            val str3 = if ("失败" in qqLogic.vipSign(qqEntity)) "签到失败" else "签到成功"
-            val str4 = qqLogic.phoneGameSign(qqEntity)
-            val str5 = qqLogic.yellowSign(qqEntity)
-            val str6 = qqLogic.qqVideoSign1(qqEntity)
-            val str7 = qqLogic.qqVideoSign2(qqEntity)
-            val str8 = qqLogic.bigVipSign(qqEntity)
-            val str9 = if ("失败" in qqLogic.qqMusicSign(qqEntity)) "签到失败" else "签到成功"
-            val str10 = if ("成功" in qqLogic.gameSign(qqEntity)) "签到成功" else "签到失败"
-            val str11 = if ("失败" in qqLogic.qPetSign(qqEntity)) "领取失败" else "领取成功"
-            val str12 = if ("成功" in qqLogic.tribeSign(qqEntity)) "领取成功" else "领取失败"
-            val str13 = qqLogic.motionSign(qqEntity)
-            val str14 = if ("成功" in qqLogic.blueSign(qqEntity)) "签到成功" else "签到失败"
-            val str15 = qqLogic.sVipMornSign(qqEntity)
-            val str16 = qqLogic.weiYunSign(qqEntity)
-            val str17 = qqLogic.weiShiSign(qqEntity)
-            val str18 = qqLogic.growthLike(qqEntity)
-            sb.appendln("手机打卡：$str1")
-                    .appendln("群等级抽奖：$str2")
-                    .appendln("会员签到：$str3")
-                    .appendln("手游加速：$str4")
-                    .appendln("黄钻签到：$str5")
-                    .appendln("腾讯视频签到1：$str6")
-                    .appendln("腾讯视频签到2：$str7")
-                    .appendln("大会员签到；$str8")
-                    .appendln("音乐签到：$str9")
-                    .appendln("游戏签到：$str10")
-                    .appendln("大乐斗签到：$str11")
-                    .appendln("兴趣部落：$str12")
-                    .appendln("运动签到：$str13")
-                    .appendln("蓝钻签到：$str14")
-                    .appendln("svip打卡报名：$str15")
-                    .appendln("微云签到：$str16")
-                    .appendln("微视签到：$str17")
-                    .append("排行榜点赞：$str18")
-            sb.toString()
+            try {
+                val sb = StringBuilder()
+                qqLogic.anotherSign(qqEntity)
+                val str2 = qqLogic.groupLottery(qqEntity, group)
+                val str3 = if ("失败" in qqLogic.vipSign(qqEntity)) "签到失败" else "签到成功"
+                val str4 = qqLogic.phoneGameSign(qqEntity)
+                val str5 = qqLogic.yellowSign(qqEntity)
+                val str6 = qqLogic.qqVideoSign1(qqEntity)
+                val str7 = qqLogic.qqVideoSign2(qqEntity)
+                val str8 = qqLogic.bigVipSign(qqEntity)
+                val str9 = if ("失败" in qqLogic.qqMusicSign(qqEntity)) "签到失败" else "签到成功"
+                val str10 = if ("失败" in qqLogic.qPetSign(qqEntity)) "领取失败" else "领取成功"
+                val str11 = if ("成功" in qqLogic.tribeSign(qqEntity)) "领取成功" else "领取失败"
+                val str12 = qqLogic.motionSign(qqEntity)
+                val str13 = if ("成功" in qqLogic.blueSign(qqEntity)) "签到成功" else "签到失败"
+                val str14 = qqLogic.sVipMornSign(qqEntity)
+                val str15 = qqLogic.weiYunSign(qqEntity)
+                val str16 = qqLogic.weiShiSign(qqEntity)
+                val str17 = qqLogic.growthLike(qqEntity)
+                sb.appendln("手机打卡：$str1")
+                        .appendln("群等级抽奖：$str2")
+                        .appendln("会员签到：$str3")
+                        .appendln("手游加速：$str4")
+                        .appendln("黄钻签到：$str5")
+                        .appendln("腾讯视频签到1：$str6")
+                        .appendln("腾讯视频签到2：$str7")
+                        .appendln("大会员签到；$str8")
+                        .appendln("音乐签到：$str9")
+                        .appendln("大乐斗签到：$str10")
+                        .appendln("兴趣部落：$str11")
+                        .appendln("运动签到：$str12")
+                        .appendln("蓝钻签到：$str13")
+                        .appendln("svip打卡报名：$str14")
+                        .appendln("微云签到：$str15")
+                        .appendln("微视签到：$str16")
+                        .append("排行榜点赞：$str17")
+                sb.toString()
+                "超级签到成功！！"
+            }catch (e: IOException){
+                "超级签到失败！！请重试！！"
+            }
         }else "超级签到失败，请更新QQ！"
     }
 

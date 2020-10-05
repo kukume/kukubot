@@ -32,4 +32,5 @@ interface WeiboLogic {
     fun favoritesWeibo(weiboEntity: WeiboEntity, id: String): String
     fun delWeibo(weiboEntity: WeiboEntity, id: String): String
     fun shortUrl(weiboEntity: WeiboEntity, url: String): String
+    fun weiboSuperTalkSign(weiboEntity: WeiboEntity): String
 }

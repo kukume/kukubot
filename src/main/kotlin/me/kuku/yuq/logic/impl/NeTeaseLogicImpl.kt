@@ -14,7 +14,7 @@ import kotlin.random.Random
 
 class NeTeaseLogicImpl: NeTeaseLogic {
 
-    private val referer = "http://music.163.com/"
+    private val referer = "https://music.163.com/"
     private val vi = "0102030405060708"
     private val nonce = "0CoJUm6Qyw8W8jud"
     private val secretKey = "TA3YiYCfY2dDJQgg"
@@ -34,7 +34,7 @@ class NeTeaseLogicImpl: NeTeaseLogic {
      * 密码需要md5
      */
     override fun loginByPhone(username: String, password: String): CommonResult<NeTeaseEntity> {
-        val response = OkHttpClientUtils.post("https://music.163.com/weapi/login/cellphone", OkHttpClientUtils.addForms(
+        val response = OkHttpClientUtils.post("https://music.163.com/weapi/w/login/cellphone?csrf_token=", OkHttpClientUtils.addForms(
                 *this.prepare(mapOf("phone" to username, "countrycode" to "86", "password" to password, "rememberLogin" to "true"))
         ), OkHttpClientUtils.addHeaders(
                 "referer", referer,
@@ -44,7 +44,7 @@ class NeTeaseLogicImpl: NeTeaseLogic {
         val cookieMap = OkHttpClientUtils.getCookie(response, "MUSIC_U", "__csrf")
         return if (jsonObject.getInteger("code") == 200){
             CommonResult(200, "", NeTeaseEntity(null, 0L, username, password, cookieMap.getValue("MUSIC_U"), cookieMap.getValue("__csrf")))
-        }else CommonResult(500, jsonObject.getString("msg"))
+        }else CommonResult(500, jsonObject.getString("message"))
     }
 
     override fun loginByQQ(qqEntity: QQEntity): CommonResult<NeTeaseEntity> {

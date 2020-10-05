@@ -99,11 +99,12 @@ class ToolLogicImpl: ToolLogic {
     }
 
     override fun queryIp(ip: String): String {
-        val response = OkHttpClientUtils.get("https://api.kieng.cn/ipgeography?ip=$ip")
-        val jsonObject = OkHttpClientUtils.getJson(response)
-        return if (jsonObject.getInteger("code") == 200){
-            jsonObject.getString("pos") + jsonObject.getString("isp")
-        }else jsonObject.getString("error")
+        val response = OkHttpClientUtils.get("http://ipaddr.cz88.net/data.php?ip=$ip",
+                OkHttpClientUtils.addUA(OkHttpClientUtils.PC_UA))
+        val str = OkHttpClientUtils.getStr(response)
+        val list = str.split("'")
+        // 1-ip  3 - addr 5 - ua
+        return list[3]
     }
 
     override fun queryWhois(domain: String): String {
@@ -343,7 +344,7 @@ class ToolLogicImpl: ToolLogic {
         return mapOf("text" to jsonObject.getString("hitokoto"), "from" to jsonObject.getString("from"))
     }
 
-    override fun songByQQ(name: String): String {
+/*    override fun songByQQ(name: String): String {
         val firstResponse = OkHttpClientUtils.get("https://c.y.qq.com/soso/fcgi-bin/client_search_cp?w=${URLEncoder.encode(name, "utf-8")}&format=json")
         val jsonObject = OkHttpClientUtils.getJson(firstResponse)
         val songJsonObject = jsonObject.getJSONObject("data").getJSONObject("song").getJSONArray("list").getJSONObject(0)
@@ -358,7 +359,7 @@ class ToolLogicImpl: ToolLogic {
         val thirdResponse = OkHttpClientUtils.get(jumpUrl, OkHttpClientUtils.addUA(OkHttpClientUtils.PC_UA))
         val html = OkHttpClientUtils.getStr(thirdResponse)
         val imageUrl = Jsoup.parse(html).select(".main .mod_data .data__cover img").first().attr("src")
-        return "{\"app\":\"com.tencent.structmsg\",\"desc\":\"音乐\",\"view\":\"music\",\"ver\":\"0.0.0.1\",\"prompt\":\"[分享]$songName\",\"appID\":\"\",\"sourceName\":\"\",\"actionData\":\"\",\"actionData_A\":\"\",\"sourceUrl\":\"\",\"meta\":{\"music\":{\"action\":\"\",\"android_pkg_name\":\"\",\"app_type\":1,\"appid\":100497308,\"desc\":\"${songJsonObject.getJSONArray("singer").getJSONObject(0).getString("name")}\",\"jumpUrl\":\"$jumpUrl\",\"musicUrl\":\"$musicUrl\",\"preview\":\"http:$imageUrl\",\"sourceMsgId\":\"0\",\"source_icon\":\"\",\"source_url\":\"\",\"tag\":\"QQ音乐\",\"title\":\"$songName\"}},\"config\":{\"autosize\":true,\"ctime\":1592152029,\"forward\":true,\"token\":\"00a77c3ec88562b6e75b6202ede77f54\",\"type\":\"normal\"},\"text\":\"\",\"sourceAd\":\"\",\"extra\":\"\"}"
+        return "{\"app\":\"com.tencent.structmsg\",\"desc\":\"音乐\",\"view\":\"music\",\"ver\":\"0.0.0.1\",\"prompt\":\"[分享]$songName\",\"appID\":\"\",\"sourceName\":\"\",\"actionData\":\"\",\"actionData_A\":\"\",\"sourceUrl\":\"\",\"meta\":{\"music\":{\"action\":\"\",\"android_pkg_name\":\"\",\"app_type\":1,\"appid\":100497308,\"desc\":\"${songJsonObject.getJSONArray("singer").getJSONObject(0).getString("name")}\",\"jumpUrl\":\"$jumpUrl\",\"musicUrl\":\"$musicUrl\",\"preview\":\"http:$imageUrl\",\"sourceMsgId\":\"0\",\"source_icon\":\"\",\"source_url\":\"\",\"tag\":\"QQ音乐\",\"title\":\"$songName\"}},\"config\":{\"autosize\":true,\"ctime\":${Date().time.toString().substring(0, 10)},\"forward\":true,\"token\":\"${BotUtils.randomStr(32)}\",\"type\":\"normal\"},\"text\":\"\",\"sourceAd\":\"\",\"extra\":\"\"}"
     }
 
     override fun songBy163(name: String): CommonResult<String> {
@@ -377,10 +378,10 @@ class ToolLogicImpl: ToolLogic {
                 val thirdResponse = OkHttpClientUtils.get("https://y.music.163.com/m/song?id=$id", OkHttpClientUtils.addUA(OkHttpClientUtils.MOBILE_UA))
                 val html = OkHttpClientUtils.getStr(thirdResponse)
                 val imageUrl = Jsoup.parse(html).select("meta[property=og:image]").first().attr("content")
-                CommonResult(200, "成功", "{\"app\":\"com.tencent.structmsg\",\"desc\":\"音乐\",\"view\":\"music\",\"ver\":\"0.0.0.1\",\"prompt\":\"[分享]$songName\",\"appID\":\"\",\"sourceName\":\"\",\"actionData\":\"\",\"actionData_A\":\"\",\"sourceUrl\":\"\",\"meta\":{\"music\":{\"action\":\"\",\"android_pkg_name\":\"\",\"app_type\":1,\"appid\":100497308,\"desc\":\"$author\",\"jumpUrl\":\"${"https://music.163.com/song?id=$id"}\",\"musicUrl\":\"$url\",\"preview\":\"$imageUrl\",\"sourceMsgId\":\"0\",\"source_icon\":\"\",\"source_url\":\"\",\"tag\":\"网易云音乐\",\"title\":\"$songName\"}},\"config\":{\"autosize\":true,\"ctime\":1592152029,\"forward\":true,\"token\":\"00a77c3ec88562b6e75b6202ede77f54\",\"type\":\"normal\"},\"text\":\"\",\"sourceAd\":\"\",\"extra\":\"\"}")
+                CommonResult(200, "成功", "{\"app\":\"com.tencent.structmsg\",\"desc\":\"音乐\",\"view\":\"music\",\"ver\":\"0.0.0.1\",\"prompt\":\"[分享]$songName\",\"appID\":\"\",\"sourceName\":\"\",\"actionData\":\"\",\"actionData_A\":\"\",\"sourceUrl\":\"\",\"meta\":{\"music\":{\"action\":\"\",\"android_pkg_name\":\"\",\"app_type\":1,\"appid\":100497308,\"desc\":\"$author\",\"jumpUrl\":\"${"https://music.163.com/song?id=$id"}\",\"musicUrl\":\"$url\",\"preview\":\"$imageUrl\",\"sourceMsgId\":\"0\",\"source_icon\":\"\",\"source_url\":\"\",\"tag\":\"网易云音乐\",\"title\":\"$songName\"}},\"config\":{\"autosize\":true,\"ctime\":${Date().time.toString().substring(0, 10)},\"forward\":true,\"token\":\"0c0c209ba588fbda61d4480e988a1fa2\",\"type\":\"normal\"},\"text\":\"\",\"sourceAd\":\"\",\"extra\":\"\"}")
             }else CommonResult(500, "可能该歌曲没有版权或者无法下载！")
         }else CommonResult(500, "未找到该歌曲！！")
-    }
+    }*/
 
     override fun creatQr(content: String): String {
         val response = OkHttpClientUtils.get("$url/qrcode/create/single?content=${URLEncoder.encode(content, "utf-8")}&size=500&type=0$params")

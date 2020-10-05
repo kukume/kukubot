@@ -41,7 +41,7 @@ class ManagerController: QQController() {
     @Inject
     private lateinit var recallService: RecallService
 
-    private val version = "v1.6.0"
+    private val version = "v1.6.1"
 
     @Before
     fun before(group: Long, qq: Long, actionContext: BotActionContext, message: Message){
@@ -334,7 +334,6 @@ class ManagerController: QQController() {
     @QMsg(at = true, atNewLine = true)
     fun kai(qqGroupEntity: QQGroupEntity): String{
         val sb = StringBuilder("本群开关情况如下：\n")
-        sb.appendln("音乐：${qqGroupEntity.musicType}")
         sb.appendln("色图：" + this.boolToStr(qqGroupEntity.colorPic) + "、" + qqGroupEntity.colorPicType)
         sb.appendln("鉴黄：" + this.boolToStr(qqGroupEntity.pic))
         sb.appendln("嘴臭：" + this.boolToStr(qqGroupEntity.mouthOdor))
@@ -404,28 +403,6 @@ class ManagerController: QQController() {
         val sb = StringBuilder()
         for (i in 0 until 1000) sb.appendln()
         return sb.toString()
-    }
-
-    @Action("点歌切换 {type}")
-    @QMsg(at = true)
-    fun song(type: String, qqGroupEntity: QQGroupEntity): String?{
-        var musicType = qqGroupEntity.musicType
-        val msg = when (type){
-            "qq" -> {
-                musicType = "qq"
-                "点歌切换为qq源成功"
-            }
-            "网易" -> {
-                musicType = "163"
-                "点歌切换为网易源成功"
-            }
-            else -> null
-        }
-        return if (msg != null){
-            qqGroupEntity.musicType = musicType
-            qqGroupService.save(qqGroupEntity)
-            msg
-        }else null
     }
 
     @Action("问")

@@ -1,5 +1,6 @@
 package me.kuku.yuq.job
 
+import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
 import com.alibaba.fastjson.JSONArray
@@ -86,6 +87,12 @@ class WeiboJob {
                 }else return@forEach
             }
         }
+    }
+
+    @Action("At::d::08")
+    fun weiboSuperTalkSign(){
+        val list = weiboService.findAll()
+        list.forEach { weiboLogic.weiboSuperTalkSign(it) }
     }
 
     private fun isMatch(jsonArray: JSONArray, userId: String): List<JSONObject>{

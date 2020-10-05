@@ -13,4 +13,6 @@ interface WeiboService {
 
     fun findByMonitor(monitor: Boolean): List<WeiboEntity>
 
+    fun findAll(): List<WeiboEntity>
+
 }

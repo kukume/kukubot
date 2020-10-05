@@ -61,6 +61,7 @@ class WeiboController: QQController() {
                     val newWeiboEntity = commonResult.t!!
                     val weiboEntity = weiboService.findByQQ(qq) ?: WeiboEntity(null, qq, group.id)
                     weiboEntity.pcCookie = newWeiboEntity.pcCookie
+                    weiboEntity.group_ = group.id
                     weiboEntity.mobileCookie = newWeiboEntity.mobileCookie
                     weiboService.save(weiboEntity)
                     group.sendMessage(mif.at(qq).plus("绑定微博信息成功！！"))
@@ -305,6 +306,11 @@ class WeiboController: QQController() {
         weiboService.save(weiboEntity)
         return "删除该用户的微博自动转发成功！！"
     }
+
+    @Action("微博超话签到")
+    @QMsg(at = true)
+    fun weiboSuperTalkSign(weiboEntity: WeiboEntity) =
+        weiboLogic.weiboSuperTalkSign(weiboEntity)
 
     @QMsg(at = true)
     @Action("bilibililoginbyweibo")

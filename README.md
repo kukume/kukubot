@@ -15,7 +15,7 @@
 
 指令：[https://w.url.cn/s/Adt25oJ](https://w.url.cn/s/Adt25oJ)
 
-安装教程：[https://uxy.me/ydmX7](https://uxy.me/ydmX7)
+安装教程：[https://w.url.cn/s/AD764XH](https://w.url.cn/s/AD764XH)
 
 ## 说明
 * 机器人使用之前必须发送`机器人 开`才能开启机器人

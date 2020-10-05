@@ -41,8 +41,6 @@ class ToolController: QQController() {
     private lateinit var messageService: MessageService
     @Inject
     private lateinit var weiboLogic: WeiboLogic
-    @Config("YuQ.Mirai.user.qq")
-    private lateinit var qq: String
 
     private var colorPicTime = 0L
 
@@ -214,27 +212,6 @@ class ToolController: QQController() {
         for (i in 0 until 10){
             val message = this.colorPic(group, qq)
             reply(message)
-        }
-    }
-
-    @Action("点歌")
-    fun song(group: Long, message: Message, qq: Long): Any?{
-        if (message.toPath().size == 1) return mif.at(qq).plus("没有发现歌曲名字")
-        val msgStr = message.body[0].toPath()
-        val name = msgStr.substring(3)
-        val qqGroupEntity = qqGroupService.findByGroup(group)
-        return when (qqGroupEntity?.musicType ?: "qq") {
-            "qq" -> {
-                val jsonStr = toolLogic.songByQQ(name)
-                mif.jsonEx(jsonStr)
-            }
-            "163" -> {
-                val commonResult = toolLogic.songBy163(name)
-                return if (commonResult.code == 200) {
-                    mif.jsonEx(commonResult.t!!)
-                }else commonResult.msg
-            }
-            else -> null
         }
     }
 

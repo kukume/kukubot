@@ -18,6 +18,7 @@ import me.kuku.yuq.logic.*
 import me.kuku.yuq.service.*
 import me.kuku.yuq.utils.*
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.concurrent.thread
 
@@ -130,19 +131,24 @@ class QQController: QQController() {
 
     @Action("群礼物")
     @QMsg(at = true)
-    fun lottery(qqEntity: QQEntity): String{
+    fun lottery(qqEntity: QQEntity, group: Group, qq: Long): String{
         val commonResult = qqZoneLogic.queryGroup(qqEntity)
         return if (commonResult.code == 200){
-            val list = commonResult.t
-            val sb = StringBuilder()
-            list?.forEach {
-                val group = it.getValue("group").toLong()
-                val result = qqLogic.groupLottery(qqEntity, group)
-                if (result.contains("成功")) sb.appendln(result)
+            thread {
+                val list = commonResult.t
+                val sb = StringBuilder()
+                list?.forEach {
+                    TimeUnit.SECONDS.sleep(3)
+                    val itGroup = it.getValue("group").toLong()
+                    val result = qqLogic.groupLottery(qqEntity, itGroup)
+                    if (result.contains("成功")) sb.appendln(result)
+                }
+                var str = sb.removeSuffixLine().toString()
+                str = if (str == "") "啥都没抽到"
+                else str
+                group.sendMessage(mif.at(qq).plus(str))
             }
-            val str = sb.removeSuffixLine().toString()
-            if (str == "") "啥都没抽到"
-            else str
+            return "抽取群礼物已在后台运行中！！"
         }else commonResult.msg
     }
 

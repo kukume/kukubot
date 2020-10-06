@@ -289,6 +289,7 @@ class BotController: QQController() {
         }
         val map = list[(num ?: 1) - 1]
         val resultQQ = map.getValue("qq").toLong()
+        if (resultQQ == this.qq.toLong()) return listOf("呼风唤雨", "84消毒", "巨星排面").random().toMessage()
         val jsonArray = qqGroupEntity?.getWhiteJsonArray() ?: JSONArray()
         if (jsonArray.contains(resultQQ.toString())){
             return try {

@@ -41,7 +41,7 @@ class ManagerController: QQController() {
     @Inject
     private lateinit var recallService: RecallService
 
-    private val version = "v1.6.2"
+    private val version = "v1.6.3"
 
     @Before
     fun before(group: Long, qq: Long, actionContext: BotActionContext, message: Message){

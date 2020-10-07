@@ -16,7 +16,6 @@ import org.jsoup.Jsoup
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.util.*
-import kotlin.math.sign
 
 class WeiboLogicImpl: WeiboLogic {
     override fun hotSearch(): List<String> {
@@ -571,14 +570,14 @@ class WeiboLogicImpl: WeiboLogic {
         } else "获取短链接失败！！！"
     }
 
-    override fun weiboSuperTalkSign(weiboEntity: WeiboEntity): String {
+    override fun weiboSuperTalkSign(weiboEntity: WeiboEntity): CommonResult<String> {
         val response = OkHttpClientUtils.get("https://m.weibo.cn/api/container/getIndex?containerid=100803_-_followsuper&luicode=10000011&lfid=231093_-_chaohua",
                 OkHttpClientUtils.addHeaders(
                         "cookie", weiboEntity.mobileCookie,
                         "user-agent", OkHttpClientUtils.MOBILE_UA
                 ))
         val jsonObject = OkHttpClientUtils.getJson(response)
-        if (jsonObject.getInteger("ok") != 1) return "签到失败，微博的cookie已失效！！"
+        if (jsonObject.getInteger("ok") != 1) return CommonResult(500, "签到失败，微博的cookie已失效！！")
         val cookie = OkHttpClientUtils.getCookie(response) + weiboEntity.mobileCookie
         val token = BotUtils.regex("XSRF-TOKEN=", "; ", cookie)!!
         val list = mutableListOf<String>()
@@ -605,12 +604,12 @@ class WeiboLogicImpl: WeiboLogic {
                     "referer", "https://m.weibo.cn/p/tabbar?containerid=100803_-_followsuper&luicode=10000011&lfid=231093_-_chaohua&page_type=tabbar",
                     "user-agent", OkHttpClientUtils.MOBILE_UA
             ))
-            if (signResponse.code != 200) return "签到失败，请重试！！"
+            if (signResponse.code != 200) return CommonResult(500, "签到失败，请重试！！")
             val signJsonObject = OkHttpClientUtils.getJson(signResponse)
             if (signJsonObject.getInteger("ok") == 0){
-                return "请使用浏览器进入该链接并识别验证码，并重新发送该指令，${System.getProperty("line.separator")}${signJsonObject.getJSONObject("data").getString("scheme")}"
+                return CommonResult(201, "需要验证码", signJsonObject.getJSONObject("data").getString("scheme"))
             }
         }
-        return "微博超话签到成功！！"
+        return CommonResult(200, "微博超话签到成功！！")
     }
 }

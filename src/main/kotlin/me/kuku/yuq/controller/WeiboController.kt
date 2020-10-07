@@ -14,6 +14,7 @@ import com.icecreamqaq.yuq.message.Message
 import me.kuku.yuq.entity.BiliBiliEntity
 import me.kuku.yuq.entity.WeiboEntity
 import me.kuku.yuq.logic.BiliBiliLogic
+import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.logic.WeiboLogic
 import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.pojo.WeiboPojo
@@ -36,6 +37,8 @@ class WeiboController: QQController() {
     private lateinit var biliBiliLogic: BiliBiliLogic
     @Inject
     private lateinit var biliBiliService: BiliBiliService
+    @Inject
+    private lateinit var toolLogic: ToolLogic
 
     private val hotMap: MutableMap<Long, List<String>> = mutableMapOf()
 
@@ -309,8 +312,17 @@ class WeiboController: QQController() {
 
     @Action("微博超话签到")
     @QMsg(at = true)
-    fun weiboSuperTalkSign(weiboEntity: WeiboEntity) =
-        weiboLogic.weiboSuperTalkSign(weiboEntity)
+    fun weiboSuperTalkSign(weiboEntity: WeiboEntity): Any {
+        val commonResult = weiboLogic.weiboSuperTalkSign(weiboEntity)
+        return when (commonResult.code){
+            200,500 -> commonResult.msg
+            else -> {
+                val url = commonResult.t
+                val qrUrl = toolLogic.creatQr(url!!)
+                mif.text("请打开微博客户端扫描该二维码并验证该验证码，然后重新发送该指令：").plus(mif.imageByUrl(qrUrl))
+            }
+        }
+    }
 
     @QMsg(at = true)
     @Action("bilibililoginbyweibo")

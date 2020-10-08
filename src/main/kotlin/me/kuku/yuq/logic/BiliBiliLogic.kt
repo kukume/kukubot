@@ -14,6 +14,7 @@ interface BiliBiliLogic {
     fun getIdByName(username: String): CommonResult<List<BiliBiliPojo>>
     fun convertStr(biliBiliPojo: BiliBiliPojo): String
     fun getDynamicById(id: String): CommonResult<List<BiliBiliPojo>>
+    fun getAllDynamicById(id: String): List<BiliBiliPojo>
     fun loginByQQ(qqEntity: QQEntity): CommonResult<BiliBiliEntity>
     fun loginByWeibo(weiboEntity: WeiboEntity): CommonResult<BiliBiliEntity>
     fun loginByQr1(): String

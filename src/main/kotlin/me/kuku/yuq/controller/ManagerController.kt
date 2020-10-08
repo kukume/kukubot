@@ -41,7 +41,7 @@ class ManagerController: QQController() {
     @Inject
     private lateinit var recallService: RecallService
 
-    private val version = "v1.6.3"
+    private val version = "v1.6.4"
 
     @Before
     fun before(group: Long, qq: Long, actionContext: BotActionContext, message: Message){
@@ -458,12 +458,12 @@ class ManagerController: QQController() {
     }
 
     @Action("检查更新")
-    fun checkUpdate(qq: Long): String{
+    fun checkUpdate(qq: Long, @PathVar(1) str: String?): String{
         val gitVersion = toolLogic.queryVersion()
         val sb = StringBuilder()
         sb.appendln("当前程序版本：$version")
         sb.appendln("最新程序版本：$gitVersion")
-        if (qq == master.toLong()) {
+        if (qq == master.toLong() && str != null) {
             if (gitVersion > version) {
                 sb.appendln("更新日志：https://github.com/kukume/kuku-bot/releases/tag/$gitVersion")
                 sb.append("发现程序可更新，正在下载中！！！")

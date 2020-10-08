@@ -130,19 +130,35 @@ class BiliBiliLogicImpl: BiliBiliLogic {
         return sb.removeSuffixLine().toString()
     }
 
-    override fun getDynamicById(id: String): CommonResult<List<BiliBiliPojo>> {
-        val response = OkHttpClientUtils.get("https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/space_history?visitor_uid=0&host_uid=$id&offset_dynamic_id=0&need_top=1",
+    private fun getDynamicById(id: String, offsetId: String): CommonResult<List<BiliBiliPojo>> {
+        val response = OkHttpClientUtils.get("https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/space_history?visitor_uid=0&host_uid=$id&offset_dynamic_id=$offsetId&need_top=1",
                 OkHttpClientUtils.addReferer("https://space.bilibili.com/$id/dynamic"))
         val jsonObject = OkHttpClientUtils.getJson(response)
         // next_offset  下一页开头
-        val jsonArray = jsonObject.getJSONObject("data").getJSONArray("cards") ?: return CommonResult(500, "该用户并没有动态哦！！")
+        val dataJsonObject = jsonObject.getJSONObject("data")
+        val jsonArray = dataJsonObject.getJSONArray("cards") ?: return CommonResult(500, "该用户并没有动态哦！！")
         val list = mutableListOf<BiliBiliPojo>()
         for (i in jsonArray.indices){
             val singleJsonObject = jsonArray.getJSONObject(i)
             if (singleJsonObject.getJSONObject("extra")?.getInteger("is_space_top") == 1) continue
             list.add(this.convert(singleJsonObject))
         }
-        return CommonResult(200, "", list)
+        return CommonResult(200, dataJsonObject.getString("next_offset"), list)
+    }
+
+    override fun getDynamicById(id: String) = this.getDynamicById(id, "0")
+
+    override fun getAllDynamicById(id: String): List<BiliBiliPojo> {
+        var offsetId = "0"
+        val allList = mutableListOf<BiliBiliPojo>()
+        while (true){
+            val commonResult = this.getDynamicById(id, offsetId)
+            if (commonResult.code == 200){
+                val list = commonResult.t!!
+                allList.addAll(list)
+                offsetId = commonResult.msg
+            }else return allList
+        }
     }
 
     override fun loginByQQ(qqEntity: QQEntity): CommonResult<BiliBiliEntity> {

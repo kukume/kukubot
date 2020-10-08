@@ -2,6 +2,7 @@ package me.kuku.yuq.logic.impl
 
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONArray
+import com.alibaba.fastjson.JSONException
 import com.alibaba.fastjson.JSONObject
 import me.kuku.yuq.entity.QQEntity
 import me.kuku.yuq.entity.WeiboEntity
@@ -338,7 +339,11 @@ class WeiboLogicImpl: WeiboLogic {
                 OkHttpClientUtils.addCookie(weiboEntity.mobileCookie))
         val str = OkHttpClientUtils.getStr(response)
         return if ("" != str) {
-            val jsonArray = JSON.parseObject(str).getJSONObject("data").getJSONArray("statuses")
+            val jsonArray = try {
+                JSON.parseObject(str).getJSONObject("data").getJSONArray("statuses")
+            }catch (e: JSONException){
+                return CommonResult(500, "查询微博失败，请稍后再试！！")
+            }
             val list = mutableListOf<WeiboPojo>()
             for (i in jsonArray.indices) {
                 val jsonObject = jsonArray.getJSONObject(i)

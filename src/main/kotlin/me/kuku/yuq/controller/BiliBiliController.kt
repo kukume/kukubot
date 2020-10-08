@@ -300,6 +300,21 @@ class BiliBiliController: QQController() {
         }
     }
 
+    @Action("哔哩哔哩赞 {username}")
+    fun biliBiliAllLike(biliBiliEntity: BiliBiliEntity, username: String, group: Group, qq: Long): String{
+        val idCommonResult = biliBiliLogic.getIdByName(username)
+        val biliBiliPojo = idCommonResult.t?.get(0) ?: return "没有找到该用户！！"
+        val list = biliBiliLogic.getAllDynamicById(biliBiliPojo.userId)
+        thread {
+            list.forEach {
+                TimeUnit.SECONDS.sleep(5)
+                biliBiliLogic.like(biliBiliEntity, it.id, true)
+            }
+            group.sendMessage(mif.at(qq).plus("赞该用户动态成功！！"))
+        }
+        return "哔哩哔哩赞正在运行中！！"
+    }
+
     private fun parseNum(list: List<*>, num: Int?): Int{
         var newNum = num ?: 1
         if (newNum > list.size - 1) newNum = 1

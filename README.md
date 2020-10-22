@@ -13,6 +13,8 @@
 * 群管功能
 * 一些小工具
 
+mirai-console版：[https://www.kuku.me/archives/7/](https://www.kuku.me/archives/7/)
+
 指令：[https://w.url.cn/s/Adt25oJ](https://w.url.cn/s/Adt25oJ)
 
 安装教程：[https://w.url.cn/s/AD764XH](https://w.url.cn/s/AD764XH)

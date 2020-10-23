@@ -29,9 +29,8 @@ interface ToolLogic {
     fun ping(domain: String): String
     fun colorPicByLoLiCon(apiKey: String, isR18: Boolean): CommonResult<Map<String, String>>
     fun piXivPicProxy(url: String): ByteArray
-    fun r18setting(cookie: String, isOpen: Boolean): String
     fun hiToKoTo(): Map<String, String>
-    fun creatQr(content: String): String
+    fun creatQr(content: String): ByteArray
     fun girlImage(): String
     fun lolFree(): String
     fun abbreviation(content: String): String

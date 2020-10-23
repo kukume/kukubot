@@ -1,91 +1,99 @@
+@file:Suppress("unused")
+
 package me.kuku.yuq.job
 
 import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
-import com.icecreamqaq.yuq.toMessage
+import com.icecreamqaq.yuq.message.Message.Companion.toMessage
+import com.icecreamqaq.yuq.mif
 import com.icecreamqaq.yuq.yuq
 import me.kuku.yuq.logic.BiliBiliLogic
+import me.kuku.yuq.pojo.BiliBiliPojo
 import me.kuku.yuq.service.BiliBiliService
-import me.kuku.yuq.service.QQGroupService
+import me.kuku.yuq.service.GroupService
 import javax.inject.Inject
 
 @JobCenter
 class BiliBiliJob {
     @Inject
-    private lateinit var qqGroupService: QQGroupService
+    private lateinit var groupService: GroupService
     @Inject
     private lateinit var biliBiliLogic: BiliBiliLogic
     @Inject
     private lateinit var biliBiliService: BiliBiliService
 
     private val groupMap = mutableMapOf<Long, MutableMap<Long, Long>>()
-    private val qqMap = mutableMapOf<Long, Long>()
+    private val userMap = mutableMapOf<Long, Long>()
     private val liveMap = mutableMapOf<Long, MutableMap<Long, Boolean>>()
 
     @Cron("30s")
     fun biliBiliGroupMonitor(){
-        val groupList = qqGroupService.findAll()
-        groupList.forEach { qqGroupEntity ->
-            val group = qqGroupEntity.group_
-            if (!groupMap.containsKey(group)) groupMap[group] = mutableMapOf()
-            val map = groupMap[group]!!
-            val biliBiliJsonArray = qqGroupEntity.getBiliBiliJsonArray()
-            for (i in biliBiliJsonArray.indices){
-                val jsonObject = biliBiliJsonArray.getJSONObject(i)
-                val biliBiliId = jsonObject.getLong("id")
-                val commonResult = biliBiliLogic.getDynamicById(biliBiliId.toString())
-                val biliBiliList = commonResult.t ?: continue
-                val firstBiliBiliPojo = if (biliBiliList.isNotEmpty()) biliBiliList[0] else continue
-                if (map.containsKey(biliBiliId)){
-                    val oldId = map.getValue(biliBiliId)
-                    if (firstBiliBiliPojo.id.toLong() > oldId)
-                        map[biliBiliId] = firstBiliBiliPojo.id.toLong()
-                    biliBiliList.forEach inner@{ biliBiliPojo ->
-                        if (biliBiliPojo.id.toLong() > oldId)
-                            yuq.groups[group]?.sendMessage(biliBiliLogic.convertStr(biliBiliPojo).toMessage())
-                        else return@inner
+        val groupList = groupService.findAll()
+        for (groupEntity in groupList){
+            val biliBiliJsonArray = groupEntity.biliBiliJsonArray
+            val group = groupEntity.group
+            if (biliBiliJsonArray.isEmpty()) continue
+            if (!groupMap.containsKey(group)){
+                groupMap[group] = mutableMapOf()
+            }
+            val biMap = groupMap[group]!!
+            for (any in biliBiliJsonArray){
+                val jsonObject = any as JSONObject
+                val userId = jsonObject.getLong("id")
+                val commonResult = biliBiliLogic.getDynamicById(userId.toString())
+                val list = commonResult.t ?: continue
+                if (biMap.containsKey(userId)) {
+                    val newList = mutableListOf<BiliBiliPojo>()
+                    for (biliBiliPojo in list){
+                        if (biliBiliPojo.id.toLong() <= biMap.getValue(userId)) break
+                        newList.add(biliBiliPojo)
                     }
-                }else map[biliBiliId] = firstBiliBiliPojo.id.toLong()
+                    newList.forEach {
+                        yuq.groups[group]?.sendMessage(mif.text("哔哩哔哩有新动态了\n")
+                                .plus(biliBiliLogic.convertStr(it)))
+                    }
+                }
+                biMap[userId] = list[0].id.toLong()
             }
         }
     }
 
     @Cron("30s")
     fun biliBiliQQMonitor(){
-        val list = biliBiliService.findByMonitor(true)
-        list.forEach { biliBiliEntity ->
+        val biliBiliList = biliBiliService.findByMonitor(true)
+        for (biliBiliEntity in biliBiliList){
             val qq = biliBiliEntity.qq
             val commonResult = biliBiliLogic.getFriendDynamic(biliBiliEntity)
-            val biliBiliList = commonResult.t ?: return@forEach
-            if (biliBiliList.isEmpty()) return@forEach
-            val firstId = biliBiliList[0].id.toLong()
-            if (!qqMap.containsKey(qq)) qqMap[qq] = firstId
-            val oldId = qqMap[qq]!!
-            if (firstId > oldId) qqMap[qq] = firstId
-            biliBiliList.forEach inner@{ biliBiliPojo ->
-                if (biliBiliPojo.id.toLong() > oldId){
+            val list = commonResult.t ?: continue
+            val newList = mutableListOf<BiliBiliPojo>()
+            if (userMap.containsKey(qq)){
+                val oldId = userMap[qq]!!
+                for (biliBiliPojo in list) {
+                    if (biliBiliPojo.id.toLong() <= oldId) break
+                    newList.add(biliBiliPojo)
+                }
+                for (biliBiliPojo in newList){
                     val userId = biliBiliPojo.userId
-                    val id = biliBiliPojo.id
-                    val rid = biliBiliPojo.rid
-                    val likeJsonArray = biliBiliEntity.getLikeJsonArray()
-                    if (this.match(likeJsonArray, userId).isNotEmpty()) biliBiliLogic.like(biliBiliEntity, id, true)
-                    val commentJsonArray = biliBiliEntity.getCommentJsonArray()
-                    this.match(commentJsonArray, userId).forEach { biliBiliLogic.comment(biliBiliEntity, rid, biliBiliPojo.type.toString(), it.getString("content")) }
-                    val forwardJsonArray = biliBiliEntity.getForwardJsonArray()
-                    this.match(forwardJsonArray, userId).forEach { biliBiliLogic.forward(biliBiliEntity, id, it.getString("content")) }
+                    val likeList = match(biliBiliEntity.likeJsonArray, userId)
+                    if (likeList.isNotEmpty())  biliBiliLogic.like(biliBiliEntity, biliBiliPojo.id, true)
+                    val commentList = match(biliBiliEntity.commentJsonArray, userId)
+                    for (jsonObject in commentList)  biliBiliLogic.comment(biliBiliEntity, biliBiliPojo.rid, biliBiliPojo.type.toString(), jsonObject.getString("content"))
+                    val forwardList = match(biliBiliEntity.forwardJsonArray, userId)
+                    for (jsonObject in forwardList) biliBiliLogic.forward(biliBiliEntity, biliBiliPojo.id, jsonObject.getString("content"))
                     val bvId = biliBiliPojo.bvId
-                    if (bvId != null){
-                        val tossCoinJsonArray = biliBiliEntity.getTossCoinJsonArray()
-                        if (this.match(tossCoinJsonArray, userId).isNotEmpty()) { biliBiliLogic.tossCoin(biliBiliEntity, rid, bvId, 2) }
-                        val favoritesJsonArray = biliBiliEntity.getFavoritesJsonArray()
-                        this.match(favoritesJsonArray, userId).forEach { biliBiliLogic.favorites(biliBiliEntity, rid, it.getString("content")) }
+                    if (bvId != null) {
+                        val tossCoinList = match(biliBiliEntity.tossCoinJsonArray, userId)
+                        if (tossCoinList.isNotEmpty()) biliBiliLogic.tossCoin(biliBiliEntity, biliBiliPojo.rid, 2)
+                        val favoritesList = match(biliBiliEntity.favoritesJsonArray, userId)
+                        for (jsonObject in favoritesList) biliBiliLogic.favorites(biliBiliEntity, biliBiliPojo.rid, jsonObject.getString("content"))
                     }
-                    val group = biliBiliEntity.group_
-                    yuq.groups[group]?.get(qq)?.sendMessage(biliBiliLogic.convertStr(biliBiliPojo).toMessage())
-                }else return@inner
+                    yuq.groups[biliBiliEntity.group_]?.members?.get(qq)?.sendMessage(mif.text("哔哩哔哩有新动态了！！\n")
+                            .plus(biliBiliLogic.convertStr(biliBiliPojo)))
+                }
             }
+            userMap[qq] = list[0].id.toLong()
         }
     }
 
@@ -94,7 +102,7 @@ class BiliBiliJob {
         val list = biliBiliService.findAll()
         list.forEach { biliBiliEntity ->
             val qq = biliBiliEntity.qq
-            val liveJsonArray = biliBiliEntity.getLiveJsonArray()
+            val liveJsonArray = biliBiliEntity.liveJsonArray
             if (!liveMap.containsKey(qq)) liveMap[qq] = mutableMapOf()
             val map = liveMap[qq]!!
             liveJsonArray.forEach {
@@ -121,4 +129,19 @@ class BiliBiliJob {
         return list
     }
 
+    @Cron("At::d::08")
+    fun biliBilliTask(){
+        val list = biliBiliService.findByTask(true)
+        for (biliBiliEntity in list){
+            val ranking = biliBiliLogic.getRanking()
+            val firstRank = ranking[0]
+                biliBiliLogic.report(biliBiliEntity, firstRank.getValue("aid"), firstRank.getValue("cid"), 300)
+                biliBiliLogic.share(biliBiliEntity, firstRank.getValue("aid"))
+                biliBiliLogic.liveSign(biliBiliEntity)
+                for (i in 0 until 2) {
+                    val randomMap = ranking.random()
+                    biliBiliLogic.tossCoin(biliBiliEntity, randomMap.getValue("aid"), 2)
+                }
+        }
+    }
 }

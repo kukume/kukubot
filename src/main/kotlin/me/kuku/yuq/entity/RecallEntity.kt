@@ -1,7 +1,5 @@
 package me.kuku.yuq.entity
 
-import com.alibaba.fastjson.JSON
-import com.alibaba.fastjson.JSONArray
 import java.util.*
 import javax.persistence.*
 
@@ -14,11 +12,9 @@ data class RecallEntity(
         var qq: Long = 0,
         @Column(name = "group_")
         var group: Long = 0,
-        var message: String = "",
+        @OneToOne
+        @JoinColumn(name = "message_id")
+        var messageEntity: MessageEntity,
         @Temporal(TemporalType.TIMESTAMP)
         var date: Date = Date()
-){
-    val messageJsonArray: JSONArray
-        @Transient
-        get() = JSON.parseArray(message)
-}
+)

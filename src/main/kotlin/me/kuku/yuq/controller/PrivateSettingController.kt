@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.Action
@@ -11,23 +13,22 @@ import com.icecreamqaq.yuq.annotation.PrivateController
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.controller.QQController
-import com.icecreamqaq.yuq.firstString
+import com.icecreamqaq.yuq.message.Message.Companion.firstString
+import com.icecreamqaq.yuq.message.Message.Companion.toMessage
 import com.icecreamqaq.yuq.mirai.MiraiBot
-import com.icecreamqaq.yuq.toMessage
 import me.kuku.yuq.entity.ConfigEntity
-import me.kuku.yuq.entity.QQEntity
-import me.kuku.yuq.entity.QQGroupEntity
+import me.kuku.yuq.entity.QQLoginEntity
+import me.kuku.yuq.entity.GroupEntity
 import me.kuku.yuq.logic.QQLogic
 import me.kuku.yuq.service.ConfigService
-import me.kuku.yuq.service.QQGroupService
-import me.kuku.yuq.service.WeiboService
+import me.kuku.yuq.service.GroupService
 import me.kuku.yuq.utils.BotUtils
 import javax.inject.Inject
 
 @PrivateController
 class PrivateSettingController: QQController() {
     @Inject
-    private lateinit var qqGroupService: QQGroupService
+    private lateinit var groupService: GroupService
     @Config("YuQ.Mirai.bot.master")
     private lateinit var master: String
     @Inject
@@ -38,12 +39,10 @@ class PrivateSettingController: QQController() {
     private lateinit var miraiBot: MiraiBot
     @Inject
     private lateinit var configService: ConfigService
-    @Inject
-    private lateinit var weiboService: WeiboService
 
     @Before
     fun before(qq: Long, actionContext: BotActionContext){
-        if (qq != master.toLong()) throw "您不是机器人主人，无法执行！！".toMessage()
+        if (qq != master.toLong()) throw "您不是机器人主人，无法执行！！".toMessage().toThrowable()
         actionContext["qqEntity"] = BotUtils.toQQEntity(web, miraiBot)
     }
 
@@ -52,16 +51,16 @@ class PrivateSettingController: QQController() {
     fun groupOpen(groupNo: Long, @PathVar(0) str: String): String{
         val groups = yuq.groups
         return if (groups.containsKey(groupNo)){
-            val qqGroupEntity = qqGroupService.findByGroup(groupNo) ?: QQGroupEntity(null, groupNo)
+            val qqGroupEntity = groupService.findByGroup(groupNo) ?: GroupEntity(null, groupNo)
             qqGroupEntity.status = str.contains("开启")
-            qqGroupService.save(qqGroupEntity)
+            groupService.save(qqGroupEntity)
             "机器人开启或者关闭成功！！"
         }else "机器人并没有加入这个群！！"
     }
 
     @Action("同意入群 {groupNo}")
-    fun agreeAddGroup(qqEntity: QQEntity, groupNo: Long): String{
-        val groupMsgList = qqLogic.getGroupMsgList(qqEntity)
+    fun agreeAddGroup(qqLoginEntity: QQLoginEntity, groupNo: Long): String{
+        val groupMsgList = qqLogic.getGroupMsgList(qqLoginEntity)
         var map: Map<String, String>? = null
         groupMsgList.forEach {
             if (it["group"] == groupNo.toString()) {
@@ -69,7 +68,7 @@ class PrivateSettingController: QQController() {
                 return@forEach
             }
         }
-        return qqLogic.operatingGroupMsg(qqEntity, "agree", map ?: return "没有找到这个群号", null)
+        return qqLogic.operatingGroupMsg(qqLoginEntity, "agree", map ?: return "没有找到这个群号", null)
     }
 
     @Action("退群 {groupNo}")
@@ -107,14 +106,4 @@ class PrivateSettingController: QQController() {
         configService.save(configEntity)
         return "绑定loLiCon的apiKey成功！！"
     }
-
-    @Action("设置wb")
-    fun settingWeibo(qq: Long): String{
-        val weiboEntity = weiboService.findByQQ(qq) ?: return "您还没有绑定微博账号！！"
-        val configEntity = configService.findByType("wb") ?: ConfigEntity(null, "wb")
-        configEntity.content = weiboEntity.mobileCookie
-        configService.save(configEntity)
-        return "设置微博信息成功！！"
-    }
-
 }

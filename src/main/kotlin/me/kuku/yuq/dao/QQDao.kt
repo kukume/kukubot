@@ -4,14 +4,14 @@ import com.icecreamqaq.yudb.jpa.hibernate.HibernateDao
 import me.kuku.yuq.entity.QQEntity
 
 class QQDao: HibernateDao<QQEntity, Int>() {
-    fun findByQQ(qq: Long) = this.search("from QQEntity where qq = ?", qq)
+
+    fun findByQQAndGroup(qq: Long, group: Int) =
+            this.search("from QQEntity where qq = ? and group_id = ?", qq, group)
+
+    fun delByQQAndGroup(qq: Long, group: Int): Int {
+        val query = this.query("delete from QQEntity where qq = ? and group_id = ?", qq, group)
+        return query.executeUpdate()
+    }
 
     fun findAll() = this.searchList("from QQEntity")
-
-    fun findByActivity() = this.searchList("from QQEntity where status = true")
-
-    fun delByQQ(qq: Long) {
-        val query = this.query("delete from QQEntity where qq = ?", qq)
-        query.executeUpdate()
-    }
 }

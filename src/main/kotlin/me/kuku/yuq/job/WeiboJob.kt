@@ -1,14 +1,17 @@
+@file:Suppress("unused")
+
 package me.kuku.yuq.job
 
-import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
-import com.icecreamqaq.yuq.toMessage
+import com.icecreamqaq.yuq.message.Message.Companion.toMessage
+import com.icecreamqaq.yuq.mif
 import com.icecreamqaq.yuq.yuq
 import me.kuku.yuq.logic.WeiboLogic
-import me.kuku.yuq.service.QQGroupService
+import me.kuku.yuq.pojo.WeiboPojo
+import me.kuku.yuq.service.GroupService
 import me.kuku.yuq.service.WeiboService
 import javax.inject.Inject
 
@@ -17,85 +20,79 @@ class WeiboJob {
     @Inject
     private lateinit var weiboLogic: WeiboLogic
     @Inject
-    private lateinit var qqGroupService: QQGroupService
+    private lateinit var groupService: GroupService
     @Inject
     private lateinit var weiboService: WeiboService
 
     private val groupMap = mutableMapOf<Long, MutableMap<Long, Long>>()
-    private val qqMap = mutableMapOf<Long, Long>()
+    private val userMap = mutableMapOf<Long, Long>()
 
     @Cron("30s")
     fun groupWeibo(){
-        for (qqGroupEntity in qqGroupService.findAll()) {
-            val group = qqGroupEntity.group_
-            if (!groupMap.containsKey(group)) groupMap[group] = mutableMapOf()
-            val map = groupMap[group]!!
-            val weiboJsonArray = qqGroupEntity.getWeiboJsonArray()
-            for (i in weiboJsonArray.indices){
-                val jsonObject = weiboJsonArray.getJSONObject(i)
-                val weiboId = jsonObject.getLong("id")
-                val commonResult = weiboLogic.getWeiboById(weiboId.toString())
+        for (groupEntity in groupService.findAll()) {
+            val group = groupEntity.group
+            val weiboJsonArray = groupEntity.weiboJsonArray
+            if (weiboJsonArray.isEmpty()) continue
+            if (!groupMap.containsKey(group)){
+                groupMap[group] = mutableMapOf()
+            }
+            val wbMap = groupMap[group]!!
+            for (any in weiboJsonArray){
+                val jsonObject = any as JSONObject
+                val userId = jsonObject.getLong("id")
+                val commonResult = weiboLogic.getWeiboById(userId.toString())
                 val list = commonResult.t ?: continue
-                val firstWeiboPojo = if (list.isNotEmpty()) list[0] else continue
-                if (map.containsKey(weiboId)){
-                    val oldMBlogId = map.getValue(weiboId)
-                    if (firstWeiboPojo.id.toLong() > oldMBlogId)
-                        map[weiboId] = firstWeiboPojo.id.toLong()
-                    list.forEach { weiboPojo ->
-                        if (weiboPojo.id.toLong() > oldMBlogId){
-                            yuq.groups[group]?.sendMessage(weiboLogic.convertStr(weiboPojo).toMessage())
-                        }else return@forEach
+                if (wbMap.containsKey(userId)){
+                    val newList = mutableListOf<WeiboPojo>()
+                    for (weiboPojo in list){
+                        if (weiboPojo.id.toLong() <= wbMap.getValue(userId)) break
+                        newList.add(weiboPojo)
                     }
-                }else map[weiboId] = firstWeiboPojo.id.toLong()
+                    newList.forEach {
+                            yuq.groups[group]?.sendMessage(mif.text("有新微博了\n").plus(weiboLogic.convertStr(it)))
+                    }
+                }
+                wbMap[userId] = list[0].id.toLong()
             }
         }
     }
 
     @Cron("30s")
     fun qqWeibo(){
-        val list = weiboService.findByMonitor(true)
-        for (weiboEntity in list) {
+        val weiboList = weiboService.findByMonitor(true)
+        for (weiboEntity in weiboList) {
             val qq = weiboEntity.qq
             val commonResult = weiboLogic.getFriendWeibo(weiboEntity)
-            val weiboList = commonResult.t ?: continue
-            if (weiboList.isEmpty()) continue
-            val firstWeiboPojo = weiboList[0]
-            val firstMBlogId = firstWeiboPojo.id.toLong()
-            if (!qqMap.containsKey(qq)) qqMap[qq] = firstMBlogId
-            val oldMBlogId = qqMap[qq]!!
-            if (firstMBlogId > oldMBlogId) qqMap[qq] = firstMBlogId
-            weiboList.forEach { weiboPojo ->
-                if (weiboPojo.id.toLong() > oldMBlogId) {
-                    val userId = weiboPojo.userId
-                    val id = weiboPojo.id
-                    val likeJsonArray = weiboEntity.getLikeJsonArray()
-                    val likeList = this.isMatch(likeJsonArray, userId)
-                    if (likeList.isNotEmpty())
-                        weiboLogic.like(weiboEntity, id)
-                    val commentJsonArray = weiboEntity.getCommentJsonArray()
-                    this.isMatch(commentJsonArray, userId).forEach {
-                        weiboLogic.comment(weiboEntity, id, it.getString("content"))
+            val list = commonResult.t ?: break
+            val newList: MutableList<WeiboPojo> = mutableListOf()
+            if (userMap.containsKey(qq)){
+                for (weiboPojo in list){
+                    if (weiboPojo.id.toLong() <= userMap.getValue(qq)) break
+                    newList.add(weiboPojo)
+                }
+                newList.forEach {
+                    val userId = it.userId
+                    val id = it.id
+                    val likeList = match(weiboEntity.likeJsonArray, userId)
+                    if (likeList.isNotEmpty()) weiboLogic.like(weiboEntity, id)
+                    val commentList = match(weiboEntity.commentJsonArray, userId)
+                    for (jsonObject in commentList) weiboLogic.comment(weiboEntity, id, jsonObject.getString("content"))
+                    val forwardList = match(weiboEntity.forwardJsonArray, userId)
+                    for (jsonObject in forwardList) weiboLogic.forward(weiboEntity, id, jsonObject.getString("content"), null)
+                    val group = weiboEntity.group
+                    val msg = "有新微博了！！\n" + weiboLogic.convertStr(it)
+                    if (group == 0L){
+                        yuq.friends[qq]?.sendMessage(msg.toMessage())
+                    }else{
+                        yuq.groups[group]?.members?.get(qq)?.sendMessage(msg.toMessage())
                     }
-                    val forwardJsonArray = weiboEntity.getForwardJsonArray()
-                    this.isMatch(forwardJsonArray, userId).forEach {
-                        weiboLogic.forward(weiboEntity, id, it.getString("content"), null)
-                    }
-                    val group = weiboEntity.group_
-                    if (group == null || group == 0L)
-                        yuq.friends[qq]?.sendMessage(weiboLogic.convertStr(weiboPojo).toMessage())
-                    else yuq.groups[group]?.get(qq)?.sendMessage(weiboLogic.convertStr(weiboPojo).toMessage())
-                }else return@forEach
+                }
             }
+            userMap[qq] = list[0].id.toLong()
         }
     }
 
-    @Action("At::d::08")
-    fun weiboSuperTalkSign(){
-        val list = weiboService.findAll()
-        list.forEach { weiboLogic.weiboSuperTalkSign(it) }
-    }
-
-    private fun isMatch(jsonArray: JSONArray, userId: String): List<JSONObject>{
+    private fun match(jsonArray: JSONArray, userId: String): List<JSONObject>{
         val list = mutableListOf<JSONObject>()
         for (i in jsonArray.indices){
             val jsonObject = jsonArray.getJSONObject(i)

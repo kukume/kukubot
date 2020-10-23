@@ -10,8 +10,6 @@ data class NeTeaseEntity (
         var id: Int? = null,
         @Column(unique = true)
         var qq: Long = 0L,
-        var username: String = "",
-        var password: String = "",
         var MUSIC_U: String = "",
         var __csrf: String = ""
 ){

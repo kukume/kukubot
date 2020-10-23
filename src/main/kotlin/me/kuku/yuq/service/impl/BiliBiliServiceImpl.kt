@@ -24,4 +24,7 @@ class BiliBiliServiceImpl: BiliBiliService {
 
     @Transactional
     override fun findAll() = biliBiliDao.findAll()
+
+    @Transactional
+    override fun findByTask(task: Boolean) = biliBiliDao.findByTask(task)
 }

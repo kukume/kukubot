@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
 import me.kuku.yuq.entity.BiliBiliEntity
-import me.kuku.yuq.entity.QQEntity
+import me.kuku.yuq.entity.QQLoginEntity
 import me.kuku.yuq.entity.WeiboEntity
 import me.kuku.yuq.logic.BiliBiliLogic
 import me.kuku.yuq.pojo.BiliBiliPojo
@@ -116,16 +116,16 @@ class BiliBiliLogicImpl: BiliBiliLogic {
         val bvId = biliBiliPojo.bvId
         val forwardBvId = biliBiliPojo.forwardBvId
         val sb = StringBuilder()
-                .appendln(biliBiliPojo.name)
-                .appendln("发布时间：${sdf.format(Date(biliBiliPojo.time))}")
-                .appendln("内容：${biliBiliPojo.text}")
-                .appendln("动态链接：https://t.bilibili.com/${biliBiliPojo.id}")
-                .appendln("视频链接：${if (bvId != null) "https://www.bilibili.com/video/$bvId" else "没有发现视频"}")
+                .appendLine(biliBiliPojo.name)
+                .appendLine("发布时间：${sdf.format(Date(biliBiliPojo.time))}")
+                .appendLine("内容：${biliBiliPojo.text}")
+                .appendLine("动态链接：https://t.bilibili.com/${biliBiliPojo.id}")
+                .appendLine("视频链接：${if (bvId != null) "https://www.bilibili.com/video/$bvId" else "没有发现视频"}")
         if (biliBiliPojo.isForward)
-            sb.appendln("转发自：${biliBiliPojo.forwardName}")
-                .appendln("发布时间：${sdf.format(Date(biliBiliPojo.forwardTime!!))}")
-                .appendln("内容：${biliBiliPojo.forwardText}")
-                .appendln("动态链接：https://t.bilibili.com/${biliBiliPojo.forwardId}")
+            sb.appendLine("转发自：${biliBiliPojo.forwardName}")
+                .appendLine("发布时间：${sdf.format(Date(biliBiliPojo.forwardTime!!))}")
+                .appendLine("内容：${biliBiliPojo.forwardText}")
+                .appendLine("动态链接：https://t.bilibili.com/${biliBiliPojo.forwardId}")
                 .append("视频链接：${if (forwardBvId != null) "https://www.bilibili.com/video/$forwardBvId" else "没有发现视频"}")
         return sb.removeSuffixLine().toString()
     }
@@ -161,7 +161,7 @@ class BiliBiliLogicImpl: BiliBiliLogic {
         }
     }
 
-    override fun loginByQQ(qqEntity: QQEntity): CommonResult<BiliBiliEntity> {
+    override fun loginByQQ(qqLoginEntity: QQLoginEntity): CommonResult<BiliBiliEntity> {
         val dfcResponse = OkHttpClientUtils.post("https://passport.bilibili.com/captcha/dfc")
         val dfcToken = OkHttpClientUtils.getJson(dfcResponse).getJSONObject("data").getString("dfc")
         val dfcCookie = OkHttpClientUtils.getCookie(dfcResponse)
@@ -175,9 +175,9 @@ class BiliBiliLogicImpl: BiliBiliLogic {
         val loginFirstResponse = OkHttpClientUtils.get("https://xui.ptlogin2.qq.com/cgi-bin/xlogin?appid=716027609&pt_3rd_aid=101135748&daid=383&pt_skey_valid=1&style=35&s_url=http%3A%2F%2Fconnect.qq.com&refer_cgi=authorize&which=&response_type=code&state=authorize&client_id=101135748&redirect_uri=https%3A%2F%2Fpassport.bilibili.com%2Flogin%2Fsnsback%3Fsns%3Dqq%26%26state%3D$state&scope=do_like,get_user_info,get_simple_userinfo,get_vip_info,get_vip_rich_info,add_one_blog,list_album,upload_pic,add_album,list_photo,get_info,add_t,del_t,add_pic_t,get_repost_list,get_other_info,get_fanslist,get_idollist,add_idol,del_idol,get_tenpay_addr")
         loginFirstResponse.close()
         val qqLoginCookie = OkHttpClientUtils.getCookie(loginFirstResponse)
-        val superLoginUrl = "https://ssl.ptlogin2.qq.com/pt_open_login?openlogin_data=which%3D%26refer_cgi%3Dauthorize%26response_type%3Dcode%26client_id%3D101135748%26state%3Dauthorize%26display%3D%26openapi%3D%2523%26switch%3D0%26src%3D1%26sdkv%3D%26sdkp%3Da%26tid%3D1598024545%26pf%3D%26need_pay%3D0%26browser%3D0%26browser_error%3D%26serial%3D%26token_key%3D%26redirect_uri%3Dhttps%253A%252F%252Fpassport.bilibili.com%252Flogin%252Fsnsback%253Fsns%253Dqq%2526%2526state%253D$state%26sign%3D%26time%3D%26status_version%3D%26status_os%3D%26status_machine%3D%26page_type%3D1%26has_auth%3D0%26update_auth%3D0%26auth_time%3D${Date().time}&auth_token=${QQUtils.getToken2(qqEntity.superToken)}&pt_vcode_v1=0&pt_verifysession_v1=&verifycode=&u=${qqEntity.qq}&pt_randsalt=0&ptlang=2052&low_login_enable=0&u1=http%3A%2F%2Fconnect.qq.com&from_ui=1&fp=loginerroralert&device=2&aid=716027609&daid=383&pt_3rd_aid=101135748&ptredirect=1&h=1&g=1&pt_uistyle=35&regmaster=&"
+        val superLoginUrl = "https://ssl.ptlogin2.qq.com/pt_open_login?openlogin_data=which%3D%26refer_cgi%3Dauthorize%26response_type%3Dcode%26client_id%3D101135748%26state%3Dauthorize%26display%3D%26openapi%3D%2523%26switch%3D0%26src%3D1%26sdkv%3D%26sdkp%3Da%26tid%3D1598024545%26pf%3D%26need_pay%3D0%26browser%3D0%26browser_error%3D%26serial%3D%26token_key%3D%26redirect_uri%3Dhttps%253A%252F%252Fpassport.bilibili.com%252Flogin%252Fsnsback%253Fsns%253Dqq%2526%2526state%253D$state%26sign%3D%26time%3D%26status_version%3D%26status_os%3D%26status_machine%3D%26page_type%3D1%26has_auth%3D0%26update_auth%3D0%26auth_time%3D${Date().time}&auth_token=${QQUtils.getToken2(qqLoginEntity.superToken)}&pt_vcode_v1=0&pt_verifysession_v1=&verifycode=&u=${qqLoginEntity.qq}&pt_randsalt=0&ptlang=2052&low_login_enable=0&u1=http%3A%2F%2Fconnect.qq.com&from_ui=1&fp=loginerroralert&device=2&aid=716027609&daid=383&pt_3rd_aid=101135748&ptredirect=1&h=1&g=1&pt_uistyle=35&regmaster=&"
         val loginResponse = OkHttpClientUtils.get(superLoginUrl,
-                OkHttpClientUtils.addCookie(qqEntity.getCookieWithSuper() + qqLoginCookie))
+                OkHttpClientUtils.addCookie(qqLoginEntity.getCookieWithSuper() + qqLoginCookie))
         val str = OkHttpClientUtils.getStr(loginResponse)
         val commonResult = QQUtils.getResultUrl(str)
         val url = commonResult.t ?: return CommonResult(500, commonResult.msg)
@@ -357,7 +357,7 @@ class BiliBiliLogicImpl: BiliBiliLogic {
         else "转发动态失败，${jsonObject.getString("message")}"
     }
 
-    override fun tossCoin(biliBiliEntity: BiliBiliEntity, rid: String, bvId: String, count: Int): String {
+    override fun tossCoin(biliBiliEntity: BiliBiliEntity, rid: String, count: Int): String {
         val response = OkHttpClientUtils.post("https://api.bilibili.com/x/web-interface/coin/add", OkHttpClientUtils.addForms(
                 "aid", rid,
                 "multiply", count.toString(),
@@ -451,5 +451,48 @@ class BiliBiliLogicImpl: BiliBiliLogic {
         val jsonObject = OkHttpClientUtils.getJson(response)
         return if (jsonObject.getInteger("code") == 0) "发布动态成功！！！"
         else "发布动态失败，${jsonObject.getString("message")}"
+    }
+
+    override fun getRanking(): List<Map<String, String>> {
+        val response = OkHttpClientUtils.get("https://api.bilibili.com/x/web-interface/ranking/v2?rid=0&type=all")
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        val jsonArray = jsonObject.getJSONObject("data").getJSONArray("list")
+        val list = mutableListOf<Map<String, String>>()
+        for (obj in jsonArray){
+            val singleJsonObject = obj as JSONObject
+            list.add(mapOf(
+                    "aid" to singleJsonObject.getString("aid"),
+                    "cid" to singleJsonObject.getString("cid"),
+                    "title" to singleJsonObject.getString("title"),
+                    "desc" to singleJsonObject.getString("desc"),
+                    "username" to singleJsonObject.getJSONObject("owner").getString("name"),
+                    "dynamic" to singleJsonObject.getString("dynamic"),
+                    "bv" to singleJsonObject.getString("bvid")
+            ))
+        }
+        return list
+    }
+
+    override fun report(biliBiliEntity: BiliBiliEntity, aid: String, cid: String, proGRes: Int): String {
+        val response = OkHttpClientUtils.post("http://api.bilibili.com/x/v2/history/report",
+                OkHttpClientUtils.addForms(mapOf(
+                        "aid" to aid,
+                        "cid" to cid,
+                        "progres" to proGRes.toString(),
+                        "csrf" to biliBiliEntity.token
+                )), OkHttpClientUtils.addCookie(biliBiliEntity.cookie))
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return if (jsonObject.getInteger("code") == 0) "模拟观看视频成功！！"
+        else jsonObject.getString("message")
+    }
+
+    override fun share(biliBiliEntity: BiliBiliEntity, aid: String): String {
+        val response = OkHttpClientUtils.post("https://api.bilibili.com/x/web-interface/share/add", OkHttpClientUtils.addForms(mapOf(
+                "aid" to aid,
+                "csrf" to biliBiliEntity.token
+        )), OkHttpClientUtils.addCookie(biliBiliEntity.cookie))
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return if (jsonObject.getInteger("code") == 0) "分享视频成功！！"
+        else jsonObject.getString("message")
     }
 }

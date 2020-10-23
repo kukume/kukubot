@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package me.kuku.yuq.job
 
 import com.IceCreamQAQ.Yu.annotation.Cron
@@ -22,7 +24,7 @@ class MotionJob {
         val list = motionService.findAll()
         list.forEach {
             if (it.step != 0){
-                if (it.cookie != "")
+                if (it.leXinCookie != "")
                     leXinMotionLogic.modifyStepCount(it.step, it)
                 if (it.miLoginToken != "")
                     xiaomiMotionLogic.changeStep(it.miLoginToken, it.step)

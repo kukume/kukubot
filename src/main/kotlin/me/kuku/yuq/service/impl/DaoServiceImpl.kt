@@ -9,13 +9,9 @@ class DaoServiceImpl: DaoService {
     @Inject
     private lateinit var qqJobDao: QQJobDao
     @Inject
-    private lateinit var qqDao: QQDao
+    private lateinit var qqLoginDao: QQLoginDao
     @Inject
     private lateinit var motionDao: MotionDao
-    @Inject
-    private lateinit var superCuteDao: SuperCuteDao
-    @Inject
-    private lateinit var steamDao: SteamDao
     @Inject
     private lateinit var biliBiliDao: BiliBiliDao
     @Inject
@@ -26,10 +22,8 @@ class DaoServiceImpl: DaoService {
     @Transactional
     override fun delQQ(qq: Long) {
         qqJobDao.delByQQ(qq)
-        qqDao.delByQQ(qq)
+        qqLoginDao.delByQQ(qq)
         motionDao.delByQQ(qq)
-        superCuteDao.delByQQ(qq)
-        steamDao.delByQQ(qq)
         biliBiliDao.delByQQ(qq)
         neTeaseDao.delByQQ(qq)
         weiboDao.delByQQ(qq)

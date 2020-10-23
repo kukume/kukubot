@@ -14,4 +14,6 @@ class BiliBiliDao: HibernateDao<BiliBiliEntity, Int>() {
     fun findByMonitor(monitor: Boolean) = this.searchList("from BiliBiliEntity where monitor = ?", null, monitor)
 
     fun findAll() = this.searchList("from BiliBiliEntity")
+
+    fun findByTask(task: Boolean) = this.searchList("from BiliBiliEntity where task = ?", null, task)
 }

@@ -85,7 +85,7 @@ class QQAILogicImpl: QQAILogic {
             val sb = StringBuilder()
             jsonArray.forEach {
                 val singleJsonObject = it as JSONObject
-                sb.appendln(singleJsonObject.getString("itemstring"))
+                sb.appendLine(singleJsonObject.getString("itemstring"))
             }
             sb.removeSuffixLine().toString()
         }else jsonObject.getString("msg")

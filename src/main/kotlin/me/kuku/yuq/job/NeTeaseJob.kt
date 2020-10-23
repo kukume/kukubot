@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package me.kuku.yuq.job
 
 import com.IceCreamQAQ.Yu.annotation.Cron

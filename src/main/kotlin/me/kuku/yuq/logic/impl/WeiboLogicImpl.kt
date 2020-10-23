@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONException
 import com.alibaba.fastjson.JSONObject
-import me.kuku.yuq.entity.QQEntity
+import me.kuku.yuq.entity.QQLoginEntity
 import me.kuku.yuq.entity.WeiboEntity
 import me.kuku.yuq.logic.WeiboLogic
 import me.kuku.yuq.pojo.CommonResult
@@ -74,6 +74,7 @@ class WeiboLogicImpl: WeiboLogic {
     }
 
     private fun convert(jsonObject: JSONObject): WeiboPojo {
+        println(jsonObject)
         val weiboPojo = WeiboPojo()
         val userJsonObject = jsonObject.getJSONObject("user")
         weiboPojo.id = jsonObject.getString("id")
@@ -97,7 +98,7 @@ class WeiboLogicImpl: WeiboLogic {
             weiboPojo.isForward = true
             weiboPojo.forwardId = forwardJsonObject.getString("id")
             weiboPojo.forwardTime = forwardJsonObject.getString("created_at")
-            weiboPojo.forwardName = forwardJsonObject.getJSONObject("user").getString("screen_name")
+            weiboPojo.forwardName = forwardJsonObject.getJSONObject("user")?.getString("screen_name") ?: "原微博已被删除"
             weiboPojo.forwardText = Jsoup.parse(forwardJsonObject.getString("text")).text()
             weiboPojo.forwardBid = forwardJsonObject.getString("bid")
         }
@@ -106,15 +107,15 @@ class WeiboLogicImpl: WeiboLogic {
 
     override fun convertStr(weiboPojo: WeiboPojo): String {
         val sb = StringBuilder()
-                .appendln(weiboPojo.name)
-                .appendln("发布时间：${weiboPojo.created}")
-                .appendln("内容：${weiboPojo.text}")
+                .appendLine(weiboPojo.name)
+                .appendLine("发布时间：${weiboPojo.created}")
+                .appendLine("内容：${weiboPojo.text}")
                 .append("链接：https://m.weibo.cn/status/${weiboPojo.bid}")
         if (weiboPojo.isForward) {
-            sb.appendln()
-                    .appendln("转发自：${weiboPojo.forwardName}")
-                    .appendln("发布时间：${weiboPojo.forwardTime}")
-                    .appendln("内容：${weiboPojo.forwardText}")
+            sb.appendLine()
+                    .appendLine("转发自：${weiboPojo.forwardName}")
+                    .appendLine("发布时间：${weiboPojo.forwardTime}")
+                    .appendLine("内容：${weiboPojo.forwardText}")
                     .append("链接：https://m.weibo.cn/status/${weiboPojo.forwardBid}")
         }
         return sb.toString()
@@ -269,7 +270,7 @@ class WeiboLogicImpl: WeiboLogic {
         }
     }
 
-    override fun loginByQQ(qqEntity: QQEntity): CommonResult<WeiboEntity> {
+    override fun loginByQQ(qqLoginEntity: QQLoginEntity): CommonResult<WeiboEntity> {
         val startWeiboResponse = OkHttpClientUtils.get("https://passport.weibo.com/othersitebind/authorize?entry=miniblog&site=qq")
         startWeiboResponse.close()
         val weiboCookie = OkHttpClientUtils.getCookie(startWeiboResponse)
@@ -278,8 +279,8 @@ class WeiboLogicImpl: WeiboLogic {
         val startResponse = OkHttpClientUtils.get(startUrl)
         startResponse.close()
         val cookie = OkHttpClientUtils.getCookie(startResponse)
-        val response = OkHttpClientUtils.get("https://ssl.ptlogin2.qq.com/pt_open_login?openlogin_data=which%3D%26refer_cgi%3Dauthorize%26response_type%3Dcode%26client_id%3D101019034%26state%3D%26display%3D%26openapi%3D%2523%26switch%3D0%26src%3D1%26sdkv%3D%26sdkp%3Da%26tid%3D1597734121%26pf%3D%26need_pay%3D0%26browser%3D0%26browser_error%3D%26serial%3D%26token_key%3D%26redirect_uri%3Dhttps%253A%252F%252Fpassport.weibo.com%252Fothersitebind%252Fbind%253Fsite%253Dqq%2526state%253D$code%2526bentry%253Dminiblog%2526wl%253D%26sign%3D%26time%3D%26status_version%3D%26status_os%3D%26status_machine%3D%26page_type%3D1%26has_auth%3D0%26update_auth%3D0%26auth_time%3D${Date().time}&auth_token=${QQUtils.getToken2(qqEntity.superToken)}&pt_vcode_v1=0&pt_verifysession_v1=&verifycode=&u=${qqEntity.qq}&pt_randsalt=0&ptlang=2052&low_login_enable=0&u1=http%3A%2F%2Fconnect.qq.com&from_ui=1&fp=loginerroralert&device=2&aid=716027609&daid=383&pt_3rd_aid=101019034&ptredirect=1&h=1&g=1&pt_uistyle=35&regmaster=&", OkHttpClientUtils.addHeaders(
-                "cookie", qqEntity.getCookieWithSuper() + cookie,
+        val response = OkHttpClientUtils.get("https://ssl.ptlogin2.qq.com/pt_open_login?openlogin_data=which%3D%26refer_cgi%3Dauthorize%26response_type%3Dcode%26client_id%3D101019034%26state%3D%26display%3D%26openapi%3D%2523%26switch%3D0%26src%3D1%26sdkv%3D%26sdkp%3Da%26tid%3D1597734121%26pf%3D%26need_pay%3D0%26browser%3D0%26browser_error%3D%26serial%3D%26token_key%3D%26redirect_uri%3Dhttps%253A%252F%252Fpassport.weibo.com%252Fothersitebind%252Fbind%253Fsite%253Dqq%2526state%253D$code%2526bentry%253Dminiblog%2526wl%253D%26sign%3D%26time%3D%26status_version%3D%26status_os%3D%26status_machine%3D%26page_type%3D1%26has_auth%3D0%26update_auth%3D0%26auth_time%3D${Date().time}&auth_token=${QQUtils.getToken2(qqLoginEntity.superToken)}&pt_vcode_v1=0&pt_verifysession_v1=&verifycode=&u=${qqLoginEntity.qq}&pt_randsalt=0&ptlang=2052&low_login_enable=0&u1=http%3A%2F%2Fconnect.qq.com&from_ui=1&fp=loginerroralert&device=2&aid=716027609&daid=383&pt_3rd_aid=101019034&ptredirect=1&h=1&g=1&pt_uistyle=35&regmaster=&", OkHttpClientUtils.addHeaders(
+                "cookie", qqLoginEntity.getCookieWithSuper() + cookie,
                 "referer", startUrl
         ))
         val commonResult = QQUtils.getResultUrl(OkHttpClientUtils.getStr(response))
@@ -470,13 +471,13 @@ class WeiboLogicImpl: WeiboLogic {
             val jsonObject = OkHttpClientUtils.getJson(response)
             val userInfoJsonObject = jsonObject.getJSONObject("data").getJSONObject("userInfo")
             val sb = StringBuilder()
-            sb.appendln("id：${userInfoJsonObject.getString("id")}")
-                    .appendln("昵称：${userInfoJsonObject.getString("screen_name")}")
-                    .appendln("关注：${userInfoJsonObject.getString("follow_count")}")
-                    .appendln("粉丝：${userInfoJsonObject.getString("followers_count")}")
-                    .appendln("微博会员：${userInfoJsonObject.getString("mbrank")}级")
-                    .appendln("微博认证：${userInfoJsonObject.getString("verified_reason")}")
-                    .appendln("描述：${userInfoJsonObject.getString("description")}")
+            sb.appendLine("id：${userInfoJsonObject.getString("id")}")
+                    .appendLine("昵称：${userInfoJsonObject.getString("screen_name")}")
+                    .appendLine("关注：${userInfoJsonObject.getString("follow_count")}")
+                    .appendLine("粉丝：${userInfoJsonObject.getString("followers_count")}")
+                    .appendLine("微博会员：${userInfoJsonObject.getString("mbrank")}级")
+                    .appendLine("微博认证：${userInfoJsonObject.getString("verified_reason")}")
+                    .appendLine("描述：${userInfoJsonObject.getString("description")}")
                     .append("主页：https://m.weibo.cn/u/${userInfoJsonObject.getString("id")}")
             sb.removeSuffixLine().toString()
         } else "查询失败，请稍后再试！！！"

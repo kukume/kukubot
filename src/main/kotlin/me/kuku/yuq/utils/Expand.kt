@@ -1,23 +1,10 @@
 package me.kuku.yuq.utils
 
-import com.IceCreamQAQ.Yu.util.IO
 import com.IceCreamQAQ.Yu.util.OkHttpWebImpl
-import com.icecreamqaq.yuq.message.Image
-import com.icecreamqaq.yuq.message.MessageItemFactory
 import okhttp3.FormBody
 import okhttp3.Request
-import java.io.File
-import java.util.*
 
-
-fun MessageItemFactory.image(byteArray: ByteArray): Image {
-    val uuid = UUID.randomUUID().toString()
-    val file = File("tmp/$uuid")
-    IO.writeTmpFile(uuid, byteArray)
-    return this.imageByFile(file)
-}
-
-fun StringBuilder.removeSuffixLine() = this.removeSuffix(System.getProperty("line.separator"))
+fun StringBuilder.removeSuffixLine() = this.removeSuffix("\n")
 
 fun OkHttpWebImpl.postQQUA(url: String, para: Map<String, String>): String{
     val fbBuilder = FormBody.Builder()

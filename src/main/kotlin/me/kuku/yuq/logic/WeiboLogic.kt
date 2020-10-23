@@ -1,7 +1,7 @@
 package me.kuku.yuq.logic
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind
-import me.kuku.yuq.entity.QQEntity
+import me.kuku.yuq.entity.QQLoginEntity
 import me.kuku.yuq.entity.WeiboEntity
 import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.pojo.WeiboPojo
@@ -17,7 +17,7 @@ interface WeiboLogic {
     fun login(map: MutableMap<String, String>, door: String?): CommonResult<MutableMap<String, String>>
     fun loginSuccess(cookie: String, referer: String, url: String): WeiboEntity
     fun loginBySms(token: String, phone: String, code: String): CommonResult<WeiboEntity>
-    fun loginByQQ(qqEntity: QQEntity): CommonResult<WeiboEntity>
+    fun loginByQQ(qqLoginEntity: QQLoginEntity): CommonResult<WeiboEntity>
     fun loginByQr1(): Map<String, String>
     fun loginByQr2(id: String): CommonResult<WeiboEntity>
     fun getFriendWeibo(weiboEntity: WeiboEntity): CommonResult<List<WeiboPojo>>

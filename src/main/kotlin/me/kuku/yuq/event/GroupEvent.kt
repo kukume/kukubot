@@ -1,15 +1,16 @@
+@file:Suppress("unused")
+
 package me.kuku.yuq.event
 
 import com.IceCreamQAQ.Yu.annotation.Event
 import com.IceCreamQAQ.Yu.annotation.EventListener
 import com.icecreamqaq.yuq.event.*
-import com.icecreamqaq.yuq.message.Message
+import com.icecreamqaq.yuq.message.Message.Companion.toMessage
 import com.icecreamqaq.yuq.mif
-import com.icecreamqaq.yuq.toMessage
 import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.service.DaoService
-import me.kuku.yuq.service.GroupQQService
-import me.kuku.yuq.service.QQGroupService
+import me.kuku.yuq.service.QQService
+import me.kuku.yuq.service.GroupService
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
@@ -19,43 +20,18 @@ class GroupEvent {
     @Inject
     private lateinit var toolLogic: ToolLogic
     @Inject
-    private lateinit var qqGroupService: QQGroupService
+    private lateinit var groupService: GroupService
     @Inject
     private lateinit var daoService: DaoService
     @Inject
-    private lateinit var groupQQService: GroupQQService
-
-    private val messages = mutableMapOf<Long, Message>()
-    private val alreadyMessage = mutableMapOf<Long, Message>()
-    private val prefixQQ = mutableMapOf<Long, Long>()
-
-    @Event
-    @Synchronized
-    fun repeat(e: GroupMessageEvent){
-        val group = e.group.id
-        val qq = e.sender.id
-        val qqGroupEntity = qqGroupService.findByGroup(group)
-        if (qqGroupEntity?.repeat == false) return
-        val nowMessage = e.message
-        if (messages.containsKey(group)){
-            val oldMessage = messages.getValue(group)
-            if (nowMessage.bodyEquals(oldMessage) &&
-                    qq != prefixQQ[group] &&
-                    !nowMessage.bodyEquals(alreadyMessage[group])){
-                e.group.sendMessage(nowMessage)
-                alreadyMessage[group] = nowMessage
-            }
-        }
-        prefixQQ[group] = qq
-        messages[group] = nowMessage
-    }
+    private lateinit var qqService: QQService
 
     @Event
     fun groupMemberRequest(e: GroupMemberRequestEvent){
-        val qqGroupEntity = qqGroupService.findByGroup(e.group.id) ?: return
-        if (qqGroupEntity.autoReview == true) {
+        val qqGroupEntity = groupService.findByGroup(e.group.id) ?: return
+        if (qqGroupEntity.autoReview) {
             var status = true
-            val blackJsonArray = qqGroupEntity.getBlackJsonArray()
+            val blackJsonArray = qqGroupEntity.blackJsonArray
             for (i in blackJsonArray.indices) {
                 val black = blackJsonArray.getLong(i)
                 if (black == e.qq.id) {
@@ -69,40 +45,40 @@ class GroupEvent {
     }
 
     @Event
-    fun groupMemberLeave(e: GroupMemberLeaveEvent){
+    fun groupMemberLeave(e: GroupMemberLeaveEvent.Leave){
         val qq = e.member.id
         val group = e.group.id
         daoService.delQQ(qq)
-        groupQQService.delByQQAndGroup(qq, group)
-        val qqGroupEntity = qqGroupService.findByGroup(group) ?: return
-        val msg = if (qqGroupEntity.leaveGroupBlack == true) {
-            val blackJsonArray = qqGroupEntity.getBlackJsonArray()
+        qqService.delByQQAndGroup(qq, group)
+        val qqGroupEntity = groupService.findByGroup(group) ?: return
+        val msg = if (qqGroupEntity.leaveGroupBlack) {
+            val blackJsonArray = qqGroupEntity.blackJsonArray
             blackJsonArray.add(qq.toString())
             qqGroupEntity.blackList = blackJsonArray.toString()
-            qqGroupService.save(qqGroupEntity)
+            groupService.save(qqGroupEntity)
             "刚刚，${e.member.name}退群了，已加入本群黑名单！！"
         }else "刚刚，${e.member.name}离开了我们！！"
         e.group.sendMessage(msg.toMessage())
     }
 
     @Event
-    fun groupMemberKick(e: GroupMemberKickEvent){
+    fun groupMemberKick(e: GroupMemberLeaveEvent.Kick){
         val qq = e.member.id
         val group = e.group.id
-        val qqGroupEntity = qqGroupService.findByGroup(group) ?: return
-        val blackJsonArray = qqGroupEntity.getBlackJsonArray()
+        val qqGroupEntity = groupService.findByGroup(group) ?: return
+        val blackJsonArray = qqGroupEntity.blackJsonArray
         blackJsonArray.add(qq.toString())
         qqGroupEntity.blackList = blackJsonArray.toString()
-        qqGroupService.save(qqGroupEntity)
+        groupService.save(qqGroupEntity)
         daoService.delQQ(qq)
-        groupQQService.delByQQAndGroup(qq, group)
+        qqService.delByQQAndGroup(qq, group)
     }
 
     @Event
     fun groupMemberJoin(e: GroupMemberJoinEvent){
         val group = e.group.id
         val qq = e.member.id
-        val qqGroupEntity = qqGroupService.findByGroup(group)
+        val qqGroupEntity = groupService.findByGroup(group)
         if (qqGroupEntity?.welcomeMsg == true) {
             e.group.sendMessage(
                     mif.at(qq).plus(

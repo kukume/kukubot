@@ -34,11 +34,17 @@ class GroupManagerEvent {
         val groupEntity = groupService.findByGroup(e.group.id) ?: return
         if (e.sender.id.toString() in groupEntity.whiteJsonArray) return
         val message = e.message
-        val str = message.firstString()
-        groupEntity.interceptJsonArray.forEach {
-            val intercept = it as String
-            if (intercept in str){
-                e.cancel = true
+        val str = try {
+            message.firstString()
+        }catch (e: IllegalStateException){
+            null
+        }
+        if (str != null) {
+            groupEntity.interceptJsonArray.forEach {
+                val intercept = it as String
+                if (intercept in str) {
+                    e.cancel = true
+                }
             }
         }
         if (yuq.groups[e.group.id]?.bot?.isAdmin() != true) return

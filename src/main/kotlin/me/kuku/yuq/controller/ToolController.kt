@@ -14,14 +14,16 @@ import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.Message.Companion.firstString
 import com.icecreamqaq.yuq.message.Message.Companion.toMessage
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import me.kuku.yuq.logic.QQAILogic
 import me.kuku.yuq.logic.ToolLogic
-import me.kuku.yuq.logic.WeiboLogic
 import me.kuku.yuq.service.ConfigService
 import me.kuku.yuq.service.MessageService
 import me.kuku.yuq.service.GroupService
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.removeSuffixLine
+import net.mamoe.mirai.Bot
 import java.net.URLEncoder
 import javax.inject.Inject
 
@@ -37,8 +39,6 @@ class ToolController: QQController() {
     private lateinit var configService: ConfigService
     @Inject
     private lateinit var messageService: MessageService
-    @Inject
-    private lateinit var weiboLogic: WeiboLogic
 
     @QMsg(at = true)
     @Action("百度 {content}")
@@ -299,5 +299,18 @@ class ToolController: QQController() {
             sb.appendLine("@${group[k].nameCardOrName()}（$k）：${v}条")
         }
         return sb.removeSuffixLine().toString()
+    }
+
+    @Action("语音合成 {text}")
+    fun voice(text: String, group: Long, qq: Long){
+        val commonResult = qqAiLogic.voiceSynthesis(text)
+        if (commonResult.code == 200) {
+            GlobalScope.launch {
+                val miraiGroup = Bot.getInstance(yuq.botId).groups[group]
+                miraiGroup.sendMessage(miraiGroup.uploadVoice(commonResult.t!!.inputStream()))
+            }
+        }else {
+            reply(mif.at(qq).plus(commonResult.msg))
+        }
     }
 }

@@ -3,13 +3,12 @@ package me.kuku.yuq.utils
 import com.IceCreamQAQ.Yu.util.OkHttpWebImpl
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
-import com.icecreamqaq.yuq.entity.Contact
-import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.message.*
 import com.icecreamqaq.yuq.message.Message.Companion.toMessage
 import com.icecreamqaq.yuq.mif
 import com.icecreamqaq.yuq.mirai.MiraiBot
 import com.icecreamqaq.yuq.mirai.message.ImageReceive
+import com.icecreamqaq.yuq.yuq
 import me.kuku.yuq.entity.QQLoginEntity
 import java.net.URLEncoder
 import kotlin.random.Random
@@ -55,11 +54,6 @@ object BotUtils {
     fun regex(first: String, last: String , text: String): String? {
         val regex = "(?<=$first).*?(?=$last)"
         return this.regex(regex, text)
-    }
-
-    fun getGroupId(qq: Contact): Long{
-        return if (qq is Member) qq.group.id
-        else 0L
     }
 
     fun messageToJsonArray(rm: Message): JSONArray{
@@ -132,20 +126,9 @@ object BotUtils {
         val groupPsKey = qunMap.getValue("p_skey").value
         val qqMap = concurrentHashMap.getValue("qq.com")
         val sKey = qqMap.getValue("skey").value
-        val qq = Regex("[1-9][0-9]*").find(qqMap.getValue("uin").value)?.value!!
         val qZoneMap = concurrentHashMap.getValue("qzone.qq.com")
         val psKey = qZoneMap.getValue("p_skey").value
-        return QQLoginEntity(null, qq.toLong(), 0L, "", sKey, psKey, groupPsKey, miraiBot.superKey, QQUtils.getToken(miraiBot.superKey).toString())
-    }
-
-    fun delAuto(jsonArray: JSONArray, username: String): JSONArray{
-        val delList = mutableListOf<JSONObject>()
-        for (i in jsonArray.indices){
-            val jsonObject = jsonArray.getJSONObject(i)
-            if (jsonObject.getString("name") == username) delList.add(jsonObject)
-        }
-        delList.forEach { jsonArray.remove(it) }
-        return jsonArray
+        return QQLoginEntity(null, yuq.botId, 0L, "", sKey, psKey, groupPsKey, miraiBot.superKey, QQUtils.getToken(miraiBot.superKey).toString())
     }
 
     fun delManager(jsonArray: JSONArray, content: String): JSONArray{

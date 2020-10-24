@@ -43,9 +43,9 @@ class QQController: QQController() {
 
     @Before
     fun checkBind(qq: Long, actionContext: BotActionContext){
-        val qqEntity = qqLoginService.findByQQ(qq) ?:
+        val qqLoginEntity = qqLoginService.findByQQ(qq) ?:
             throw mif.at(qq).plus("没有绑定QQ！，请先发送qq进行扫码登录绑定，如需密码登录绑定请私聊机器人发送qq").toThrowable()
-        if (qqEntity.status) actionContext.session["qqEntity"] = qqEntity
+        if (qqLoginEntity.status) actionContext.session["qqLoginEntity"] = qqLoginEntity
         else throw mif.at(qq).plus("您的QQ已失效，请更新QQ！！").toThrowable()
     }
 

@@ -11,10 +11,12 @@ import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.controller.QQController
 import com.icecreamqaq.yuq.message.Message
 import me.kuku.yuq.entity.GroupEntity
+import me.kuku.yuq.entity.QQEntity
 import me.kuku.yuq.logic.BiliBiliLogic
 import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.logic.WeiboLogic
 import me.kuku.yuq.service.GroupService
+import me.kuku.yuq.service.QQService
 import me.kuku.yuq.service.RecallService
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.removeSuffixLine
@@ -30,6 +32,8 @@ class ManageNotController: QQController(){
     private lateinit var recallService: RecallService
     @Inject
     private lateinit var toolLogic: ToolLogic
+    @Inject
+    private lateinit var qqService: QQService
 
     private val version = "v1.7.0"
 
@@ -110,6 +114,32 @@ class ManageNotController: QQController(){
         sb.appendLine("最新程序版本：$gitVersion")
         return sb.toString()
     }
+
+
+    @Action("开关")
+    @QMsg(at = true, atNewLine = true)
+    fun kai(groupEntity: GroupEntity): String{
+        val sb = StringBuilder("本群开关情况如下：\n")
+        sb.appendLine("色图：" + this.boolToStr(groupEntity.colorPic) + "、" + groupEntity.colorPicType)
+        sb.appendLine("鉴黄：" + this.boolToStr(groupEntity.pic))
+        sb.appendLine("欢迎语：" + this.boolToStr(groupEntity.welcomeMsg))
+        sb.appendLine("退群拉黑：" + this.boolToStr(groupEntity.leaveGroupBlack))
+        sb.appendLine("自动审核：" + this.boolToStr(groupEntity.autoReview))
+        sb.appendLine("撤回通知：" + this.boolToStr(groupEntity.recall))
+        sb.appendLine("整点报时：" + this.boolToStr(groupEntity.onTimeAlarm))
+        sb.appendLine("闪照通知：" + this.boolToStr(groupEntity.flashNotify))
+        sb.append("最大违规次数：${groupEntity.maxViolationCount}")
+        return sb.toString()
+    }
+
+    @Action("查询违规")
+    @QMsg(at = true)
+    fun queryVio(qq: Long, group: Long): String{
+        val qqEntity = qqService.findByQQAndGroup(qq, group)
+        return "您在本群违规次数为：" + (qqEntity?.violationCount ?: 0)
+    }
+
+    private fun boolToStr(b: Boolean?) = if (b == true) "开" else "关"
 }
 
 @Suppress("DuplicatedCode")
@@ -131,7 +161,7 @@ class ManageOwnerController: QQController() {
         val groupEntity = groupService.findByGroup(group) ?: GroupEntity(null, group)
         if (qq.toString() == master){
             return groupEntity
-        }else throw mif.at(qq).plus("权限不足，无法执行！！").toThrowable()
+        }else throw mif.at(qq).plus("您的权限不足，无法执行！！").toThrowable()
     }
 
     @Action("加管 {content}")
@@ -141,19 +171,19 @@ class ManageOwnerController: QQController() {
     fun add(groupEntity: GroupEntity, @PathVar(0) type: String, content: String): String?{
         when (type){
             "加管" -> {
-                groupEntity.adminList = groupEntity.adminJsonArray.add(content).toString()
+                groupEntity.adminList = groupEntity.adminJsonArray.fluentAdd(content).toString()
             }
             "加违规词" -> {
-                groupEntity.violationList = groupEntity.violationJsonArray.add(content).toString()
+                groupEntity.violationList = groupEntity.violationJsonArray.fluentAdd(content).toString()
             }
             "加黑名单" -> {
-                groupEntity.blackList = groupEntity.blackJsonArray.add(content).toString()
+                groupEntity.blackList = groupEntity.blackJsonArray.fluentAdd(content).toString()
             }
             "加白名单" -> {
-                groupEntity.whiteList = groupEntity.whiteJsonArray.add(content).toString()
+                groupEntity.whiteList = groupEntity.whiteJsonArray.fluentAdd(content).toString()
             }
             "加拦截" -> {
-                groupEntity.interceptList = groupEntity.interceptJsonArray.add(content).toString()
+                groupEntity.interceptList = groupEntity.interceptJsonArray.fluentAdd(content).toString()
             }
             "加微博监控" -> {
                 val commonResult = weiboLogic.getIdByName(content)
@@ -226,7 +256,7 @@ class ManageOwnerController: QQController() {
 
     @Action("机器人 {status}")
     @Synonym(["loc监控 {status}", "整点报时 {status}", "自动审核 {status}",
-        "欢迎语 {status}", "退群拉黑 {status}", "鉴黄 {status}", "#涩图 {status}",
+        "欢迎语 {status}", "退群拉黑 {status}", "鉴黄 {status}", "色图 {status}",
         "撤回通知 {status}", "闪照通知 {status}"])
     @QMsg(at = true)
     fun onOrOff(groupEntity: GroupEntity, status: Boolean, @PathVar(0) op: String): String?{
@@ -238,7 +268,7 @@ class ManageOwnerController: QQController() {
             "欢迎语" -> groupEntity.welcomeMsg = status
             "退群拉黑" -> groupEntity.leaveGroupBlack = status
             "鉴黄" -> groupEntity.pic = status
-            "#涩图" -> groupEntity.colorPic = status
+            "色图" -> groupEntity.colorPic = status
             "撤回通知" -> groupEntity.recall = status
             "闪照通知" -> groupEntity.flashNotify = status
             else -> return null
@@ -253,22 +283,6 @@ class ManageOwnerController: QQController() {
         groupEntity.maxViolationCount = count
         groupService.save(groupEntity)
         return "已设置本群最大违规次数为${count}次"
-    }
-
-    @Action("开关")
-    @QMsg(at = true, atNewLine = true)
-    fun kai(groupEntity: GroupEntity): String{
-        val sb = StringBuilder("本群开关情况如下：\n")
-        sb.appendLine("色图：" + this.boolToStr(groupEntity.colorPic) + "、" + groupEntity.colorPicType)
-        sb.appendLine("鉴黄：" + this.boolToStr(groupEntity.pic))
-        sb.appendLine("欢迎语：" + this.boolToStr(groupEntity.welcomeMsg))
-        sb.appendLine("退群拉黑：" + this.boolToStr(groupEntity.leaveGroupBlack))
-        sb.appendLine("自动审核：" + this.boolToStr(groupEntity.autoReview))
-        sb.appendLine("撤回通知：" + this.boolToStr(groupEntity.recall))
-        sb.appendLine("整点报时：" + this.boolToStr(groupEntity.onTimeAlarm))
-        sb.appendLine("闪照通知：" + this.boolToStr(groupEntity.flashNotify))
-        sb.append("最大违规次数：${groupEntity.maxViolationCount}")
-        return sb.toString()
     }
 
     @Action("色图切换 {type}")
@@ -317,8 +331,6 @@ class ManageOwnerController: QQController() {
         groupService.save(groupEntity)
         return "删除问答成功！！"
     }
-
-    private fun boolToStr(b: Boolean?) = if (b == true) "开" else "关"
 }
 
 @GroupController
@@ -335,7 +347,7 @@ class ManageAdminController: QQController(){
         val adminJSONArray = groupEntity.adminJsonArray
         if (qq.toString() in adminJSONArray || qq == master.toLong()){
             return groupEntity
-        }else throw mif.at(qq).plus("").toThrowable()
+        }else throw mif.at(qq).plus("您的权限不足，无法执行！！").toThrowable()
     }
 
     @Action("清屏")

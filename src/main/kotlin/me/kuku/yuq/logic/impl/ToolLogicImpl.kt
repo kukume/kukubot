@@ -1,6 +1,5 @@
 package me.kuku.yuq.logic.impl
 
-import com.IceCreamQAQ.Yu.annotation.Config
 import com.IceCreamQAQ.Yu.util.IO
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
@@ -454,11 +453,13 @@ class ToolLogicImpl: ToolLogic {
             val url = "https://www.hostloc.com/" + s.attr("href")
             val name = ele.select("cite a").first().text()
             val time = ele.select("em a span").first().text()
+            val id = BotUtils.regex("tid=", "&", url)!!
             list.add(mapOf(
                     "title" to title,
                     "url" to url,
                     "name" to name,
-                    "time" to time
+                    "time" to time,
+                    "id" to id
             ))
         }
         return list

@@ -51,8 +51,8 @@ class BotController: QQController() {
 
     @Before
     fun before(actionContext: BotActionContext) {
-        val qqEntity = BotUtils.toQQEntity(web, miraiBot)
-        actionContext["qqEntity"] = qqEntity
+        val qqLoginEntity = BotUtils.toQQEntity(web, miraiBot)
+        actionContext["qqLoginEntity"] = qqLoginEntity
     }
 
     @Action("签个到 {param}")

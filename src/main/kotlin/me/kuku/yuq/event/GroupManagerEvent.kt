@@ -71,10 +71,11 @@ class GroupManagerEvent {
             qqEntity.violationCount = qqEntity.violationCount + 1
             if (qqEntity.violationCount < groupEntity.maxViolationCount) {
                 val sb = StringBuilder()
-                if (code == 1) sb.append("检测到色情图片。")
-                else sb.append("检测到违规词\"$vio\"")
-                sb.append("您当前的违规次数为${qqEntity.violationCount}次，累计违规${groupEntity.maxViolationCount}会被移出本群哦！！")
+                if (code == 2) sb.append("检测到色情图片。")
+                else sb.append("检测到违规词\"$vio\"。")
+                sb.append("您当前的违规次数为${qqEntity.violationCount}次，累计违规${groupEntity.maxViolationCount}次会被移出本群哦！！")
                 e.group.sendMessage(mif.at(qqEntity.qq).plus(sb.toString()))
+                e.message.recall()
                 e.sender.ban(60 * 30)
                 qqService.save(qqEntity)
             }else{
@@ -90,7 +91,11 @@ class GroupManagerEvent {
         val message = e.message
         if (message.toPath().isEmpty()) return
         if (message.toPath()[0] == "删问答") return
-        val str = message.firstString()
+        val str = try {
+            message.firstString()
+        }catch (e: IllegalStateException){
+            return
+        }
         val qaJsonArray = groupEntity.qaJsonArray
         for (i in qaJsonArray.indices){
             val jsonObject = qaJsonArray.getJSONObject(i)

@@ -51,7 +51,7 @@ class QQJob {
         }
     }
 
-    @Cron("At::d::06::00")
+    @Cron("At::d::06:00")
     fun sVipMorn() {
         val list = qqLoginService.findByActivity()
         list.forEach {

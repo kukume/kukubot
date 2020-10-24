@@ -16,11 +16,12 @@ repositories {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
     implementation 'com.IceCreamQAQ.YuQ:YuQ-Mirai:0.1.0.0-DEV1'
-    compile (group: 'com.IceCreamQAQ.Yu', name: 'Yu-DB', version: '0.0.1.0'){
+    implementation 'com.IceCreamQAQ:YuQ:0.1.0.0-DEV2'
+    implementation ('com.IceCreamQAQ.Yu:Yu-DB:0.0.1.0'){
         exclude group: 'mysql', module: 'mysql-connector-java'
     }
-    compile group: 'org.jsoup', name: 'jsoup', version: '1.13.1'
-    compile group: 'com.h2database', name: 'h2', version: '1.4.200'
+    implementation 'org.jsoup:jsoup:1.13.1'
+    implementation 'com.h2database:h2:1.4.200'
 }
 
 jar {

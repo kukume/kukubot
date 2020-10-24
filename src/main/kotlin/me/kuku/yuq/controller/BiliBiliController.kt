@@ -75,7 +75,7 @@ class BiliBiliController: QQController() {
     fun before(qq: Long, actionContext: BotActionContext){
         val biliBiliEntity = biliBiliService.findByQQ(qq)
         if (biliBiliEntity == null || biliBiliEntity.cookie == "")
-            throw mif.at(qq).plus("您还没有绑定哔哩哔哩账号，无法继续！！！，如需绑定请发送[bilibililoginbyqq]或[bilibililoginbyweibo]或[]bilibililoginbyqr").toThrowable()
+            throw mif.at(qq).plus("您还没有绑定哔哩哔哩账号，无法继续！！！，如需绑定请发送bilibililoginbyqr").toThrowable()
         actionContext["biliBiliEntity"] = biliBiliEntity
     }
 

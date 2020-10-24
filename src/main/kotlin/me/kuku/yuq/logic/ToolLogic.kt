@@ -48,4 +48,6 @@ interface ToolLogic {
     fun githubQuicken(gitUrl: String): String
     fun traceRoute(domain: String): String
     fun teachYou(content: String, type: String): String?
+    fun preventQQRed(url: String): String
+    fun preventQQWechatRed(url: String): String
 }

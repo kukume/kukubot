@@ -32,7 +32,7 @@ class QQJob {
                 if (qqEntity.password == "") {
                     qqEntity.status = false
                     qqLoginService.save(qqEntity)
-                    yuq.groups[qqEntity.qqGroup]?.get(qqEntity.qq)?.sendMessage("您的QQ登录已失效！！".toMessage())
+                    yuq.groups[qqEntity.group]?.get(qqEntity.qq)?.sendMessage("您的QQ登录已失效！！".toMessage())
                 }else{
                     val commonResult = QQPasswordLoginUtils.login(qq = qqEntity.qq.toString(), password = qqEntity.password)
                     if (commonResult.code == 200){
@@ -41,10 +41,10 @@ class QQJob {
                         qqEntity.status = false
                         qqLoginService.save(qqEntity)
                         val msg = "您的QQ自动更新失败，${commonResult.msg}"
-                        if (qqEntity.qqGroup == 0L)
+                        if (qqEntity.group == 0L)
                             yuq.friends[qqEntity.qq]?.sendMessage(msg.toMessage())
                         else
-                            yuq.groups[qqEntity.qqGroup]?.get(qqEntity.qq)?.sendMessage(msg.toMessage())
+                            yuq.groups[qqEntity.group]?.get(qqEntity.qq)?.sendMessage(msg.toMessage())
                     }
                 }
             }

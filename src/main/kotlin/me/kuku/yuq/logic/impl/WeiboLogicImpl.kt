@@ -74,7 +74,6 @@ class WeiboLogicImpl: WeiboLogic {
     }
 
     private fun convert(jsonObject: JSONObject): WeiboPojo {
-        println(jsonObject)
         val weiboPojo = WeiboPojo()
         val userJsonObject = jsonObject.getJSONObject("user")
         weiboPojo.id = jsonObject.getString("id")

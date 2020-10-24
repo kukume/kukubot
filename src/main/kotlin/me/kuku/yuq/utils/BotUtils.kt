@@ -16,17 +16,7 @@ import kotlin.random.Random
 object BotUtils {
 
     fun shortUrl(url: String): String{
-        val newUrl = if (url.startsWith("http")) url
-        else "http://$url"
-        return if (url.contains("iheit.com") || url.contains("kuku.me") || url.contains("workers.dev")) {
-            val response = OkHttpClientUtils.get("https://uxy.me/api.php?url=${URLEncoder.encode(newUrl, "utf-8")}")
-            val jsonObject = OkHttpClientUtils.getJson(response)
-            val shortUrl = jsonObject.getString("shorturl")
-            shortUrl ?: "生成失败！！！"
-        }else {
-            val response = OkHttpClientUtils.get("https://api.kuku.me/tool/shorturl?url=${URLEncoder.encode(newUrl, "utf-8")}")
-            OkHttpClientUtils.getStr(response)
-        }
+        return OkHttpClientUtils.getStr("http://api.suowo.cn/api.htm?key=5e9a6ed83a005a12b5e62d70@f6bbd71fde6d40e27ecf3a592e13f9ff&url=${URLEncoder.encode(url, "utf-8")}")
     }
 
     fun randomStr(len: Int): String{

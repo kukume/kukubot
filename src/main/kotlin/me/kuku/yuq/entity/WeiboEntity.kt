@@ -14,8 +14,6 @@ data class WeiboEntity(
         var qq: Long = 0L,
         @Column(name = "group_")
         var group: Long = 0L,
-        var username: String = "",
-        var password: String = "",
         @Lob
         @Column(columnDefinition="text")
         var pcCookie: String = "",

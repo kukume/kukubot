@@ -12,7 +12,8 @@ data class QQLoginEntity(
         var id: Int? = null,
         @Column(unique = true)
         var qq: Long = 0L,
-        var qqGroup: Long = 0L,
+        @Column(name = "group_")
+        var group: Long = 0L,
         var password: String = "",
         var sKey: String = "",
         var psKey: String = "",

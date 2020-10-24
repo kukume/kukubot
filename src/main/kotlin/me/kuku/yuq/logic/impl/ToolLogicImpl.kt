@@ -562,4 +562,25 @@ class ToolLogicImpl: ToolLogic {
         }
         return "点击以下链接即可教您使用${msg}搜索“$content”\n${BotUtils.shortUrl(url)}"
     }
+
+    override fun preventQQRed(url: String): String {
+        val jsonObject = OkHttpClientUtils.postJson("https://www.91she.cn/ajax.php?act=creat", mapOf(
+                "url" to url,
+                "type" to "2",
+                "dwz" to "2"
+        ), OkHttpClientUtils.addUA(OkHttpClientUtils.PC_UA))
+        return if (jsonObject.getInteger("code") == 0){
+            jsonObject.getString("dwz1")
+        }else {
+            jsonObject.getString("msg")
+        }
+    }
+
+    override fun preventQQWechatRed(url: String): String {
+        val jsonObject = OkHttpClientUtils.getJson("http://fh.dw81.cn:81/dwz.php?type=ty&longurl=$url&dwzapi=500",
+                OkHttpClientUtils.addUA(OkHttpClientUtils.PC_UA))
+        return if (jsonObject.getInteger("code ") == 1){
+            jsonObject.getString("ae_url")
+        }else jsonObject.getString("msg")
+    }
 }

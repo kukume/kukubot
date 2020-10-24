@@ -26,6 +26,7 @@ import me.kuku.yuq.utils.removeSuffixLine
 import net.mamoe.mirai.Bot
 import java.net.URLEncoder
 import javax.inject.Inject
+import kotlin.random.Random
 
 @GroupController
 class ToolController: QQController() {
@@ -312,5 +313,13 @@ class ToolController: QQController() {
         }else {
             reply(mif.at(qq).plus(commonResult.msg))
         }
+    }
+
+    @QMsg(at = true)
+    @Action("防红 {url}")
+    fun preventRed(url: String): String{
+        val b = Random.nextBoolean()
+        return if (b) toolLogic.preventQQRed(url)
+        else toolLogic.preventQQWechatRed(url)
     }
 }

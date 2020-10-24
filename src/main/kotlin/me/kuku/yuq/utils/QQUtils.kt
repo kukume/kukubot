@@ -107,7 +107,7 @@ object QQUtils {
         var qqEntity = qqLoginService.findByQQ(qq) ?: QQLoginEntity()
         qqEntity = this.convertQQEntity(map, qqEntity)
         qqEntity.qq = qq
-        if (group != 0L) qqEntity.qqGroup = group
+        if (group != 0L) qqEntity.group = group
         if (password != "") qqEntity.password = password
         qqLoginService.save(qqEntity)
     }

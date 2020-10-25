@@ -11,7 +11,6 @@ import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.controller.QQController
 import com.icecreamqaq.yuq.message.Message
 import me.kuku.yuq.entity.GroupEntity
-import me.kuku.yuq.entity.QQEntity
 import me.kuku.yuq.logic.BiliBiliLogic
 import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.logic.WeiboLogic

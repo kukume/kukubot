@@ -14,7 +14,7 @@ data class RecallEntity(
         var group: Long = 0,
         @OneToOne
         @JoinColumn(name = "message_id")
-        var messageEntity: MessageEntity,
+        var messageEntity: MessageEntity = MessageEntity(),
         @Temporal(TemporalType.TIMESTAMP)
         var date: Date = Date()
 )

@@ -7,7 +7,7 @@ import javax.persistence.*
 
 
 @Entity
-@Table(name = "message", indexes = [Index(name = "idx_group_date", columnList = "group_,date"), Index(name = "idx_messageId", columnList = "messageId")])
+@Table(name = "message", indexes = [Index(name = "idx_group", columnList = "group_"), Index(name = "idx_messageId", columnList = "messageId")])
 data class MessageEntity (
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)

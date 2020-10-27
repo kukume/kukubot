@@ -52,7 +52,9 @@ class WeiboJob {
                             yuq.groups[group]?.sendMessage(mif.text("有新微博了\n").plus(weiboLogic.convertStr(it)))
                     }
                 }
-                wbMap[userId] = list[0].id.toLong()
+                val newId = list[0].id.toLong()
+                if (!wbMap.containsKey(userId) || newId > wbMap.getValue(userId))
+                    wbMap[userId] = list[0].id.toLong()
             }
         }
     }

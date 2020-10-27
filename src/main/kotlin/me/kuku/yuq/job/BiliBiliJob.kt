@@ -55,7 +55,9 @@ class BiliBiliJob {
                                 .plus(biliBiliLogic.convertStr(it)))
                     }
                 }
-                biMap[userId] = list[0].id.toLong()
+                val newId = list[0].id.toLong()
+                if (!biMap.containsKey(userId) || newId > biMap.getValue(userId))
+                    biMap[userId] = list[0].id.toLong()
             }
         }
     }

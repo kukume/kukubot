@@ -29,7 +29,3 @@ jar {
         attributes ('Main-Class': 'me.kuku.yuq.StartKt')
     }
 }
-
-shadowJar {
-    zip64 true
-}

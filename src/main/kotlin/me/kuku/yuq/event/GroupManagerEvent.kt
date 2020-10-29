@@ -4,6 +4,7 @@ package me.kuku.yuq.event
 
 import com.IceCreamQAQ.Yu.annotation.Event
 import com.IceCreamQAQ.Yu.annotation.EventListener
+import com.IceCreamQAQ.Yu.cache.EhcacheHelp
 import com.icecreamqaq.yuq.event.GroupMessageEvent
 import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.message.JsonEx
@@ -19,6 +20,7 @@ import me.kuku.yuq.service.QQService
 import me.kuku.yuq.service.GroupService
 import me.kuku.yuq.utils.BotUtils
 import javax.inject.Inject
+import javax.inject.Named
 
 @EventListener
 class GroupManagerEvent {
@@ -28,6 +30,9 @@ class GroupManagerEvent {
     private lateinit var qqService: QQService
     @Inject
     private lateinit var qqAiLogic: QQAILogic
+    @Inject
+    @field:Named("CommandCountOnTime")
+    private lateinit var eh: EhcacheHelp<Int>
 
     @Event
     fun inter(e: GroupMessageEvent){
@@ -114,6 +119,11 @@ class GroupManagerEvent {
                 if (jsonObject.getString("q") in str) status = true
             }
             if (status){
+                val maxCount = groupEntity.maxCommandCountOnTime
+                val key = e.sender.toString() + q
+                var num = eh[key] ?: 0
+                if (num >= maxCount) return
+                eh[key] = ++num
                 val jsonArray = jsonObject.getJSONArray("a")
                 e.group.sendMessage(BotUtils.jsonArrayToMessage(jsonArray))
             }

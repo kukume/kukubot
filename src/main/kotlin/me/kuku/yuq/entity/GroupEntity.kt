@@ -46,6 +46,7 @@ data class GroupEntity(
         var onTimeAlarm: Boolean = false,
         var colorPicType: String = "danbooru",
         var maxViolationCount: Int = 5,
+        var maxCommandCountOnTime: Int = -1,
         var locMonitor: Boolean = false,
         var flashNotify: Boolean = false
 ){

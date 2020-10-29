@@ -32,7 +32,7 @@ class BiliBiliLoginController: QQController() {
     @Inject
     private lateinit var toolLogic: ToolLogic
 
-    @Action("bilibililoginbyqr")
+    @Action("bllogin qr")
     @QMsg(at = true)
     fun biliBiliLoginByQr(group: Group, qq: Long): Message{
         val url = biliBiliLogic.loginByQr1()

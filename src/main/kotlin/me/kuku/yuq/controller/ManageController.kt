@@ -3,6 +3,8 @@
 package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.*
+import com.IceCreamQAQ.Yu.cache.EhcacheHelp
+import com.IceCreamQAQ.Yu.entity.DoNone
 import com.alibaba.fastjson.JSONObject
 import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.annotation.PathVar
@@ -19,8 +21,34 @@ import me.kuku.yuq.service.QQService
 import me.kuku.yuq.service.RecallService
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.removeSuffixLine
+import java.lang.RuntimeException
 import java.text.SimpleDateFormat
 import javax.inject.Inject
+import javax.inject.Named
+
+@GroupController
+class BeforeController{
+    @Inject
+    @field:Named("CommandCountOnTime")
+    private lateinit var eh: EhcacheHelp<Int>
+    @Inject
+    private lateinit var groupService: GroupService
+
+    @Global
+    @Before
+    fun before(message: Message, group: Long, qq: Long){
+        val groupEntity = groupService.findByGroup(group) ?: return
+        val maxCount = groupEntity.maxCommandCountOnTime
+        if (maxCount < 0) return
+        val list = message.toPath()
+        if (list.isEmpty()) return
+        val command = list[0]
+        val key = qq.toString() + command
+        var num = eh[key] ?: 0
+        if (num >= maxCount) throw DoNone()
+        eh[key] = ++num
+    }
+}
 
 @GroupController
 class ManageNotController: QQController(){
@@ -42,7 +70,7 @@ class ManageNotController: QQController(){
     }
 
     @Action("查管")
-    @Synonym(["查admin命令", "查黑名单", "查白名单", "查违规词", "查拦截", "查微博监控", "查哔哩哔哩监控", "查问答"])
+    @Synonym(["查黑名单", "查白名单", "查违规词", "查拦截", "查微博监控", "查哔哩哔哩监控", "查问答"])
     @QMsg(at = true, atNewLine = true)
     fun query(groupEntity: GroupEntity, @PathVar(0) type: String): String?{
         val sb = StringBuilder()
@@ -253,35 +281,20 @@ class ManageOwnerController: QQController() {
         return "${type}成功！！"
     }
 
-    @Action("机器人 {status}")
-    @Synonym(["loc监控 {status}", "整点报时 {status}", "自动审核 {status}",
-        "欢迎语 {status}", "退群拉黑 {status}", "鉴黄 {status}", "色图 {status}",
-        "撤回通知 {status}", "闪照通知 {status}"])
-    @QMsg(at = true)
-    fun onOrOff(groupEntity: GroupEntity, status: Boolean, @PathVar(0) op: String): String?{
-        when (op){
-            "机器人" -> groupEntity.status = status
-            "loc监控" -> groupEntity.locMonitor = status
-            "整点报时" -> groupEntity.onTimeAlarm = status
-            "自动审核" -> groupEntity.autoReview = status
-            "欢迎语" -> groupEntity.welcomeMsg = status
-            "退群拉黑" -> groupEntity.leaveGroupBlack = status
-            "鉴黄" -> groupEntity.pic = status
-            "色图" -> groupEntity.colorPic = status
-            "撤回通知" -> groupEntity.recall = status
-            "闪照通知" -> groupEntity.flashNotify = status
-            else -> return null
-        }
-        groupService.save(groupEntity)
-        return if (status) "${op}开启成功" else "${op}关闭成功"
-    }
-
     @Action("违规次数 {count}")
     @QMsg(at = true)
     fun maxViolationCount(groupEntity: GroupEntity, count: Int): String{
         groupEntity.maxViolationCount = count
         groupService.save(groupEntity)
         return "已设置本群最大违规次数为${count}次"
+    }
+
+    @Action("指令限制 {count}")
+    @QMsg(at = true)
+    fun maxCommandCount(groupEntity: GroupEntity, count: Int): String{
+        groupEntity.maxCommandCountOnTime = count
+        groupService.save(groupEntity)
+        return "已设置本群单个指令每人每分钟最大触发次数为${count}次"
     }
 
     @Action("色图切换 {type}")
@@ -380,5 +393,28 @@ class ManageAdminController: QQController(){
         }
         yuq.groups[group]?.get(qqNo)?.ban(time)
         return "禁言成功！！"
+    }
+
+    @Action("机器人 {status}")
+    @Synonym(["loc监控 {status}", "整点报时 {status}", "自动审核 {status}",
+        "欢迎语 {status}", "退群拉黑 {status}", "鉴黄 {status}", "色图 {status}",
+        "撤回通知 {status}", "闪照通知 {status}"])
+    @QMsg(at = true)
+    fun onOrOff(groupEntity: GroupEntity, status: Boolean, @PathVar(0) op: String): String?{
+        when (op){
+            "机器人" -> groupEntity.status = status
+            "loc监控" -> groupEntity.locMonitor = status
+            "整点报时" -> groupEntity.onTimeAlarm = status
+            "自动审核" -> groupEntity.autoReview = status
+            "欢迎语" -> groupEntity.welcomeMsg = status
+            "退群拉黑" -> groupEntity.leaveGroupBlack = status
+            "鉴黄" -> groupEntity.pic = status
+            "色图" -> groupEntity.colorPic = status
+            "撤回通知" -> groupEntity.recall = status
+            "闪照通知" -> groupEntity.flashNotify = status
+            else -> return null
+        }
+        groupService.save(groupEntity)
+        return if (status) "${op}开启成功" else "${op}关闭成功"
     }
 }

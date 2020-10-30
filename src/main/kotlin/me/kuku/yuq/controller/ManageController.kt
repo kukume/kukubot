@@ -21,7 +21,6 @@ import me.kuku.yuq.service.QQService
 import me.kuku.yuq.service.RecallService
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.removeSuffixLine
-import java.lang.RuntimeException
 import java.text.SimpleDateFormat
 import javax.inject.Inject
 import javax.inject.Named
@@ -155,6 +154,8 @@ class ManageNotController: QQController(){
         sb.appendLine("撤回通知：" + this.boolToStr(groupEntity.recall))
         sb.appendLine("整点报时：" + this.boolToStr(groupEntity.onTimeAlarm))
         sb.appendLine("闪照通知：" + this.boolToStr(groupEntity.flashNotify))
+        val maxCommandCountOnTime = groupEntity.maxCommandCountOnTime
+        sb.appendLine("指令限制：${if (maxCommandCountOnTime == -1) "无限制" else "$maxCommandCountOnTime"}")
         sb.append("最大违规次数：${groupEntity.maxViolationCount}")
         return sb.toString()
     }

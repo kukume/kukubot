@@ -1,5 +1,6 @@
 package me.kuku.yuq.logic.impl
 
+import com.alibaba.fastjson.JSONObject
 import me.kuku.yuq.entity.MotionEntity
 import me.kuku.yuq.entity.QQLoginEntity
 import me.kuku.yuq.logic.LeXinMotionLogic
@@ -84,13 +85,20 @@ class LeXinMotionLogicImpl: LeXinMotionLogic {
     }
 
     override fun modifyStepCount(step: Int, motionEntity: MotionEntity): String {
+        //另一个手环  http://we.qq.com/d/AQC7PnaOEcpmVUpHtrZBmRUVq4wOOgKw-gfh6wPj
+        val bindJsonObject = OkHttpClientUtils.postJson("https://sports.lifesense.com/device_service/device_user/bind",
+                OkHttpClientUtils.addJson("{\"qrcode\": \"http://we.qq.com/d/AQC7PnaOelOaCg9Ux8c9Ew95yumTVfMcFuGCHMY-\",\"userId\":\"${motionEntity.leXinUserId}\"}"),
+                OkHttpClientUtils.addCookie(motionEntity.leXinCookie))
+        if (bindJsonObject.getInteger("code") != 200) return bindJsonObject.getString("msg")
         val dateTimeFormat = SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
         val dateFormat = SimpleDateFormat("yyyy-MM-dd")
         val date = Date()
-        val response = OkHttpClientUtils.post("https://sports.lifesense.com/sport_service/sport/sport/uploadMobileStepV2",
-                OkHttpClientUtils.addJson("{\"list\": [{\"active\": 1,\"calories\": ${step / 3415},\"created\": \"${dateTimeFormat.format(date)}\",\"dataSource\": 2,\"dayMeasurementTime\": \"${dateFormat.format(date)}\",\"deviceId\": \"M_NULL\",\"distance\": ${step / 100},\"id\": \"${motionEntity.leXinAccessToken}\",\"isUpload\": 0,\"measurementTime\": \"${dateTimeFormat.format(date)}\",\"priority\": 0,\"step\": $step,\"type\": 2,\"updated\": ${date.time},\"userId\":\"${motionEntity.leXinUserId}\",\"DataSource\": 2,\"exerciseTime\": 0}]}"),
+        val tenTime = date.time.toString().substring(0, 10)
+        val response = OkHttpClientUtils.post("https://sports.lifesense.com/sport_service/sport/sport/uploadMobileStepV2?country=%E4%B8%AD%E5%9B%BD&city=%E6%9F%B3%E5%B7%9E&cityCode=450200&timezone=Asia%2FShanghai&latitude=24.368694&os_country=CN&channel=qq&language=zh&openudid=&platform=android&province=%E5%B9%BF%E8%A5%BF%E5%A3%AE%E6%97%8F%E8%87%AA%E6%B2%BB%E5%8C%BA&appType=6&requestId=${BotUtils.randomStr(32)}&countryCode=&systemType=2&longitude=109.532216&devicemodel=V1914A&area=CN&screenwidth=1080&os_langs=zh&provinceCode=450000&promotion_channel=qq&rnd=3d51742c&version=4.6.7&areaCode=450203&requestToken=${BotUtils.randomStr(32)}&network_type=wifi&osversion=10&screenheight=2267&ts=${tenTime}",
+                OkHttpClientUtils.addJson("{\"list\":[{\"active\":1,\"calories\":${step / 4},\"created\":\"${dateTimeFormat.format(date)}\",\"dataSource\":2,\"dayMeasurementTime\":\"${dateFormat.format(date)}\",\"deviceId\":\"M_NULL\",\"distance\":${step / 3},\"id\":\"${BotUtils.randomStr(32)}\",\"isUpload\":0,\"measurementTime\":\"${dateTimeFormat.format(date)}\",\"priority\":0,\"step\":$step,\"type\":2,\"updated\":${tenTime + "000"},\"userId\":\"${motionEntity.leXinUserId}\",\"DataSource\":2,\"exerciseTime\":0}]}"),
                 OkHttpClientUtils.addCookie(motionEntity.leXinCookie))
-        val jsonObject = OkHttpClientUtils.getJson(response)
+        val str = OkHttpClientUtils.getStr(response)
+        val jsonObject = JSONObject.parseObject(str)
         return if (jsonObject.getInteger("code") == 200) "步数修改成功！！" else jsonObject.getString("msg")
     }
 }

@@ -13,6 +13,7 @@ import me.kuku.yuq.logic.WeiboLogic
 import me.kuku.yuq.pojo.WeiboPojo
 import me.kuku.yuq.service.GroupService
 import me.kuku.yuq.service.WeiboService
+import java.lang.Exception
 import javax.inject.Inject
 
 @JobCenter
@@ -84,7 +85,11 @@ class WeiboJob {
                     val group = weiboEntity.group
                     val msg = "有新微博了！！\n" + weiboLogic.convertStr(it)
                     if (group == 0L){
-                        yuq.friends[qq]?.sendMessage(msg.toMessage())
+                        try {
+                            yuq.friends[qq]?.sendMessage(msg.toMessage())
+                        }catch (e: Exception){
+                            e.printStackTrace()
+                        }
                     }else{
                         yuq.groups[group]?.members?.get(qq)?.sendMessage(msg.toMessage())
                     }

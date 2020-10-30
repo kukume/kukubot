@@ -8,12 +8,14 @@ import com.IceCreamQAQ.Yu.annotation.Synonym
 import com.alibaba.fastjson.JSONObject
 import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.annotation.PathVar
+import com.icecreamqaq.yuq.annotation.PrivateController
 import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.controller.QQController
+import com.icecreamqaq.yuq.entity.Contact
 import com.icecreamqaq.yuq.entity.Group
-import com.icecreamqaq.yuq.message.At
+import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.Message.Companion.firstString
@@ -81,16 +83,10 @@ class QQController: QQController() {
         return qqLogic.modifyAvatar(qqLoginEntity, url)
     }
 
-    @Action("送花")
+    @Action("送花 {qqNo}")
     @QMsg(at = true)
-    fun sendFlower(qqLoginEntity: QQLoginEntity, message: Message, group: Long): String{
-        val singleBody = message.body.getOrNull(1)
-        val qq: String =  if (singleBody != null){
-            if (singleBody is At){
-                singleBody.user.toString()
-            }else singleBody.toPath()
-        }else return "缺少参数，送花的对象！"
-        return qqLogic.sendFlower(qqLoginEntity, qq.toLong(), group)
+    fun sendFlower(qqLoginEntity: QQLoginEntity, qqNo: Long, group: Long): String{
+        return qqLogic.sendFlower(qqLoginEntity, qqNo, group)
     }
 
     @Action("群礼物")
@@ -249,6 +245,7 @@ class QQController: QQController() {
 }
 
 @GroupController
+@PrivateController
 class BindQQController: QQController(){
     @Inject
     private lateinit var qqLoginService: QQLoginService
@@ -263,13 +260,40 @@ class BindQQController: QQController(){
             val msg = if (commonResult.code == 200){
                 //登录成功
                 QQUtils.saveOrUpdate(qqLoginService, commonResult.t!!, qq, group = group.id)
-                "绑定或更新成功！"
+                "绑定或更新QQ成功！"
             }else{
                 commonResult.msg
             }
             group.sendMessage(mif.at(qq).plus(msg))
         }
         return mif.imageByInputStream(bytes.inputStream()).plus("qzone.qq.com的扫码登录")
+    }
+
+    @Action("qqlogin pwd")
+    fun bindQQByPwd(@PathVar(2) password: String?, qq: Contact, session: ContextSession): String{
+        val qqLoginEntity = qqLoginService.findByQQ(qq.id)
+        val group = if (qq is Member) qq.group.id else 0
+        val pwd = qqLoginEntity?.password ?: password ?: return "在您的指令中没有发现密码！！"
+        val commonResult = QQPasswordLoginUtils.login(qq = qq.id.toString(), password = pwd)
+        return when (commonResult.code){
+            200 -> {
+                val map = commonResult.t!!
+                QQUtils.saveOrUpdate(qqLoginService, map, qq.id, pwd, group)
+                "绑定或者更新QQ成功！！"
+            }
+            10009 -> {
+                reply(commonResult.msg)
+                val map = commonResult.t!!
+                val codeMessage = session.waitNextMessage(1000 * 60 * 2)
+                val code = codeMessage.firstString()
+                val loginResult = QQPasswordLoginUtils.loginBySms(qq = qq.toString(), password = pwd, randStr = map["randStr"].toString(),
+                        ticket = map["ticket"].toString(), cookie = map["cookie"].toString(), smsCode = code)
+                if (loginResult.code != 200) return "验证码输入错误，请重新登录！！"
+                QQUtils.saveOrUpdate(qqLoginService, loginResult.t!!, qq.id, pwd, group)
+                "绑定或者更新QQ成功！！"
+            }
+            else -> commonResult.msg
+        }
     }
 }
 

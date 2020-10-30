@@ -7,6 +7,5 @@ import me.kuku.yuq.entity.MessageEntity
 interface MessageService {
     fun findByMessageId(messageId: Int): MessageEntity?
     fun save(messageEntity: MessageEntity)
-    fun findMaxMessageIdByGroup(group: Long): Int?
     fun findCountQQByGroupAndToday(group: Long): Map<Long, Long>
 }

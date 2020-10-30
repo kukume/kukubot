@@ -1,16 +1,15 @@
 package me.kuku.yuq.dao
 
-import com.icecreamqaq.yudb.jpa.hibernate.HibernateDao
+import com.icecreamqaq.yudb.YuDao
+import com.icecreamqaq.yudb.jpa.annotation.Dao
+import com.icecreamqaq.yudb.jpa.annotation.Select
 import me.kuku.yuq.entity.GroupEntity
 
-class GroupDao: HibernateDao<GroupEntity, Int>(){
-
-    fun findByGroup(group: Long) = this.search("from GroupEntity where group_ = ?", group)
-
-    fun findByOnTimeAlarm(onTimeAlarm: Boolean) = this.searchList("from GroupEntity where onTimeAlarm = ?", null, onTimeAlarm)
-
-    fun findAll() = this.searchList("from GroupEntity")
-
-    fun findByLocMonitor(locMonitor: Boolean) = this.searchList("from GroupEntity where locMonitor = ?", null, locMonitor)
-
+@Dao
+interface GroupDao: YuDao<GroupEntity, Int>{
+    fun findByGroup(group: Long): GroupEntity?
+    fun findByOnTimeAlarm(onTimeAlarm: Boolean): List<GroupEntity>
+    @Select("from GroupEntity")
+    fun findAll(): List<GroupEntity>
+    fun findByLocMonitor(locMonitor: Boolean): List<GroupEntity>
 }

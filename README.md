@@ -24,13 +24,23 @@ docker pull docker.pkg.github.com/kukume/kuku-bot/kukubot:latest
 docker pull kukume/kukubot
 ```
 **运行：**
-```
+```shell script
+# 初始化容器
 docker run -it --name kukubot -d  \
 -p 8081:8081 \
 -v $(pwd)/kukubot/conf:/kukubot/conf \
 -v $(pwd)/kukubot/db:/kukubot/db \
 kukume/kukubot
+# 复制配置文件
 docker cp kukubot:/kukubot/YuQ.properties $(pwd)/kukubot/conf/YuQ.properties
+# 查看日志
+docker logs kukubot
+# 输入以下命令即可进入控制台，可填入登录验证码等信息
+docker attach kukubot
+# 启动容器
+docker start kukubot
+# 停止容器
+docker stop kukubot
 ```
 
 mirai-console版：[https://www.kuku.me/archives/7/](https://www.kuku.me/archives/7/)

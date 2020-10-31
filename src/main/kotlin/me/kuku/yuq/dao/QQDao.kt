@@ -8,6 +8,7 @@ import me.kuku.yuq.entity.QQEntity
 
 @Dao
 interface QQDao: YuDao<QQEntity, Int>{
+    @Select("from QQEntity where qq = ? and group_id = ?")
     fun findByQQAndGroup(qq: Long, group: Int): QQEntity?
     @Execute("delete from QQEntity where qq = ? and group_id = ?")
     fun delByQQAndGroup(qq: Long, group: Int): Int

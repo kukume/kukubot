@@ -49,14 +49,12 @@ class GroupJob {
             }
             locId = list[0].getValue("id").toInt()
             newList.forEach { locMap ->
-                yuq.groups[groupEntity.group]?.sendMessage(
-                        """
-                    Loc有新帖了！！
-                    标题：${locMap["title"]}
-                    昵称：${locMap["name"]}
-                    链接：${locMap["url"]}
-                """.trimIndent().toMessage()
-                )
+                val sb = StringBuilder()
+                sb.appendLine("Loc有新帖了！！")
+                        .appendLine("标题：${locMap["title"]}")
+                        .appendLine("昵称：${locMap["name"]}")
+                        .append("链接：${locMap["url"]}")
+                yuq.groups[groupEntity.group]?.sendMessage(sb.toString().toMessage())
             }
         }
     }

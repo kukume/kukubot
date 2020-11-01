@@ -12,46 +12,18 @@
 * 群管功能
 * 一些小工具
 
-## Docker
+## 教程文章
 
-**Docker**将在提交代码后自动更新
-
-**镜像：**
-```shell script
-# Github
-docker pull docker.pkg.github.com/kukume/kuku-bot/kukubot:latest
-# Docker-Hub
-docker pull kukume/kukubot
-```
-**运行：**
-```shell script
-# 初始化容器
-docker run -it --name kukubot -d  \
--p 8081:8081 \
--v $(pwd)/kukubot/conf:/kukubot/conf \
--v $(pwd)/kukubot/db:/kukubot/db \
-kukume/kukubot
-# 复制配置文件
-docker cp kukubot:/kukubot/YuQ.properties $(pwd)/kukubot/conf/YuQ.properties
-# 查看日志
-docker logs kukubot
-# 输入以下命令即可进入控制台，可填入登录验证码等信息
-docker attach kukubot
-# 启动容器
-docker start kukubot
-# 停止容器
-docker stop kukubot
-```
+**Docker**版（将在提交代码后自动更新）：[https://www.kuku.me/archives/8/](https://www.kuku.me/archives/8/)
 
 mirai-console版：[https://www.kuku.me/archives/7/](https://www.kuku.me/archives/7/)
 
 安装教程：[https://w.url.cn/s/AD764XH](https://w.url.cn/s/AD764XH)
 
 ## 说明
-* 机器人使用之前必须发送`机器人 开`才能开启机器人
 * 数据库使用h2，目录`db`下
 * 发送的图片保存在`tmp`目录下
-* 其他说明见博客
+* 超级萌宠已删除，建议使用XP插件`XAutoDaily`
 
 ## 鸣谢
 

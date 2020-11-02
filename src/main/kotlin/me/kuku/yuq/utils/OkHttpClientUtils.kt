@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package me.kuku.yuq.utils
 
 import com.alibaba.fastjson.JSON
@@ -6,9 +8,7 @@ import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import okio.ByteString
-import java.net.InetSocketAddress
-import java.net.Proxy
-import java.net.SocketAddress
+import java.io.InputStream
 import java.util.concurrent.TimeUnit
 
 object OkHttpClientUtils {
@@ -32,9 +32,43 @@ object OkHttpClientUtils {
         return okHttpClient.newCall(request).execute()
     }
 
+    fun getStr(url: String, headers: Headers = Headers.Builder().build()): String{
+        val response = get(url, headers)
+        return getStr(response)
+    }
+
+    fun getJson(url: String, headers: Headers = Headers.Builder().build()): JSONObject{
+        val response = get(url, headers)
+        return getJson(response)
+    }
+
     fun post(url: String, requestBody: RequestBody = FormBody.Builder().build(), headers: Headers = Headers.Builder().build()): Response{
         val request = Request.Builder().url(url).post(requestBody).headers(headers).build()
         return okHttpClient.newCall(request).execute()
+    }
+
+    fun postStr(url: String, requestBody: RequestBody = FormBody.Builder().build(), headers: Headers = Headers.Builder().build()): String{
+        val response = post(url, requestBody, headers)
+        return getStr(response)
+    }
+
+    fun postJson(url: String, requestBody: RequestBody = FormBody.Builder().build(), headers: Headers = Headers.Builder().build()): JSONObject{
+        val response = post(url, requestBody, headers)
+        return getJson(response)
+    }
+
+    fun post(url: String, map: Map<String, String>, headers: Headers = Headers.Builder().build()): Response{
+        return post(url, addForms(map), headers)
+    }
+
+    fun postStr(url: String, map: Map<String, String>, headers: Headers = Headers.Builder().build()): String{
+        val response = post(url, addForms(map), headers)
+        return getStr(response)
+    }
+
+    fun postJson(url: String, map: Map<String, String>, headers: Headers = Headers.Builder().build()): JSONObject{
+        val response = post(url, addForms(map), headers)
+        return getJson(response)
     }
 
     fun put(url: String, requestBody: RequestBody = FormBody.Builder().build(), headers: Headers = Headers.Builder().build()): Response{
@@ -47,13 +81,21 @@ object OkHttpClientUtils {
         return okHttpClient.newCall(request).execute()
     }
 
-    fun addHeader(name: String, value: String) = Headers.Builder().add(name, value).build()
+    fun addHeader() = Headers.Builder()
 
-    fun addCookie(value: String) = this.addHeader("cookie", value)
+    private fun addHeader(name: String, value: String) = Headers.Builder().add(name, value).build()
 
-    fun addReferer(value: String) = this.addHeader("Referer", value)
+    fun addCookie(value: String) = addHeader("cookie", value)
 
-    fun addUA(value: String) = this.addHeader("user-agent", value)
+    fun Headers.Builder.addCookie(value: String) = this.add("cookie", value)
+
+    fun addReferer(value: String) = addHeader("Referer", value)
+
+    fun Headers.Builder.addReferer(value: String) = this.add("Referer", value)
+
+    fun addUA(value: String) = addHeader("user-agent", value)
+
+    fun Headers.Builder.addUA(value: String) = this.add("user-agent", value)
 
     fun getCookie(response: Response, vararg names: String): Map<String, String>{
         val map = HashMap<String, String>()
@@ -69,6 +111,8 @@ object OkHttpClientUtils {
         }
         return map
     }
+
+    fun getCookie(cookie: String, name: String) = BotUtils.regex("$name=", "; ", cookie)
 
     fun getCookie(response: Response): String{
         val sb = StringBuilder()
@@ -88,6 +132,14 @@ object OkHttpClientUtils {
         return builder.build()
     }
 
+    fun addHeaders(map: Map<String, String>): Headers{
+        val builder = Headers.Builder()
+        for ((k, v) in map){
+            builder.add(k, v)
+        }
+        return builder.build()
+    }
+
     fun addForms(vararg forms: String): RequestBody{
         val builder = FormBody.Builder()
         for (i in forms.indices step 2){
@@ -96,23 +148,36 @@ object OkHttpClientUtils {
         return builder.build()
     }
 
-    fun addStream(url: String) = this.getByteStr(this.get(url)).toRequestBody(this.MEDIA_STREAM)
+    fun addForms(map: Map<String, String>): RequestBody{
+        val builder = FormBody.Builder()
+        for ((k, v) in map){
+            builder.add(k, v)
+        }
+        return builder.build()
+    }
 
-    fun addStream(byteArray: ByteArray) = byteArray.toRequestBody(this.MEDIA_STREAM)
+    fun getStream(url: String): InputStream{
+        val response = get(url)
+        return getBytes(response).inputStream()
+    }
 
-    fun addStream(byteString: ByteString) = byteString.toRequestBody(this.MEDIA_STREAM)
+    fun addStream(url: String) = getByteStr(get(url)).toRequestBody(MEDIA_STREAM)
+
+    fun addStream(byteArray: ByteArray) = byteArray.toRequestBody(MEDIA_STREAM)
+
+    fun addStream(byteString: ByteString) = byteString.toRequestBody(MEDIA_STREAM)
 
     fun addJson(params: String) = params.toRequestBody(MEDIA_JSON)
 
     fun getStr(response: Response) = response.body!!.string()
 
-    fun getStr(response: Response, regex: String) = BotUtils.regex(regex, this.getStr(response))
+    fun getStr(response: Response, regex: String) = BotUtils.regex(regex, getStr(response))
 
-    fun getJson(response: Response): JSONObject = JSON.parseObject(this.getStr(response))
+    fun getJson(response: Response): JSONObject = JSON.parseObject(getStr(response))
 
-    fun getJson(response: Response, regex: String): JSONObject = JSON.parseObject(this.getStr(response, regex))
+    fun getJson(response: Response, regex: String): JSONObject = JSON.parseObject(getStr(response, regex))
 
-    fun getJsonp(response: Response) = this.getJson(response, "\\{[\\s\\S]*\\}")
+    fun getJsonp(response: Response) = getJson(response, "\\{[\\s\\S]*\\}")
 
     fun getBytes(response: Response) = response.body!!.bytes()
 

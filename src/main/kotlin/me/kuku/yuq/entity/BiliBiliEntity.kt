@@ -17,6 +17,8 @@ data class BiliBiliEntity(
         @Column(columnDefinition = "text")
         var cookie: String = "",
         var monitor: Boolean = false,
+        @Column(name = "task_")
+        var task: Boolean = false,
         @Lob
         @Column(columnDefinition = "text")
         var liveList: String = "[]",
@@ -38,16 +40,16 @@ data class BiliBiliEntity(
         var token: String = "",
         var userId: String = ""
 ){
-        @Transient
-        fun getLiveJsonArray(): JSONArray = JSON.parseArray(liveList) ?: JSON.parseArray("[]")
-        @Transient
-        fun getLikeJsonArray(): JSONArray = JSON.parseArray(likeList) ?: JSON.parseArray("[]")
-        @Transient
-        fun getCommentJsonArray(): JSONArray = JSON.parseArray(commentList) ?: JSON.parseArray("[]")
-        @Transient
-        fun getForwardJsonArray(): JSONArray = JSON.parseArray(forwardList) ?: JSON.parseArray("[]")
-        @Transient
-        fun getTossCoinJsonArray(): JSONArray = JSON.parseArray(tossCoinList) ?: JSON.parseArray("[]")
-        @Transient
-        fun getFavoritesJsonArray(): JSONArray = JSON.parseArray(favoritesList) ?: JSON.parseArray("[]")
+        val liveJsonArray: JSONArray
+                get() = JSON.parseArray(liveList)
+        val likeJsonArray: JSONArray
+                get() = JSON.parseArray(likeList)
+        val commentJsonArray: JSONArray
+                get() = JSON.parseArray(commentList)
+        val forwardJsonArray: JSONArray
+                get() = JSON.parseArray(forwardList)
+        val tossCoinJsonArray: JSONArray
+                get() = JSON.parseArray(tossCoinList)
+        val favoritesJsonArray: JSONArray
+                get() = JSON.parseArray(favoritesList)
 }

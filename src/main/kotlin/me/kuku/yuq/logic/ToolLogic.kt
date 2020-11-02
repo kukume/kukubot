@@ -27,14 +27,10 @@ interface ToolLogic {
     fun restoreShortUrl(url: String): String
     fun weather(local: String, cookie: String): CommonResult<String>
     fun ping(domain: String): String
-    fun colorPic(type: String): String
     fun colorPicByLoLiCon(apiKey: String, isR18: Boolean): CommonResult<Map<String, String>>
     fun piXivPicProxy(url: String): ByteArray
-    fun r18setting(cookie: String, isOpen: Boolean): String
     fun hiToKoTo(): Map<String, String>
-    fun songByQQ(name: String): String
-    fun songBy163(name: String): CommonResult<String>
-    fun creatQr(content: String): String
+    fun creatQr(content: String): ByteArray
     fun girlImage(): String
     fun lolFree(): String
     fun abbreviation(content: String): String
@@ -47,7 +43,11 @@ interface ToolLogic {
     fun hostLocPost(): List<Map<String, String>>
     fun wordSegmentation(text: String): String
     fun acgPic(): String
-    fun danBooRuPic(): String
+    fun danBooRuPic(): Map<String, String>
     fun identifyPic(url: String): String?
     fun githubQuicken(gitUrl: String): String
+    fun traceRoute(domain: String): String
+    fun teachYou(content: String, type: String): String?
+    fun preventQQRed(url: String): String
+    fun preventQQWechatRed(url: String): String
 }

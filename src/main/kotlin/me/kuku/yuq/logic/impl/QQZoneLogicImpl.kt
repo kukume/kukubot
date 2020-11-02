@@ -2,7 +2,7 @@ package me.kuku.yuq.logic.impl
 
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
-import me.kuku.yuq.entity.QQEntity
+import me.kuku.yuq.entity.QQLoginEntity
 import me.kuku.yuq.logic.QQZoneLogic
 import me.kuku.yuq.pojo.CommonResult
 import me.kuku.yuq.pojo.GroupMember
@@ -13,11 +13,11 @@ import java.util.*
 
 class QQZoneLogicImpl: QQZoneLogic {
 
-    override fun friendTalk(qqEntity: QQEntity): List<Map<String, String?>>? {
-        val response = OkHttpClientUtils.post("https://h5.qzone.qq.com/webapp/json/mqzone_feeds/getActiveFeeds?g_tk=${qqEntity.getGtkP()}",
+    override fun friendTalk(qqLoginEntity: QQLoginEntity): List<Map<String, String?>>? {
+        val response = OkHttpClientUtils.post("https://h5.qzone.qq.com/webapp/json/mqzone_feeds/getActiveFeeds?g_tk=${qqLoginEntity.getGtkP()}",
                 OkHttpClientUtils.addForms("res_type", "0", "res_attach", "", "refresh_type", "2",
                         "format", "json", "attach_info", ""),
-                OkHttpClientUtils.addCookie(qqEntity.getCookieWithQQZone()))
+                OkHttpClientUtils.addCookie(qqLoginEntity.getCookieWithQQZone()))
         val jsonObject = OkHttpClientUtils.getJson(response)
         return if (jsonObject.getInteger("code") == 0){
             val feedsJsonArray = jsonObject.getJSONObject("data").getJSONArray("vFeeds")
@@ -39,9 +39,9 @@ class QQZoneLogicImpl: QQZoneLogic {
         }else null
     }
 
-    override fun talkByQQ(qqEntity: QQEntity, qq: Long): List<Map<String, String?>>? {
-        val response = OkHttpClientUtils.get("https://mobile.qzone.qq.com/get_feeds?g_tk=${qqEntity.getGtkP()}&hostuin=$qq&res_type=2&res_attach=&refresh_type=2&format=json",
-                OkHttpClientUtils.addCookie(qqEntity.getCookieWithQQZone()))
+    override fun talkByQQ(qqLoginEntity: QQLoginEntity, qq: Long): List<Map<String, String?>>? {
+        val response = OkHttpClientUtils.get("https://mobile.qzone.qq.com/get_feeds?g_tk=${qqLoginEntity.getGtkP()}&hostuin=$qq&res_type=2&res_attach=&refresh_type=2&format=json",
+                OkHttpClientUtils.addCookie(qqLoginEntity.getCookieWithQQZone()))
         val jsonObject = OkHttpClientUtils.getJson(response)
         return if (jsonObject.getInteger("code") == 0){
             val feedsJsonArray = jsonObject.getJSONObject("data").getJSONArray("vFeeds")
@@ -50,7 +50,7 @@ class QQZoneLogicImpl: QQZoneLogic {
                 val feedJsonObject = it as JSONObject
                 val map = mapOf(
                         "id" to feedJsonObject.getJSONObject("id").getString("cellid"),
-                        "qq" to qqEntity.qq.toString()
+                        "qq" to qqLoginEntity.qq.toString()
                 )
                 list.add(map)
             }
@@ -58,41 +58,41 @@ class QQZoneLogicImpl: QQZoneLogic {
         }else null
     }
 
-    override fun forwardTalk(qqEntity: QQEntity, id: String, qq: String, text: String): String {
-        val response = OkHttpClientUtils.post("https://mobile.qzone.qq.com/operation/operation_add?g_tk=${qqEntity.getGtkP()}",
+    override fun forwardTalk(qqLoginEntity: QQLoginEntity, id: String, qq: String, text: String): String {
+        val response = OkHttpClientUtils.post("https://mobile.qzone.qq.com/operation/operation_add?g_tk=${qqLoginEntity.getGtkP()}",
                 OkHttpClientUtils.addForms("res_id", id, "res_uin", qq, "format", "json",
                         "reason", text, "res_type", "311", "opr_type", "forward", "operate", "1"),
-                OkHttpClientUtils.addCookie(qqEntity.getCookieWithQQZone()))
+                OkHttpClientUtils.addCookie(qqLoginEntity.getCookieWithQQZone()))
         val jsonObject = OkHttpClientUtils.getJson(response)
         return if (jsonObject.getInteger("code") == 0){
             "转发${qq}的说说成功"
         }else "转发说说失败，请更新QQ"
     }
 
-    override fun publishTalk(qqEntity: QQEntity, text: String): String {
-        val response = OkHttpClientUtils.post("https://mobile.qzone.qq.com/mood/publish_mood?g_tk=${qqEntity.getGtkP()}",
-                OkHttpClientUtils.addForms("opr_type", "publish_shuoshuo", "res_uin", qqEntity.qq.toString(),
+    override fun publishTalk(qqLoginEntity: QQLoginEntity, text: String): String {
+        val response = OkHttpClientUtils.post("https://mobile.qzone.qq.com/mood/publish_mood?g_tk=${qqLoginEntity.getGtkP()}",
+                OkHttpClientUtils.addForms("opr_type", "publish_shuoshuo", "res_uin", qqLoginEntity.qq.toString(),
                         "content", text, "richval", "", "lat", "0", "lon", "0", "lbsid", "", "issyncweibo", "0",
-                        "format", "json"), OkHttpClientUtils.addCookie(qqEntity.getCookieWithQQZone()))
+                        "format", "json"), OkHttpClientUtils.addCookie(qqLoginEntity.getCookieWithQQZone()))
         val jsonObject = OkHttpClientUtils.getJson(response)
         return if (jsonObject.getInteger("code") == 0){
             "发说说成功"
         }else "发说说失败，请更新QQ！"
     }
 
-    override fun removeTalk(qqEntity: QQEntity, id: String): String {
-        val response = OkHttpClientUtils.post("https://mobile.qzone.qq.com/operation/operation_add?g_tk=${qqEntity.getGtkP()}",
+    override fun removeTalk(qqLoginEntity: QQLoginEntity, id: String): String {
+        val response = OkHttpClientUtils.post("https://mobile.qzone.qq.com/operation/operation_add?g_tk=${qqLoginEntity.getGtkP()}",
                 OkHttpClientUtils.addForms("opr_type", "delugc", "res_type", "311", "res_id", id,
-                        "real_del", "0", "res_uin", qqEntity.qq.toString(), "format", "json"),
-                OkHttpClientUtils.addCookie(qqEntity.getCookieWithQQZone()))
+                        "real_del", "0", "res_uin", qqLoginEntity.qq.toString(), "format", "json"),
+                OkHttpClientUtils.addCookie(qqLoginEntity.getCookieWithQQZone()))
         val jsonObject = OkHttpClientUtils.getJson(response)
         return if (jsonObject.getInteger("code") == 0){
             "删除说说成功"
         }else "删除说说失败，请更新QQ！"
     }
 
-    override fun commentTalk(qqEntity: QQEntity, id: String, qq: String, text: String): String {
-        val response = OkHttpClientUtils.post("https://mobile.qzone.qq.com/operation/publish_addcomment?g_tk=${qqEntity.getGtkP()}",
+    override fun commentTalk(qqLoginEntity: QQLoginEntity, id: String, qq: String, text: String): String {
+        val response = OkHttpClientUtils.post("https://mobile.qzone.qq.com/operation/publish_addcomment?g_tk=${qqLoginEntity.getGtkP()}",
                 OkHttpClientUtils.addForms("res_id", id, "res_uin", qq, "format", "json", "res_type", "311",
                         "content", text, "busi_param", "", "opr_type", "addcomment"))
         return if (OkHttpClientUtils.getJson(response).getInteger("code") == 0){
@@ -100,8 +100,8 @@ class QQZoneLogicImpl: QQZoneLogic {
         }else "评论说说失败，请更新QQ"
     }
 
-    override fun likeTalk(qqEntity: QQEntity, map: Map<String, String?>): String {
-        val response = OkHttpClientUtils.post("https://h5.qzone.qq.com/proxy/domain/w.qzone.qq.com/cgi-bin/likes/internal_dolike_app?g_tk=${qqEntity.getGtkP()}",
+    override fun likeTalk(qqLoginEntity: QQLoginEntity, map: Map<String, String?>): String {
+        val response = OkHttpClientUtils.post("https://h5.qzone.qq.com/proxy/domain/w.qzone.qq.com/cgi-bin/likes/internal_dolike_app?g_tk=${qqLoginEntity.getGtkP()}",
                 OkHttpClientUtils.addForms(
                         "opuin", map["qq"].toString(),
                         "unikey", map["orgLikeKey"].toString(),
@@ -109,20 +109,20 @@ class QQZoneLogicImpl: QQZoneLogic {
                         "appid", "311",
                         "opr_type", "like",
                         "format", "purejson"
-                ), OkHttpClientUtils.addCookie(qqEntity.getCookieWithQQZone()))
+                ), OkHttpClientUtils.addCookie(qqLoginEntity.getCookieWithQQZone()))
         return if (OkHttpClientUtils.getJson(response).getInteger("ret") == 0){
             "赞${map["qq"]}的说说成功"
         }else "赞说说失败，请更新QQ"
     }
 
-    override fun addFriend(qqEntity: QQEntity, qq: Long, msg: String, realName: String?, group: String?): String {
-        val gtkP = qqEntity.getGtkP()
+    override fun addFriend(qqLoginEntity: QQLoginEntity, qq: Long, msg: String, realName: String?, group: String?): String {
+        val gtkP = qqLoginEntity.getGtkP()
         var groupId = 0
-        this.visitQZoneMobile(qqEntity, qq)
-        val refererUrl = "https://user.qzone.qq.com/$qq?ADUIN=${qqEntity.qq}&ADSESSION=${Date().time}&ADTAG=CLIENT.QQ.5761_FriendInfo_PersonalInfo.0&ADPUBNO=27041&source=namecardstar"
-        val firstResponse = OkHttpClientUtils.get("https://user.qzone.qq.com/proxy/domain/r.qzone.qq.com/cgi-bin/tfriend/friend_getgroupinfo.cgi?uin=${qqEntity.qq}&rd=0.${BotUtils.randomNum(15)}&fupdate=1&fuin=$qq&g_tk=$gtkP&g_tk=$gtkP", OkHttpClientUtils.addHeaders(
+        this.visitQZoneMobile(qqLoginEntity, qq)
+        val refererUrl = "https://user.qzone.qq.com/$qq?ADUIN=${qqLoginEntity.qq}&ADSESSION=${Date().time}&ADTAG=CLIENT.QQ.5761_FriendInfo_PersonalInfo.0&ADPUBNO=27041&source=namecardstar"
+        val firstResponse = OkHttpClientUtils.get("https://user.qzone.qq.com/proxy/domain/r.qzone.qq.com/cgi-bin/tfriend/friend_getgroupinfo.cgi?uin=${qqLoginEntity.qq}&rd=0.${BotUtils.randomNum(15)}&fupdate=1&fuin=$qq&g_tk=$gtkP&g_tk=$gtkP", OkHttpClientUtils.addHeaders(
                 "referer", "https://user.qzone.qq.com/$qq",
-                "cookie", qqEntity.getCookieWithQQZone()
+                "cookie", qqLoginEntity.getCookieWithQQZone()
         ))
         val firstJsonObject = OkHttpClientUtils.getJsonp(firstResponse)
         val dataFirstJsonObject = firstJsonObject.getJSONObject("data")
@@ -141,13 +141,13 @@ class QQZoneLogicImpl: QQZoneLogic {
         val secondResponse = OkHttpClientUtils.post("https://user.qzone.qq.com/proxy/domain/w.qzone.qq.com/cgi-bin/tfriend/friend_authfriend.cgi?&g_tk=$gtkP", OkHttpClientUtils.addForms(
                 "sid", "0",
                 "ouin", qq.toString(),
-                "uin", qqEntity.qq.toString(),
+                "uin", qqLoginEntity.qq.toString(),
                 "fuin", qq.toString(),
                 "sourceId", "1",
                 "fupdate", "1",
                 "qzreferrer", refererUrl
         ), OkHttpClientUtils.addHeaders(
-                "cookie", qqEntity.getCookieWithQQZone(),
+                "cookie", qqLoginEntity.getCookieWithQQZone(),
                 "referer", refererUrl
         ))
         val secondJsonObject = OkHttpClientUtils.getJson(secondResponse, "(?<=frameElement.callback\\()[\\s\\S]*?(?=\\);)")
@@ -156,7 +156,7 @@ class QQZoneLogicImpl: QQZoneLogic {
             val builder = FormBody.Builder()
                     .add("sid", "3")
                     .add("ouin", qq.toString())
-                    .add("uin", qqEntity.qq.toString())
+                    .add("uin", qqLoginEntity.qq.toString())
                     .add("fuin", qq.toString())
                     .add("sourceId", "1")
                     .add("fupdate", "1")
@@ -179,7 +179,7 @@ class QQZoneLogicImpl: QQZoneLogic {
             }else builder.add("strmsg", msg)
             val response = OkHttpClientUtils.post("https://user.qzone.qq.com/proxy/domain/w.qzone.qq.com/cgi-bin/tfriend/friend_addfriend.cgi?&g_tk=$gtkP",
                     builder.build(), OkHttpClientUtils.addHeaders(
-                    "cookie", qqEntity.getCookieWithQQZone(),
+                    "cookie", qqLoginEntity.getCookieWithQQZone(),
                     "referer", refererUrl
             ))
             val str = OkHttpClientUtils.getStr(response)
@@ -193,10 +193,10 @@ class QQZoneLogicImpl: QQZoneLogic {
         }else return secondJsonObject.getString("message")
     }
 
-    override fun queryGroup(qqEntity: QQEntity): CommonResult<List<Map<String, String>>> {
-        val response = OkHttpClientUtils.get("https://user.qzone.qq.com/proxy/domain/r.qzone.qq.com/cgi-bin/tfriend/qqgroupfriend_extend.cgi?uin=${qqEntity.qq}&rd=0.${BotUtils.randomNum(16)}&cntperpage=0&fupdate=1&g_tk=${qqEntity.getGtkP()}&g_tk=${qqEntity.getGtkP()}", OkHttpClientUtils.addHeaders(
-                "referer", "https://user.qzone.qq.com/${qqEntity.qq}/myhome/friends/ofpmd",
-                "cookie", qqEntity.getCookieWithQQZone()
+    override fun queryGroup(qqLoginEntity: QQLoginEntity): CommonResult<List<Map<String, String>>> {
+        val response = OkHttpClientUtils.get("https://user.qzone.qq.com/proxy/domain/r.qzone.qq.com/cgi-bin/tfriend/qqgroupfriend_extend.cgi?uin=${qqLoginEntity.qq}&rd=0.${BotUtils.randomNum(16)}&cntperpage=0&fupdate=1&g_tk=${qqLoginEntity.getGtkP()}&g_tk=${qqLoginEntity.getGtkP()}", OkHttpClientUtils.addHeaders(
+                "referer", "https://user.qzone.qq.com/${qqLoginEntity.qq}/myhome/friends/ofpmd",
+                "cookie", qqLoginEntity.getCookieWithQQZone()
         ))
         val jsonObject = OkHttpClientUtils.getJsonp(response)
         return if (jsonObject.getInteger("code") == 0){
@@ -213,10 +213,10 @@ class QQZoneLogicImpl: QQZoneLogic {
         }else CommonResult(500, jsonObject.getString("message"))
     }
 
-    override fun queryGroupMember(qqEntity: QQEntity, group: String): CommonResult<List<Map<String, String>>> {
-        val response = OkHttpClientUtils.get("https://user.qzone.qq.com/proxy/domain/r.qzone.qq.com/cgi-bin/tfriend/qqgroupfriend_groupinfo.cgi?uin=${qqEntity.qq}&gid=$group&fupdate=1&type=1&g_tk=${qqEntity.getGtkP()}&g_tk=${qqEntity.getGtkP()}", OkHttpClientUtils.addHeaders(
-                "referer", "https://user.qzone.qq.com/${qqEntity.qq}/myhome/friends/ofpmd",
-                "cookie", qqEntity.getCookieWithQQZone()
+    override fun queryGroupMember(qqLoginEntity: QQLoginEntity, group: String): CommonResult<List<Map<String, String>>> {
+        val response = OkHttpClientUtils.get("https://user.qzone.qq.com/proxy/domain/r.qzone.qq.com/cgi-bin/tfriend/qqgroupfriend_groupinfo.cgi?uin=${qqLoginEntity.qq}&gid=$group&fupdate=1&type=1&g_tk=${qqLoginEntity.getGtkP()}&g_tk=${qqLoginEntity.getGtkP()}", OkHttpClientUtils.addHeaders(
+                "referer", "https://user.qzone.qq.com/${qqLoginEntity.qq}/myhome/friends/ofpmd",
+                "cookie", qqLoginEntity.getCookieWithQQZone()
         ))
         val jsonObject = OkHttpClientUtils.getJsonp(response)
         return if (jsonObject.getInteger("code") == 0){
@@ -233,13 +233,13 @@ class QQZoneLogicImpl: QQZoneLogic {
         }else CommonResult(500, jsonObject.getString("message"))
     }
 
-    override fun leaveMessage(qqEntity: QQEntity, qq: Long, content: String): String {
-        val response = OkHttpClientUtils.post("https://mobile.qzone.qq.com/msgb/fcg_add_msg?g_tk=${qqEntity.getGtkP()}", OkHttpClientUtils.addForms(
+    override fun leaveMessage(qqLoginEntity: QQLoginEntity, qq: Long, content: String): String {
+        val response = OkHttpClientUtils.post("https://mobile.qzone.qq.com/msgb/fcg_add_msg?g_tk=${qqLoginEntity.getGtkP()}", OkHttpClientUtils.addForms(
                 "res_uin", qq.toString(),
                 "format", "json",
                 "content", content,
                 "opr_type", "add_comment"
-        ), qqEntity.cookieWithQQZone())
+        ), qqLoginEntity.cookieWithQQZone())
         val jsonObject = OkHttpClientUtils.getJson(response)
         return when (jsonObject.getInteger("code")){
             0 -> "留言成功"
@@ -248,25 +248,25 @@ class QQZoneLogicImpl: QQZoneLogic {
         }
     }
 
-    override fun visitQZone(qqEntity: QQEntity, qq: Long): String {
+    override fun visitQZone(qqLoginEntity: QQLoginEntity, qq: Long): String {
         val response = OkHttpClientUtils.get("https://user.qzone.qq.com/$qq/", OkHttpClientUtils.addHeaders(
-                "cookie", qqEntity.getCookieWithQQZone(),
+                "cookie", qqLoginEntity.getCookieWithQQZone(),
                 "user-agent", OkHttpClientUtils.PC_UA
         ))
         return if (response.code == 200){
             response.close()
-            val gtk = qqEntity.getGtkP()
+            val gtk = qqLoginEntity.getGtkP()
             val cookie = OkHttpClientUtils.getCookie(response)
-            val visitResponse = OkHttpClientUtils.get("https://user.qzone.qq.com/proxy/domain/g.qzone.qq.com/fcg-bin/cgi_emotion_list.fcg?uin=$qq&loginUin=${qqEntity.qq}&rd=0.${BotUtils.randomNum(16)}&num=3&noflower=1&jsonpCallback=_Callback&format=jsonp&g_tk=$gtk&g_tk=$gtk",
-                    OkHttpClientUtils.addCookie(qqEntity.getCookieWithQQZone() + cookie))
+            val visitResponse = OkHttpClientUtils.get("https://user.qzone.qq.com/proxy/domain/g.qzone.qq.com/fcg-bin/cgi_emotion_list.fcg?uin=$qq&loginUin=${qqLoginEntity.qq}&rd=0.${BotUtils.randomNum(16)}&num=3&noflower=1&jsonpCallback=_Callback&format=jsonp&g_tk=$gtk&g_tk=$gtk",
+                    OkHttpClientUtils.addCookie(qqLoginEntity.getCookieWithQQZone() + cookie))
             if (visitResponse.code == 200) "访问${qq}的空间成功"
             else "访问${qq}的空间失败，请更新QQ！！"
         }else "访问空间失败！！请更新QQ！！"
     }
 
-    override fun visitQZoneMobile(qqEntity: QQEntity, qq: Long): CommonResult<GroupMember> {
+    override fun visitQZoneMobile(qqLoginEntity: QQLoginEntity, qq: Long): CommonResult<GroupMember> {
         val response = OkHttpClientUtils.get("https://h5.qzone.qq.com/mqzone/profile?hostuin=$qq", OkHttpClientUtils.addHeaders(
-                "cookie", qqEntity.getCookieWithQQZone(),
+                "cookie", qqLoginEntity.getCookieWithQQZone(),
                 "user-agent", OkHttpClientUtils.MOBILE_UA
         ))
         val html = OkHttpClientUtils.getStr(response)

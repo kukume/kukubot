@@ -10,4 +10,5 @@ interface BiliBiliService {
     fun delByQQ(qq: Long): Int
     fun findByMonitor(monitor: Boolean): List<BiliBiliEntity>
     fun findAll(): List<BiliBiliEntity>
+    fun findByTask(task: Boolean): List<BiliBiliEntity>
 }

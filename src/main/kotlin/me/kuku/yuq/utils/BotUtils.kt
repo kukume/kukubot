@@ -3,30 +3,20 @@ package me.kuku.yuq.utils
 import com.IceCreamQAQ.Yu.util.OkHttpWebImpl
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
-import com.icecreamqaq.yuq.entity.Contact
-import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.message.*
+import com.icecreamqaq.yuq.message.Message.Companion.toMessage
 import com.icecreamqaq.yuq.mif
 import com.icecreamqaq.yuq.mirai.MiraiBot
-import com.icecreamqaq.yuq.toMessage
-import me.kuku.yuq.entity.QQEntity
+import com.icecreamqaq.yuq.mirai.message.ImageReceive
+import com.icecreamqaq.yuq.yuq
+import me.kuku.yuq.entity.QQLoginEntity
 import java.net.URLEncoder
 import kotlin.random.Random
 
 object BotUtils {
 
     fun shortUrl(url: String): String{
-        val newUrl = if (url.startsWith("http")) url
-        else "http://$url"
-        return if (url.contains("iheit.com") || url.contains("kuku.me") || url.contains("workers.dev")) {
-            val response = OkHttpClientUtils.get("https://uxy.me/api.php?url=${URLEncoder.encode(newUrl, "utf-8")}")
-            val jsonObject = OkHttpClientUtils.getJson(response)
-            val shortUrl = jsonObject.getString("shorturl")
-            shortUrl ?: "生成失败！！！"
-        }else {
-            val response = OkHttpClientUtils.get("https://api.kuku.me/tool/shorturl?url=${URLEncoder.encode(newUrl, "utf-8")}")
-            OkHttpClientUtils.getStr(response)
-        }
+        return OkHttpClientUtils.getStr("http://api.suowo.cn/api.htm?key=5e9a6ed83a005a12b5e62d70@f6bbd71fde6d40e27ecf3a592e13f9ff&url=${URLEncoder.encode(url, "utf-8")}")
     }
 
     fun randomStr(len: Int): String{
@@ -56,11 +46,6 @@ object BotUtils {
         return this.regex(regex, text)
     }
 
-    fun getGroupId(qq: Contact): Long{
-        return if (qq is Member) qq.group.id
-        else 0L
-    }
-
     fun messageToJsonArray(rm: Message): JSONArray{
         val body = rm.body
         val aJsonArray = JSONArray()
@@ -71,7 +56,7 @@ object BotUtils {
                     aJsonObject["type"] = "text"
                     aJsonObject["content"] = messageItem.text
                 }
-                is Image -> {
+                is ImageReceive -> {
                     aJsonObject["type"] = "image"
                     aJsonObject["content"] = messageItem.url
                 }
@@ -125,26 +110,15 @@ object BotUtils {
         return jsonArray
     }
 
-    fun toQQEntity(web: OkHttpWebImpl, miraiBot: MiraiBot): QQEntity{
+    fun toQQEntity(web: OkHttpWebImpl, miraiBot: MiraiBot): QQLoginEntity{
         val concurrentHashMap = web.domainMap
         val qunMap = concurrentHashMap.getValue("qun.qq.com")
         val groupPsKey = qunMap.getValue("p_skey").value
         val qqMap = concurrentHashMap.getValue("qq.com")
         val sKey = qqMap.getValue("skey").value
-        val qq = Regex("[1-9][0-9]*").find(qqMap.getValue("uin").value)?.value!!
         val qZoneMap = concurrentHashMap.getValue("qzone.qq.com")
         val psKey = qZoneMap.getValue("p_skey").value
-        return QQEntity(null, qq.toLong(), 0L, "", sKey, psKey, groupPsKey, miraiBot.superKey, QQUtils.getToken(miraiBot.superKey).toString())
-    }
-
-    fun delAuto(jsonArray: JSONArray, username: String): JSONArray{
-        val delList = mutableListOf<JSONObject>()
-        for (i in jsonArray.indices){
-            val jsonObject = jsonArray.getJSONObject(i)
-            if (jsonObject.getString("name") == username) delList.add(jsonObject)
-        }
-        delList.forEach { jsonArray.remove(it) }
-        return jsonArray
+        return QQLoginEntity(null, yuq.botId, 0L, "", sKey, psKey, groupPsKey, miraiBot.superKey, QQUtils.getToken(miraiBot.superKey).toString())
     }
 
     fun delManager(jsonArray: JSONArray, content: String): JSONArray{

@@ -1,6 +1,5 @@
 package me.kuku.yuq.logic.impl
 
-import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
 import me.kuku.yuq.logic.QQAILogic
 import me.kuku.yuq.pojo.CommonResult
@@ -19,17 +18,7 @@ class QQAILogicImpl: QQAILogic {
     @Inject
     private lateinit var configService: ConfigService
 
-    private var appId = ""
-    private var appKey = ""
-
-   private fun before(){
-       val configEntity = configService.findByType("qqAI") ?: return
-       val jsonObject = JSON.parseObject(configEntity.content)
-       appId = jsonObject.getString("appId")
-       appKey = jsonObject.getString("appKey")
-   }
-
-    private fun getSign(map: Map<String, String>): String{
+    private fun getSign(map: Map<String, String>, appKey: String): String{
         val treeMap = TreeMap<String, String>()
         treeMap.putAll(map)
         val sb = StringBuilder()
@@ -41,10 +30,14 @@ class QQAILogicImpl: QQAILogic {
     }
 
     private fun addParams(otherParams: Map<String, String>): FormBody {
+        val configEntity1 = configService.findByType("qqAIAppId")
+        val configEntity2 = configService.findByType("qqAIAppKey")
+        val appId = configEntity1?.content ?: ""
+        val appKey = configEntity2?.content ?: ""
         val map = mutableMapOf("app_id" to appId, "time_stamp" to (Date().time / 1000).toString(), "nonce_str" to BotUtils.randomStr(16))
         val builder = FormBody.Builder()
         map.putAll(otherParams)
-        val sign = this.getSign(map)
+        val sign = this.getSign(map, appKey)
         map["sign"] = sign
         for ((k , v) in map){
             builder.add(k, v)
@@ -59,7 +52,6 @@ class QQAILogicImpl: QQAILogic {
     }
 
     override fun pornIdentification(imageUrl: String): Boolean{
-        before()
         val baseStr = this.urlToBase64(imageUrl)
         val response = OkHttpClientUtils.post("https://api.ai.qq.com/fcgi-bin/vision/vision_porn",
                 addParams(mapOf("image" to baseStr)))
@@ -74,7 +66,6 @@ class QQAILogicImpl: QQAILogic {
     }
 
     override fun generalOCR(imageUrl: String): String{
-        before()
         val baseStr = this.urlToBase64(imageUrl)
         val response = OkHttpClientUtils.post("https://api.ai.qq.com/fcgi-bin/ocr/ocr_generalocr",
                 addParams(mapOf("image" to baseStr)))
@@ -85,34 +76,13 @@ class QQAILogicImpl: QQAILogic {
             val sb = StringBuilder()
             jsonArray.forEach {
                 val singleJsonObject = it as JSONObject
-                sb.appendln(singleJsonObject.getString("itemstring"))
+                sb.appendLine(singleJsonObject.getString("itemstring"))
             }
             sb.removeSuffixLine().toString()
         }else jsonObject.getString("msg")
     }
 
-    override fun generalOCRToCaptcha(byteArray: ByteArray): CommonResult<String> {
-        before()
-        val b64 = Base64.getEncoder().encodeToString(byteArray)
-        val response = OkHttpClientUtils.post("https://api.ai.qq.com/fcgi-bin/ocr/ocr_generalocr",
-                addParams(mapOf("image" to b64)))
-        val jsonObject = OkHttpClientUtils.getJson(response)
-        return if (jsonObject.getInteger("ret") == 0){
-            val itemJsonArray = jsonObject.getJSONObject("data").getJSONArray("item_list")
-            if (itemJsonArray.size < 1) return CommonResult(200, "", "")
-            val jsonArray = itemJsonArray.getJSONObject(0).getJSONArray("words")
-            var code = ""
-            jsonArray.forEach {
-                val wordJsonObject = it as JSONObject
-                val cha = wordJsonObject.getString("character")
-                if (cha != "" &&( cha[0].isLetter() || cha[0].isDigit())) code += cha
-            }
-            CommonResult(200, "", code)
-        }else CommonResult(500, jsonObject.getString("msg"))
-    }
-
     override fun textChat(question: String, session: String): String{
-        before()
         val response = OkHttpClientUtils.post("https://api.ai.qq.com/fcgi-bin/nlp/nlp_textchat",
                 addParams(mapOf("session" to session, "question" to question)))
         val jsonObject = OkHttpClientUtils.getJson(response)
@@ -125,19 +95,18 @@ class QQAILogicImpl: QQAILogic {
     }
 
     override fun echoSpeechRecognition(url: String): String {
-        before()
         val speechResponse = OkHttpClientUtils.get(url)
         val bytes = OkHttpClientUtils.getBytes(speechResponse)
         val b64Str = Base64.getEncoder().encodeToString(bytes)
         val response = OkHttpClientUtils.post(
-            "https://api.ai.qq.com/fcgi-bin/aai/aai_asr",
-            addParams(
-                mapOf(
-                    "format" to "3",
-                    "speech" to b64Str,
-                    "rate" to "16000"
+                "https://api.ai.qq.com/fcgi-bin/aai/aai_asr",
+                addParams(
+                        mapOf(
+                                "format" to "3",
+                                "speech" to b64Str,
+                                "rate" to "16000"
+                        )
                 )
-            )
         )
         val jsonObject = OkHttpClientUtils.getJson(response)
         println(jsonObject)
@@ -145,26 +114,42 @@ class QQAILogicImpl: QQAILogic {
     }
 
     override fun aiLabSpeechRecognition(url: String): String {
-        before()
         val speechResponse = OkHttpClientUtils.get(url)
         val bytes = OkHttpClientUtils.getBytes(speechResponse)
         val b64Str = Base64.getEncoder().encodeToString(bytes)
         val response = OkHttpClientUtils.post(
-            "https://api.ai.qq.com/fcgi-bin/aai/aai_asrs",
-            addParams(
-                mapOf(
-                    "format" to "3",
-                    "rate" to "16000",
-                    "seq" to "0",
-                    "len" to bytes.size.toString(),
-                    "end" to "1",
-                    "speech_id" to "123213123",
-                    "speech_chunk" to b64Str
+                "https://api.ai.qq.com/fcgi-bin/aai/aai_asrs",
+                addParams(
+                        mapOf(
+                                "format" to "3",
+                                "rate" to "16000",
+                                "seq" to "0",
+                                "len" to bytes.size.toString(),
+                                "end" to "1",
+                                "speech_id" to "123213123",
+                                "speech_chunk" to b64Str
+                        )
                 )
-            )
         )
         val jsonObject = OkHttpClientUtils.getJson(response)
         println(jsonObject)
         return ""
+    }
+
+    override fun voiceSynthesis(text: String): CommonResult<ByteArray> {
+        val response = OkHttpClientUtils.post("https://api.ai.qq.com/fcgi-bin/aai/aai_tts", addParams(mapOf(
+                "speaker" to "5",
+                "format" to "2",
+                "volume" to "0",
+                "speed" to "100",
+                "text" to text,
+                "aht" to "0",
+                "apc" to "58"
+        )))
+        val jsonObject = OkHttpClientUtils.getJson(response)
+        return if (jsonObject.getInteger("ret") == 0) {
+            val base64 = jsonObject.getJSONObject("data").getString("speech")
+            CommonResult(200, "", Base64.getDecoder().decode(base64))
+        }else CommonResult(500, jsonObject.getString("msg"))
     }
 }

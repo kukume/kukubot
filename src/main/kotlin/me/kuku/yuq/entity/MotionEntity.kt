@@ -10,13 +10,19 @@ data class MotionEntity(
         var id: Int? = null,
         @Column(unique = true)
         var qq: Long = 0L,
-        var phone: String = "",
+        var leXinPhone: String = "",
+        var leXinPassword: String = "",
         @Lob
         @Column(columnDefinition="text")
-        var cookie: String = "",
-        var userId: String = "",
+        var leXinCookie: String = "",
+        var leXinUserId: String = "",
         @Lob
         @Column(columnDefinition="text")
-        var accessToken: String = "",
-        var step: Int = 0
+        var leXinAccessToken: String = "",
+        var step: Int = 0,
+        var miPhone: String = "",
+        var miPassword: String = "",
+        @Lob
+        @Column(columnDefinition="text")
+        var miLoginToken: String = ""
 )

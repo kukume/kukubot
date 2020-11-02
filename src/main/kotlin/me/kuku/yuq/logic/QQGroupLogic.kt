@@ -17,5 +17,5 @@ interface QQGroupLogic {
     fun essenceMessage(group: Long): CommonResult<List<String>>
     fun queryGroup(): CommonResult<List<Long>>
     fun groupHonor(group: Long, type: String): List<Map<String, String>>
-    fun groupSign(group: Long, place: String, text: String, name: String, picId: String?): String
+    fun groupSign(group: Long, place: String, text: String, name: String, picId: String?, picUrl: String?): CommonResult<String>
 }

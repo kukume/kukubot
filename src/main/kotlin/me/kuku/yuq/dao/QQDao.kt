@@ -1,17 +1,17 @@
 package me.kuku.yuq.dao
 
-import com.icecreamqaq.yudb.jpa.hibernate.HibernateDao
+import com.icecreamqaq.yudb.YuDao
+import com.icecreamqaq.yudb.jpa.annotation.Dao
+import com.icecreamqaq.yudb.jpa.annotation.Execute
+import com.icecreamqaq.yudb.jpa.annotation.Select
 import me.kuku.yuq.entity.QQEntity
 
-class QQDao: HibernateDao<QQEntity, Int>() {
-    fun findByQQ(qq: Long) = this.search("from QQEntity where qq = ?", qq)
-
-    fun findAll() = this.searchList("from QQEntity")
-
-    fun findByActivity() = this.searchList("from QQEntity where status = true")
-
-    fun delByQQ(qq: Long) {
-        val query = this.query("delete from QQEntity where qq = ?", qq)
-        query.executeUpdate()
-    }
+@Dao
+interface QQDao: YuDao<QQEntity, Int>{
+    @Select("from QQEntity where qq = ? and group_id = ?")
+    fun findByQQAndGroup(qq: Long, group: Int): QQEntity?
+    @Execute("delete from QQEntity where qq = ? and group_id = ?")
+    fun delByQQAndGroup(qq: Long, group: Int): Int
+    @Select("from QQEntity")
+    fun findAll(): List<QQEntity>
 }

@@ -12,30 +12,29 @@ data class WeiboEntity(
         var id: Int? = null,
         @Column(unique = true)
         var qq: Long = 0L,
-        var group_: Long? = 0L,
-        var username: String = "",
-        var password: String = "",
+        @Column(name = "group_")
+        var group: Long = 0L,
         @Lob
         @Column(columnDefinition="text")
         var pcCookie: String = "",
         @Lob
         @Column(columnDefinition="text")
         var mobileCookie: String = "",
-        var monitor: Boolean? = false,
+        var monitor: Boolean = false,
         @Lob
         @Column(columnDefinition="text")
-        var likeList: String? = "[]",
+        var likeList: String = "[]",
         @Lob
         @Column(columnDefinition="text")
-        var commentList: String? = "[]",
+        var commentList: String = "[]",
         @Lob
         @Column(columnDefinition="text")
-        var forwardList: String? = "[]"
+        var forwardList: String = "[]"
 ){
-        @Transient
-        fun getLikeJsonArray(): JSONArray = JSON.parseArray(likeList) ?: JSON.parseArray("[]")
-        @Transient
-        fun getCommentJsonArray(): JSONArray = JSON.parseArray(commentList) ?: JSON.parseArray("[]")
-        @Transient
-        fun getForwardJsonArray(): JSONArray = JSON.parseArray(forwardList) ?: JSON.parseArray("[]")
+        val likeJsonArray: JSONArray
+                get() = JSON.parseArray(likeList)
+        val commentJsonArray: JSONArray
+                get() = JSON.parseArray(commentList)
+        val forwardJsonArray: JSONArray
+                get() = JSON.parseArray(forwardList)
 }

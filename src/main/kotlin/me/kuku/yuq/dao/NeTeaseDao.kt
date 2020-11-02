@@ -1,16 +1,17 @@
 package me.kuku.yuq.dao
 
-import com.icecreamqaq.yudb.jpa.hibernate.HibernateDao
+import com.icecreamqaq.yudb.YuDao
+import com.icecreamqaq.yudb.jpa.annotation.Dao
+import com.icecreamqaq.yudb.jpa.annotation.Execute
+import com.icecreamqaq.yudb.jpa.annotation.Select
 import me.kuku.yuq.entity.NeTeaseEntity
 
-class NeTeaseDao: HibernateDao<NeTeaseEntity, Int>() {
-
-    fun findByQQ(qq: Long) = this.search("from NeTeaseEntity where qq = ?", qq)
-
-    fun findAll() = this.searchList("from NeTeaseEntity")
-
-    fun delByQQ(qq: Long): Int{
-        val query = this.query("delete from GroupQQEntity where qq = ?", qq)
-        return query.executeUpdate()
-    }
+@Dao
+interface NeTeaseDao: YuDao<NeTeaseEntity, Int>{
+    @Select("from NeTeaseEntity where qq = ?")
+    fun findByQQ(qq: Long): NeTeaseEntity?
+    @Select("from NeTeaseEntity")
+    fun findAll(): List<NeTeaseEntity>
+    @Execute("delete from GroupQQEntity where qq = ?")
+    fun delByQQ(qq: Long): Int
 }

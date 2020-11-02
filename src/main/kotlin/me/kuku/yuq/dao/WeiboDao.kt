@@ -1,17 +1,17 @@
 package me.kuku.yuq.dao
 
-import com.icecreamqaq.yudb.jpa.hibernate.HibernateDao
+import com.icecreamqaq.yudb.YuDao
+import com.icecreamqaq.yudb.jpa.annotation.Dao
+import com.icecreamqaq.yudb.jpa.annotation.Execute
+import com.icecreamqaq.yudb.jpa.annotation.Select
 import me.kuku.yuq.entity.WeiboEntity
 
-class WeiboDao: HibernateDao<WeiboEntity, Int>() {
-
-    fun findByQQ(qq: Long) = this.search("from WeiboEntity where qq = ?", qq)
-
-    fun delByQQ(qq: Long): Int {
-        val query = this.query("delete from WeiboEntity where qq = ?", qq)
-        return query.executeUpdate()
-    }
-
-    fun findByMonitor(monitor: Boolean) = this.searchList("from WeiboEntity where monitor = ?", null, monitor)
-
+@Dao
+interface WeiboDao: YuDao<WeiboEntity, Int>{
+    fun findByQQ(qq: Long): WeiboEntity?
+    @Execute("delete from WeiboEntity where qq = ?")
+    fun delByQQ(qq: Long): Int
+    fun findByMonitor(monitor: Boolean): List<WeiboEntity>
+    @Select("from WeiboEntity")
+    fun findAll(): List<WeiboEntity>
 }

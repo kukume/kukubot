@@ -5,8 +5,8 @@ import me.kuku.yuq.entity.QQEntity
 
 @AutoBind
 interface QQService {
-    fun findByQQ(qq: Long): QQEntity?
-    fun save(qqEntity: QQEntity)
-    fun delByQQ(qq: Long)
-    fun findByActivity(): List<QQEntity>
+    fun findByQQAndGroup(qq: Long, group: Long): QQEntity?
+    fun save(QQEntity: QQEntity)
+    fun delByQQAndGroup(qq: Long, group: Long): Int
+    fun findAll(): List<QQEntity>
 }

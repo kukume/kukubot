@@ -3,11 +3,8 @@
 * [YuQ-Mirai-SuperDemo](https://github.com/YuQWorks/YuQ-SuperDemo)
 * [Mirai](https://github.com/mamoe/mirai)
 
-**一切开发旨在学习，请勿用于非法用途**
-
 ## 功能
 * QQ签到
-* 超级萌宠养成
 * 推送最新微博到群聊（指定用户名）、私聊（我的关注），微博自动赞、评论、转发
 * 推送最新哔哩哔哩动态到群聊（指定用户名）、私聊（我的关注），开播提醒，哔哩哔哩自动赞、评论、转发、投硬币、收藏
 * 修改步数（wx and alipay）
@@ -15,9 +12,18 @@
 * 群管功能
 * 一些小工具
 
-指令：[https://w.url.cn/s/Adt25oJ](https://w.url.cn/s/Adt25oJ)
+## 教程文章
 
-安装教程以及说明：[https://uxy.me/9RhHX](https://uxy.me/9RhHX)
+**Docker**版（将在提交代码后自动更新）：[https://www.kuku.me/archives/8/](https://www.kuku.me/archives/8/)
+
+mirai-console版：[https://www.kuku.me/archives/7/](https://www.kuku.me/archives/7/)
+
+安装教程：[https://w.url.cn/s/AD764XH](https://w.url.cn/s/AD764XH)
+
+## 说明
+* 数据库使用h2，目录`db`下
+* 发送的图片保存在`tmp`目录下
+* 超级萌宠已删除，建议使用XP插件`XAutoDaily`
 
 ## 鸣谢
 

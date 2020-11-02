@@ -1,8 +1,8 @@
 package me.kuku.yuq.utils
 
-import me.kuku.yuq.entity.QQEntity
+import me.kuku.yuq.entity.QQLoginEntity
 import me.kuku.yuq.pojo.CommonResult
-import me.kuku.yuq.service.QQService
+import me.kuku.yuq.service.QQLoginService
 import org.jsoup.internal.StringUtil
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -55,14 +55,14 @@ object QQUtils {
         return hash and 2147483647
     }
 
-    fun convertQQEntity(map: Map<String, String>, qqEntity: QQEntity = QQEntity()): QQEntity{
-        qqEntity.sKey = map.getValue("skey")
-        qqEntity.psKey = map.getValue("p_skey")
-        qqEntity.superKey = map.getValue("superkey")
-        qqEntity.superToken = map.getValue("supertoken")
-        qqEntity.pt4Token = map.getValue("pt4_token")
-        qqEntity.status = true
-        return qqEntity
+    fun convertQQEntity(map: Map<String, String>, qqLoginEntity: QQLoginEntity = QQLoginEntity()): QQLoginEntity{
+        qqLoginEntity.sKey = map.getValue("skey")
+        qqLoginEntity.psKey = map.getValue("p_skey")
+        qqLoginEntity.superKey = map.getValue("superkey")
+        qqLoginEntity.superToken = map.getValue("supertoken")
+        qqLoginEntity.pt4Token = map.getValue("pt4_token")
+        qqLoginEntity.status = true
+        return qqLoginEntity
     }
 
     fun getResultUrl(str: String): CommonResult<String>{
@@ -103,13 +103,13 @@ object QQUtils {
         return this.getKey("https://$domain/check_sig?uin=$qq&ptsigx=$pt$suffixUrl")
     }
 
-    fun saveOrUpdate(qqService: QQService, map: Map<String, String>, qq: Long, password: String = "", group: Long = 0L){
-        var qqEntity = qqService.findByQQ(qq) ?: QQEntity()
+    fun saveOrUpdate(qqLoginService: QQLoginService, map: Map<String, String>, qq: Long, password: String = "", group: Long = 0L){
+        var qqEntity = qqLoginService.findByQQ(qq) ?: QQLoginEntity()
         qqEntity = this.convertQQEntity(map, qqEntity)
         qqEntity.qq = qq
-        if (group != 0L) qqEntity.qqGroup = group
+        if (group != 0L) qqEntity.group = group
         if (password != "") qqEntity.password = password
-        qqService.save(qqEntity)
+        qqLoginService.save(qqEntity)
     }
 
     fun qrCodeLoginVerify(sig: String, appId: String = "", daId: String = "", url: String = ""): CommonResult<Map<String, String>>{

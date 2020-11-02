@@ -270,22 +270,49 @@ class QQGroupLogicImpl: QQGroupLogic {
         return list
     }
 
-    override fun groupSign(group: Long, place: String, text: String, name: String, picId: String?): String {
+    override fun groupSign(group: Long, place: String, text: String, name: String, picId: String?, picUrl: String?): CommonResult<String> {
         val gtk = miraiBot.gtk
+        val qq = miraiBot.qq
         var info: String? = null
         var templateId: String? = null
+        var newPicUrl: String? = picUrl
         val templateStr = web.get("https://qun.qq.com/cgi-bin/qiandao/gallery_template?gc=$group&bkn=$gtk&time=1014")
         val templateJsonObject = JSON.parseObject(templateStr)
-        if (templateJsonObject.getInteger("retcode") != 0) return "qq群签到失败，请更新QQ！！"
-        templateJsonObject.getJSONObject("data").getJSONArray("list").forEach {
-            val singleJsonObject = it as JSONObject
-            if (singleJsonObject.getString("name") == name){
-                info = if (singleJsonObject.containsKey("gallery_info")){
-                    val infoJsonObject = singleJsonObject.getJSONObject("gallery_info")
-                    "{\"category_id\":${infoJsonObject.getInteger("category_id")},\"page\":${infoJsonObject.getInteger("page")},\"pic_id\":${infoJsonObject.getInteger("pic_id")}}"
-                }else "{\"category_id\":\"\",\"page\":\"\",\"pic_id\":\"\"}"
-                templateId = singleJsonObject.getString("id")
-                return@forEach
+        if (templateJsonObject.getInteger("retcode") != 0) return CommonResult(500, "qq群签到失败，请更新QQ！！")
+        run out@{
+            templateJsonObject.getJSONObject("data").getJSONArray("list").forEach {
+                val singleJsonObject = it as JSONObject
+                if (singleJsonObject.getString("name") == name){
+                    info = if (singleJsonObject.containsKey("gallery_info")){
+                        val infoJsonObject = singleJsonObject.getJSONObject("gallery_info")
+                        newPicUrl = infoJsonObject.getString("url")
+                        "{\"category_id\":${infoJsonObject.getInteger("category_id")},\"page\":${infoJsonObject.getInteger("page")},\"pic_id\":${infoJsonObject.getInteger("pic_id")}}"
+                    }else "{\"category_id\":\"\",\"page\":\"\",\"pic_id\":\"\"}"
+                    templateId = singleJsonObject.getString("id")
+                    return@out
+                }
+                if (singleJsonObject.getString("name") == "自定义") return@out
+                val idStr = web.get("https://qun.qq.com/cgi-bin/qiandao/gallery_list/category?template_id=${singleJsonObject.getInteger("id")}&bkn=$gtk&need_dynamic=1")
+                val idJsonObject = JSON.parseObject(idStr)
+                val param = mutableListOf<String>()
+                idJsonObject.getJSONObject("data").getJSONArray("category_list").forEach { id ->
+                    val singleIdJsonObject = id as JSONObject
+                    param.add(singleIdJsonObject.getString("category_id"))
+                }
+                val deepStr = web.get("https://qun.qq.com/cgi-bin/qiandao/gallery_list?bkn=$gtk&category_ids=$param&start=0&num=50")
+                val deepJsonObject = JSON.parseObject(deepStr)
+                deepJsonObject.getJSONObject("data").getJSONArray("picture_list").forEach { sin ->
+                    val jsonObject = sin as JSONObject
+                    jsonObject.getJSONArray("picture_item").forEach {item ->
+                        val itemJsonObject = item as JSONObject
+                        if (itemJsonObject.getString("name") == name){
+                            info = "{\"category_id\":\"${jsonObject.getInteger("category_id")}\",\"page\":\"${itemJsonObject.getInteger("page")}\",\"pic_id\":\"${itemJsonObject.getInteger("picture_id")}\"}"
+                            templateId = singleJsonObject.getString("id")
+                            newPicUrl = itemJsonObject.getString("url")
+                        return@out
+                        }
+                    }
+                }
             }
         }
         if (info == null || templateId == null){
@@ -297,11 +324,12 @@ class QQGroupLogicImpl: QQGroupLogic {
                 if (singleJsonObject.getString("name") == name){
                     info = "{\"category_id\":${picJsonObject.getInteger("category_id")},\"page\":${singleJsonObject.getInteger("page")},\"pic_id\":${singleJsonObject.getInteger("picture_id")}}"
                     templateId = "[object Object]"
+                    newPicUrl = singleJsonObject.getString("url")
                     return@forEach
                 }
             }
         }
-        if (info == null || templateId == null) return "群签到类型中没有${name}这个类型，请重试！！"
+        if (info == null || templateId == null) return CommonResult(500, "群签到类型中没有${name}这个类型，请重试！！")
         val str = web.postQQUA("https://qun.qq.com/cgi-bin/qiandao/sign/publish", mapOf(
                 "btn" to gtk.toString(),
                 "template_data" to "",
@@ -317,11 +345,16 @@ class QQGroupLogicImpl: QQGroupLogic {
         ))
         val jsonObject = JSON.parseObject(str)
         return when (jsonObject.getInteger("retcode")){
-            0 -> "qq群${group}签到成功"
-            10013,10001 -> "qq群签到失败，已被禁言！"
-            10016 -> "群签到一次性只能签到5个群，请10分钟后再试！"
-            5 -> "qq群签到失败，请更新QQ！！"
-            else -> "qq群签到失败，${jsonObject.getString("msg")}"
+            0 -> {
+                val resultStr = web.get("https://qun.qq.com/cgi-bin/qiandao/list?gc=$group&uin=$qq&type=0&num=10&sign_id=&bkn=$gtk")
+                val resultJsonObject = JSON.parseObject(resultStr)
+                val id = resultJsonObject.getJSONObject("data").getJSONArray("list").getJSONObject(0).getString("sign_id")
+                CommonResult(200, "", "{\"app\":\"com.tencent.qq.checkin\",\"desc\":\"群签到\",\"view\":\"checkIn\",\"ver\":\"1.0.0.25\",\"prompt\":\"[群签到]群签到\",\"appID\":\"\",\"sourceName\":\"\",\"actionData\":\"\",\"actionData_A\":\"\",\"sourceUrl\":\"\",\"meta\":{\"checkInData\":{\"address\":\"$place\",\"cover\":{\"height\":0,\"url\":\"$newPicUrl\",\"width\":0},\"desc\":\"$text\",\"hostuin\":$qq,\"id\":\"$id\",\"media_type\":0,\"qunid\":\"$group\",\"rank\":0,\"skip_to\":1,\"time\":0,\"url\":\"mqqapi:\\/\\/microapp\\/open?appid=1108164955&path=pages%2Fchecklist%2Fchecklist&extraData=929630359%7C$id\",\"vid\":\"\"}},\"config\":{\"forward\":0,\"showSender\":1},\"text\":\"\",\"sourceAd\":\"\",\"extra\":\"\"}")
+            }
+            10013,10001 -> CommonResult(500, "qq群签到失败，已被禁言！")
+            10016 -> CommonResult(500, "群签到一次性只能签到5个群，请10分钟后再试！")
+            5 -> CommonResult(500, "qq群签到失败，请更新QQ！！")
+            else -> CommonResult(500, "qq群签到失败，${jsonObject.getString("msg")}")
         }
     }
 }

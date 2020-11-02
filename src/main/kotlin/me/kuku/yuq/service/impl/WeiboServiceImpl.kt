@@ -21,4 +21,7 @@ class WeiboServiceImpl: WeiboService {
 
     @Transactional
     override fun findByMonitor(monitor: Boolean) = weiboDao.findByMonitor(monitor)
+
+    @Transactional
+    override fun findAll() = weiboDao.findAll()
 }

@@ -1,26 +1,30 @@
+@file:Suppress("unused")
+
 package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.Action
-import com.IceCreamQAQ.Yu.annotation.Config
 import com.IceCreamQAQ.Yu.annotation.Synonym
-import com.icecreamqaq.yuq.annotation.*
+import com.icecreamqaq.yuq.annotation.GroupController
+import com.icecreamqaq.yuq.annotation.PathVar
+import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.controller.QQController
-import com.icecreamqaq.yuq.entity.Contact
-import com.icecreamqaq.yuq.entity.Member
-import com.icecreamqaq.yuq.firstString
-import com.icecreamqaq.yuq.message.*
-import com.icecreamqaq.yuq.toMessage
+import com.icecreamqaq.yuq.entity.Group
+import com.icecreamqaq.yuq.message.Image
+import com.icecreamqaq.yuq.message.Message
+import com.icecreamqaq.yuq.message.Message.Companion.firstString
+import com.icecreamqaq.yuq.message.Message.Companion.toMessage
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import me.kuku.yuq.logic.QQAILogic
 import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.service.ConfigService
-import me.kuku.yuq.service.QQGroupService
+import me.kuku.yuq.service.MessageService
+import me.kuku.yuq.service.GroupService
 import me.kuku.yuq.utils.BotUtils
-import me.kuku.yuq.utils.OkHttpClientUtils
-import me.kuku.yuq.utils.image
 import me.kuku.yuq.utils.removeSuffixLine
+import net.mamoe.mirai.Bot
 import java.net.URLEncoder
-import java.util.*
 import javax.inject.Inject
 import kotlin.random.Random
 
@@ -29,25 +33,29 @@ class ToolController: QQController() {
     @Inject
     private lateinit var toolLogic: ToolLogic
     @Inject
-    private lateinit var qqGroupService: QQGroupService
+    private lateinit var groupService: GroupService
     @Inject
     private lateinit var qqAiLogic: QQAILogic
     @Inject
     private lateinit var configService: ConfigService
-    @Config("YuQ.Mirai.user.qq")
-    private lateinit var qq: String
-
-    private var colorPicTime = 0L
+    @Inject
+    private lateinit var messageService: MessageService
 
     @QMsg(at = true)
     @Action("百度 {content}")
-    fun teachYouBaidu(content: String) =
-        "点击以下链接即可教您使用百度搜索“$content”\n${BotUtils.shortUrl("https://u.iheit.com/baidu/index.html?${URLEncoder.encode(content, "utf-8")}")}"
+    fun teachYouBaidu(content: String) = toolLogic.teachYou(content, "baidu")
 
     @QMsg(at = true)
     @Action("谷歌 {content}")
-    fun teachYouGoogle(content: String) =
-        "点击以下链接即可教您使用谷歌搜索“$content”\n${BotUtils.shortUrl("https://u.iheit.com/google/index.html?${URLEncoder.encode(content, "utf-8")}")}"
+    fun teachYouGoogle(content: String) = toolLogic.teachYou(content, "google")
+
+    @QMsg(at = true)
+    @Action("bing {content}")
+    fun teachYouBing(content: String) = toolLogic.teachYou(content, "bing")
+
+    @QMsg(at = true)
+    @Action("搜狗 {content}")
+    fun teachYouSouGou(content: String) = toolLogic.teachYou(content, "sougou")
 
     @QMsg(at = true, atNewLine = true)
     @Action("舔狗日记")
@@ -60,11 +68,7 @@ class ToolController: QQController() {
     @QMsg(at = true, atNewLine = true)
     @Action("嘴臭")
     @Synonym(["祖安语录"])
-    fun mouthOdor(group: Long): String {
-        val qqGroupEntity = qqGroupService.findByGroup(group)
-        if (qqGroupEntity?.mouthOdor != true) return "该功能已关闭！！"
-        return toolLogic.mouthOdor()
-    }
+    fun mouthOdor() = toolLogic.mouthOdor()
 
     @QMsg(at = true)
     @Action("毒鸡汤")
@@ -141,45 +145,25 @@ class ToolController: QQController() {
     @QMsg(at = true, atNewLine = true)
     fun ping(domain: String) = toolLogic.ping(domain)
 
-    @Action("\\.*\\")
-    @QMsg(reply = true, at = true)
-    fun chat(message: Message, qq: Contact): String?{
-        val body = message.body
-        val at = body[0]
-        if (at is At && at.user == this.qq.toLong()){
-            for (item in body){
-                if (item is Text && item.text.trim() != "") {
-                    return qqAiLogic.textChat(item.text, qq.id.toString())
-                }
-            }
-        }
-        return null
-    }
-
     @Action("搜 {question}")
     @QMsg(at = true)
     fun search(question: String) = toolLogic.searchQuestion(question)
-
-    @Action("\\.*B407F708-A2C6-A506-3420-98DF7CAC4A57.*\\")
-    @Synonym(["\\.*65B7E786-ABB3-135D-15DF-2B1032B9A06D.*\\"])
-    fun pic(group: Long, qq: Long) = this.colorPic(group, qq)
 
     @Action("涩图")
     @Synonym(["色图", "色图来"])
     @Synchronized
     fun colorPic(group: Long, qq: Long): Message {
-        val qqGroupEntity = qqGroupService.findByGroup(group)
-        if (qqGroupEntity?.colorPic != true) throw mif.at(qq).plus("该功能已关闭")
+        val qqGroupEntity = groupService.findByGroup(group)
+        if (qqGroupEntity?.colorPic != true) throw mif.at(qq).plus("该功能已关闭").toThrowable()
+        val line = System.getProperty("line.separator")
         return when (val type = qqGroupEntity.colorPicType){
-            "native","r-18" -> {
-                val url = toolLogic.colorPic(type)
-                if (url.startsWith("http")){
-                    val response = OkHttpClientUtils.get(url)
-                    val bytes = OkHttpClientUtils.getBytes(response)
-                    mif.imageToFlash(mif.image(bytes)).toMessage()
-                }else url.toMessage()
+            "danbooru" -> {
+                val map = toolLogic.danBooRuPic()
+                mif.at(qq).plus(line)
+                        .plus(mif.imageByUrl(map.getValue("picUrl")))
+                        .plus("详情：${map["detailedUrl"]}$line")
+                        .plus("链接：${map["url"]}")
             }
-            "danbooru" -> mif.imageToFlash(mif.imageByUrl(toolLogic.danBooRuPic())).toMessage()
             "lolicon", "loliconR18" -> {
                 val configEntity = configService.findByType("loLiCon") ?:
                         return mif.at(qq).plus("您还没有配置lolicon的apiKey，无法获取色图！！")
@@ -187,9 +171,8 @@ class ToolController: QQController() {
                 val commonResult = toolLogic.colorPicByLoLiCon(apiKey, type == "loliconR18")
                 val map = commonResult.t ?: return mif.at(qq).plus(commonResult.msg)
                 val bytes = toolLogic.piXivPicProxy(map.getValue("url"))
-                val line = System.getProperty("line.separator")
-                mif.at(qq)
-                        .plus(mif.image(bytes))
+                mif.at(qq).plus(line)
+                        .plus(mif.imageByInputStream(bytes.inputStream()))
                         .plus("标题：${map["title"]}$line")
                         .plus("当日剩余额度：${map["count"]}$line")
                         .plus("恢复额度时间：${map["time"]}秒")
@@ -198,50 +181,11 @@ class ToolController: QQController() {
         }
     }
 
-    @Action("涩图十连")
-    @Synonym(["色图十连"])
-    fun tenColorPic(group: Long, qq: Long){
-        val time = Date().time
-        val timeDifference = (time - colorPicTime) / 1000
-        if (timeDifference < 120){
-            reply("涩图十连还有${120 - timeDifference}s才允许被执行")
-            return
-        }else colorPicTime = time
-        for (i in 0 until 10){
-            val message = this.colorPic(group, qq)
-            reply(message)
-        }
-    }
-
-    @Action("点歌")
-    fun song(group: Long, message: Message, qq: Long): Any?{
-        if (message.toPath().size == 1) return mif.at(qq).plus("没有发现歌曲名字")
-        val msgStr = message.body[0].toPath()
-        val name = msgStr.substring(3)
-        val qqGroupEntity = qqGroupService.findByGroup(group)
-        return when (qqGroupEntity?.musicType ?: "qq") {
-            "qq" -> {
-                val jsonStr = toolLogic.songByQQ(name)
-                mif.jsonEx(jsonStr)
-            }
-            "163" -> {
-                val commonResult = toolLogic.songBy163(name)
-                return if (commonResult.code == 200) {
-                    mif.jsonEx(commonResult.t!!)
-                }else commonResult.msg
-            }
-            else -> null
-        }
-    }
-
-    @Action("菜单")
-    fun menu() = "菜单它来了：https://w.url.cn/s/Adt25oJ"
-
     @Action("qr/{content}")
     @QMsg(at = true, atNewLine = true)
     fun creatQrCode(content: String): Message{
         val url = toolLogic.creatQr(content)
-        return mif.imageByUrl(url).toMessage()
+        return mif.imageByInputStream(url.inputStream()).toMessage()
     }
 
     @Action("看美女")
@@ -266,22 +210,10 @@ class ToolController: QQController() {
 
     @Action("几点了")
     @Synonym(["多久了", "时间"])
-    fun time() = mif.image(toolLogic.queryTime())
+    fun time() = mif.imageByInputStream(toolLogic.queryTime().inputStream())
 
     @Action("网抑")
-    fun wy(): XmlEx{
-        val num = Random.nextInt(2)
-        return if (num == 1)
-            mif.xmlEx(1, "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID=\"1\" templateID=\"-1\" action=\"app\" actionData=\"com.netease.cloudmusic\" brief=\"点击启动网抑\" sourceMsgId=\"0\" url=\"http://y-8.top\" flag=\"2\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"12\" advertiser_id=\"0\" aid=\"0\"><picture cover=\"https://imgurl.cloudimg.cc/2020/07/26/2a7410726090854.jpg\" w=\"0\" h=\"0\" /><title>启动网抑音乐</title></item><source name=\"今天你网抑了吗\" icon=\"\" action=\"\" appid=\"0\" /></msg>")
-        else
-            mif.xmlEx(1, "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID=\"1\" templateID=\"-1\" action=\"app\" actionData=\"com.netease.cloudmusic\" brief=\"点击启动网抑\" sourceMsgId=\"0\" url=\"http://y-8.top\" flag=\"2\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"4\" advertiser_id=\"0\" aid=\"0\"><picture cover=\"https://imgurl.cloudimg.cc/2020/07/26/2a7410726090854.jpg\" w=\"0\" h=\"0\" /><title>启动网抑音乐</title></item><source name=\"今天你网抑了吗\" icon=\"\" action=\"\" appid=\"0\" /></msg>")
-    }
-
-    @Action("跟我读")
-    fun repeat(session: ContextSession, qq: Long): Message{
-        reply(mif.at(qq).plus("您请说！！"))
-        return session.waitNextMessage(30 * 1000)
-    }
+    fun wy() = mif.xmlEx(1, "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID=\"1\" templateID=\"-1\" action=\"app\" actionData=\"com.netease.cloudmusic\" brief=\"点击启动网抑\" sourceMsgId=\"0\" url=\"https://www.kuku.me/archives/6/\" flag=\"2\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"12\" advertiser_id=\"0\" aid=\"0\"><picture cover=\"https://imgurl.cloudimg.cc/2020/07/26/2a7410726090854.jpg\" w=\"0\" h=\"0\" /><title>启动网抑音乐</title></item><source name=\"今天你网抑了吗\" icon=\"\" action=\"\" appid=\"0\" /></msg>")
 
     @QMsg(at = true)
     @Action("网抑云")
@@ -296,8 +228,8 @@ class ToolController: QQController() {
         return if (commonResult.code == 200){
             val map = commonResult.t!!
             mif.imageByUrl(map.getValue("pic")).plus(
-                    StringBuilder().appendln("标题：${map["title"]}")
-                            .appendln("描述：${map["desc"]}")
+                    StringBuilder().appendLine("标题：${map["title"]}")
+                            .appendLine("描述：${map["desc"]}")
                             .append("链接：${map["url"]}").toString()
             )
         }else commonResult.msg.toMessage()
@@ -310,7 +242,7 @@ class ToolController: QQController() {
         val sb = StringBuilder()
         for (i in list.indices){
             val map = list[i]
-            sb.appendln("${i + 1}、${map["title"]}")
+            sb.appendLine("${i + 1}、${map["title"]}")
         }
         return sb.removeSuffixLine().toString()
     }
@@ -320,7 +252,7 @@ class ToolController: QQController() {
     fun loc(): String{
         val list = toolLogic.hostLocPost()
         val sb = StringBuilder()
-        list.forEach { sb.appendln("${it["title"]}-${it["name"]}-${it["time"]}").appendln("------------") }
+        list.forEach { sb.appendLine("${it["title"]}-${it["name"]}-${it["time"]}").appendLine("------------") }
         return sb.removeSuffixLine().toString()
     }
 
@@ -343,16 +275,6 @@ class ToolController: QQController() {
         else "没有找到这张图片！！！".toMessage()
     }
 
-    @Action("自闭")
-    fun shut(qq: Member, group: Long): String?{
-        if (yuq.groups[group]?.bot?.isAdmin() == true){
-            if (qq.isAdmin()) return "以你的权限来看，我无法给予你想要的套餐呢！！"
-            val time = Random.nextInt(11)
-            qq.ban(time * 60)
-        }
-        return null
-    }
-
     @Action("OCR {img}")
     @Synonym(["ocr {img}"])
     @QMsg(at = true, atNewLine = true)
@@ -364,5 +286,40 @@ class ToolController: QQController() {
         reply(mif.at(qq).plus("请输入github文件下载链接"))
         val url = session.waitNextMessage().firstString()
         return BotUtils.shortUrl(toolLogic.githubQuicken(url))
+    }
+
+    @Action("traceroute {domain}")
+    @Synonym(["路由追踪 {domain}"])
+    fun traceRoute(domain: String) = toolLogic.traceRoute(domain)
+
+    @Action("查发言数")
+    fun queryMessage(group: Group): String{
+        val map = messageService.findCountQQByGroupAndToday(group.id)
+        val sb = StringBuilder().appendLine("本群今日发言数统计如下：")
+        for ((k, v) in map){
+            sb.appendLine("@${group[k].nameCardOrName()}（$k）：${v}条")
+        }
+        return sb.removeSuffixLine().toString()
+    }
+
+    @Action("语音合成 {text}")
+    fun voice(text: String, group: Long, qq: Long){
+        val commonResult = qqAiLogic.voiceSynthesis(text)
+        if (commonResult.code == 200) {
+            GlobalScope.launch {
+                val miraiGroup = Bot.getInstance(yuq.botId).groups[group]
+                miraiGroup.sendMessage(miraiGroup.uploadVoice(commonResult.t!!.inputStream()))
+            }
+        }else {
+            reply(mif.at(qq).plus(commonResult.msg))
+        }
+    }
+
+    @QMsg(at = true)
+    @Action("防红 {url}")
+    fun preventRed(url: String): String{
+        val b = Random.nextBoolean()
+        return if (b) toolLogic.preventQQRed(url)
+        else toolLogic.preventQQWechatRed(url)
     }
 }

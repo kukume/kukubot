@@ -1,12 +1,14 @@
+@file:Suppress("unused")
+
 package me.kuku.yuq.job
 
 import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
+import com.icecreamqaq.yuq.message.Message.Companion.toMessage
 import com.icecreamqaq.yuq.mif
-import com.icecreamqaq.yuq.toMessage
 import com.icecreamqaq.yuq.yuq
 import me.kuku.yuq.logic.ToolLogic
-import me.kuku.yuq.service.QQGroupService
+import me.kuku.yuq.service.GroupService
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
@@ -15,42 +17,45 @@ import javax.inject.Inject
 class GroupJob {
 
     @Inject
-    private lateinit var qqGroupService: QQGroupService
+    private lateinit var groupService: GroupService
     @Inject
     private lateinit var toolLogic: ToolLogic
 
-    private val locMap = mutableMapOf<Long, String>()
+    private var locId = 0
 
     @Cron("At::h::00")
     fun onTimeAlarm(){
-        val list = qqGroupService.findByOnTimeAlarm(true)
+        val list = groupService.findByOnTimeAlarm(true)
         val sdf = SimpleDateFormat("HH", Locale.CHINA)
         var hour = sdf.format(Date()).toInt()
         if (hour == 0) hour = 12
         if (hour > 12) hour -= 12
         val url = "https://u.iheit.com/kuku/bot/time/$hour.jpg"
-        list.forEach { yuq.groups[it.group_]?.sendMessage(mif.imageByUrl(url).toMessage()) }
+        list.forEach { yuq.groups[it.group]?.sendMessage(mif.imageByUrl(url).toMessage()) }
     }
 
     @Cron("1m")
     fun locMonitor(){
-        val list = qqGroupService.findByLocMonitor(true)
-        list.forEach { qqGroupEntity ->
-            val group = qqGroupEntity.group_
-            val locList = toolLogic.hostLocPost()
-            if (locList.isEmpty()) return@forEach
-            val map = locList[0]
-            if (locMap.containsKey(group)){
-                val url = locMap[group]!!
-                if (url != map["url"]){
-                    locMap[group] = map.getValue("url")
-                    yuq.groups[group]?.sendMessage("""
-                        Loc有新帖了！！
-                        标题：${map["title"]}
-                        链接：${map["url"]}
-                    """.trimIndent().toMessage())
+        val groupList = groupService.findByLocMonitor(true)
+        for (groupEntity in groupList){
+            val list = toolLogic.hostLocPost()
+            val newList = mutableListOf<Map<String, String>>()
+            if (list.isEmpty()) return
+            if (locId != 0){
+                for (map in list){
+                    if (map.getValue("id").toInt() <= locId) break
+                    newList.add(map)
                 }
-            }else locMap[group] = map.getValue("url")
+            }
+            locId = list[0].getValue("id").toInt()
+            newList.forEach { locMap ->
+                val sb = StringBuilder()
+                sb.appendLine("Loc有新帖了！！")
+                        .appendLine("标题：${locMap["title"]}")
+                        .appendLine("昵称：${locMap["name"]}")
+                        .append("链接：${locMap["url"]}")
+                yuq.groups[groupEntity.group]?.sendMessage(sb.toString().toMessage())
+            }
         }
     }
 

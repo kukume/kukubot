@@ -13,7 +13,6 @@
             diskPersistent="false"
             diskExpiryThreadIntervalSeconds="120"/>
 
-
     <cache
             name="ContextSession"
             maxElementsInMemory="10000"
@@ -23,12 +22,10 @@
     />
 
     <cache
-            name="MessageSaved"
-            maxElementsInMemory="10000"
-            eternal="false"
-            overflowToDisk="false"
-            timeToIdleSeconds="120"
+        name="CommandCountOnTime"
+        maxElementsInMemory="10000"
+        eternal="false"
+        overflowToDisk="false"
+        timeToIdleSeconds="60"
     />
-
-
 </ehcache>

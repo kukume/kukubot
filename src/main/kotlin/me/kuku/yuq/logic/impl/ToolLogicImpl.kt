@@ -1,6 +1,5 @@
 package me.kuku.yuq.logic.impl
 
-import com.IceCreamQAQ.Yu.annotation.Config
 import com.IceCreamQAQ.Yu.util.IO
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
@@ -10,6 +9,7 @@ import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.OkHttpClientUtils
 import me.kuku.yuq.utils.removeSuffixLine
 import org.jsoup.Jsoup
+import java.io.File
 import java.net.URLEncoder
 import java.nio.charset.Charset
 import java.text.SimpleDateFormat
@@ -21,10 +21,7 @@ class ToolLogicImpl: ToolLogic {
     private val appId = "ghpgtsokjvkjdmlk"
     private val appSecret = "N2hNMC93empxb0twUW1jd1FRbVVtQT09"
     private val params = "&app_id=$appId&app_secret=$appSecret"
-
-    private val neTeaseUrl = "https://netease.kuku.me"
-    @Config("YuQ.Mirai.bot.myApi")
-    private lateinit var myApi: String
+    private val myApi = "https://api.kuku.me"
 
     override fun dogLicking() : String {
         val response = OkHttpClientUtils.get("http://api.yyhy.me/tg.php?type=api")
@@ -36,7 +33,7 @@ class ToolLogicImpl: ToolLogic {
 
     override fun baiKe(text: String): String {
         val encodeText = URLEncoder.encode(text, "utf-8")
-        val url = "https://baike.baidu.com/item/$encodeText"
+        val url = "https://baike.baidu.com/search/word?word=$encodeText"
         val commonResult = this.baiKeByUrl(url)
         return when (commonResult.code) {
             200 -> {
@@ -54,9 +51,9 @@ class ToolLogicImpl: ToolLogic {
         var response = OkHttpClientUtils.get(url)
         while (response.code == 302){
             response.close()
-            val location = response.header("Location")
-            if ("https://baike.baidu.com/error.html" == location) return CommonResult(500, "")
-            val resultUrl = "https://baike.baidu.com$location"
+            val location = response.header("Location")!!
+            if (location.startsWith("//baike.baidu.com/search/none")) return CommonResult(500, "")
+            val resultUrl = if (location.startsWith("//")) "https:$location" else "https://baike.baidu.com$location"
             response = OkHttpClientUtils.get(resultUrl)
         }
         val html = OkHttpClientUtils.getStr(response)
@@ -98,11 +95,12 @@ class ToolLogicImpl: ToolLogic {
     }
 
     override fun queryIp(ip: String): String {
-        val response = OkHttpClientUtils.get("https://api.kieng.cn/ipgeography?ip=$ip")
-        val jsonObject = OkHttpClientUtils.getJson(response)
-        return if (jsonObject.getInteger("code") == 200){
-            jsonObject.getString("pos") + jsonObject.getString("isp")
-        }else jsonObject.getString("error")
+        val response = OkHttpClientUtils.get("http://ipaddr.cz88.net/data.php?ip=$ip",
+                OkHttpClientUtils.addUA(OkHttpClientUtils.PC_UA))
+        val str = OkHttpClientUtils.getStr(response)
+        val list = str.split("'")
+        // 1-ip  3 - addr 5 - ua
+        return list[3]
     }
 
     override fun queryWhois(domain: String): String {
@@ -112,13 +110,13 @@ class ToolLogicImpl: ToolLogic {
         return if (data.size == 0) "未找到该域名的whois信息"
         else {
             val sb = StringBuilder()
-            sb.appendln("域名：${data.getString("domainName")}")
-                    .appendln("域名状态：${data.getString("domainStatus")}")
-                    .appendln("联系人：${data.getString("registrant")}")
-                    .appendln("联系邮箱：${data.getString("contactEmail")}")
-                    .appendln("注册商：${data.getString("registrar")}")
-                    .appendln("DNS：${data.getString("dnsNameServer")}")
-                    .appendln("创建时间：${data.getString("registrationTime")}")
+            sb.appendLine("域名：${data.getString("domainName")}")
+                    .appendLine("域名状态：${data.getString("domainStatus")}")
+                    .appendLine("联系人：${data.getString("registrant")}")
+                    .appendLine("联系邮箱：${data.getString("contactEmail")}")
+                    .appendLine("注册商：${data.getString("registrar")}")
+                    .appendLine("DNS：${data.getString("dnsNameServer")}")
+                    .appendLine("创建时间：${data.getString("registrationTime")}")
                     .append("过期时间：${data.getString("expirationTime")}")
             sb.toString()
         }
@@ -131,11 +129,11 @@ class ToolLogicImpl: ToolLogic {
         return if (data.size == 0) "未找到该域名的备案信息"
         else{
             val sb = StringBuilder()
-            sb.appendln("主办单位名称：${data.getString("organizer_name")}")
-                    .appendln("主办单位性质：${data.getString("organizer_nature")}")
-                    .appendln("网站备案/许可证号：${data.getString("recording_license_number")}")
-                    .appendln("网站名称：${data.getString("site_name")}")
-                    .appendln("网站首页网址：${data.getString("site_index_url")}")
+            sb.appendLine("主办单位名称：${data.getString("organizer_name")}")
+                    .appendLine("主办单位性质：${data.getString("organizer_nature")}")
+                    .appendLine("网站备案/许可证号：${data.getString("recording_license_number")}")
+                    .appendLine("网站名称：${data.getString("site_name")}")
+                    .appendLine("网站首页网址：${data.getString("site_index_url")}")
                     .append("审核时间：${data.getString("review_time")}")
             sb.toString()
         }
@@ -149,8 +147,8 @@ class ToolLogicImpl: ToolLogic {
             val sb = StringBuilder()
             jsonArray.forEach {
                 val json = it as JSONObject
-                sb.appendln("标题：${json.getString("title")}")
-                        .appendln("链接：${json.getString("url")}").appendln(" -------------- ")
+                sb.appendLine("标题：${json.getString("title")}")
+                        .appendLine("链接：${json.getString("url")}").appendLine(" -------------- ")
             }
             sb.toString()
         }else "获取失败${jsonObject.getString("msg")}"
@@ -162,7 +160,7 @@ class ToolLogicImpl: ToolLogic {
         val elements = ele.getElementsByTag("dl")
         val sb = StringBuilder()
         for (element in elements){
-            sb.append(element.getElementsByTag("dt").first().text()).appendln(element.getElementsByTag("dd").text())
+            sb.append(element.getElementsByTag("dt").first().text()).appendLine(element.getElementsByTag("dd").text())
         }
         return sb.toString()
     }
@@ -193,11 +191,11 @@ class ToolLogicImpl: ToolLogic {
             val data = jsonObject.getJSONObject("data")
             val aim = data.getJSONObject("aim")
             if (aim != null)
-                sb.appendln("${aim.getString("goodsName")}；${aim.getString("goodsType")}")
+                sb.appendLine("${aim.getString("goodsName")}；${aim.getString("goodsType")}")
             val recommendList = data.getJSONArray("recommendList")
             for (i in (0 until recommendList.size)){
                 val obj = recommendList.getJSONObject(i)
-                sb.appendln("${obj.getString("goodsName")}；${obj.getString("goodsType")}")
+                sb.appendLine("${obj.getString("goodsName")}；${obj.getString("goodsType")}")
             }
             sb.toString()
         }
@@ -209,7 +207,7 @@ class ToolLogicImpl: ToolLogic {
         val sb = StringBuilder()
         for (i in data){
             val jsonObject = i as JSONObject
-            sb.appendln("${jsonObject.getString("year")}年${jsonObject.getInteger("month")}月" +
+            sb.appendLine("${jsonObject.getString("year")}年${jsonObject.getInteger("month")}月" +
                     "${jsonObject.getInteger("day")}日，${jsonObject.getString("title")}")
         }
         return sb.toString()
@@ -295,21 +293,13 @@ class ToolLogicImpl: ToolLogic {
             val time = BotUtils.regex("时间=", "ms", result)?.trim() ?: BotUtils.regex("time=", "ms", result)?.trim() ?: "请求超时"
             val ipInfo = this.queryIp(ip)
             val sb = StringBuilder("====查询结果====\n")
-            sb.appendln("域名/IP：$domain")
-            sb.appendln("IP：：$ip")
-            sb.appendln("延迟：${time}ms")
+            sb.appendLine("域名/IP：$domain")
+            sb.appendLine("IP：：$ip")
+            sb.appendLine("延迟：${time}ms")
             sb.append("位置：$ipInfo")
             return sb.toString()
         }
         return "ping失败，请稍后再试！！"
-    }
-
-    override fun colorPic(type: String): String {
-        val response = OkHttpClientUtils.get("https://$myApi/pixiv/random/$type")
-        val jsonObject = OkHttpClientUtils.getJson(response)
-        return if (jsonObject.getInteger("code") == 200){
-            jsonObject.getJSONObject("data").getString("url")
-        }else jsonObject.getString("msg")
     }
 
     override fun colorPicByLoLiCon(apiKey: String, isR18: Boolean): CommonResult<Map<String, String>> {
@@ -334,14 +324,8 @@ class ToolLogicImpl: ToolLogic {
     }
 
     override fun piXivPicProxy(url: String): ByteArray {
-        val response = OkHttpClientUtils.get("https://$myApi/pixiv/picbyurl?url=${URLEncoder.encode(url, "utf-8")}")
+        val response = OkHttpClientUtils.get("$myApi/pixiv/picbyurl?url=${URLEncoder.encode(url, "utf-8")}")
         return OkHttpClientUtils.getBytes(response)
-    }
-
-    override fun r18setting(cookie: String, isOpen: Boolean): String {
-        val response = OkHttpClientUtils.get("https://$myApi/pixiv/r18setting?cookie=$cookie&isopen=${if (isOpen) 1 else 0}")
-        val jsonObject = OkHttpClientUtils.getJson(response)
-        return jsonObject.getString("msg")
     }
 
     override fun hiToKoTo(): Map<String, String> {
@@ -350,49 +334,9 @@ class ToolLogicImpl: ToolLogic {
         return mapOf("text" to jsonObject.getString("hitokoto"), "from" to jsonObject.getString("from"))
     }
 
-    override fun songByQQ(name: String): String {
-        val firstResponse = OkHttpClientUtils.get("https://c.y.qq.com/soso/fcgi-bin/client_search_cp?w=${URLEncoder.encode(name, "utf-8")}&format=json")
-        val jsonObject = OkHttpClientUtils.getJson(firstResponse)
-        val songJsonObject = jsonObject.getJSONObject("data").getJSONObject("song").getJSONArray("list").getJSONObject(0)
-        val songName = songJsonObject.getString("songname")
-        val mid = songJsonObject.getString("songmid")
-        val secondResponse = OkHttpClientUtils.get("https://u.y.qq.com/cgi-bin/musicu.fcg?format=json&data=%7B%22req_0%22%3A%7B%22module%22%3A%22vkey.GetVkeyServer%22%2C%22method%22%3A%22CgiGetVkey%22%2C%22param%22%3A%7B%22guid%22%3A%22358840384%22%2C%22songmid%22%3A%5B%22$mid%22%5D%2C%22songtype%22%3A%5B0%5D%2C%22uin%22%3A%220%22%2C%22loginflag%22%3A1%2C%22platform%22%3A%2220%22%7D%7D%2C%22comm%22%3A%7B%22uin%22%3A%220%22%2C%22format%22%3A%22json%22%2C%22ct%22%3A24%2C%22cv%22%3A0%7D%7D")
-        val secondJsonObject = OkHttpClientUtils.getJson(secondResponse)
-        val dataJsonObject = secondJsonObject.getJSONObject("req_0").getJSONObject("data")
-        val urlJsonObject = dataJsonObject.getJSONArray("midurlinfo").getJSONObject(0)
-        val musicUrl = dataJsonObject.getJSONArray("sip").getString(0) + urlJsonObject.getString("purl")
-        val jumpUrl = "https://y.qq.com/n/yqq/song/$mid.html"
-        val thirdResponse = OkHttpClientUtils.get(jumpUrl, OkHttpClientUtils.addUA(OkHttpClientUtils.PC_UA))
-        val html = OkHttpClientUtils.getStr(thirdResponse)
-        val imageUrl = Jsoup.parse(html).select(".main .mod_data .data__cover img").first().attr("src")
-        return "{\"app\":\"com.tencent.structmsg\",\"desc\":\"音乐\",\"view\":\"music\",\"ver\":\"0.0.0.1\",\"prompt\":\"[分享]$songName\",\"appID\":\"\",\"sourceName\":\"\",\"actionData\":\"\",\"actionData_A\":\"\",\"sourceUrl\":\"\",\"meta\":{\"music\":{\"action\":\"\",\"android_pkg_name\":\"\",\"app_type\":1,\"appid\":100497308,\"desc\":\"${songJsonObject.getJSONArray("singer").getJSONObject(0).getString("name")}\",\"jumpUrl\":\"$jumpUrl\",\"musicUrl\":\"$musicUrl\",\"preview\":\"http:$imageUrl\",\"sourceMsgId\":\"0\",\"source_icon\":\"\",\"source_url\":\"\",\"tag\":\"QQ音乐\",\"title\":\"$songName\"}},\"config\":{\"autosize\":true,\"ctime\":1592152029,\"forward\":true,\"token\":\"00a77c3ec88562b6e75b6202ede77f54\",\"type\":\"normal\"},\"text\":\"\",\"sourceAd\":\"\",\"extra\":\"\"}"
-    }
-
-    override fun songBy163(name: String): CommonResult<String> {
-        val response = OkHttpClientUtils.get("$neTeaseUrl/search?keywords=${URLEncoder.encode(name, "utf-8")}")
-        val jsonObject = OkHttpClientUtils.getJson(response)
-        val resultJsonObject = jsonObject.getJSONObject("result")
-        return if (resultJsonObject.getInteger("songCount") != 0){
-            val songJsonObject = resultJsonObject.getJSONArray("songs").getJSONObject(0)
-            val id = songJsonObject.getInteger("id")
-            val secondResponse = OkHttpClientUtils.get("$neTeaseUrl/song/url?id=$id")
-            val secondJsonObject = OkHttpClientUtils.getJson(secondResponse)
-            val url = secondJsonObject.getJSONArray("data").getJSONObject(0).getString("url")
-            if (url != null){
-                val songName = songJsonObject.getString("name")
-                val author = songJsonObject.getJSONArray("artists").getJSONObject(0).getString("name")
-                val thirdResponse = OkHttpClientUtils.get("https://y.music.163.com/m/song?id=$id", OkHttpClientUtils.addUA(OkHttpClientUtils.MOBILE_UA))
-                val html = OkHttpClientUtils.getStr(thirdResponse)
-                val imageUrl = Jsoup.parse(html).select("meta[property=og:image]").first().attr("content")
-                CommonResult(200, "成功", "{\"app\":\"com.tencent.structmsg\",\"desc\":\"音乐\",\"view\":\"music\",\"ver\":\"0.0.0.1\",\"prompt\":\"[分享]$songName\",\"appID\":\"\",\"sourceName\":\"\",\"actionData\":\"\",\"actionData_A\":\"\",\"sourceUrl\":\"\",\"meta\":{\"music\":{\"action\":\"\",\"android_pkg_name\":\"\",\"app_type\":1,\"appid\":100497308,\"desc\":\"$author\",\"jumpUrl\":\"${"https://music.163.com/song?id=$id"}\",\"musicUrl\":\"$url\",\"preview\":\"$imageUrl\",\"sourceMsgId\":\"0\",\"source_icon\":\"\",\"source_url\":\"\",\"tag\":\"网易云音乐\",\"title\":\"$songName\"}},\"config\":{\"autosize\":true,\"ctime\":1592152029,\"forward\":true,\"token\":\"00a77c3ec88562b6e75b6202ede77f54\",\"type\":\"normal\"},\"text\":\"\",\"sourceAd\":\"\",\"extra\":\"\"}")
-            }else CommonResult(500, "可能该歌曲没有版权或者无法下载！")
-        }else CommonResult(500, "未找到该歌曲！！")
-    }
-
-    override fun creatQr(content: String): String {
-        val response = OkHttpClientUtils.get("$url/qrcode/create/single?content=${URLEncoder.encode(content, "utf-8")}&size=500&type=0$params")
-        val jsonObject = OkHttpClientUtils.getJson(response)
-        return jsonObject.getJSONObject("data").getString("qrCodeUrl")
+    override fun creatQr(content: String): ByteArray {
+        val response = OkHttpClientUtils.get("https://www.zhihu.com/qrcode?url=${URLEncoder.encode(content, "utf-8")}")
+        return OkHttpClientUtils.getBytes(response)
     }
 
     override fun girlImage(): String {
@@ -409,7 +353,7 @@ class ToolLogicImpl: ToolLogic {
         for (i in jsonArray.indices){
             val jsonObject = jsonArray.getJSONObject(i)
             if (jsonObject.getInteger("isWeekFree") == 1){
-                sb.appendln("${jsonObject.getString("name")}-${jsonObject.getString("title")}")
+                sb.appendLine("${jsonObject.getString("name")}-${jsonObject.getString("title")}")
             }
         }
         return sb.removeSuffixLine().toString()
@@ -424,7 +368,7 @@ class ToolLogicImpl: ToolLogic {
             val transJsonArray = jsonArray.getJSONObject(0).getJSONArray("trans") ?: return "没有查询到结果！！"
             val sb = StringBuilder("缩写${content}的含义如下：\r\n")
             for (i in 0 until transJsonArray.size){
-                sb.appendln(transJsonArray.getString(i))
+                sb.appendLine(transJsonArray.getString(i))
             }
             sb.removeSuffixLine().toString()
         }else "没有查询到结果"
@@ -509,11 +453,13 @@ class ToolLogicImpl: ToolLogic {
             val url = "https://www.hostloc.com/" + s.attr("href")
             val name = ele.select("cite a").first().text()
             val time = ele.select("em a span").first().text()
+            val id = BotUtils.regex("tid=", "&", url)!!
             list.add(mapOf(
                     "title" to title,
                     "url" to url,
                     "name" to name,
-                    "time" to time
+                    "time" to time,
+                    "id" to id
             ))
         }
         return list
@@ -525,7 +471,7 @@ class ToolLogicImpl: ToolLogic {
         return if (jsonObject.getInteger("code") == 0){
             val sb = StringBuilder()
             val jsonArray = jsonObject.getJSONObject("data").getJSONArray("result")
-            jsonArray.forEach{  sb.appendln(it) }
+            jsonArray.forEach{  sb.appendLine(it) }
             return sb.removeSuffixLine().toString()
         }else jsonObject.getString("msg")
     }
@@ -536,7 +482,7 @@ class ToolLogicImpl: ToolLogic {
         return response.header("location")!!
     }
 
-    override fun danBooRuPic(): String {
+    override fun danBooRuPic(): Map<String, String> {
         val tagResponse = OkHttpClientUtils.get("https://danbooru.donmai.us/",
                 OkHttpClientUtils.addUA(OkHttpClientUtils.PC_UA))
         val tagHtml = OkHttpClientUtils.getStr(tagResponse)
@@ -554,9 +500,16 @@ class ToolLogicImpl: ToolLogic {
                 OkHttpClientUtils.addUA(OkHttpClientUtils.PC_UA))
         val picHtml = OkHttpClientUtils.getStr(picResponse)
         val picElements = Jsoup.parse(picHtml).select("#posts-container article")
-        val urls = mutableListOf<String>()
-        picElements.forEach { urls.add(it.attr("data-file-url")) }
-        return urls[Random.nextInt(urls.size)]
+        val pics = mutableListOf<Map<String, String>>()
+        picElements.forEach {
+            pics.add(mapOf(
+                    "picUrl" to it.attr("data-file-url"),
+                    "originalUrl" to it.attr("data-source"),
+                    "detailedUrl" to it.attr("data-normalized-source"),
+                    "url" to "https://danbooru.donmai.us/posts/${it.attr("data-id")}"
+            ))
+        }
+        return pics[Random.nextInt(pics.size)]
     }
 
     override fun identifyPic(url: String): String? {
@@ -567,4 +520,67 @@ class ToolLogicImpl: ToolLogic {
     }
 
     override fun githubQuicken(gitUrl: String) = "https://github.kuku.workers.dev/$gitUrl"
+
+    override fun traceRoute(domain: String): String {
+        val osName = System.getProperty("os.name")
+        if (osName.contains("Windows")) return "不支持Windows系统！！"
+        val file = File("besttrace")
+        val runtime = Runtime.getRuntime()
+        if (!file.exists()) {
+            val response = OkHttpClientUtils.get("https://u.iheit.com/kuku/bot/besttrace")
+            val bytes = OkHttpClientUtils.getBytes(response)
+            IO.writeFile(file, bytes)
+            runtime.exec("chmod +x besttrace")
+        }
+        val process = runtime.exec("./besttrace $domain")
+        val resultBytes = IO.read(process.inputStream)
+        return String(resultBytes, Charset.forName("utf-8"))
+    }
+
+    override fun teachYou(content: String, type: String): String? {
+        val msg: String
+        val url: String
+        val suffix = URLEncoder.encode(Base64.getEncoder().encodeToString(content.toByteArray()), "utf-8")
+        when (type){
+            "baidu" -> {
+                msg = "百度"
+                url = "https://u.iheit.com/teachsearch/baidu/index.html?q=$suffix"
+            }
+            "google" -> {
+                msg = "谷歌"
+                url = "https://u.iheit.com/teachsearch/google/index.html?q=$suffix"
+            }
+            "bing" -> {
+                msg = "必应"
+                url = "https://u.iheit.com/teachsearch/bing/index.html?q=$suffix"
+            }
+            "sougou" -> {
+                msg = "搜狗"
+                url = "https://u.iheit.com/teachsearch/sougou/index.html?q=$suffix"
+            }
+            else -> return null
+        }
+        return "点击以下链接即可教您使用${msg}搜索“$content”\n${BotUtils.shortUrl(url)}"
+    }
+
+    override fun preventQQRed(url: String): String {
+        val jsonObject = OkHttpClientUtils.postJson("https://www.91she.cn/ajax.php?act=creat", mapOf(
+                "url" to url,
+                "type" to "2",
+                "dwz" to "2"
+        ), OkHttpClientUtils.addUA(OkHttpClientUtils.PC_UA))
+        return if (jsonObject.getInteger("code") == 0){
+            jsonObject.getString("dwz1")
+        }else {
+            jsonObject.getString("msg")
+        }
+    }
+
+    override fun preventQQWechatRed(url: String): String {
+        val jsonObject = OkHttpClientUtils.getJson("http://fh.dw81.cn:81/dwz.php?type=ty&longurl=$url&dwzapi=500",
+                OkHttpClientUtils.addUA(OkHttpClientUtils.PC_UA))
+        return if (jsonObject.getInteger("code ") == 1){
+            jsonObject.getString("ae_url")
+        }else jsonObject.getString("msg")
+    }
 }

@@ -16,7 +16,7 @@ data class QQJobEntity(
         @Column(columnDefinition="text")
         var data: String = "{}"
 ){
-        @Transient
-        fun getJsonObject(): JSONObject = JSON.parseObject(data)
+        val dataJsonObject: JSONObject
+                get() = JSON.parseObject(data)
 
 }

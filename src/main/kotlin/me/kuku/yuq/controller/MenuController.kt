@@ -4,33 +4,14 @@ package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Synonym
-import com.IceCreamQAQ.Yu.controller.router.NewRouterImpl
-import com.IceCreamQAQ.Yu.di.YuContext
 import com.icecreamqaq.yuq.annotation.GroupController
-import com.icecreamqaq.yuq.controller.BotActionInvoker
-import com.icecreamqaq.yuq.controller.BotReflectMethodInvoker
 import me.kuku.yuq.utils.removeSuffixLine
-import javax.inject.Inject
 
 @GroupController
-class MenuController @Inject constructor(private val yuContext: YuContext) {
-
-    private fun getNewRouter(): NewRouterImpl{
-        return yuContext.getBean("com.IceCreamQAQ.Yu.controller.router.NewRouter") as NewRouterImpl
-    }
+class MenuController {
 
     @Action("help")
-    fun help() = """
-        tool
-        bilibili
-        bot
-        manage
-        motion
-        wy
-        qq
-        setting
-        wb
-    """.trimIndent()
+    fun help() = menu(MenuController::class.java)
 
     @Action("tool")
     fun tool() = menu(ToolController::class.java)

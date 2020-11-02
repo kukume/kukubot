@@ -15,8 +15,8 @@ repositories {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
-    implementation 'com.IceCreamQAQ.YuQ:YuQ-Mirai:0.1.0.0-DEV1'
-    implementation 'com.IceCreamQAQ:YuQ:0.1.0.0-DEV2'
+    implementation 'com.IceCreamQAQ.YuQ:YuQ-Mirai:0.1.0.0-DEV2'
+    implementation 'com.IceCreamQAQ:YuQ:0.1.0.0-DEV3'
     implementation("com.IceCreamQAQ:Yu-Core:0.2.0.0-DEV1")
     implementation ('com.IceCreamQAQ.Yu:Yu-DB:0.0.2.0-DEV2'){
         exclude group: 'mysql', module: 'mysql-connector-java'

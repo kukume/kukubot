@@ -11,6 +11,7 @@ interface QQLoginDao: YuDao<QQLoginEntity, Int>{
     fun findByQQ(qq: Long): QQLoginEntity?
     @Select("from QQLoginEntity")
     fun findAll(): List<QQLoginEntity>
+    @Select("from QQLoginEntity where status = true")
     fun findByActivity(): List<QQLoginEntity>
     @Execute("delete from QQLoginEntity where qq = ?")
     fun delByQQ(qq: Long)

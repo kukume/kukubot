@@ -120,10 +120,12 @@ class GroupManagerEvent {
             }
             if (status){
                 val maxCount = groupEntity.maxCommandCountOnTime
-                val key = e.sender.toString() + q
-                var num = eh[key] ?: 0
-                if (num >= maxCount) return
-                eh[key] = ++num
+                if (maxCount > 0) {
+                    val key = e.sender.toString() + q
+                    var num = eh[key] ?: 0
+                    if (num >= maxCount) return
+                    eh[key] = ++num
+                }
                 val jsonArray = jsonObject.getJSONArray("a")
                 e.group.sendMessage(BotUtils.jsonArrayToMessage(jsonArray))
             }

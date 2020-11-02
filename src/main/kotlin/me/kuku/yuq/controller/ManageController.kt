@@ -155,7 +155,7 @@ class ManageNotController: QQController(){
         sb.appendLine("整点报时：" + this.boolToStr(groupEntity.onTimeAlarm))
         sb.appendLine("闪照通知：" + this.boolToStr(groupEntity.flashNotify))
         val maxCommandCountOnTime = groupEntity.maxCommandCountOnTime
-        sb.appendLine("指令限制：${if (maxCommandCountOnTime == -1) "无限制" else "$maxCommandCountOnTime"}")
+        sb.appendLine("指令限制：${if (maxCommandCountOnTime < 0) "无限制" else "$maxCommandCountOnTime"}")
         sb.append("最大违规次数：${groupEntity.maxViolationCount}")
         return sb.toString()
     }

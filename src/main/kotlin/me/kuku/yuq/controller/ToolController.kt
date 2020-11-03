@@ -3,6 +3,7 @@
 package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.Action
+import com.IceCreamQAQ.Yu.annotation.Config
 import com.IceCreamQAQ.Yu.annotation.Synonym
 import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.annotation.PathVar
@@ -24,6 +25,7 @@ import me.kuku.yuq.service.GroupService
 import me.kuku.yuq.utils.BotUtils
 import me.kuku.yuq.utils.removeSuffixLine
 import net.mamoe.mirai.Bot
+import net.mamoe.mirai.message.action.Nudge.Companion.sendNudge
 import java.net.URLEncoder
 import javax.inject.Inject
 import kotlin.random.Random
@@ -40,6 +42,8 @@ class ToolController: QQController() {
     private lateinit var configService: ConfigService
     @Inject
     private lateinit var messageService: MessageService
+    @Config("YuQ.Mirai.protocol")
+    private lateinit var protocol: String
 
     @QMsg(at = true)
     @Action("百度 {content}")
@@ -321,5 +325,19 @@ class ToolController: QQController() {
         val b = Random.nextBoolean()
         return if (b) toolLogic.preventQQRed(url)
         else toolLogic.preventQQWechatRed(url)
+    }
+
+    @Action("戳 {qqNo}")
+    @QMsg(at = true)
+    fun stamp(qqNo: Long, group: Long): String{
+        if (protocol != "Android") return "戳一戳必须使用Android才能使用！！"
+        val bot = Bot.getInstance(yuq.botId)
+        val groupObj = bot.groups[group]
+        GlobalScope.launch {
+            val member = if (qqNo == bot.id) groupObj.botAsMember
+            else groupObj.members[qqNo]
+            groupObj.sendNudge(member.nudge())
+        }
+        return "戳成功！！"
     }
 }

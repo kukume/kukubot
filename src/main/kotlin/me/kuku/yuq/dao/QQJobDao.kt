@@ -10,6 +10,6 @@ interface QQJobDao: YuDao<QQJobEntity, Int>{
     fun findByQQAndType(qq: Long, type: String): QQJobEntity?
     fun findByQQ(qq: Long): List<QQJobEntity>
     fun findByType(type: String): List<QQJobEntity>
-    @Execute("delete from QQJobEntity where qq = ?1")
+    @Execute("delete from QQJobEntity where qq = ?0")
     fun delByQQ(qq: Long)
 }

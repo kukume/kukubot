@@ -11,6 +11,6 @@ interface NeTeaseDao: YuDao<NeTeaseEntity, Int>{
     fun findByQQ(qq: Long): NeTeaseEntity?
     @Select("from NeTeaseEntity")
     fun findAll(): List<NeTeaseEntity>
-    @Execute("delete from GroupQQEntity where qq = ?1")
+    @Execute("delete from GroupQQEntity where qq = ?0")
     fun delByQQ(qq: Long): Int
 }

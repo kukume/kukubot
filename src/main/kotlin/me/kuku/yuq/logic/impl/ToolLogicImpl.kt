@@ -277,6 +277,7 @@ class ToolLogicImpl: ToolLogic {
                 "晴" -> "sun"
                 "阴" -> "cloud"
                 "多云" -> "fine"
+                "雨","阵雨" -> "rain"
                 else -> "cloud"
             }
             val xmlStr = "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID=\"146\" templateID=\"1\" action=\"web\" brief=\"[分享] $city $weather\" sourcePublicUin=\"2658655094\" sourceMsgId=\"0\" url=\"https://weather.mp.qq.com/pages/aio?_wv=1090533159&amp;_wwv=196612&amp;scene=1&amp;adcode=$code&amp;timeStamp=${Date().time}\" flag=\"0\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"2\" advertiser_id=\"0\" aid=\"0\"><picture cover=\"https://imgcache.qq.com/ac/qqweather/image/share_icon/$wPic.png\" w=\"0\" h=\"0\" /><title>$city $weather</title><summary>$temperature\n" +

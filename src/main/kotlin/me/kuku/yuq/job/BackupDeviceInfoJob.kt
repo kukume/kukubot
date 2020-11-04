@@ -10,7 +10,7 @@ import java.io.File
 @JobCenter
 class BackupDeviceInfoJob {
 
-    @Cron("At::d::00:00")
+    @Cron("1h")
     fun backUp(){
         val confFile = File("conf")
         if (confFile.exists()){

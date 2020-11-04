@@ -8,10 +8,9 @@ import me.kuku.yuq.entity.NeTeaseEntity
 
 @Dao
 interface NeTeaseDao: YuDao<NeTeaseEntity, Int>{
-    @Select("from NeTeaseEntity where qq = ?")
     fun findByQQ(qq: Long): NeTeaseEntity?
     @Select("from NeTeaseEntity")
     fun findAll(): List<NeTeaseEntity>
-    @Execute("delete from GroupQQEntity where qq = ?")
+    @Execute("delete from GroupQQEntity where qq = ?1")
     fun delByQQ(qq: Long): Int
 }

@@ -11,6 +11,6 @@ interface MotionDao: YuDao<MotionEntity, Int>{
     fun findByQQ(qq: Long): MotionEntity?
     @Select("from MotionEntity")
     fun findAll(): List<MotionEntity>
-    @Execute("delete from MotionEntity where qq = ?")
+    @Execute("delete from MotionEntity where qq = ?1")
     fun delByQQ(qq: Long)
 }

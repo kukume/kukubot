@@ -9,7 +9,7 @@ import me.kuku.yuq.entity.WeiboEntity
 @Dao
 interface WeiboDao: YuDao<WeiboEntity, Int>{
     fun findByQQ(qq: Long): WeiboEntity?
-    @Execute("delete from WeiboEntity where qq = ?")
+    @Execute("delete from WeiboEntity where qq = ?1")
     fun delByQQ(qq: Long): Int
     fun findByMonitor(monitor: Boolean): List<WeiboEntity>
     @Select("from WeiboEntity")

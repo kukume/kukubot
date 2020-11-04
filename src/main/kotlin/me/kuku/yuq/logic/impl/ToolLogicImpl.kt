@@ -272,7 +272,14 @@ class ToolLogicImpl: ToolLogic {
             val city = doc.getElementById("s_city").text()
             val temperature = doc.select(".cur-weather-info .date span").first().text()
             val air = doc.select("._val").first().text()
-            val xmlStr = "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID=\"146\" templateID=\"1\" action=\"web\" brief=\"[分享] $city  \" sourcePublicUin=\"2658655094\" sourceMsgId=\"0\" url=\"https://weather.mp.qq.com/?city=${URLEncoder.encode(city, "utf-8")}&amp;areaid=$id&amp;adcode=$code&amp;st=0&amp;_wv=1\" flag=\"0\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"2\" advertiser_id=\"0\" aid=\"0\"><picture cover=\"https://imgcache.qq.com/ac/qqweather/image/share_icon/cloud.png\" w=\"0\" h=\"0\" /><title>$city  </title><summary>$temperature\n" +
+            val weather = doc.getElementById("s_info1").getElementsByTag("span").first().text()
+            val wPic = when (weather){
+                "晴" -> "sun"
+                "阴" -> "cloud"
+                "多云" -> "fine"
+                else -> "cloud"
+            }
+            val xmlStr = "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID=\"146\" templateID=\"1\" action=\"web\" brief=\"[分享] $city $weather\" sourcePublicUin=\"2658655094\" sourceMsgId=\"0\" url=\"https://weather.mp.qq.com/pages/aio?_wv=1090533159&amp;_wwv=196612&amp;scene=1&amp;adcode=$code&amp;timeStamp=${Date().time}\" flag=\"0\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"2\" advertiser_id=\"0\" aid=\"0\"><picture cover=\"https://imgcache.qq.com/ac/qqweather/image/share_icon/$wPic.png\" w=\"0\" h=\"0\" /><title>$city $weather</title><summary>$temperature\n" +
                     "空气质量:$air</summary></item><source name=\"QQ天气\" icon=\"https://url.cn/JS8oE7\" action=\"plugin\" a_actionData=\"mqqapi://app/action?pkg=com.tencent.mobileqq&amp;cmp=com.tencent.biz.pubaccount.AccountDetailActivity&amp;uin=2658655094\" i_actionData=\"mqqapi://card/show_pslcard?src_type=internal&amp;card_type=public_account&amp;uin=2658655094&amp;version=1\" appid=\"-1\" /></msg>"
             CommonResult(200, "", xmlStr)
         }else CommonResult(500, "没有找到这个城市")

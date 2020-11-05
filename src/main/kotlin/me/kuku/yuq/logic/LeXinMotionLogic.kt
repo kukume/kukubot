@@ -20,4 +20,6 @@ interface LeXinMotionLogic {
 
     fun modifyStepCount(step: Int, motionEntity: MotionEntity): String
 
+    fun bindBand(motionEntity: MotionEntity): String
+
 }

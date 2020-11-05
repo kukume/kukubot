@@ -85,12 +85,6 @@ class LeXinMotionLogicImpl: LeXinMotionLogic {
     }
 
     override fun modifyStepCount(step: Int, motionEntity: MotionEntity): String {
-        //另一个手环  http://we.qq.com/d/AQC7PnaOEcpmVUpHtrZBmRUVq4wOOgKw-gfh6wPj
-        //http://we.qq.com/d/AQC7PnaOelOaCg9Ux8c9Ew95yumTVfMcFuGCHMY-
-        val bindJsonObject = OkHttpClientUtils.postJson("https://sports.lifesense.com/device_service/device_user/bind",
-                OkHttpClientUtils.addJson("{\"qrcode\": \"http://we.qq.com/d/AQC7PnaOelOaCg9Ux8c9Ew95yumTVfMcFuGCHMY-\",\"userId\":\"${motionEntity.leXinUserId}\"}"),
-                OkHttpClientUtils.addCookie(motionEntity.leXinCookie))
-        if (bindJsonObject.getInteger("code") != 200) return bindJsonObject.getString("msg")
         val dateTimeFormat = SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
         val dateFormat = SimpleDateFormat("yyyy-MM-dd")
         val date = Date()
@@ -101,5 +95,13 @@ class LeXinMotionLogicImpl: LeXinMotionLogic {
         val str = OkHttpClientUtils.getStr(response)
         val jsonObject = JSONObject.parseObject(str)
         return if (jsonObject.getInteger("code") == 200) "步数修改成功！！" else jsonObject.getString("msg")
+    }
+
+    override fun bindBand(motionEntity: MotionEntity): String {
+        val bindJsonObject = OkHttpClientUtils.postJson("https://sports.lifesense.com/device_service/device_user/bind",
+                OkHttpClientUtils.addJson("{\"qrcode\": \"http://we.qq.com/d/AQC7PnaOelOaCg9Ux8c9Ew95yumTVfMcFuGCHMY-\",\"userId\":\"${motionEntity.leXinUserId}\"}"),
+                OkHttpClientUtils.addCookie(motionEntity.leXinCookie))
+        if (bindJsonObject.getInteger("code") != 200) return bindJsonObject.getString("msg")
+        return "绑定成功！！"
     }
 }

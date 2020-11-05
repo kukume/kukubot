@@ -60,6 +60,12 @@ class GroupManagerEvent {
         var vio: String? = null
         out@for (i in violationJsonArray.indices){
             val violation = violationJsonArray.getString(i)
+            val nameCard = e.sender.nameCard
+            if (nameCard.contains(violation)){
+                code = 3
+                vio = violation
+                break@out
+            }
             for (item in message.body){
                 when (item){
                     is Text -> if (item.text.contains(violation)) code = 1
@@ -83,7 +89,8 @@ class GroupManagerEvent {
             if (qqEntity.violationCount < groupEntity.maxViolationCount) {
                 val sb = StringBuilder()
                 if (code == 2) sb.append("检测到色情图片。")
-                else sb.append("检测到违规词\"$vio\"。")
+                else if (code == 1) sb.append("检测到违规词\"$vio\"。")
+                else if (code == 3) sb.appendLine("检测到违规群名片\"$vio\"")
                 sb.append("您当前的违规次数为${qqEntity.violationCount}次，累计违规${groupEntity.maxViolationCount}次会被移出本群哦！！")
                 e.group.sendMessage(mif.at(qqEntity.qq).plus(sb.toString()))
                 e.message.recall()

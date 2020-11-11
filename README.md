@@ -1,4 +1,4 @@
-**基于`YuQ-Mirai`的没有菜单的而且也不好用的机器人**
+**基于`YuQ-Mirai`的不好用的机器人**
 * [YuQ-Mirai](https://github.com/YuQWorks/YuQ-Mirai)
 * [YuQ-Mirai-SuperDemo](https://github.com/YuQWorks/YuQ-SuperDemo)
 * [Mirai](https://github.com/mamoe/mirai)
@@ -7,7 +7,7 @@
 * QQ签到
 * 推送最新微博到群聊（指定用户名）、私聊（我的关注），微博自动赞、评论、转发
 * 推送最新哔哩哔哩动态到群聊（指定用户名）、私聊（我的关注），开播提醒，哔哩哔哩自动赞、评论、转发、投硬币、收藏
-* 修改步数（wx and alipay）
+* 修改步数（wx and alipay and qq）
 * 网易云音乐打卡和每日300首听歌量
 * 群管功能
 * 一些小工具

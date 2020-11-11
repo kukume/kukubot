@@ -1,9 +1,9 @@
 plugins {
+    id 'java'
     id "com.github.johnrengelman.shadow" version "5.2.0"
-    id 'org.jetbrains.kotlin.jvm' version '1.4.10'
 }
 
-group 'me.kuku.yuq'
+group 'me.kuku'
 version '1.0-SNAPSHOT'
 
 repositories {
@@ -14,7 +14,9 @@ repositories {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    implementation 'org.projectlombok:lombok:1.18.16'
+    annotationProcessor 'org.projectlombok:lombok:1.18.16'
     implementation 'com.IceCreamQAQ.YuQ:YuQ-Mirai:0.1.0.0-DEV2'
     implementation 'com.IceCreamQAQ:YuQ:0.1.0.0-DEV3'
     implementation("com.IceCreamQAQ:Yu-Core:0.2.0.0-DEV1")
@@ -28,6 +30,6 @@ dependencies {
 
 jar {
     manifest {
-        attributes ('Main-Class': 'me.kuku.yuq.StartKt')
+        attributes ('Main-Class': 'me.kuku.yuq.Start')
     }
 }

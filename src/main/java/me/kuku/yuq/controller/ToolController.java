@@ -49,6 +49,9 @@ public class ToolController {
     private ConfigService configService;
     @Inject
     private MessageService messageService;
+
+    @Inject
+    private MessageItemFactory mif;
     @Config("YuQ.Mirai.protocol")
     private String protocol;
 
@@ -378,7 +381,7 @@ public class ToolController {
     @Action("戳 {qqNo}")
     @QMsg(at = true)
     public String stamp(long qqNo, long group){
-        if (!"Android".equals(protocol)) return "戳一戳必须使用Android才能使用！！";
+        if (!"".equals(protocol)) return "戳一戳必须使用Android才能使用！！";
         Bot bot = Bot.getInstance(FunKt.getYuq().getBotId());
         net.mamoe.mirai.contact.Group groupObj = bot.getGroup(group);
         Member member;
@@ -387,5 +390,18 @@ public class ToolController {
         boolean b = Nudge.Companion.sendNudge(groupObj, member.nudge());
         if (b) return "戳成功！！";
         else return "戳失败，对方已关闭戳一戳！！";
+    }
+
+
+    @Action("点歌 {name}")
+    public Object musicFromQQ(String name) throws IOException {
+        String xmlStr = toolLogic.songByQQ(name);
+        return mif.xmlEx(2, xmlStr);
+    }
+
+    @Action("163点歌 {name}")
+    public Object musicFrom163(String name){
+        Result<String> xmlStr = toolLogic.songBy163(name);
+        return mif.xmlEx(2, xmlStr.getData());
     }
 }

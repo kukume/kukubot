@@ -32,6 +32,6 @@ public class NeTeaseController {
     public String listeningVolume(NeTeaseEntity neTeaseEntity) throws IOException {
         String signResult = neTeaseLogic.sign(neTeaseEntity);
         String listeningVolume = neTeaseLogic.listeningVolume(neTeaseEntity);
-        return "网易音乐签到：" + signResult + "\\n听歌量：" + listeningVolume;
+        return "网易音乐签到：" + signResult + "\n听歌量：" + listeningVolume;
     }
 }

@@ -61,6 +61,7 @@ public class QQZoneLogicImpl implements QQZoneLogic {
                 Map<String, String> map = new HashMap<>();
                 map.put("id", feedJsonObject.getJSONObject("id").getString("cellid"));
                 map.put("qq", qq.toString());
+                map.put("time", feedJsonObject.getJSONObject("comm").getString("time"));
                 list.add(map);
             });
             return list;
@@ -70,7 +71,7 @@ public class QQZoneLogicImpl implements QQZoneLogic {
     @Override
     public String forwardTalk(QQLoginEntity qqLoginEntity, String id, String qq, String text) throws IOException {
         Map<String, String> map = new HashMap<>();
-        map.put("res_id", "id");
+        map.put("res_id", id);
         map.put("res_uin", qq);
         map.put("format", "json");
         map.put("reason", text);

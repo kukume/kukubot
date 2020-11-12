@@ -642,9 +642,9 @@ public class ToolLogicImpl implements ToolLogic {
         JSONObject dataJsonObject = secondJsonObject.getJSONObject("req_0").getJSONObject("data");
         JSONObject urlJsonObject = dataJsonObject.getJSONArray("midurlinfo").getJSONObject(0);
         String musicUrl = dataJsonObject.getJSONArray("sip").getString(0) + urlJsonObject.getString("purl");
-        String jumpUrl = "https://y.qq.com/n/yqq/song/"+mid+".html";
-        Response thirdResponse = OkHttpUtils.get(jumpUrl, OkHttpUtils.addUA(OkHttpUtils.MOBILE_UA));
-        String html = OkHttpUtils.getStr(thirdResponse);
+//        String jumpUrl = "https://y.qq.com/n/yqq/song/"+mid+".html";
+//        Response thirdResponse = OkHttpUtils.get(jumpUrl, OkHttpUtils.addUA(UA.MOBILE));
+//        String html = OkHttpUtils.getStr(thirdResponse);
         String songid = songJsonObject.getString("songid");
         String albumId = songJsonObject.getString("albumid");
         String singer = songJsonObject.getJSONArray("singer").getJSONObject(0).getString("name");
@@ -675,8 +675,8 @@ public class ToolLogicImpl implements ToolLogic {
             if (url != null){
                 String songName = songJsonObject.getString("name");
                 String author = songJsonObject.getJSONArray("artists").getJSONObject(0).getString("name");
-                Response thirdResponse = OkHttpUtils.get("https://y.music.163.com/m/song?id="+id, OkHttpUtils.addUA(OkHttpUtils.MOBILE_UA));
-                String html = OkHttpUtils.getStr(thirdResponse)
+                Response thirdResponse = OkHttpUtils.get("https://y.music.163.com/m/song?id="+id, OkHttpUtils.addUA(UA.MOBILE));
+                String html = OkHttpUtils.getStr(thirdResponse);
                 String imageUrl = Jsoup.parse(html).select("meta[property=og:image]").first().attr("content");
                  return Result.success("成功","<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>" +
                                 "<msg serviceID=\"2\" templateID=\"1\" action=\"web\" brief=\"[分享] "+songName+"\" sourceMsgId=\"0\" " +
@@ -694,6 +694,5 @@ public class ToolLogicImpl implements ToolLogic {
         }else {
             return Result.failure(500, "未找到该歌曲！！");
         }
-    }
     }
 }

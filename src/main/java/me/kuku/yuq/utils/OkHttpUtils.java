@@ -18,8 +18,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class OkHttpUtils {
-    public static final String PC_UA =  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36";
-    public static final String MOBILE_UA = "Mozilla/5.0 (Linux; Android 8.0; Pixel 2 Build/OPD3.170816.012) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Mobile Safari/537.36";
     private static final MediaType MEDIA_JSON = MediaType.get("application/json;charset=utf-8");
     private static final MediaType MEDIA_STREAM = MediaType.get("application/octet-stream");
     private static final MediaType MEDIA_X_JSON = MediaType.get("text/x-json");

@@ -23,6 +23,7 @@ public class NeTeaseLogicImpl implements NeTeaseLogic {
     private final String secretKey = "TA3YiYCfY2dDJQgg";
     private final String encSecKey = "84ca47bca10bad09a6b04c5c927ef077d9b9f1e37098aa3eac6ea70eb59df0aa28b691b7e75e4f1f9831754919ea784c8f74fbfadf2898b0be17849fd656060162857830e241aba44991601f137624094c114ea8d17bce815b0cd4e5b8e2fbaba978c6d1d14dc3d1faf852bdd28818031ccdaaa13a6018e1024e2aae98844210";
     private final String UA = me.kuku.yuq.pojo.UA.PC.getValue();
+    private final String api = "https://netease.kuku.me";
 
     private String aesEncode(String secretData, String secret){
         return AESUtils.encrypt(secretData, secret, vi);
@@ -39,31 +40,24 @@ public class NeTeaseLogicImpl implements NeTeaseLogic {
 
     @Override
     public Result<NeTeaseEntity> loginByPhone(String username, String password) throws IOException {
-        HashMap<String, String> map = new HashMap<>();
-        map.put("phone", username);
-        map.put("countrycode", "86");
-        map.put("password", password);
-        map.put("rememberLogin", "true");
-        Response response = OkHttpUtils.post("https://music.163.com/weapi/w/login/cellphone?csrf_token=",
-                prepare(map), OkHttpUtils.addHeaders(null, referer, UA));
+        Response response = OkHttpUtils.get(api + "/login/cellphone?phone=" + username + "&md5_password=" + password);
         JSONObject jsonObject = OkHttpUtils.getJson(response);
-        String cookie = OkHttpUtils.getCookie(response);
-        if (jsonObject.getInteger("code").equals(200)){
-            return Result.success(new NeTeaseEntity(OkHttpUtils.getCookie(cookie, "MUSIC_U"),
-                    OkHttpUtils.getCookie(cookie, "__csrf")));
-        }else return Result.failure(jsonObject.getString("message"), null);
+        if (jsonObject.getInteger("code") == 200){
+            String cookie = OkHttpUtils.getCookie(response);
+            return Result.success(new NeTeaseEntity(
+                    OkHttpUtils.getCookie(cookie, "MUSIC_U"), OkHttpUtils.getCookie(cookie, "__csrf")
+            ));
+        }else return Result.failure(jsonObject.getString("msg"), null);
     }
 
     @Override
     public String sign(NeTeaseEntity neTeaseEntity) throws IOException {
-        HashMap<String, String> map = new HashMap<>();
-        map.put("type", "0");
-        JSONObject jsonObject = OkHttpUtils.postJson("https://music.163.com/weapi/point/dailyTask",
-                prepare(map), OkHttpUtils.addHeaders(neTeaseEntity.getCookie(), referer));
+        OkHttpUtils.get(api + "/daily_signin?type=1").close();
+        JSONObject jsonObject = OkHttpUtils.getJson(api + "/daily_signin?type=0");
         Integer code = jsonObject.getInteger("code");
         switch (code){
             case 200: return "签到成功！！";
-            case -1: return "今日已签到";
+            case -2: return "今日已签到";
             default: return jsonObject.getString("msg");
         }
     }

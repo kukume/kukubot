@@ -400,7 +400,7 @@ public class ToolController {
     }
 
     @Action("163点歌 {name}")
-    public Object musicFrom163(String name){
+    public Object musicFrom163(String name) throws IOException {
         Result<String> xmlStr = toolLogic.songBy163(name);
         return mif.xmlEx(2, xmlStr.getData());
     }

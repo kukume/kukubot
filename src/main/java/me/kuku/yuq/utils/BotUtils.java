@@ -10,6 +10,8 @@ import com.icecreamqaq.yuq.mirai.message.ImageReceive;
 import me.kuku.yuq.entity.QQLoginEntity;
 import okhttp3.Cookie;
 
+import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +22,12 @@ import java.util.regex.Pattern;
 public class BotUtils {
 
     public static String shortUrl(String url){
-        return "";
+        try {
+            return OkHttpUtils.getStr("https://api.kuku.me/shorturl?url=" + URLEncoder.encode(url, "utf-8"));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "短链接异常！！";
+        }
     }
 
     public static String regex(String regex, String text){

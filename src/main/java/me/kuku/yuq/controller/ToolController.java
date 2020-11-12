@@ -9,6 +9,7 @@ import com.icecreamqaq.yuq.annotation.PathVar;
 import com.icecreamqaq.yuq.annotation.QMsg;
 import com.icecreamqaq.yuq.controller.ContextSession;
 import com.icecreamqaq.yuq.entity.Group;
+import com.icecreamqaq.yuq.job.RainInfo;
 import com.icecreamqaq.yuq.message.Image;
 import com.icecreamqaq.yuq.message.Message;
 import com.icecreamqaq.yuq.message.MessageItemFactory;
@@ -49,6 +50,8 @@ public class ToolController {
     private ConfigService configService;
     @Inject
     private MessageService messageService;
+    @Inject
+    private RainInfo rainInfo;
 
     @Inject
     private MessageItemFactory mif;
@@ -403,5 +406,23 @@ public class ToolController {
     public Object musicFrom163(String name) throws IOException {
         Result<String> xmlStr = toolLogic.songBy163(name);
         return mif.xmlEx(2, xmlStr.getData());
+    }
+
+    @Action("收发消息状态")
+    public String status(){
+        //当前收发消息状态：
+        //收：7 / 分钟，
+        //发：1 / 分钟。
+        //总计：
+        //收：31 条，
+        //发：7 条。
+        //调用其getCountRm Ra Sm Sa
+        //R 是收 S 是发 m是每分钟 a 是总计
+        return "当前收发消息状态：\n" +
+                "收：" + rainInfo.getCountRm() + " / 分钟\n" +
+                "发：" + rainInfo.getCountSm() + " / 分钟\n" +
+                "总计：\n" +
+                "收：" + rainInfo.getCountRa() + " 条，\n" +
+                "发：" + rainInfo.getCountSa() + " 条。";
     }
 }

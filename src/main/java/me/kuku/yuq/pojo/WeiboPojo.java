@@ -10,7 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class WeiboPojo {
-    private Integer id;
+    private Long id;
     private String name;
     private String userId;
     private String created;

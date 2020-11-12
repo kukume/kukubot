@@ -68,9 +68,9 @@ public class WeiboJob {
                                 .plus(weiboLogic.convertStr(weiboPojo)));
                     });
                 }
-                Integer newId = list.get(0).getId();
+                Long newId = list.get(0).getId();
                 if (!wbMap.containsKey(userId) || newId > wbMap.get(userId)){
-                    wbMap.put(userId, newId.longValue());
+                    wbMap.put(userId, newId);
                 }
             }
         }
@@ -87,7 +87,7 @@ public class WeiboJob {
             List<WeiboPojo> newList = new ArrayList<>();
             if (userMap.containsKey(qq)) {
                 for (WeiboPojo weiboPojo : list) {
-                    if (weiboPojo.getId().longValue() <= userMap.get(qq)) break;
+                    if (weiboPojo.getId() <= userMap.get(qq)) break;
                     newList.add(weiboPojo);
                 }
                 for (WeiboPojo weiboPojo : newList) {
@@ -111,7 +111,7 @@ public class WeiboJob {
                     }
                 }
             }
-            userMap.put(qq, list.get(0).getId().longValue());
+            userMap.put(qq, list.get(0).getId());
         }
     }
 }

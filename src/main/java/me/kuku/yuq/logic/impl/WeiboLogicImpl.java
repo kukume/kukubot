@@ -86,7 +86,7 @@ public class WeiboLogicImpl implements WeiboLogic {
     private WeiboPojo convert(JSONObject jsonObject){
         WeiboPojo weiboPojo = new WeiboPojo();
         JSONObject userJsonObject = jsonObject.getJSONObject("user");
-        weiboPojo.setId(Integer.parseInt(jsonObject.getString("id")));
+        weiboPojo.setId(Long.parseLong(jsonObject.getString("id")));
         weiboPojo.setName(userJsonObject.getString("screen_name"));
         weiboPojo.setCreated(jsonObject.getString("created_at"));
         weiboPojo.setText(Jsoup.parse(jsonObject.getString("text")).text());

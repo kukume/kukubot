@@ -476,8 +476,12 @@ public class ToolController {
                 "系统架构：" + osArch + "\n" +
                 "jvm内存总量：" + formatByte(jvmTotalMemoryByte) + "\n" +
                 "jvm已使用内存：" + formatByte(jvmTotalMemoryByte-freeMemoryByte) + "\n" +
-                "java版本：" + jdkVersion + "\n" +
-                "当前收发消息状态：\n" +
+                "java版本：" + jdkVersion;
+    }
+
+    @Action("消息统计")
+    public String message(){
+        return "当前收发消息状态：\n" +
                 "收：" + rainInfo.getCountRm() + " / 分钟\n" +
                 "发：" + rainInfo.getCountSm() + " / 分钟\n" +
                 "总计：\n" +

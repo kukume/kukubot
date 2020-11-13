@@ -115,7 +115,7 @@ public class WeiboLogicImpl implements WeiboLogic {
             weiboPojo.setForwardName(name);
             weiboPojo.setForwardText(Jsoup.parse(forwardJsonObject.getString("text")).text());
             weiboPojo.setForwardBid(forwardJsonObject.getString("bid"));
-        }
+        }else weiboPojo.setIsForward(false);
         return weiboPojo;
     }
 

@@ -97,7 +97,8 @@ public class LeXinMotionLogicImpl implements LeXinMotionLogic {
         list.add("http://we.qq.com/d/AQC7PnaOk8V-FV7R4ix61GToC5fh5I151hvlsNf6");
         String qrcode = list.get((int) (Math.random() * list.size()));
         JSONObject jsonObject = OkHttpUtils.postJson("https://sports.lifesense.com/device_service/device_user/bind",
-                OkHttpUtils.addJson(String.format("{\"qrcode\": \"%s\",\"userId\":\"%s\"}", qrcode, motionEntity.getLeXinUserId())));
+                OkHttpUtils.addJson(String.format("{\"qrcode\": \"%s\",\"userId\":\"%s\"}", qrcode, motionEntity.getLeXinUserId())),
+                OkHttpUtils.addCookie(motionEntity.getLeXinCookie()));
         if (jsonObject.getInteger("code").equals(200)) return "绑定成功！！";
         else return jsonObject.getString("msg");
     }

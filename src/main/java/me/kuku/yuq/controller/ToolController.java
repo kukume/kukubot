@@ -14,7 +14,6 @@ import com.icecreamqaq.yuq.message.Image;
 import com.icecreamqaq.yuq.message.Message;
 import com.icecreamqaq.yuq.message.MessageItemFactory;
 import com.icecreamqaq.yuq.message.XmlEx;
-import me.kuku.yuq.Start;
 import me.kuku.yuq.entity.ConfigEntity;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.logic.QQAILogic;

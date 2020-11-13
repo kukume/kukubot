@@ -63,6 +63,7 @@ public class MotionController {
     }
 
     @Action("lexin绑定手环")
+    @QMsg(at = true)
     public String bindBand(MotionEntity motionEntity) throws IOException {
         return leXinMotionLogic.bindBand(motionEntity);
     }

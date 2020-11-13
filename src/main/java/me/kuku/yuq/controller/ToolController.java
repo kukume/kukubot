@@ -14,6 +14,7 @@ import com.icecreamqaq.yuq.message.Image;
 import com.icecreamqaq.yuq.message.Message;
 import com.icecreamqaq.yuq.message.MessageItemFactory;
 import com.icecreamqaq.yuq.message.XmlEx;
+import me.kuku.yuq.Start;
 import me.kuku.yuq.entity.ConfigEntity;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.logic.QQAILogic;
@@ -27,15 +28,20 @@ import me.kuku.yuq.utils.OkHttpUtils;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Member;
 import net.mamoe.mirai.message.action.Nudge;
+import oshi.SystemInfo;
+import oshi.hardware.CentralProcessor;
+import oshi.hardware.GlobalMemory;
 
 import javax.inject.Inject;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.text.DecimalFormat;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("unused")
 @GroupController
@@ -52,11 +58,16 @@ public class ToolController {
     private MessageService messageService;
     @Inject
     private RainInfo rainInfo;
-
     @Inject
     private MessageItemFactory mif;
     @Config("YuQ.Mirai.protocol")
     private String protocol;
+
+    private final LocalDateTime startTime;
+
+    public ToolController(){
+        startTime = LocalDateTime.now();
+    }
 
     @QMsg(at = true)
     @Action("百度 {content}")
@@ -384,7 +395,7 @@ public class ToolController {
     @Action("戳 {qqNo}")
     @QMsg(at = true)
     public String stamp(long qqNo, long group){
-        if (!"".equals(protocol)) return "戳一戳必须使用Android才能使用！！";
+        if (!"Android".equals(protocol)) return "戳一戳必须使用Android才能使用！！";
         Bot bot = Bot.getInstance(FunKt.getYuq().getBotId());
         net.mamoe.mirai.contact.Group groupObj = bot.getGroup(group);
         Member member;
@@ -408,21 +419,88 @@ public class ToolController {
         return mif.xmlEx(2, xmlStr.getData());
     }
 
-    @Action("收发消息状态")
+    @Action("统计")
     public String status(){
-        //当前收发消息状态：
-        //收：7 / 分钟，
-        //发：1 / 分钟。
-        //总计：
-        //收：31 条，
-        //发：7 条。
-        //调用其getCountRm Ra Sm Sa
-        //R 是收 S 是发 m是每分钟 a 是总计
-        return "当前收发消息状态：\n" +
+        SystemInfo systemInfo = new SystemInfo();
+        CentralProcessor processor = systemInfo.getHardware().getProcessor();
+        long[] prevTicks = processor.getSystemCpuLoadTicks();
+        // 睡眠1s
+        try {
+            TimeUnit.SECONDS.sleep(1);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        long[] ticks = processor.getSystemCpuLoadTicks();
+        long nice = ticks[CentralProcessor.TickType.NICE.getIndex()] - prevTicks[CentralProcessor.TickType.NICE.getIndex()];
+        long irq = ticks[CentralProcessor.TickType.IRQ.getIndex()] - prevTicks[CentralProcessor.TickType.IRQ.getIndex()];
+        long softirq = ticks[CentralProcessor.TickType.SOFTIRQ.getIndex()] - prevTicks[CentralProcessor.TickType.SOFTIRQ.getIndex()];
+        long steal = ticks[CentralProcessor.TickType.STEAL.getIndex()] - prevTicks[CentralProcessor.TickType.STEAL.getIndex()];
+        long cSys = ticks[CentralProcessor.TickType.SYSTEM.getIndex()] - prevTicks[CentralProcessor.TickType.SYSTEM.getIndex()];
+        long user = ticks[CentralProcessor.TickType.USER.getIndex()] - prevTicks[CentralProcessor.TickType.USER.getIndex()];
+        long iowait = ticks[CentralProcessor.TickType.IOWAIT.getIndex()] - prevTicks[CentralProcessor.TickType.IOWAIT.getIndex()];
+        long idle = ticks[CentralProcessor.TickType.IDLE.getIndex()] - prevTicks[CentralProcessor.TickType.IDLE.getIndex()];
+        long totalCpu = user + nice + cSys + idle + iowait + irq + softirq + steal;
+        GlobalMemory memory = systemInfo.getHardware().getMemory();
+        //总内存
+        long totalByte = memory.getTotal();
+        //剩余
+        long acaliableByte = memory.getAvailable();
+        Properties props = System.getProperties();
+        //系统名称
+        String osName = props.getProperty("os.name");
+        //架构名称
+        String osArch = props.getProperty("os.arch");
+        Runtime runtime = Runtime.getRuntime();
+        //jvm总内存
+        long jvmTotalMemoryByte = runtime.totalMemory();
+        //jvm最大可申请
+        long jvmMaxMoryByte = runtime.maxMemory();
+        //空闲空间
+        long freeMemoryByte = runtime.freeMemory();
+        //jdk版本
+        String jdkVersion = props.getProperty("java.version");
+        //jdk路径
+        String jdkHome = props.getProperty("java.home");
+        LocalDateTime nowTime = LocalDateTime.now();
+        Duration duration = Duration.between(startTime, nowTime);
+        long days = duration.toDays();
+        long hours = duration.toHours();
+        long minutes = duration.toMinutes();
+        String ss = days + "天" + hours + "小时" + minutes + "分钟";
+        return  "程序运行时长：" + ss + "\n" +
+                "cpu核数：" + processor.getLogicalProcessorCount() + "\n" +
+                "cpu当前使用率：" + new DecimalFormat("#.##%").format(1.0-(idle * 1.0 / totalCpu)) + "\n" +
+                "总内存：" + formatByte(totalByte) + "\n" +
+                "已使用内存：" + formatByte(totalByte-acaliableByte) + "\n" +
+                "操作系统：" + osName + "\n" +
+                "系统架构：" + osArch + "\n" +
+                "jvm内存总量：" + formatByte(jvmTotalMemoryByte) + "\n" +
+                "jvm已使用内存：" + formatByte(jvmTotalMemoryByte-freeMemoryByte) + "\n" +
+                "java版本：" + jdkVersion + "\n" +
+                "当前收发消息状态：\n" +
                 "收：" + rainInfo.getCountRm() + " / 分钟\n" +
                 "发：" + rainInfo.getCountSm() + " / 分钟\n" +
                 "总计：\n" +
                 "收：" + rainInfo.getCountRa() + " 条，\n" +
                 "发：" + rainInfo.getCountSa() + " 条。";
+    }
+
+    private String formatByte(long byteNumber){
+        //换算单位
+        double FORMAT = 1024.0;
+        double kbNumber = byteNumber/FORMAT;
+        if(kbNumber<FORMAT){
+            return new DecimalFormat("#.##KB").format(kbNumber);
+        }
+        double mbNumber = kbNumber/FORMAT;
+        if(mbNumber<FORMAT){
+            return new DecimalFormat("#.##MB").format(mbNumber);
+        }
+        double gbNumber = mbNumber/FORMAT;
+        if(gbNumber<FORMAT){
+            return new DecimalFormat("#.##GB").format(gbNumber);
+        }
+        double tbNumber = gbNumber/FORMAT;
+        return new DecimalFormat("#.##TB").format(tbNumber);
     }
 }

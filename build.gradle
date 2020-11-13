@@ -24,6 +24,7 @@ dependencies {
     implementation 'com.IceCreamQAQ.Yu:WebCore:0.0.2.0-DEV1'
     implementation 'org.jsoup:jsoup:1.13.1'
     implementation 'com.h2database:h2:1.4.200'
+    implementation 'com.github.oshi:oshi-core:5.3.5'
 }
 
 jar {

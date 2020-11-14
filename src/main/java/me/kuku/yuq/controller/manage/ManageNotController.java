@@ -34,7 +34,7 @@ public class ManageNotController {
     @Inject
     private QQService qqService;
 
-    private final String version = "v2.0.0";
+    private final String version = "v2.0.1";
 
     @Before
     public GroupEntity before(Long group){

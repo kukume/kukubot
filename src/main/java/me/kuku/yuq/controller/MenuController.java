@@ -3,7 +3,6 @@ package me.kuku.yuq.controller;
 import com.IceCreamQAQ.Yu.annotation.Action;
 import com.IceCreamQAQ.Yu.annotation.Synonym;
 import com.icecreamqaq.yuq.annotation.GroupController;
-import com.icecreamqaq.yuq.controller.QQController;
 import me.kuku.yuq.controller.bilibili.BiliBiliController;
 import me.kuku.yuq.controller.bilibili.BiliBiliLoginController;
 import me.kuku.yuq.controller.manage.ManageAdminController;
@@ -13,6 +12,7 @@ import me.kuku.yuq.controller.netease.BindNeTeaseController;
 import me.kuku.yuq.controller.netease.NeTeaseController;
 import me.kuku.yuq.controller.qqlogin.BindQQController;
 import me.kuku.yuq.controller.qqlogin.QQJobController;
+import me.kuku.yuq.controller.qqlogin.QQLoginController;
 import me.kuku.yuq.controller.weibo.WeiboController;
 import me.kuku.yuq.controller.weibo.WeiboNotController;
 
@@ -56,7 +56,7 @@ public class MenuController {
 
     @Action("qq")
     public String qq(){
-        return menu(QQController.class) + "\n" +
+        return menu(QQLoginController.class) + "\n" +
                 menu(BindQQController.class) + "\n" +
                 menu(QQJobController.class);
     }

@@ -66,8 +66,9 @@ public class MyJob {
                 long group = list.get((int) (Math.random() * list.size())).getGroup();
                 Map<Long, Member> members = FunKt.getYuq().getGroups().get(group).getMembers();
                 Message message = Message.Companion.toMessage(
-                        "程序有更新啦，快去更新吧。\n如果您使用的不是docker版而且github release没有发布新版本，那么请无视这条消息！！\n" +
-                                "github：https://github.com/kukume/kuku-bot"
+                        "程序有更新啦，快去更新吧。\n如果您使用的是docker版，请参考 https://www.kuku.me/archives/8/ 的更新教程\n" +
+                                "如果不是，那么请手动替换最新jar包并重启：https://github.com/kukume/kuku-bot/actions，\n" +
+                                "选择最新的workflows然后下载Artifacts"
                 );
                 long qq = Long.parseLong(master);
                 if (members.containsKey(qq)){

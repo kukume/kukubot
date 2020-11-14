@@ -3,6 +3,8 @@
 * [YuQ-Mirai-SuperDemo](https://github.com/YuQWorks/YuQ-SuperDemo)
 * [Mirai](https://github.com/mamoe/mirai)
 
+**Jar包下载**：https://github.com/kukume/kuku-bot/actions
+
 ## 功能
 * QQ签到
 * 推送最新微博到群聊（指定用户名）、私聊（我的关注），微博自动赞、评论、转发

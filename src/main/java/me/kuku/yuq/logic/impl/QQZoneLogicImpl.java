@@ -147,7 +147,8 @@ public class QQZoneLogicImpl implements QQZoneLogic {
     @Override
     public Result<List<Map<String, String>>> queryGroup(QQLoginEntity qqLoginEntity) throws IOException {
         JSONObject jsonObject = OkHttpUtils.getJsonp(String.format("https://user.qzone.qq.com/proxy/domain/r.qzone.qq.com/cgi-bin/tfriend/qqgroupfriend_extend.cgi?uin=%d&rd=0.%s&cntperpage=0&fupdate=1&g_tk=%s&g_tk=%s",
-                qqLoginEntity.getQq(), BotUtils.randomNum(16), qqLoginEntity.getGtkP(), qqLoginEntity.getGtkP()));
+                qqLoginEntity.getQq(), BotUtils.randomNum(16), qqLoginEntity.getGtkP(), qqLoginEntity.getGtkP()),
+                OkHttpUtils.addCookie(qqLoginEntity.getCookieWithQQZone()));
         if (jsonObject.getInteger("code") == 0){
             JSONArray jsonArray = jsonObject.getJSONObject("data").getJSONArray("group");
             List<Map<String, String>> list = new ArrayList<>();

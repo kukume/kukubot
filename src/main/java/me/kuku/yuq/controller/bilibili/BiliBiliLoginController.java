@@ -28,8 +28,8 @@ public class BiliBiliLoginController {
     public void biliBiliLoginByQr(Group group, Long qq) throws IOException {
         String url = biliBiliLogic.loginByQr1();
         byte[] qrUrl = toolLogic.creatQr(url);
-        FunKt.getMif().at(qq).plus("请使用哔哩哔哩APP扫码登录：")
-                .plus(FunKt.getMif().imageByInputStream(new ByteArrayInputStream(qrUrl)));
+        group.sendMessage(FunKt.getMif().at(qq).plus("请使用哔哩哔哩APP扫码登录：")
+                .plus(FunKt.getMif().imageByInputStream(new ByteArrayInputStream(qrUrl))));
         new Thread(() -> {
             while (true){
                 try {

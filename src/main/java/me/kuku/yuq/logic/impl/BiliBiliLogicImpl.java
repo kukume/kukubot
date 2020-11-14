@@ -215,7 +215,7 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
         String oauthKey = BotUtils.regex("(?<=oauthKey\\=).*", url);
         if (oauthKey == null) return Result.failure("链接格式不正确！！", null);
         Map<String, String> map = new HashMap<>();
-        map.put("oauthKey", "oauthKey");
+        map.put("oauthKey", oauthKey);
         map.put("gourl", "https://www.bilibili.com");
         JSONObject jsonObject = OkHttpUtils.postJson("https://passport.bilibili.com/qrcode/getLoginInfo", map);
         Boolean status = jsonObject.getBoolean("status");

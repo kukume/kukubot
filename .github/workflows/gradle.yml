@@ -26,5 +26,6 @@ jobs:
       run: ./gradlew shadowJar
     - uses: actions/upload-artifact@v2
       with:
-        name: Package
+        name: kukubot
         path: build/libs
+          src/main/resources/conf/YuQ.properties

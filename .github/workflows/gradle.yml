@@ -28,4 +28,3 @@ jobs:
       with:
         name: kukubot
         path: build/libs
-          src/main/resources/conf/YuQ.properties

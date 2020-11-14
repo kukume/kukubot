@@ -456,7 +456,7 @@ public class QQLogicImpl implements QQLogic {
         jsonObject = jsonObject.getJSONObject("modRet");
         if (jsonObject == null) sb.append("道聚城签到失败\n");
         else {
-            switch (jsonObject.getInteger("rey")){
+            switch (jsonObject.getInteger("ret")){
                 case 0: sb.append("道聚城签到成功！\n"); break;
                 case 600: sb.append("道聚城今天已签到！\n"); break;
                 default: sb.append("道聚城签到失败！").append(jsonObject.getJSONObject("modRet").getString("msg")).append("\n");

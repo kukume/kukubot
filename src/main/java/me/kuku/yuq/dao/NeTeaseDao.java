@@ -13,6 +13,6 @@ public interface NeTeaseDao extends YuDao<NeTeaseEntity, Integer> {
     NeTeaseEntity findByQQ(Long qq);
     @Select("from NeTeaseEntity")
     List<NeTeaseEntity> findAll();
-    @Execute("delete from GroupQQEntity where qq = ?0")
+    @Execute("delete from NeTeaseEntity where qq = ?0")
     int delByQQ(Long qq);
 }

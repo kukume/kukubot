@@ -129,10 +129,13 @@ public class ManageNotController {
         sb.append("整点报时：").append(this.boolToStr(groupEntity.getOnTimeAlarm())).append("\n");
         sb.append("闪照通知：").append(this.boolToStr(groupEntity.getFlashNotify())).append("\n");
         Integer maxCommandCountOnTime = groupEntity.getMaxCommandCountOnTime();
+        if (maxCommandCountOnTime == null) maxCommandCountOnTime = -1;
         String ss = maxCommandCountOnTime.toString();
         if (maxCommandCountOnTime < 0) ss = "无限制";
         sb.append("指令限制：").append(ss).append("\n");
-        sb.append("最大违规次数：").append(groupEntity.getMaxViolationCount());
+        Integer maxViolationCount = groupEntity.getMaxViolationCount();
+        if (maxViolationCount == null) maxViolationCount = 5;
+        sb.append("最大违规次数：").append(maxViolationCount);
         return sb.toString();
     }
 

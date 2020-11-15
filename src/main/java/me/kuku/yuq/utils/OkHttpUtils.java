@@ -43,6 +43,10 @@ public class OkHttpUtils {
         return okHttpClient.newCall(request).execute();
     }
 
+    public static Response get(String url, Map<String, String> map) throws IOException {
+        return get(url, addHeaders(map));
+    }
+
     public static Response get(String url) throws IOException {
         return get(url, emptyHeaders());
     }
@@ -134,6 +138,10 @@ public class OkHttpUtils {
     public static JSONObject getJson(String url, Headers headers) throws IOException {
         Response response = get(url, headers);
         return getJson(response);
+    }
+
+    public static JSONObject getJson(String url, Map<String, String> map) throws IOException {
+        return getJson(url, addHeaders(map));
     }
 
     public static JSONObject getJson(String url) throws IOException {

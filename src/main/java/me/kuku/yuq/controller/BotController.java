@@ -157,10 +157,9 @@ public class BotController extends QQController {
         if (groupMember == null) return result.getMessage();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         StringBuilder sb = new StringBuilder();
-        sb.append("\n");
         sb.append("群名片：").append(groupMember.getGroupCard()).append("\n");
         sb.append("Q龄：").append(groupMember.getAge()).append("\n");
-        sb.append("入群时间：").append(sdf.format(new Date(groupMember.getJoinTime())));
+        sb.append("入群时间：").append(sdf.format(new Date(groupMember.getJoinTime()))).append("\n");
         sb.append("最后发言时间：").append(sdf.format(new Date(groupMember.getLastTime())));
         return sb.toString();
     }

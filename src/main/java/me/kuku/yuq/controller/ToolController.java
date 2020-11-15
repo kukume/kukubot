@@ -419,6 +419,7 @@ public class ToolController {
     }
 
     @Action("统计")
+    @Synonym({"运行状态"})
     public String status(){
         SystemInfo systemInfo = new SystemInfo();
         CentralProcessor processor = systemInfo.getHardware().getProcessor();
@@ -505,5 +506,10 @@ public class ToolController {
         }
         double tbNumber = gbNumber/FORMAT;
         return new DecimalFormat("#.##TB").format(tbNumber);
+    }
+
+    @Action("genshin {id}")
+    public String queryGenShinUserInfo(long id) throws IOException {
+        return toolLogic.genShinUserInfo(id);
     }
 }

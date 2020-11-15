@@ -9,6 +9,7 @@ import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.pojo.UA;
 import me.kuku.yuq.utils.BotUtils;
+import me.kuku.yuq.utils.MD5Utils;
 import me.kuku.yuq.utils.OkHttpUtils;
 import okhttp3.Response;
 import org.jsoup.Jsoup;
@@ -694,5 +695,81 @@ public class ToolLogicImpl implements ToolLogic {
         }else {
             return Result.failure(500, "未找到该歌曲！！");
         }
+    }
+
+    @Override
+    public String genShinUserInfo(long id) throws IOException {
+        Map<String, String> map = new HashMap<>();
+        String mhyVersion = "2.1.0";
+        String n = MD5Utils.toMD5(mhyVersion);
+        String i = String.valueOf(new Date().getTime()).substring(0, 10);
+        String r = BotUtils.randomStr(6);
+        String c = MD5Utils.toMD5("salt=" + n + "&t=" + i + "&r=" + r);
+        String ds = i + "," + r + "," + c;
+        map.put("DS", ds);
+        map.put("x-rpc-app_version", "2.1.0");
+        map.put("User-Agent", "Mozilla/5.0 (Linux; Android 9; Unspecified Device) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/39.0.0.0 Mobile Safari/537.36 miHoYoBBS/2.2.");
+        map.put("x-rpc-client_type", "4");
+        map.put("Referer", "https://webstatic.mihoyo.com/app/community-game-records/index.html?v=6");
+        map.put("X-Requested-With", "com.mihoyo.hyperion");
+        JSONObject jsonObject = OkHttpUtils.getJson("https://api-takumi.mihoyo.com/game_record/genshin/api/index?server=cn_gf01&role_id=" + id,
+                map);
+        StringBuilder sb = new StringBuilder(id + " Genshin Info:\nRoles:\n");
+        JSONArray jsonArray = jsonObject.getJSONObject("data").getJSONArray("avatars");
+        for (Object obj: jsonArray){
+            JSONObject singleJsonObject = (JSONObject) obj;
+            String element = singleJsonObject.getString("element");
+            String type;
+            switch (element){
+                case "None": type = "无属性"; break;
+                case "Anemo": type = "风属性"; break;
+                case "Pyro": type = "火属性"; break;
+                case "Geo": type = "岩属性"; break;
+                case "Electro": type = "雷属性"; break;
+                case "Cryo": type = "冰属性"; break;
+                case "Hydro": type = "水属性"; break;
+                default: type = "草属性";
+            }
+            String name = singleJsonObject.getString("name");
+            String text = "";
+            if ("旅行者".equals(name)){
+                String image = singleJsonObject.getString("image");
+                text += "* " + name + "：\n";
+                if (image.contains("UI_AvatarIcon_PlayerGirl")){
+                    text += "  - [萤——妹妹] " + singleJsonObject.getString("level") + "级 " + type + "\n";
+                }else if (image.contains("UI_AvatarIcon_PlayerBoy")){
+                    text += "  - [空——哥哥] " + singleJsonObject.getString("level") + "级 " + type + "\n";
+                }else{
+                    text += "  - [性别判断失败] " + singleJsonObject.getString("level") + "级 " + type + "\n";
+                }
+            }else{
+                text += "* " + singleJsonObject.getString("name") + " " + singleJsonObject.getString("rarity") +
+                        "★角色:\n";
+                text += "  - " + singleJsonObject.getString("level") + "级 好感度(" + singleJsonObject.getString("fetter") +
+                        ")级 " + type + "\n";
+            }
+            sb.append(text);
+        }
+        JSONObject statsJsonObject = jsonObject.getJSONObject("data").getJSONObject("stats");
+        sb.append("\nAccount Info:\n");
+        sb.append("- 活跃天数：").append(statsJsonObject.getString("active_day_number")).append(" 天\n");
+        sb.append("- 达成成就：").append(statsJsonObject.getString("achievement_number")).append(" 个\n");
+        sb.append("- 获得角色：").append(statsJsonObject.getString("avatar_number")).append(" 个\n");
+        sb.append("- 深渊螺旋：");
+        if ("-".equals(statsJsonObject.getString("spiral_abyss"))){
+            sb.append("没打");
+        }else sb.append("打到了").append(statsJsonObject.getString("spiral_abyss"));
+        sb.append("\n").append("* 收集：\n");
+        sb.append("  - 风神瞳").append(statsJsonObject.getString("anemoculus_number")).append(" 个 岩神瞳")
+                .append(statsJsonObject.getString("geoculus_number")).append("个\n");
+        sb.append("* 解锁：\n");
+        sb.append("  - 传送点").append(statsJsonObject.getString("way_point_number")).append("个 秘境")
+                .append(statsJsonObject.getString("domain_number")).append("个\n");
+        sb.append("* 共开启宝箱：\n");
+        sb.append("  - 普通：").append(statsJsonObject.getString("common_chest_number")).append("个 精致：")
+                .append(statsJsonObject.getString("exquisite_chest_number")).append("个\n")
+                .append("  - 珍贵：").append(statsJsonObject.getString("luxurious_chest_number")).append("个 华丽：")
+                .append(statsJsonObject.getString("precious_chest_number")).append("个");
+        return sb.toString();
     }
 }

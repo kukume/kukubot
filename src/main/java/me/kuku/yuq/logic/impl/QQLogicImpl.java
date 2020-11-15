@@ -1045,7 +1045,7 @@ public class QQLogicImpl implements QQLogic {
     @Override
     public Result<List<GroupMember>> groupMemberInfo(QQLoginEntity qqLoginEntity, Long group) throws IOException {
         JSONObject jsonObject = OkHttpUtils.getJson(String.format("https://qinfo.clt.qq.com/cgi-bin/qun_info/get_members_info_v1?friends=1&gc=%s&bkn=%s&src=qinfo_v3&_ti=%s",
-                group, qqLoginEntity.getGtk(), new Date().getTime()));
+                group, qqLoginEntity.getGtk(), new Date().getTime()), OkHttpUtils.addCookie(qqLoginEntity.getCookie()));
         switch (jsonObject.getInteger("ec")){
             case 0:
                 JSONObject membersJsonObject = jsonObject.getJSONObject("members");

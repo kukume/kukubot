@@ -90,7 +90,7 @@ public class MonitorEvent {
                     }
                 }
                 String textChat = qqaiLogic.textChat(sb.toString(), String.valueOf(e.getSender().getId()));
-                e.getGroup().sendMessage(Message.Companion.toMessage(textChat));
+                e.getGroup().sendMessage(FunKt.getMif().at(e.getSender().getId()).plus(textChat));
             }
         }
     }

@@ -77,12 +77,14 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
                 if (text == null) text = itemJsonObject.getString("description");
                 if (text == null) text = itemJsonObject.getString("content");
                 JSONArray picJsonArray = itemJsonObject.getJSONArray("pictures");
-                List<String> picList = new ArrayList<>();
-                picJsonArray.forEach(obj -> {
-                    JSONObject picJsonObject = (JSONObject) obj;
-                    picList.add(picJsonObject.getString("img_src"));
-                });
-                biliBiliPojo.setPicList(picList);
+                if (picJsonArray != null) {
+                    List<String> picList = new ArrayList<>();
+                    picJsonArray.forEach(obj -> {
+                        JSONObject picJsonObject = (JSONObject) obj;
+                        picList.add(picJsonObject.getString("img_src"));
+                    });
+                    biliBiliPojo.setPicList(picList);
+                }
             }
             if (text == null) {
                 try {
@@ -136,7 +138,7 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
         biliBiliPojo.setText(text);
         int type;
         if (biliBiliPojo.getBvId() == null){
-            if (biliBiliPojo.getPicList().size() == 0) type = 17;
+            if (biliBiliPojo.getPicList() == null) type = 17;
             else type = 11;
         }else type = 1;
         biliBiliPojo.setType(type);

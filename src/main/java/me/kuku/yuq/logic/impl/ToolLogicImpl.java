@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class ToolLogicImpl implements ToolLogic {
@@ -426,8 +427,8 @@ public class ToolLogicImpl implements ToolLogic {
 
     @Override
     public byte[] queryTime() throws IOException {
-        String time = OkHttpUtils.getStr(myApi + "/time/hm");
-        return OkHttpUtils.getBytes("https://u.iheit.com/images/time/" + time + ".jpg");
+        SimpleDateFormat sdf = new SimpleDateFormat("HH-mm");
+        return OkHttpUtils.getBytes("https://u.iheit.com/images/time/" + sdf.format(new Date()) + ".jpg");
     }
 
     @Override

@@ -7,11 +7,12 @@ import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.service.GroupService;
-import me.kuku.yuq.utils.OkHttpUtils;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -25,9 +26,10 @@ public class GroupJob {
     private int locId = 0;
 
     @Cron("At::h::00")
-    public void onTimeAlarm() throws IOException {
+    public void onTimeAlarm(){
         List<GroupEntity> list = groupService.findByOnTimeAlarm(true);
-        int hour = Integer.parseInt(OkHttpUtils.getStr("https://api.kuku.me/time/h"));
+        SimpleDateFormat sdf = new SimpleDateFormat("HH");
+        int hour = Integer.parseInt(sdf.format(new Date()));
         if (hour == 0) hour = 12;
         if (hour < 12) hour -= 12;
         String url = "https://u.iheit.com/kuku/bot/time/" + hour + ".jpg";

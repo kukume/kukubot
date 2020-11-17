@@ -80,6 +80,7 @@ public class ManageAdminController {
             case "欢迎语": groupEntity.setWelcomeMsg(status); break;
             case "退群拉黑": groupEntity.setLeaveGroupBlack(status); break;
             case "鉴黄": groupEntity.setPic(status); break;
+            case "色图": groupEntity.setColorPic(status); break;
             case "撤回通知": groupEntity.setRecall(status); break;
             case "闪照通知": groupEntity.setFlashNotify(status); break;
             default: return null;

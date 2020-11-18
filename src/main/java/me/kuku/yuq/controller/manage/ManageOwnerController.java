@@ -17,11 +17,9 @@ import com.icecreamqaq.yuq.message.MessageItemFactory;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.logic.BiliBiliLogic;
 import me.kuku.yuq.logic.WeiboLogic;
-import me.kuku.yuq.pojo.BiliBiliPojo;
-import me.kuku.yuq.pojo.Result;
-import me.kuku.yuq.pojo.WeiboPojo;
+import me.kuku.yuq.logic.impl.MyApiLogic;
+import me.kuku.yuq.pojo.*;
 import me.kuku.yuq.service.GroupService;
-import me.kuku.yuq.service.RecallService;
 import me.kuku.yuq.utils.BotUtils;
 
 import javax.inject.Inject;
@@ -40,7 +38,7 @@ public class ManageOwnerController extends QQController {
     @Inject
     private BiliBiliLogic biliBiliLogic;
     @Inject
-    private RecallService recallService;
+    private MyApiLogic myApiLogic;
 
     @Before
     public GroupEntity before(long group, long qq){
@@ -54,7 +52,7 @@ public class ManageOwnerController extends QQController {
     @Synonym({"加违规词 {content}", "加黑名单 {content}", "加白名单 {content}", "加拦截 {content}",
             "加微博监控 {content}", "加哔哩哔哩监控 {content}"})
     @QMsg(at = true)
-    public String add(GroupEntity groupEntity, @PathVar(0) String type, String content) throws IOException {
+    public String add(GroupEntity groupEntity, @PathVar(0) String type, String content, ContextSession session, long qq) throws IOException {
         switch (type){
             case "加管":
                 groupEntity.setAdminJsonArray(groupEntity.getAdminJsonArray().fluentAdd(content));

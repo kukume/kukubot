@@ -63,9 +63,13 @@ public class WeiboJob {
                         newList.add(weiboPojo);
                     }
                     newList.forEach( weiboPojo -> {
-                        FunKt.getYuq().getGroups().get(group)
-                                .sendMessage(FunKt.getMif().text("有新微博了\n")
-                                .plus(weiboLogic.convertStr(weiboPojo)));
+                        try {
+                            FunKt.getYuq().getGroups().get(group)
+                                    .sendMessage(FunKt.getMif().text("有新微博了\n")
+                                    .plus(weiboLogic.convertStr(weiboPojo)));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     });
                 }
                 Long newId = list.get(0).getId();

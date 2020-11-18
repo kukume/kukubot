@@ -85,6 +85,7 @@ public class GroupEvent {
         long group = e.getGroup().getId();
         long qq = e.getMember().getId();
         GroupEntity groupEntity = groupService.findByGroup(group);
+        if (groupEntity == null) return;
         if (Boolean.valueOf(true).equals(groupEntity.getWelcomeMsg())){
             e.getGroup().sendMessage(
                     FunKt.getMif().at(qq).plus(

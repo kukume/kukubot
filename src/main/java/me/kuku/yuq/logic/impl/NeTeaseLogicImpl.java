@@ -52,8 +52,10 @@ public class NeTeaseLogicImpl implements NeTeaseLogic {
 
     @Override
     public String sign(NeTeaseEntity neTeaseEntity) throws IOException {
-        OkHttpUtils.get(api + "/daily_signin?type=1").close();
-        JSONObject jsonObject = OkHttpUtils.getJson(api + "/daily_signin?type=0");
+        OkHttpUtils.get(api + "/daily_signin?type=1",
+                OkHttpUtils.addCookie(neTeaseEntity.getCookie())).close();
+        JSONObject jsonObject = OkHttpUtils.getJson(api + "/daily_signin?type=0",
+                OkHttpUtils.addCookie(neTeaseEntity.getCookie()));
         Integer code = jsonObject.getInteger("code");
         switch (code){
             case 200: return "签到成功！！";

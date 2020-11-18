@@ -31,8 +31,6 @@ public class ManageNotController {
     private RecallService recallService;
     @Inject
     private ToolLogic toolLogic;
-    @Inject
-    private QQService qqService;
 
     private final String version = "v2.0.1";
 
@@ -137,16 +135,6 @@ public class ManageNotController {
         if (maxViolationCount == null) maxViolationCount = 5;
         sb.append("最大违规次数：").append(maxViolationCount);
         return sb.toString();
-    }
-
-    @Action("查询违规")
-    @QMsg(at = true)
-    public String queryVio(long qq, long group){
-        QQEntity qqEntity = qqService.findByQQAndGroup(qq, group);
-        int num;
-        if (qqEntity == null || qqEntity.getViolationCount() == null) num = 0;
-        else num = qqEntity.getViolationCount();
-        return "您在本群违规次数为" + num + "次";
     }
 
     private String boolToStr(Boolean b){

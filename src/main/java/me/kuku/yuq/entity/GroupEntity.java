@@ -62,7 +62,7 @@ public class GroupEntity {
     }
 
     public JSONArray getBlackJsonArray(){
-        if (blackList == null) return JSON.parseArray("[]");
+        if (blackList == null) return new JSONArray();
         else return JSON.parseArray(blackList);
     }
 
@@ -71,7 +71,7 @@ public class GroupEntity {
     }
 
     public JSONArray getWhiteJsonArray(){
-        if (whiteList == null) return JSON.parseArray("[]");
+        if (whiteList == null) return new JSONArray();
         else return JSON.parseArray(whiteList);
     }
 
@@ -80,7 +80,7 @@ public class GroupEntity {
     }
 
     public JSONArray getViolationJsonArray(){
-        if (violationList == null) return JSON.parseArray("[]");
+        if (violationList == null) return new JSONArray();
         else return JSON.parseArray(violationList);
     }
 
@@ -89,7 +89,7 @@ public class GroupEntity {
     }
 
     public JSONArray getQaJsonArray(){
-        if (qaList == null) return JSON.parseArray("[]");
+        if (qaList == null) return new JSONArray();
         else return JSON.parseArray(qaList);
     }
 
@@ -98,7 +98,7 @@ public class GroupEntity {
     }
 
     public JSONArray getAdminJsonArray(){
-        if (adminList == null) return JSON.parseArray("[]");
+        if (adminList == null) return new JSONArray();
         else return JSON.parseArray(adminList);
     }
 
@@ -107,7 +107,7 @@ public class GroupEntity {
     }
 
     public JSONArray getWeiboJsonArray(){
-        if (weiboList == null) return JSON.parseArray("[]");
+        if (weiboList == null) return new JSONArray();
         else return JSON.parseArray(weiboList);
     }
 
@@ -116,7 +116,7 @@ public class GroupEntity {
     }
 
     public JSONArray getBiliBiliJsonArray(){
-        if (biliBiliList == null) return JSON.parseArray("[]");
+        if (biliBiliList == null) return new JSONArray();
         else return JSON.parseArray(biliBiliList);
     }
 
@@ -125,7 +125,7 @@ public class GroupEntity {
     }
 
     public JSONArray getInterceptJsonArray(){
-        if (interceptList == null) return JSON.parseArray("[]");
+        if (interceptList == null) return new JSONArray();
         else return JSON.parseArray(interceptList);
     }
 

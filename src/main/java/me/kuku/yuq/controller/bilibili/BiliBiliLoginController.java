@@ -14,6 +14,7 @@ import javax.inject.Inject;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @GroupController
 public class BiliBiliLoginController {
@@ -30,12 +31,17 @@ public class BiliBiliLoginController {
         byte[] qrUrl = toolLogic.creatQr(url);
         group.sendMessage(FunKt.getMif().at(qq).plus("请使用哔哩哔哩APP扫码登录：")
                 .plus(FunKt.getMif().imageByInputStream(new ByteArrayInputStream(qrUrl))));
+        AtomicInteger i = new AtomicInteger();
         new Thread(() -> {
             while (true){
                 try {
                     TimeUnit.SECONDS.sleep(3);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
+                }
+                if (i.incrementAndGet() >= 20){
+                    group.sendMessage(FunKt.getMif().at(qq).plus("您的二维码已失效！！"));
+                    break;
                 }
                 try {
                     Result<BiliBiliEntity> result = biliBiliLogic.loginByQr2(url);

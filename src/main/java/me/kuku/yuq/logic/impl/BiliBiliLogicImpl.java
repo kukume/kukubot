@@ -8,6 +8,7 @@ import me.kuku.yuq.logic.BiliBiliLogic;
 import me.kuku.yuq.pojo.BiliBiliPojo;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.pojo.ResultStatus;
+import me.kuku.yuq.pojo.UA;
 import me.kuku.yuq.utils.BotUtils;
 import me.kuku.yuq.utils.OkHttpUtils;
 import okhttp3.MultipartBody;
@@ -223,7 +224,7 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
         Boolean status = jsonObject.getBoolean("status");
         if (!status){
             switch (jsonObject.getInteger("data")){
-                case -2: return Result.failure("oauthKey不正确，请重试！！", null);
+                case -2: return Result.failure("您的二维码已过期！！", null);
                 case -4: return Result.failure(ResultStatus.QRCODE_NOT_SCANNED);
                 case -5: return Result.failure(ResultStatus.QRCODE_IS_SCANNED);
                 default: return Result.failure(jsonObject.getString("message"), null);
@@ -435,18 +436,6 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
 
     @Override
     public String report(BiliBiliEntity biliBiliEntity, String aid, String cid, int proGRes) throws IOException {
-        /*
-        val response = OkHttpClientUtils.post("http://api.bilibili.com/x/v2/history/report",
-                OkHttpClientUtils.addForms(mapOf(
-                        "aid" to aid,
-                        "cid" to cid,
-                        "progres" to proGRes.toString(),
-                        "csrf" to biliBiliEntity.token
-                )), OkHttpClientUtils.addCookie(biliBiliEntity.cookie))
-        val jsonObject = OkHttpClientUtils.getJson(response)
-        return if (jsonObject.getInteger("code") == 0) "模拟观看视频成功！！"
-        else jsonObject.getString("message")
-         */
         HashMap<String, String> map = new HashMap<>();
         map.put("aid", aid);
         map.put("cid", cid);
@@ -460,15 +449,6 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
 
     @Override
     public String share(BiliBiliEntity biliBiliEntity, String aid) throws IOException {
-        /*
-        val response = OkHttpClientUtils.post("https://api.bilibili.com/x/web-interface/share/add", OkHttpClientUtils.addForms(mapOf(
-                "aid" to aid,
-                "csrf" to biliBiliEntity.token
-        )), OkHttpClientUtils.addCookie(biliBiliEntity.cookie))
-        val jsonObject = OkHttpClientUtils.getJson(response)
-        return if (jsonObject.getInteger("code") == 0) "分享视频成功！！"
-        else jsonObject.getString("message")
-         */
         HashMap<String, String> map = new HashMap<>();
         map.put("aid", aid);
         map.put("csrf", biliBiliEntity.getToken());
@@ -476,5 +456,53 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
                 OkHttpUtils.addCookie(biliBiliEntity.getCookie()));
         if (jsonObject.getInteger("code").equals(0)) return "分享视频成功！！";
         else return jsonObject.getString("message");
+    }
+
+    @Override
+    public List<Map<String, String>> getReplay(BiliBiliEntity biliBiliEntity, String oid, int page) throws IOException {
+        JSONObject jsonObject = OkHttpUtils.getJsonp("https://api.bilibili.com/x/v2/reply?callback=jQuery17207366906764958399_" + new Date().getTime() + "&jsonp=jsonp&pn=" + page + "&type=1&oid=" + oid + "&sort=2&_=" + new Date().getTime(),
+                OkHttpUtils.addHeaders(biliBiliEntity.getCookie(), "https://www.bilibili.com/"));
+        if (jsonObject.getInteger("code") == 0){
+            JSONArray jsonArray = jsonObject.getJSONObject("data").getJSONArray("replies");
+            List<Map<String, String>> list = new ArrayList<>();
+            for (int i = 0; i < jsonArray.size(); i++){
+                JSONObject singleJsonObject = jsonArray.getJSONObject(i);
+                Map<String, String> map = new HashMap<>();
+                map.put("id", singleJsonObject.getString("rpid"));
+                map.put("content", singleJsonObject.getJSONObject("content").getString("message"));
+                list.add(map);
+            }
+            return list;
+        }else return null;
+    }
+
+    @Override
+    public String reportComment(BiliBiliEntity biliBiliEntity, String oid, String rpId, int reason) throws IOException {
+        // 违法违规 9   色情  2    低俗 10    赌博诈骗  12
+        // 人身攻击  7   侵犯隐私 15
+        // 垃圾广告 1   引战 4    剧透   5    刷屏   3      抢楼 16    内容不相关   8     青少年不良信息  17
+        //  其他 0
+        Map<String, String> map = new HashMap<>();
+        map.put("oid", oid);
+        map.put("type", "1");
+        map.put("rpid", rpId);
+        map.put("reason", String.valueOf(reason));
+        map.put("content", "");
+        map.put("ordering", "heat");
+        map.put("jsonp", "jsonp");
+        map.put("csrf", biliBiliEntity.getToken());
+        JSONObject jsonObject = OkHttpUtils.postJson("https://api.bilibili.com/x/v2/reply/report", map,
+                OkHttpUtils.addHeaders(biliBiliEntity.getCookie(), "https://www.bilibili.com/"));
+        if (jsonObject.getInteger("code") == 0) return "举报评论成功！！";
+        else return "举报评论失败！！";
+    }
+
+    @Override
+    public String getOidByBvId(String bvId) throws IOException {
+        String html = OkHttpUtils.getStr("https://www.bilibili.com/video/" + bvId,
+                OkHttpUtils.addUA(UA.PC));
+        String jsonStr = BotUtils.regex("INITIAL_STATE__=", ";\\(function\\(\\)", html);
+        JSONObject jsonObject = JSON.parseObject(jsonStr);
+        return jsonObject.getString("aid");
     }
 }

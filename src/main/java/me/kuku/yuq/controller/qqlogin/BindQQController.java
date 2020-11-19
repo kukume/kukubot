@@ -58,9 +58,9 @@ public class BindQQController extends QQController {
         Long group = null;
         if (qq instanceof Member) group = ((Member) qq).getGroup().getId();
         String pwd = null;
-        if (qqLoginEntity != null){
-            pwd = qqLoginEntity.getPassword();
-        }else pwd = password;
+        if (password != null){
+            pwd = password;
+        }else if (qqLoginEntity != null) pwd = qqLoginEntity.getPassword();
         if (pwd == null) return "在您的指令中没有发现密码！！";
         Result<Map<String, String>> result = QQPasswordLoginUtils.login(qq.getId(), pwd);
         switch (result.getCode()){

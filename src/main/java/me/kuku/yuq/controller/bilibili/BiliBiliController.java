@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.annotation.GroupController;
+import com.icecreamqaq.yuq.annotation.PathVar;
 import com.icecreamqaq.yuq.annotation.QMsg;
 import com.icecreamqaq.yuq.controller.BotActionContext;
 import com.icecreamqaq.yuq.controller.ContextSession;
@@ -21,6 +22,8 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @GroupController
 @SuppressWarnings("unused")
@@ -209,5 +212,24 @@ public class BiliBiliController extends QQController {
         String ss = "关闭";
         if (status) ss = "开启";
         return "哔哩哔哩定时任务已" + ss;
+    }
+
+    @Action("哔哩哔哩举报 {bvId}")
+    public String report(BiliBiliEntity biliBiliEntity, String bvId, long qq,
+                         @PathVar(value = 2, type = PathVar.Type.Integer) Integer page) throws IOException {
+        reply(FunKt.getMif().at(qq).plus("正在为您举报中！！"));
+        if (page == null) page = 1;
+        String oid = biliBiliLogic.getOidByBvId(bvId);
+        List<Map<String, String>> list = biliBiliLogic.getReplay(biliBiliEntity, oid, page);
+        String msg = null;
+        for (Map<String, String> map : list) {
+            try {
+                TimeUnit.SECONDS.sleep(2);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            msg = biliBiliLogic.reportComment(biliBiliEntity, oid, map.get("id"), 8);
+        }
+        return msg;
     }
 }

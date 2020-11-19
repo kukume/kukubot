@@ -31,4 +31,7 @@ public interface BiliBiliLogic {
     List<Map<String, String>> getRanking() throws IOException;
     String report(BiliBiliEntity biliBiliEntity, String aid, String cid, int proGRes) throws IOException;
     String share(BiliBiliEntity biliBiliEntity, String aid) throws IOException;
+    List<Map<String, String>> getReplay(BiliBiliEntity biliBiliEntity, String oid, int page) throws IOException;
+    String reportComment(BiliBiliEntity biliBiliEntity, String oid, String rpId, int reason) throws IOException;
+    String getOidByBvId(String bvId) throws IOException;
 }

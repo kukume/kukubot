@@ -1,7 +1,6 @@
 package me.kuku.yuq.service.impl;
 
 import com.icecreamqaq.yudb.jpa.annotation.Transactional;
-import com.icecreamqaq.yudb.jpa.hibernate.HibernateDao;
 import me.kuku.yuq.dao.MessageDao;
 import me.kuku.yuq.entity.MessageEntity;
 import me.kuku.yuq.service.MessageService;
@@ -15,8 +14,6 @@ public class MessageServiceImpl implements MessageService {
 
     @Inject
     private MessageDao messageDao;
-    @Inject
-    private HibernateDao<MessageEntity, Integer> hibernateDao;
 
     @Override
     public MessageEntity findByMessageId(int messageId) {
@@ -34,16 +31,16 @@ public class MessageServiceImpl implements MessageService {
     public Map<Long, Long> findCountQQByGroupAndToday(Long group) {
         Date date = new Date();
         String today = new SimpleDateFormat("yyyy-MM-dd", Locale.CHINA).format(date);
-        Query<MessageEntity> query = hibernateDao.query(
-                "select count(qq),qq from MessageEntity where group_ = ? and date > parsedatetime('$today', 'yyyy-MM-dd') group by qq order by count(qq) desc",
+        Query<?> query = messageDao.query(
+                "select count(qq),qq from MessageEntity where group_ = ?0 and date > parsedatetime('" + today + "', 'yyyy-MM-dd') group by qq order by count(qq) desc",
                 group
         );
-        List<MessageEntity> result = query.list();
+        List<?> result = query.list();
         Map<Long, Long> map = new HashMap<>();
-        for (MessageEntity messageEntity: result){
-            List<?> list = (List<?>) messageEntity;
-            map.put(Long.parseLong(list.get(1).toString()),
-                    Long.parseLong(list.get(0).toString()));
+        for (int i = 0; i < result.size(); i++){
+            Object[] objArr = (Object[]) result.get(0);
+            map.put(Long.parseLong(objArr[1].toString()),
+                    Long.parseLong(objArr[0].toString()));
         }
         return map;
     }

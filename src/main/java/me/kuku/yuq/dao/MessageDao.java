@@ -1,10 +1,8 @@
 package me.kuku.yuq.dao;
 
-import com.icecreamqaq.yudb.YuDao;
-import com.icecreamqaq.yudb.jpa.annotation.Dao;
+import com.icecreamqaq.yudb.jpa.JPADao;
 import me.kuku.yuq.entity.MessageEntity;
 
-@Dao
-public interface MessageDao extends YuDao<MessageEntity, Long> {
+public interface MessageDao extends JPADao<MessageEntity, Long> {
     MessageEntity findByMessageId(int messageId);
 }

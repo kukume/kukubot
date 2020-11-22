@@ -304,4 +304,25 @@ public class OkHttpUtils {
         return getCookie(url, emptyHeaders());
     }
 
+    private static Response download(String url) throws IOException {
+        Response response;
+        while (true){
+            response = get(url);
+            int code = response.code();
+            if (code == 302 || code == 301){
+                url = response.header("location");
+            }else break;
+        }
+        return response;
+    }
+
+    public static String downloadStr(String url) throws IOException {
+        Response response = download(url);
+        return getStr(response);
+    }
+
+    public static byte[] downloadBytes(String url) throws IOException {
+        Response response = download(url);
+        return getBytes(response);
+    }
 }

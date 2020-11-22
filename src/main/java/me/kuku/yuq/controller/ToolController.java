@@ -29,6 +29,7 @@ import me.kuku.yuq.utils.OkHttpUtils;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Member;
 import net.mamoe.mirai.message.action.Nudge;
+import okhttp3.Response;
 import oshi.SystemInfo;
 import oshi.hardware.CentralProcessor;
 import oshi.hardware.GlobalMemory;
@@ -217,22 +218,31 @@ public class ToolController {
         if (groupEntity == null || groupEntity.getColorPic() == null || !groupEntity.getColorPic())
             return FunKt.getMif().at(qq).plus("该功能已关闭！！");
         String type = groupEntity.getColorPicType();
-        switch (type){
-            case "danbooru":
-                byte[] bytes = OkHttpUtils.getBytes("https://api.kuku.me/danbooru");
+        if ("lolicon".equals(type) || "loliconR18".equals(type)){
+            ConfigEntity configEntity = configService.findByType("loLiCon");
+            if (configEntity == null) return FunKt.getMif().at(qq).plus("您还没有配置lolicon的apiKey，无法获取色图！！");
+            String apiKey = configEntity.getContent();
+            Result<Map<String, String>> result = toolLogic.colorPicByLoLiCon(apiKey, type.equals("loliconR18"));
+            Map<String, String> map = result.getData();
+            if (map == null) return FunKt.getMif().at(qq).plus(result.getMessage());
+            byte[] by = toolLogic.piXivPicProxy(map.get("url"));
+            return FunKt.getMif().imageByInputStream(new ByteArrayInputStream(by)).toMessage();
+        }else if (type.contains("danbooru")){
+            String[] arr = type.split("-");
+            String danType = null;
+            if (arr.length > 1) danType = arr[1];
+            String url;
+            if (danType == null) url = "https://api.kuku.me/danbooru";
+            else url = "https://api.kuku.me/danbooru?type=" + danType;
+            Response response = OkHttpUtils.get(url);
+            if (response.header("content-type") != null){
+                return FunKt.getMif().at(qq).plus("danbooru的tags类型不匹配，请重新设置tags类型，具体tag类型可前往https://danbooru.donmai.us/" +
+                        "查看，如果tag中带空格，请用_替换");
+            }else {
+                byte[] bytes = OkHttpUtils.getBytes(response);
                 return FunKt.getMif().imageByInputStream(new ByteArrayInputStream(bytes)).toMessage();
-            case "lolicon":
-            case "loliconR18":
-                ConfigEntity configEntity = configService.findByType("loLiCon");
-                if (configEntity == null) return FunKt.getMif().at(qq).plus("您还没有配置lolicon的apiKey，无法获取色图！！");
-                String apiKey = configEntity.getContent();
-                Result<Map<String, String>> result = toolLogic.colorPicByLoLiCon(apiKey, type.equals("loliconR18"));
-                Map<String, String> map = result.getData();
-                if (map == null) return FunKt.getMif().at(qq).plus(result.getMessage());
-                byte[] by = toolLogic.piXivPicProxy(map.get("url"));
-                return FunKt.getMif().imageByInputStream(new ByteArrayInputStream(by)).toMessage();
-            default: return Message.Companion.toMessage("色图类型不匹配！！");
-        }
+            }
+        }else return Message.Companion.toMessage("色图类型不匹配！！");
     }
 
     @Action("qr/{content}")

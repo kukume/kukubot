@@ -4,7 +4,6 @@ import com.IceCreamQAQ.Yu.loader.AppClassloader;
 import com.IceCreamQAQ.Yu.util.IO;
 import com.icecreamqaq.yuq.YuQStarter;
 import me.kuku.yuq.utils.OkHttpUtils;
-import okhttp3.Response;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,10 +29,7 @@ public class Start {
         File yuqFile = new File("conf/YuQ.properties");
         if (!yuqFile.exists()){
             try {
-                Response response = OkHttpUtils.get("https://ty.kuku.me/kuku/bot/YuQ.properties");
-                response.close();
-                String url = response.header("location");
-                byte[] bytes = OkHttpUtils.getBytes(url);
+                byte[] bytes = OkHttpUtils.downloadBytes("https://ty.kuku.me/kuku/bot/YuQ.properties");
                 IO.writeFile(yuqFile, bytes);
             } catch (IOException e) {
                 e.printStackTrace();

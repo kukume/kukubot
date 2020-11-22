@@ -160,14 +160,9 @@ public class ManageOwnerController extends QQController {
     @QMsg(at = true)
     public String colorPicType(GroupEntity groupEntity, String type){
         String colorPicType;
-        switch (type){
-            case "danbooru":
-            case "lolicon":
-            case "loliconR18":
-                colorPicType = type;
-                break;
-            default: return "没有该类型，请重试！！";
-        }
+        if ("lolicon".equals(type) || "loliconR18".equals(type) || type.contains("danbooru")){
+            colorPicType = type;
+        }else return "没有该类型，请重试！！";
         groupEntity.setColorPicType(colorPicType);
         groupService.save(groupEntity);
         return "色图切换成" + type + "成功！！";

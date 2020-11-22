@@ -32,7 +32,7 @@ public class GroupJob {
         int hour = Integer.parseInt(sdf.format(new Date()));
         if (hour == 0) hour = 12;
         if (hour < 12) hour -= 12;
-        String url = "https://u.iheit.com/kuku/bot/time/" + hour + ".jpg";
+        String url = "https://ty.kuku.me/images/time/" + hour + ".jpg";
         list.forEach(groupEntity ->
                 FunKt.getYuq().getGroups().get(groupEntity.getGroup())
                 .sendMessage(FunKt.getMif().imageByUrl(url).toMessage())

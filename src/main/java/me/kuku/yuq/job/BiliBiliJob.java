@@ -63,12 +63,16 @@ public class BiliBiliJob {
                         if (Long.parseLong(biliBiliPojo.getId()) <= biMap.get(userId)) break;
                         newList.add(biliBiliPojo);
                     }
-                    newList.forEach(biliBiliPojo ->
+                    newList.forEach(biliBiliPojo -> {
+                        try {
                             FunKt.getYuq().getGroups().get(group).sendMessage(
                                     FunKt.getMif().text("哔哩哔哩有新动态了\n")
-                                    .plus(biliBiliLogic.convertStr(biliBiliPojo))
-                            )
-                    );
+                                            .plus(biliBiliLogic.convertStr(biliBiliPojo))
+                            );
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+                    });
                 }
                 long newId = Long.parseLong(list.get(0).getId());
                 if (!biMap.containsKey(userId) || newId > biMap.get(userId)){

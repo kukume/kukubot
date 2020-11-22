@@ -94,8 +94,11 @@ public class QQUtils {
                 case 7:
                     msg = "superKey已失效，请更新QQ！";
                     break;
+                case 23003:
+                    msg = "当前上网环境异常，请更换网络环境或在常用设备上登录或稍后再试。";
+                    break;
                 default:
-                    msg = "其他错误";
+                    msg = str;
             }
         }
         if (msg.contains("superKey")) return Result.failure(502, msg);

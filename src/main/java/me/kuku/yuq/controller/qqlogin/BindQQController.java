@@ -73,8 +73,8 @@ public class BindQQController extends QQController {
                 Map<String, String> smsMap = result.getData();
                 Message codeMessage = session.waitNextMessage(1000 * 60 * 2);
                 String code = Message.Companion.firstString(codeMessage);
-                Result<Map<String, String>> loginResult = QQPasswordLoginUtils.loginBySms(qq.getId(), password, smsMap.get("randStr"), smsMap.get("ticket"),
-                        smsMap.get("cookie"), code);
+                smsMap.put("smsCode", code);
+                Result<Map<String, String>> loginResult = QQPasswordLoginUtils.loginBySms(qq.getId(), password, smsMap);
                 if (loginResult.getCode() != 200) return "验证码输入错误，请重新登录！！";
                 QQUtils.saveOrUpdate(qqLoginService, loginResult.getData(), qq.getId(), pwd, group);
                 return "绑定或者更新QQ成功！！";

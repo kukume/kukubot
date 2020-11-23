@@ -37,8 +37,8 @@ public class MessageServiceImpl implements MessageService {
         );
         List<?> result = query.list();
         Map<Long, Long> map = new HashMap<>();
-        for (int i = 0; i < result.size(); i++){
-            Object[] objArr = (Object[]) result.get(0);
+        for (Object o : result) {
+            Object[] objArr = (Object[]) o;
             map.put(Long.parseLong(objArr[1].toString()),
                     Long.parseLong(objArr[0].toString()));
         }

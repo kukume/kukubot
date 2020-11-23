@@ -118,8 +118,12 @@ public class BiliBiliJob {
                         List<JSONObject> favoritesList = match(biliBiliEntity.getFavoritesJsonArray(), userId);
                         for (JSONObject jsonObject: favoritesList) biliBiliLogic.favorites(biliBiliEntity, biliBiliPojo.getRid(), jsonObject.getString("content"));
                     }
-                    FunKt.getYuq().getGroups().get(biliBiliEntity.getGroup()).getMembers().get(qq)
-                            .sendMessage(FunKt.getMif().text("哔哩哔哩有新动态了！！\n").plus(biliBiliLogic.convertStr(biliBiliPojo)));
+                    try {
+                        FunKt.getYuq().getGroups().get(biliBiliEntity.getGroup()).getMembers().get(qq)
+                                .sendMessage(FunKt.getMif().text("哔哩哔哩有新动态了！！\n").plus(biliBiliLogic.convertStr(biliBiliPojo)));
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
                 }
             }
             userMap.put(qq, Long.valueOf(list.get(0).getId()));

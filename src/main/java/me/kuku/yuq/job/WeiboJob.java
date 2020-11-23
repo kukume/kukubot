@@ -107,11 +107,15 @@ public class WeiboJob {
                         weiboLogic.forward(weiboEntity, id, jsonObject.getString("content"), null);
                     Long group = weiboEntity.getGroup();
                     Message msg = Message.Companion.toMessage("有新微博了！！\n" + weiboLogic.convertStr(weiboPojo));
-                    if (group == null) {
-                        FunKt.getYuq().getFriends().get(qq).sendMessage(msg);
-                    } else {
-                        FunKt.getYuq().getGroups().get(group).get(qq)
-                                .sendMessage(msg);
+                    try {
+                        if (group == null) {
+                            FunKt.getYuq().getFriends().get(qq).sendMessage(msg);
+                        } else {
+                            FunKt.getYuq().getGroups().get(group).get(qq)
+                                    .sendMessage(msg);
+                        }
+                    }catch (Exception e){
+                        e.printStackTrace();
                     }
                 }
             }

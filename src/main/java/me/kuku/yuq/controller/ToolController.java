@@ -18,7 +18,7 @@ import me.kuku.yuq.entity.ConfigEntity;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.logic.QQAILogic;
 import me.kuku.yuq.logic.ToolLogic;
-import me.kuku.yuq.logic.impl.MyApiLogic;
+import me.kuku.yuq.logic.MyApiLogic;
 import me.kuku.yuq.pojo.InstagramPojo;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.ConfigService;
@@ -324,18 +324,6 @@ public class ToolController {
         return sb.deleteCharAt(sb.length() - 1).toString();
     }
 
-    @Action("loc")
-    @QMsg(at = true, atNewLine = true)
-    public String loc() throws IOException {
-        List<Map<String, String>> list = toolLogic.hostLocPost();
-        StringBuilder sb = new StringBuilder();
-        list.forEach(map ->
-                sb.append(map.get("title")).append("-").append(map.get("name")).append("-")
-                .append(map.get("time")).append("\n").append("------------").append("\n")
-        );
-        return sb.deleteCharAt(sb.length() - 1).toString();
-    }
-
     @Action("分词")
     @QMsg(at = true, atNewLine = true)
     public String wordSegmentation(long qq, ContextSession session, Group group) throws IOException {
@@ -478,8 +466,8 @@ public class ToolController {
         LocalDateTime nowTime = LocalDateTime.now();
         Duration duration = Duration.between(startTime, nowTime);
         long days = duration.toDays();
-        long hours = duration.toHours();
-        long minutes = duration.toMinutes();
+        long hours = duration.toHours() % 24;
+        long minutes = duration.toMinutes() % 60;
         String ss = days + "天" + hours + "小时" + minutes + "分钟";
         return  "程序运行时长：" + ss + "\n" +
                 "cpu核数：" + processor.getLogicalProcessorCount() + "\n" +

@@ -8,7 +8,7 @@ import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.QQEntity;
 import me.kuku.yuq.logic.ToolLogic;
-import me.kuku.yuq.logic.impl.MyApiLogic;
+import me.kuku.yuq.logic.MyApiLogic;
 import me.kuku.yuq.pojo.InstagramPojo;
 import me.kuku.yuq.pojo.TwitterPojo;
 import me.kuku.yuq.service.QQService;

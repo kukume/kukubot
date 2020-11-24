@@ -38,10 +38,15 @@ public class QQAILogicImpl implements QQAILogic {
     private FormBody addParams(Map<String, String> otherParams){
         ConfigEntity configEntity1 = configService.findByType("qqAIAppId");
         ConfigEntity configEntity2 = configService.findByType("qqAIAppKey");
-        String appId = configEntity1.getContent();
-        if (appId == null) appId = "";
-        String appKey = configEntity2.getContent();
-        if (appKey == null) appKey = "";
+        String appId;
+        String appKey;
+        if (configEntity1 == null || configEntity2 == null) {
+            appId = "";
+            appKey = "";
+        }else{
+            appId = configEntity1.getContent();
+            appKey = configEntity2.getContent();
+        }
         Map<String, String> map = new HashMap<>();
         map.put("app_id", appId);
         map.put("time_stamp", String.valueOf(new Date().getTime() / 1000));
@@ -79,22 +84,6 @@ public class QQAILogicImpl implements QQAILogic {
 
     @Override
     public String generalOCR(String imageUrl) throws IOException {
-        /*
-        val baseStr = this.urlToBase64(imageUrl)
-        val response = OkHttpClientUtils.post("https://api.ai.qq.com/fcgi-bin/ocr/ocr_generalocr",
-                addParams(mapOf("image" to baseStr)))
-        val jsonObject = OkHttpClientUtils.getJson(response)
-        return if (jsonObject.getInteger("ret") == 0){
-            val jsonArray = jsonObject.getJSONObject("data").getJSONArray("item_list")
-            if (jsonArray.isEmpty()) return "啥文字也没有识别到！！"
-            val sb = StringBuilder()
-            jsonArray.forEach {
-                val singleJsonObject = it as JSONObject
-                sb.appendLine(singleJsonObject.getString("itemstring"))
-            }
-            sb.removeSuffixLine().toString()
-        }else jsonObject.getString("msg")
-         */
         String baseStr = urlToBase64(imageUrl);
         Map<String, String> map = new HashMap<>();
         map.put("image", baseStr);

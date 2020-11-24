@@ -1,10 +1,6 @@
 package me.kuku.yuq.controller;
 
-import com.IceCreamQAQ.Yu.annotation.Action;
-import com.IceCreamQAQ.Yu.annotation.Before;
-import com.IceCreamQAQ.Yu.annotation.Config;
-import com.IceCreamQAQ.Yu.annotation.Synonym;
-import com.IceCreamQAQ.Yu.util.OkHttpWebImpl;
+import com.IceCreamQAQ.Yu.annotation.*;
 import com.alibaba.fastjson.JSONArray;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.annotation.GroupController;
@@ -17,17 +13,15 @@ import com.icecreamqaq.yuq.entity.Member;
 import com.icecreamqaq.yuq.message.Image;
 import com.icecreamqaq.yuq.message.Message;
 import com.icecreamqaq.yuq.message.MessageItem;
-import com.icecreamqaq.yuq.message.Text;
-import com.icecreamqaq.yuq.mirai.MiraiBot;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.entity.QQLoginEntity;
+import me.kuku.yuq.logic.BotLogic;
 import me.kuku.yuq.logic.QQGroupLogic;
-import me.kuku.yuq.logic.QQLogic;
+import me.kuku.yuq.logic.QQLoginLogic;
 import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.pojo.GroupMember;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.GroupService;
-import me.kuku.yuq.utils.BotUtils;
 import net.mamoe.mirai.contact.PermissionDeniedException;
 
 import javax.inject.Inject;
@@ -43,47 +37,20 @@ public class BotController extends QQController {
     @Config("YuQ.Mirai.user.qq")
     private String qq;
     @Inject
-    private QQLogic qqLogic;
-    @Inject
-    private MiraiBot miraiBot;
+    private QQLoginLogic qqLoginLogic;
     @Inject
     private ToolLogic toolLogic;
-    @Inject
-    private OkHttpWebImpl web;
     @Inject
     private QQGroupLogic qqGroupLogic;
     @Inject
     private GroupService groupService;
+    @Inject
+    private BotLogic botLogic;
 
     @Before
     public void before(BotActionContext actionContext){
-        QQLoginEntity qqLoginEntity = BotUtils.toQQLoginEntity(web, miraiBot);
+        QQLoginEntity qqLoginEntity = botLogic.getQQLoginEntity();
         actionContext.set("qqLoginEntity", qqLoginEntity);
-    }
-
-    @Action("签个到 {param}")
-    @QMsg(at = true)
-    public Object groupSign(QQLoginEntity qqLoginEntity, MessageItem param, Long group) throws IOException {
-        String place = "你猜";
-        String text = "yuq签到！！";
-        String str;
-        if (param instanceof Text){
-            Text t = (Text) param;
-            Result<String> result = qqGroupLogic.groupSign(group, place, text, t.getText(), null, null);
-            String data = result.getData();
-            if (data != null) str = data;
-            else return result.getMessage();
-        }else if (param instanceof Image){
-            Image i = (Image) param;
-            Result<Map<String, String>> result = qqLogic.groupUploadImage(qqLoginEntity, i.getUrl());
-            Map<String, String> map = result.getData();
-            if (map == null) return result.getMessage();
-            Result<String> signResult = qqGroupLogic.groupSign(group, place, text, "自定义", map.get("picId"), map.get("picUrl"));
-            String data = signResult.getData();
-            if (data == null) return signResult.getMessage();
-            else str = data;
-        }else return null;
-        return FunKt.getMif().jsonEx(str);
     }
 
     @Action("qq上传")
@@ -96,7 +63,7 @@ public class BotController extends QQController {
         for (MessageItem item: body){
             if (item instanceof Image){
                 Image image = (Image) item;
-                Result<Map<String, String>> result = qqLogic.groupUploadImage(qqLoginEntity, image.getUrl());
+                Result<Map<String, String>> result = qqLoginLogic.groupUploadImage(qqLoginEntity, image.getUrl());
                 String url;
                 Map<String, String> map = result.getData();
                 if (map == null) url = result.getMessage();
@@ -110,13 +77,13 @@ public class BotController extends QQController {
     @Action("查业务 {qqNo}")
     @QMsg(at = true, atNewLine = true)
     public String queryVip(Long qqNo, QQLoginEntity qqLoginEntity) throws IOException {
-        return qqLogic.queryFriendVip(qqLoginEntity, qqNo, null);
+        return qqLoginLogic.queryFriendVip(qqLoginEntity, qqNo, null);
     }
 
     @Action("列出{day}天未发言")
     @QMsg(at = true, atNewLine = true)
     public String notSpeak(Long group, String day, QQLoginEntity qqLoginEntity) throws IOException {
-        Result<List<GroupMember>> result = qqLogic.groupMemberInfo(qqLoginEntity, group);
+        Result<List<GroupMember>> result = qqLoginLogic.groupMemberInfo(qqLoginEntity, group);
         if (result.getCode() == 200){
             List<GroupMember> list = result.getData();
 //            List<Long> qqList = new ArrayList<>();
@@ -133,7 +100,7 @@ public class BotController extends QQController {
 
     @Action("列出从未发言")
     public String neverSpeak(Long group, QQLoginEntity qqLoginEntity) throws IOException {
-        Result<List<GroupMember>> result = qqLogic.groupMemberInfo(qqLoginEntity, group);
+        Result<List<GroupMember>> result = qqLoginLogic.groupMemberInfo(qqLoginEntity, group);
         if (result.getCode() == 200){
             List<GroupMember> list = result.getData();
 //            List<Long> qqList = new ArrayList<>();
@@ -167,7 +134,7 @@ public class BotController extends QQController {
     @QMsg(at = true)
     @Action("群链接")
     public String groupLink(long group, QQLoginEntity qqLoginEntity) throws IOException {
-        return qqLogic.getGroupLink(qqLoginEntity, group);
+        return qqLoginLogic.getGroupLink(qqLoginEntity, group);
     }
 
     @Action("天气 {local}")
@@ -205,28 +172,30 @@ public class BotController extends QQController {
             }
         }
         String[] urlArr = {
-                "https://u.iheit.com/kuku/61f600415023300.jpg",
-                "https://u.iheit.com/kuku/449ab0415103619.jpg",
-                "https://u.iheit.com/kuku/51fe90415023311.jpg",
-                "https://u.iheit.com/kuku/1d12a0415023726.jpg",
-                "https://u.iheit.com/kuku/b04b30415023728.jpg",
-                "https://u.iheit.com/kuku/d21200415023730.jpg",
-                "https://u.iheit.com/kuku/55f0e0415023731.jpg",
-                "https://u.iheit.com/kuku/634cc0415023733.jpg",
-                "https://u.iheit.com/kuku/c044b0415023734.jpg",
-                "https://u.iheit.com/kuku/ce2270415023735.jpg",
-                "https://u.iheit.com/kuku/6e4b20415023737.jpg",
-                "https://u.iheit.com/kuku/5f7d70415023738.jpg",
-                "https://u.iheit.com/kuku/98d640415023739.jpg",
-                "https://u.iheit.com/kuku/26a1a0415023741.jpg",
-                "https://u.iheit.com/kuku/ddc810415023745.jpg",
-                "https://u.iheit.com/kuku/23ee20415023747.jpg",
-                "https://u.iheit.com/kuku/8c4a80415023748.jpg",
-                "https://u.iheit.com/kuku/bdb970415023750.jpg",
-                "https://u.iheit.com/images/2020/07/23/33609b326b5b30b0.jpg",
-                "https://u.iheit.com/images/2020/07/23/3e53644bd75c68e6.jpg",
-                "https://u.iheit.com/images/2020/08/05/image.png",
-                "https://u.iheit.com/images/2020/08/05/image4046ccd0c6179229.png"
+                "https://backblaze.kuku.me/file/kukume/2020/11/24/3b8h.jpg",
+                "https://backblaze.kuku.me/file/kukume/2020/11/24/3dnz.gif",
+                "https://backblaze.kuku.me/file/kukume/2020/11/24/3mwy.jpg",
+                "https://backblaze.kuku.me/file/kukume/2020/11/24/3WJw.jpg",
+                "https://backblaze.kuku.me/file/kukume/2020/11/24/3g3Y.jpg",
+                "https://backblaze.kuku.me/file/kukume/2020/11/24/3iNJ.jpg",
+                "https://backblaze.kuku.me/file/kukume/2020/11/24/31I9.jpg",
+                "https://backblaze.kuku.me/file/kukume/2020/11/24/38ot.jpg",
+                "https://backblaze.kuku.me/file/kukume/2020/11/24/3LPD.jpg",
+                "https://backblaze.kuku.me/file/kukume/2020/11/24/3MF5.jpg",
+                "https://backblaze.kuku.me/file/kukume/2020/11/24/3QLr.jpg",
+                "https://backblaze.kuku.me/file/kukume/2020/11/24/3Zz2.jpg",
+                "https://backblaze.kuku.me/file/kukume/2020/11/24/3cwP.png",
+                "https://backblaze.kuku.me/file/kukume/2020/11/24/3rWQ.png",
+                "https://backblaze.kuku.me/file/kukume/2020/11/24/3u3F.jpg",
+                "https://backblaze.kuku.me/file/kukume/2020/11/24/3VNx.png",
+                "https://backblaze.kuku.me/file/kukume/2020/11/24/3t68.jpg",
+                "https://backblaze.kuku.me/file/kukume/2020/11/24/33oC.jpg",
+                "https://backblaze.kuku.me/file/kukume/2020/11/24/3GPq.jpg",
+                "https://backblaze.kuku.me/file/kukume/2020/11/24/3XHg.jpg",
+                "https://backblaze.kuku.me/file/kukume/2020/11/24/3fLU.jpg",
+                "https://backblaze.kuku.me/file/kukume/2020/11/24/3qzG.jpg",
+                "https://backblaze.kuku.me/file/kukume/2020/11/24/3n7d.jpg",
+                "https://backblaze.kuku.me/file/kukume/2020/11/24/30WN.jpg"
         };
         String url = urlArr[(int) (Math.random() * urlArr.length)];
         return FunKt.getMif().at(resultQQ).plus(FunKt.getMif().imageByUrl(url)).plus("龙王，已蝉联" + map.get("desc") + "，快喷水！！");

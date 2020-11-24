@@ -5,7 +5,7 @@ import com.IceCreamQAQ.Yu.annotation.JobCenter;
 import me.kuku.yuq.entity.MotionEntity;
 import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.logic.LeXinMotionLogic;
-import me.kuku.yuq.logic.QQLogic;
+import me.kuku.yuq.logic.QQLoginLogic;
 import me.kuku.yuq.logic.XiaomiMotionLogic;
 import me.kuku.yuq.service.MotionService;
 import me.kuku.yuq.service.QQLoginService;
@@ -25,7 +25,7 @@ public class MotionJob {
     @Inject
     private QQLoginService qqLoginService;
     @Inject
-    private QQLogic qqLogic;
+    private QQLoginLogic qqLoginLogic;
 
     @Cron("At::d::08")
     public void motion(){
@@ -37,7 +37,7 @@ public class MotionJob {
                         leXinMotionLogic.modifyStepCount(motionEntity.getStep(), motionEntity);
                         QQLoginEntity qqLoginEntity = qqLoginService.findByQQ(motionEntity.getQq());
                         if (qqLoginEntity != null && qqLoginEntity.getStatus()){
-                            qqLogic.motionSign(qqLoginEntity);
+                            qqLoginLogic.motionSign(qqLoginEntity);
                         }
                     } catch (IOException e) {
                         e.printStackTrace();

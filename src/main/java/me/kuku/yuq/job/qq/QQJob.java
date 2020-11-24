@@ -5,7 +5,7 @@ import com.IceCreamQAQ.Yu.annotation.JobCenter;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.QQLoginEntity;
-import me.kuku.yuq.logic.QQLogic;
+import me.kuku.yuq.logic.QQLoginLogic;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.QQLoginService;
 import me.kuku.yuq.utils.QQPasswordLoginUtils;
@@ -22,14 +22,14 @@ public class QQJob {
     @Inject
     private QQLoginService qqLoginService;
     @Inject
-    private QQLogic qqLogic;
+    private QQLoginLogic qqLoginLogic;
 
     @Cron("30s")
     public void checkAndUpdate(){
         List<QQLoginEntity> list = qqLoginService.findByActivity();
         for (QQLoginEntity qqLoginEntity: list){
             try {
-                String result = qqLogic.qqSign(qqLoginEntity);
+                String result = qqLoginLogic.qqSign(qqLoginEntity);
                 if (result.contains("失败")){
                     if (qqLoginEntity.getPassword() == null){
                         qqLoginEntity.setStatus(false);
@@ -72,7 +72,7 @@ public class QQJob {
         List<QQLoginEntity> list = qqLoginService.findByActivity();
         list.forEach(qqLoginEntity -> {
             try {
-                qqLogic.sVipMornClock(qqLoginEntity);
+                qqLoginLogic.sVipMornClock(qqLoginEntity);
             } catch (IOException e) {
                 e.printStackTrace();
             }

@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import me.kuku.yuq.entity.QQLoginEntity;
-import me.kuku.yuq.logic.QQLogic;
+import me.kuku.yuq.logic.QQLoginLogic;
 import me.kuku.yuq.pojo.GroupMember;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.pojo.UA;
@@ -27,7 +27,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-public class QQLogicImpl implements QQLogic {
+public class QQLoginLogicImpl implements QQLoginLogic {
     @Override
     public Result<Map<String, String>> groupUploadImage(QQLoginEntity qqLoginEntity, String url) throws IOException {
         byte[] bytes = OkHttpUtils.getBytes(url);

@@ -1,6 +1,7 @@
 package me.kuku.yuq.logic.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import me.kuku.yuq.logic.MyApiLogic;
 import me.kuku.yuq.pojo.InstagramPojo;
 import me.kuku.yuq.pojo.TwitterPojo;
 import me.kuku.yuq.utils.OkHttpUtils;

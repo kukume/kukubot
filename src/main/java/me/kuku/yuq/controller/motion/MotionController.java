@@ -9,7 +9,7 @@ import com.icecreamqaq.yuq.annotation.QMsg;
 import me.kuku.yuq.entity.MotionEntity;
 import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.logic.LeXinMotionLogic;
-import me.kuku.yuq.logic.QQLogic;
+import me.kuku.yuq.logic.QQLoginLogic;
 import me.kuku.yuq.logic.XiaomiMotionLogic;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.MotionService;
@@ -29,7 +29,7 @@ public class MotionController {
     @Inject
     private QQLoginService qqLoginService;
     @Inject
-    private QQLogic qqLogic;
+    private QQLoginLogic qqLoginLogic;
 
     @Before
     public MotionEntity before(long qq){
@@ -56,7 +56,7 @@ public class MotionController {
         if (result.contains("成功")){
             QQLoginEntity qqLoginEntity = qqLoginService.findByQQ(motionEntity.getQq());
             if (qqLoginEntity != null){
-                qqLogic.motionSign(qqLoginEntity);
+                qqLoginLogic.motionSign(qqLoginEntity);
             }
         }
         return result;

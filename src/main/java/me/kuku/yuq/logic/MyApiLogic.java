@@ -1,4 +1,4 @@
-package me.kuku.yuq.logic.impl;
+package me.kuku.yuq.logic;
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind;
 import me.kuku.yuq.pojo.InstagramPojo;

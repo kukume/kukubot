@@ -6,7 +6,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import me.kuku.yuq.entity.QQJobEntity;
 import me.kuku.yuq.entity.QQLoginEntity;
-import me.kuku.yuq.logic.QQLogic;
+import me.kuku.yuq.logic.QQLoginLogic;
 import me.kuku.yuq.logic.QQZoneLogic;
 import me.kuku.yuq.service.QQJobService;
 import me.kuku.yuq.service.QQLoginService;
@@ -25,7 +25,7 @@ public class QQSwitchJob {
     @Inject
     private QQLoginService qqLoginService;
     @Inject
-    private QQLogic qqLogic;
+    private QQLoginLogic qqLoginLogic;
     @Inject
     private QQZoneLogic qqZoneLogic;
 
@@ -36,25 +36,25 @@ public class QQSwitchJob {
             try {
                 QQLoginEntity qqLoginEntity = qqLoginService.findByQQ(qqJobEntity.getQq());
                 if (qqLoginEntity == null) continue;
-                String str = qqLogic.qqSign(qqLoginEntity);
+                String str = qqLoginLogic.qqSign(qqLoginEntity);
                 if (!str.contains("更新QQ")){
-                    qqLogic.anotherSign(qqLoginEntity);
-                    qqLogic.vipSign(qqLoginEntity);
-                    qqLogic.phoneGameSign(qqLoginEntity);
-                    qqLogic.yellowSign(qqLoginEntity);
-                    qqLogic.qqVideoSign1(qqLoginEntity);
-                    qqLogic.qqVideoSign2(qqLoginEntity);
-                    qqLogic.bigVipSign(qqLoginEntity);
-                    qqLogic.qqMusicSign(qqLoginEntity);
-                    qqLogic.gameSign(qqLoginEntity);
-                    qqLogic.qPetSign(qqLoginEntity);
-                    qqLogic.tribeSign(qqLoginEntity);
-                    qqLogic.motionSign(qqLoginEntity);
-                    qqLogic.blueSign(qqLoginEntity);
-                    qqLogic.sVipMornSign(qqLoginEntity);
-                    qqLogic.weiYunSign(qqLoginEntity);
-                    qqLogic.weiShiSign(qqLoginEntity);
-                    qqLogic.growthLike(qqLoginEntity);
+                    qqLoginLogic.anotherSign(qqLoginEntity);
+                    qqLoginLogic.vipSign(qqLoginEntity);
+                    qqLoginLogic.phoneGameSign(qqLoginEntity);
+                    qqLoginLogic.yellowSign(qqLoginEntity);
+                    qqLoginLogic.qqVideoSign1(qqLoginEntity);
+                    qqLoginLogic.qqVideoSign2(qqLoginEntity);
+                    qqLoginLogic.bigVipSign(qqLoginEntity);
+                    qqLoginLogic.qqMusicSign(qqLoginEntity);
+                    qqLoginLogic.gameSign(qqLoginEntity);
+                    qqLoginLogic.qPetSign(qqLoginEntity);
+                    qqLoginLogic.tribeSign(qqLoginEntity);
+                    qqLoginLogic.motionSign(qqLoginEntity);
+                    qqLoginLogic.blueSign(qqLoginEntity);
+                    qqLoginLogic.sVipMornSign(qqLoginEntity);
+                    qqLoginLogic.weiYunSign(qqLoginEntity);
+                    qqLoginLogic.weiShiSign(qqLoginEntity);
+                    qqLoginLogic.growthLike(qqLoginEntity);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -93,7 +93,7 @@ public class QQSwitchJob {
                 if (qqLoginEntity == null) continue;
                 if (qqLoginEntity.getStatus()){
                     try {
-                        qqLogic.diyBubble(qqLoginEntity, qqJobEntity.getDataJsonObject().getString("text"), null);
+                        qqLoginLogic.diyBubble(qqLoginEntity, qqJobEntity.getDataJsonObject().getString("text"), null);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

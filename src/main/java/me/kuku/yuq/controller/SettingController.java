@@ -17,7 +17,7 @@ import com.icecreamqaq.yuq.mirai.MiraiBot;
 import me.kuku.yuq.entity.ConfigEntity;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.entity.QQLoginEntity;
-import me.kuku.yuq.logic.QQLogic;
+import me.kuku.yuq.logic.QQLoginLogic;
 import me.kuku.yuq.service.ConfigService;
 import me.kuku.yuq.service.GroupService;
 import me.kuku.yuq.utils.BotUtils;
@@ -35,7 +35,7 @@ public class SettingController extends QQController {
     @Config("YuQ.Mirai.bot.master")
     private String master;
     @Inject
-    private QQLogic qqLogic;
+    private QQLoginLogic qqLoginLogic;
     @Inject
     private OkHttpWebImpl web;
     @Inject
@@ -65,7 +65,7 @@ public class SettingController extends QQController {
 
     @Action("同意入群 {groupNo}")
     public String agreeAddGroup(QQLoginEntity qqLoginEntity, long groupNo) throws IOException {
-        List<Map<String, String>> groupMsgList = qqLogic.getGroupMsgList(qqLoginEntity);
+        List<Map<String, String>> groupMsgList = qqLoginLogic.getGroupMsgList(qqLoginEntity);
         AtomicReference<Map<String, String>> mm = new AtomicReference<>();
         for (Map<String, String> map: groupMsgList){
             if (String.valueOf(groupNo).equals(map.get("group"))){
@@ -74,7 +74,7 @@ public class SettingController extends QQController {
             }
         }
         if (mm.get() == null) return "没有找到这个群号";
-        return qqLogic.operatingGroupMsg(qqLoginEntity, "agree", mm.get(), null);
+        return qqLoginLogic.operatingGroupMsg(qqLoginEntity, "agree", mm.get(), null);
     }
 
     @Action("退群 {groupNo}")

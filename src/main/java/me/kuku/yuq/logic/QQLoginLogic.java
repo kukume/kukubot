@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 @AutoBind
-public interface QQLogic {
+public interface QQLoginLogic {
     Result<Map<String, String>> groupUploadImage(QQLoginEntity qqLoginEntity, String url) throws IOException;
     String groupLottery(QQLoginEntity qqLoginEntity, Long group) throws IOException;
     String vipSign(QQLoginEntity qqLoginEntity) throws IOException;

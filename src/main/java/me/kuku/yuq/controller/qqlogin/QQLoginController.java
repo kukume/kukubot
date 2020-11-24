@@ -14,7 +14,7 @@ import com.icecreamqaq.yuq.message.Image;
 import com.icecreamqaq.yuq.message.Message;
 import com.icecreamqaq.yuq.message.MessageItem;
 import me.kuku.yuq.entity.QQLoginEntity;
-import me.kuku.yuq.logic.QQLogic;
+import me.kuku.yuq.logic.QQLoginLogic;
 import me.kuku.yuq.logic.QQMailLogic;
 import me.kuku.yuq.logic.QQZoneLogic;
 import me.kuku.yuq.pojo.Result;
@@ -33,7 +33,7 @@ public class QQLoginController extends QQController {
     @Inject
     private QQMailLogic qqMailLogic;
     @Inject
-    private QQLogic qqLogic;
+    private QQLoginLogic qqLoginLogic;
     @Inject
     private QQZoneLogic qqZoneLogic;
     @Inject
@@ -53,21 +53,21 @@ public class QQLoginController extends QQController {
     @Action("气泡")
     @QMsg(at = true)
     public String bubble(@PathVar(1) String text, @PathVar(2) String name, QQLoginEntity qqLoginEntity) throws IOException {
-        if (text != null) return qqLogic.diyBubble(qqLoginEntity, text, name);
+        if (text != null) return qqLoginLogic.diyBubble(qqLoginEntity, text, name);
         else return "缺少参数：diy气泡文本内容！";
     }
 
     @Action("业务")
     @QMsg(at = true, atNewLine = true)
     public String queryVip(QQLoginEntity qqLoginEntity) throws IOException {
-        return qqLogic.queryVip(qqLoginEntity);
+        return qqLoginLogic.queryVip(qqLoginEntity);
     }
 
     @Action("昵称")
     @QMsg(at = true)
     public String modifyNickname(@PathVar(1) String str, QQLoginEntity qqLoginEntity) throws IOException {
-        if (str != null) return qqLogic.modifyNickname(qqLoginEntity, str);
-        else return qqLogic.modifyNickname(qqLoginEntity, " ");
+        if (str != null) return qqLoginLogic.modifyNickname(qqLoginEntity, str);
+        else return qqLoginLogic.modifyNickname(qqLoginEntity, " ");
     }
 
     @Action("头像")
@@ -82,13 +82,13 @@ public class QQLoginController extends QQController {
         }catch (IndexOutOfBoundsException e){
             url = "http://qqpublic.qpic.cn/qq_public/0/0-3083588061-157B50D7A4036953784514241D7DDC19/0";
         }
-        return qqLogic.modifyAvatar(qqLoginEntity, url);
+        return qqLoginLogic.modifyAvatar(qqLoginEntity, url);
     }
 
     @Action("送花 {qqNo}")
     @QMsg(at = true)
     public String sendFlower(QQLoginEntity qqLoginEntity, Long qqNo, long group) throws IOException {
-        return qqLogic.sendFlower(qqLoginEntity, qqNo, group);
+        return qqLoginLogic.sendFlower(qqLoginEntity, qqNo, group);
     }
 
     @Action("群礼物")
@@ -108,7 +108,7 @@ public class QQLoginController extends QQController {
                         }
                         long itGroup = Long.parseLong(map.get("group"));
                         try {
-                            String loResult = qqLogic.groupLottery(qqLoginEntity, itGroup);
+                            String loResult = qqLoginLogic.groupLottery(qqLoginEntity, itGroup);
                             if (loResult.contains("成功")) sb.append(loResult).append("\n");
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -128,42 +128,42 @@ public class QQLoginController extends QQController {
     @QMsg(at = true, atNewLine = true)
     public String allSign(QQLoginEntity qqLoginEntity, long group, long qq) throws IOException {
         reply(FunKt.getMif().at(qq).plus("请稍后！！！正在为您签到中~~~"));
-        String str1 = qqLogic.qqSign(qqLoginEntity);
+        String str1 = qqLoginLogic.qqSign(qqLoginEntity);
         if (!str1.contains("更新QQ")){
             try {
                 StringBuilder sb = new StringBuilder();
-                qqLogic.anotherSign(qqLoginEntity);
-                String str2 = qqLogic.groupLottery(qqLoginEntity, group);
+                qqLoginLogic.anotherSign(qqLoginEntity);
+                String str2 = qqLoginLogic.groupLottery(qqLoginEntity, group);
                 String str3;
-                if (qqLogic.vipSign(qqLoginEntity).contains("失败"))
+                if (qqLoginLogic.vipSign(qqLoginEntity).contains("失败"))
                     str3 = "签到失败";
                 else str3 = "签到成功";
-                String str4 = qqLogic.phoneGameSign(qqLoginEntity);
-                String str5 = qqLogic.yellowSign(qqLoginEntity);
-                String str6 = qqLogic.qqVideoSign1(qqLoginEntity);
-                String str7 = qqLogic.qqVideoSign2(qqLoginEntity);
-                String str8 = qqLogic.bigVipSign(qqLoginEntity);
+                String str4 = qqLoginLogic.phoneGameSign(qqLoginEntity);
+                String str5 = qqLoginLogic.yellowSign(qqLoginEntity);
+                String str6 = qqLoginLogic.qqVideoSign1(qqLoginEntity);
+                String str7 = qqLoginLogic.qqVideoSign2(qqLoginEntity);
+                String str8 = qqLoginLogic.bigVipSign(qqLoginEntity);
                 String str9;
-                if (qqLogic.qqMusicSign(qqLoginEntity).contains("失败"))
+                if (qqLoginLogic.qqMusicSign(qqLoginEntity).contains("失败"))
                     str9 = "签到失败";
                 else str9 = "签到成功";
                 String str10;
-                if (qqLogic.qPetSign(qqLoginEntity).contains("失败"))
+                if (qqLoginLogic.qPetSign(qqLoginEntity).contains("失败"))
                     str10 = "领取失败";
                 else str10 = "领取成功";
                 String str11;
-                if (qqLogic.tribeSign(qqLoginEntity).contains("成功"))
+                if (qqLoginLogic.tribeSign(qqLoginEntity).contains("成功"))
                     str11 = "领取成功";
                 else str11 = "领取失败";
-                String str12 = qqLogic.motionSign(qqLoginEntity);
+                String str12 = qqLoginLogic.motionSign(qqLoginEntity);
                 String str13;
-                if (qqLogic.blueSign(qqLoginEntity).contains("成功"))
+                if (qqLoginLogic.blueSign(qqLoginEntity).contains("成功"))
                     str13 = "签到成功";
                 else str13 = "签到失败";
-                String str14 = qqLogic.sVipMornSign(qqLoginEntity);
-                String str15 = qqLogic.weiYunSign(qqLoginEntity);
-                String str16 = qqLogic.weiShiSign(qqLoginEntity);
-                String str17 = qqLogic.growthLike(qqLoginEntity);
+                String str14 = qqLoginLogic.sVipMornSign(qqLoginEntity);
+                String str15 = qqLoginLogic.weiYunSign(qqLoginEntity);
+                String str16 = qqLoginLogic.weiShiSign(qqLoginEntity);
+                String str17 = qqLoginLogic.growthLike(qqLoginEntity);
                 sb.append("手机打卡：").append(str1).append("\n")
                         .append("群等级抽奖：").append(str2).append("\n")
                         .append("会员签到：").append(str3).append("\n")
@@ -210,7 +210,7 @@ public class QQLoginController extends QQController {
     @Action("成长")
     @QMsg(at = true, atNewLine = true)
     public String growth(QQLoginEntity qqLoginEntity) throws IOException {
-        return qqLogic.vipGrowthAdd(qqLoginEntity);
+        return qqLoginLogic.vipGrowthAdd(qqLoginEntity);
     }
 
     @Action("续期")
@@ -225,7 +225,7 @@ public class QQLoginController extends QQController {
     @QMsg(at = true)
     public String copyAvatar(String qqNo, QQLoginEntity qqLoginEntity) throws IOException {
         String url = "https://q.qlogo.cn/g?b=qq&nk=" + qqNo + "&s=640";
-        return qqLogic.modifyAvatar(qqLoginEntity, url);
+        return qqLoginLogic.modifyAvatar(qqLoginEntity, url);
     }
 
     @Action("删除qq")
@@ -241,7 +241,7 @@ public class QQLoginController extends QQController {
         reply(FunKt.getMif().at(qq).plus("请输入您需要自定义的机型！！"));
         Message nextMessage = session.waitNextMessage();
         String phone = Message.Companion.firstString(nextMessage);
-        return qqLogic.changePhoneOnline(qqLoginEntity, iMei, phone);
+        return qqLoginLogic.changePhoneOnline(qqLoginEntity, iMei, phone);
     }
 
     @Action("访问空间 {qqNo}")

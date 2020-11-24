@@ -15,7 +15,7 @@ import com.icecreamqaq.yuq.controller.QQController;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.entity.QQEntity;
-import me.kuku.yuq.logic.impl.MyApiLogic;
+import me.kuku.yuq.logic.MyApiLogic;
 import me.kuku.yuq.pojo.InstagramPojo;
 import me.kuku.yuq.pojo.TwitterPojo;
 import me.kuku.yuq.service.GroupService;

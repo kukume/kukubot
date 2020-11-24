@@ -91,15 +91,21 @@ public class GroupManageEvent {
             }
         }
         if (code != 0){
-            qqEntity.setViolationCount(qqEntity.getViolationCount() + 1);
-            if (qqEntity.getViolationCount() < groupEntity.getMaxViolationCount()){
+            Integer violationCount = qqEntity.getViolationCount();
+            if (violationCount == null) violationCount = 0;
+            qqEntity.setViolationCount(++violationCount);
+            Integer maxViolationCount = groupEntity.getMaxViolationCount();
+            if (maxViolationCount == null) maxViolationCount = 5;
+            if (violationCount < maxViolationCount){
+                qqService.save(qqEntity);
                 StringBuilder sb = new StringBuilder();
                 if (code == 2) sb.append("检测到色情图片。").append("\n");
                 else if (code == 1) sb.append("检测到违规词\"").append(vio).append("\"。").append("\n");
                 else sb.append("检测到违规去群名片\"").append(vio).append("\"。").append("\n");
-                sb.append("您当前的违规次数为").append(qqEntity.getViolationCount())
-                        .append("次，累计违规").append(groupEntity.getMaxViolationCount())
+                sb.append("您当前的违规次数为").append(violationCount)
+                        .append("次，累计违规").append(maxViolationCount)
                         .append("次会被移除本群哦！！");
+                e.getSender().ban(60 * 30);
                 e.getGroup().sendMessage(FunKt.getMif().at(qqEntity.getQq()).plus(sb.toString()));
             }else {
                 e.getSender().kick("违规次数已上限！！");

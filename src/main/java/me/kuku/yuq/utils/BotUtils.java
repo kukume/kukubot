@@ -23,7 +23,9 @@ public class BotUtils {
 
     public static String shortUrl(String url){
         try {
-            return OkHttpUtils.getStr("https://api.kuku.me/shorturl?url=" + URLEncoder.encode(url, "utf-8"));
+            JSONObject jsonObject = OkHttpUtils.getJson("https://c34.cn/api/?key=NCq7UkhAxi83&url=" + URLEncoder.encode(url, "utf-8"));
+            if (jsonObject.getInteger("error") == 0) return jsonObject.getString("short");
+            else return jsonObject.getString("msg");
         } catch (IOException e) {
             e.printStackTrace();
             return "短链接异常！！";

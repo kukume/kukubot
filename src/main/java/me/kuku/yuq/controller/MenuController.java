@@ -13,6 +13,7 @@ import me.kuku.yuq.controller.netease.NeTeaseController;
 import me.kuku.yuq.controller.qqlogin.BindQQController;
 import me.kuku.yuq.controller.qqlogin.QQJobController;
 import me.kuku.yuq.controller.qqlogin.QQLoginController;
+import me.kuku.yuq.controller.warframe.WarframeController;
 import me.kuku.yuq.controller.weibo.WeiboController;
 import me.kuku.yuq.controller.weibo.WeiboNotController;
 
@@ -70,6 +71,9 @@ public class MenuController {
     public String wb(){
         return menu(WeiboNotController.class) + "\n" + menu(WeiboController.class);
     }
+
+    @Action("wf")
+    public String wf() { return menu(WarframeController.class);}
 
     private String menu(Class<?> clazz){
         StringBuilder sb = new StringBuilder();

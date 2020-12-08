@@ -13,6 +13,7 @@ import me.kuku.yuq.pojo.BiliBiliPojo;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.BiliBiliService;
 import me.kuku.yuq.service.GroupService;
+import me.kuku.yuq.utils.BotUtils;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -105,17 +106,17 @@ public class BiliBiliJob {
                 }
                 for (BiliBiliPojo biliBiliPojo: newList){
                     String userId = biliBiliPojo.getUserId();
-                    List<JSONObject> likeList = match(biliBiliEntity.getLikeJsonArray(), userId);
+                    List<JSONObject> likeList = BotUtils.match(biliBiliEntity.getLikeJsonArray(), userId);
                     if (likeList.size() != 0) biliBiliLogic.like(biliBiliEntity, biliBiliPojo.getId(), true);
-                    List<JSONObject> commentList = match(biliBiliEntity.getCommentJsonArray(), userId);
+                    List<JSONObject> commentList = BotUtils.match(biliBiliEntity.getCommentJsonArray(), userId);
                     for (JSONObject jsonObject: commentList) biliBiliLogic.comment(biliBiliEntity, biliBiliPojo.getRid(), biliBiliPojo.getType().toString(), jsonObject.getString("content"));
-                    List<JSONObject> forwardList = match(biliBiliEntity.getForwardJsonArray(), userId);
+                    List<JSONObject> forwardList = BotUtils.match(biliBiliEntity.getForwardJsonArray(), userId);
                     for (JSONObject jsonObject: forwardList) biliBiliLogic.forward(biliBiliEntity, biliBiliPojo.getId(), jsonObject.getString("content"));
                     String bvId = biliBiliPojo.getBvId();
                     if (bvId != null){
-                        List<JSONObject> tossCoinList = match(biliBiliEntity.getTossCoinJsonArray(), userId);
+                        List<JSONObject> tossCoinList = BotUtils.match(biliBiliEntity.getTossCoinJsonArray(), userId);
                         if (tossCoinList.size() != 0) biliBiliLogic.tossCoin(biliBiliEntity, biliBiliPojo.getRid(), 2);
-                        List<JSONObject> favoritesList = match(biliBiliEntity.getFavoritesJsonArray(), userId);
+                        List<JSONObject> favoritesList = BotUtils.match(biliBiliEntity.getFavoritesJsonArray(), userId);
                         for (JSONObject jsonObject: favoritesList) biliBiliLogic.favorites(biliBiliEntity, biliBiliPojo.getRid(), jsonObject.getString("content"));
                     }
                     try {
@@ -128,15 +129,6 @@ public class BiliBiliJob {
             }
             userMap.put(qq, Long.valueOf(list.get(0).getId()));
         }
-    }
-
-    private List<JSONObject> match(JSONArray jsonArray, String userId){
-        List<JSONObject> list = new ArrayList<>();
-        for (int i = 0; i < jsonArray.size(); i++){
-            JSONObject jsonObject = jsonArray.getJSONObject(i);
-            if (userId.equals(jsonObject.getString("id"))) list.add(jsonObject);
-        }
-        return list;
     }
 
     @Cron("30s")

@@ -21,7 +21,7 @@ dependencies {
     implementation ('com.IceCreamQAQ.Yu:Yu-DB:0.0.2.0-DEV7'){
         exclude group: 'mysql', module: 'mysql-connector-java'
     }
-    implementation 'com.IceCreamQAQ.Yu:WebCore:0.0.2.0-DEV3'
+    implementation 'com.IceCreamQAQ.Yu:WebCore:0.0.2.0-DEV4'
     implementation 'org.jsoup:jsoup:1.13.1'
     implementation 'com.h2database:h2:1.4.200'
     implementation 'com.github.oshi:oshi-core:5.3.5'

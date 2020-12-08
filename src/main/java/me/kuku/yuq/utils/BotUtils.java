@@ -8,11 +8,14 @@ import com.icecreamqaq.yuq.message.*;
 import com.icecreamqaq.yuq.mirai.MiraiBot;
 import com.icecreamqaq.yuq.mirai.message.ImageReceive;
 import me.kuku.yuq.entity.QQLoginEntity;
+import me.kuku.yuq.pojo.UA;
 import okhttp3.Cookie;
+import okhttp3.Response;
 
 import java.io.IOException;
-import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,9 +26,17 @@ public class BotUtils {
 
     public static String shortUrl(String url){
         try {
-            JSONObject jsonObject = OkHttpUtils.getJson("https://c34.cn/api/?key=NCq7UkhAxi83&url=" + URLEncoder.encode(url, "utf-8"));
-            if (jsonObject.getInteger("error") == 0) return jsonObject.getString("short");
-            else return jsonObject.getString("msg");
+            Response response = OkHttpUtils.get("https://sina.lt/images/transparent.gif",
+                    OkHttpUtils.addUA(UA.PC));
+            response.close();
+            String cookie = OkHttpUtils.getCookie(response);
+            if (!url.startsWith("http")){
+                url = "http://" + url;
+            }
+            JSONObject jsonObject = OkHttpUtils.getJson("https://sina.lt/api.php?from=w&url=" + Base64.getEncoder().encodeToString(url.getBytes(StandardCharsets.UTF_8)) + "&site=dwz.date",
+                    OkHttpUtils.addHeaders(cookie, null, UA.PC));
+            if ("ok".equals(jsonObject.getString("result"))) return jsonObject.getJSONObject("data").getString("short_url");
+            else return jsonObject.getString("data");
         } catch (IOException e) {
             e.printStackTrace();
             return "短链接异常！！";

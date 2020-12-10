@@ -10,7 +10,7 @@ import com.icecreamqaq.yuq.annotation.PathVar;
 import com.icecreamqaq.yuq.annotation.PrivateController;
 import com.icecreamqaq.yuq.controller.BotActionContext;
 import com.icecreamqaq.yuq.controller.ContextSession;
-import com.icecreamqaq.yuq.controller.QQController;
+import com.icecreamqaq.yuq.entity.Contact;
 import com.icecreamqaq.yuq.entity.Group;
 import com.icecreamqaq.yuq.message.Message;
 import com.icecreamqaq.yuq.mirai.MiraiBot;
@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 @PrivateController
-public class SettingController extends QQController {
+public class SettingController {
     @Inject
     private GroupService groupService;
     @Config("YuQ.Mirai.bot.master")
@@ -87,12 +87,12 @@ public class SettingController extends QQController {
     }
 
     @Action("qqai")
-    public String settingQQAI(ContextSession session){
-        reply("将设置QQAI的信息，请确保您的应用赋予了图片鉴黄、智能闲聊、通用OCR能力");
-        reply("请输入ai.qq.com/v1的appId");
+    public String settingQQAI(ContextSession session, Contact qq){
+        qq.sendMessage(Message.Companion.toMessage("将设置QQAI的信息，请确保您的应用赋予了图片鉴黄、智能闲聊、通用OCR能力"));
+        qq.sendMessage(Message.Companion.toMessage("请输入ai.qq.com/v1的appId"));
         Message firstMessage = session.waitNextMessage();
         String appId = Message.Companion.firstString(firstMessage);
-        reply("请输入ai.qq.com/v1的appKey");
+        qq.sendMessage(Message.Companion.toMessage("请输入ai.qq.com/v1的appKey"));
         Message secondMessage = session.waitNextMessage();
         String appKey = Message.Companion.firstString(secondMessage);
         ConfigEntity configEntity1 = configService.findByType("qqAIAppId");

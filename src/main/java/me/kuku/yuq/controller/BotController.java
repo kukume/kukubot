@@ -8,7 +8,7 @@ import com.icecreamqaq.yuq.annotation.PathVar;
 import com.icecreamqaq.yuq.annotation.QMsg;
 import com.icecreamqaq.yuq.controller.BotActionContext;
 import com.icecreamqaq.yuq.controller.ContextSession;
-import com.icecreamqaq.yuq.controller.QQController;
+import com.icecreamqaq.yuq.entity.Group;
 import com.icecreamqaq.yuq.entity.Member;
 import com.icecreamqaq.yuq.message.Image;
 import com.icecreamqaq.yuq.message.Message;
@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 @GroupController
-public class BotController extends QQController {
+public class BotController {
     @Config("YuQ.Mirai.user.qq")
     private String qq;
     @Inject
@@ -54,8 +54,8 @@ public class BotController extends QQController {
     }
 
     @Action("qq上传")
-    public String groupUpload(QQLoginEntity qqLoginEntity, Long qq, ContextSession session) throws IOException {
-        reply(FunKt.getMif().at(qq).plus("请发送您需要上传的图片！！"));
+    public String groupUpload(QQLoginEntity qqLoginEntity, Long qq, ContextSession session, Group group) throws IOException {
+        group.sendMessage(FunKt.getMif().at(qq).plus("请发送您需要上传的图片！！"));
         Message message = session.waitNextMessage();
         ArrayList<MessageItem> body = message.getBody();
         StringBuilder sb = new StringBuilder().append("您上传的图片链接如下：").append("\n");

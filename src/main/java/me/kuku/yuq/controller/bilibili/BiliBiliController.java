@@ -10,7 +10,7 @@ import com.icecreamqaq.yuq.annotation.PathVar;
 import com.icecreamqaq.yuq.annotation.QMsg;
 import com.icecreamqaq.yuq.controller.BotActionContext;
 import com.icecreamqaq.yuq.controller.ContextSession;
-import com.icecreamqaq.yuq.controller.QQController;
+import com.icecreamqaq.yuq.entity.Group;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.BiliBiliEntity;
 import me.kuku.yuq.logic.BiliBiliLogic;
@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 @GroupController
 @SuppressWarnings("unused")
-public class BiliBiliController extends QQController {
+public class BiliBiliController {
     @Inject
     private BiliBiliLogic biliBiliLogic;
     @Inject
@@ -42,11 +42,11 @@ public class BiliBiliController extends QQController {
     }
 
     @Action("哔哩哔哩/add/{type}/{username}")
-    public void biliBiliAdd(BiliBiliEntity biliBiliEntity, String type, String username, ContextSession session, Long qq) throws IOException {
+    public void biliBiliAdd(BiliBiliEntity biliBiliEntity, String type, String username, ContextSession session, Long qq, Group group) throws IOException {
         Result<List<BiliBiliPojo>> result = biliBiliLogic.getIdByName(username);
         List<BiliBiliPojo> list = result.getData();
         if (list == null){
-            reply(FunKt.getMif().at(qq).plus("该用户不存在！！"));
+            group.sendMessage(FunKt.getMif().at(qq).plus("该用户不存在！！"));
             return;
         }
         BiliBiliPojo biliBiliPojo = list.get(0);
@@ -58,45 +58,45 @@ public class BiliBiliController extends QQController {
         switch (type){
             case "开播提醒":
                 biliBiliEntity.setLiveJsonArray(biliBiliEntity.getLiveJsonArray().fluentAdd(jsonObject));
-                reply(FunKt.getMif().at(qq).plus("添加" + name + "的开播提醒成功！！"));
+                group.sendMessage(FunKt.getMif().at(qq).plus("添加" + name + "的开播提醒成功！！"));
                 break;
             case "赞":
                 biliBiliEntity.setLikeJsonArray(biliBiliEntity.getLikeJsonArray().fluentAdd(jsonObject));
-                reply(FunKt.getMif().at(qq).plus("添加" + name + "的自动赞成功！！"));
+                group.sendMessage(FunKt.getMif().at(qq).plus("添加" + name + "的自动赞成功！！"));
                 break;
             case "评论":
-                reply(FunKt.getMif().at(qq).plus("请输入需要评论的内容！！"));
+                group.sendMessage(FunKt.getMif().at(qq).plus("请输入需要评论的内容！！"));
                 Message message = session.waitNextMessage();
                 String content = Message.Companion.firstString(message);
                 jsonObject.put("content", content);
                 biliBiliEntity.setCommentJsonArray(
                         biliBiliEntity.getCommentJsonArray().fluentAdd(content)
                 );
-                reply(FunKt.getMif().at(qq).plus("添加" + name + "的自动评论成功！！"));
+                group.sendMessage(FunKt.getMif().at(qq).plus("添加" + name + "的自动评论成功！！"));
                 break;
             case "转发":
-                reply(FunKt.getMif().at(qq).plus("请输入需要转发的内容"));
+                group.sendMessage(FunKt.getMif().at(qq).plus("请输入需要转发的内容"));
                 String forwardContent = Message.Companion.firstString(session.waitNextMessage());
                 jsonObject.put("content", forwardContent);
                 biliBiliEntity.setForwardJsonArray(
                         biliBiliEntity.getForwardJsonArray().fluentAdd(jsonObject)
                 );
-                reply(FunKt.getMif().at(qq).plus("添加" + name + "的自动转发成功！！"));
+                group.sendMessage(FunKt.getMif().at(qq).plus("添加" + name + "的自动转发成功！！"));
                 break;
             case "投硬币":
                 biliBiliEntity.setTossCoinJsonArray(
                         biliBiliEntity.getTossCoinJsonArray().fluentAdd(jsonObject)
                 );
-                reply(FunKt.getMif().at(qq).plus("添加" + name + "的自动转发成功！！"));
+                group.sendMessage(FunKt.getMif().at(qq).plus("添加" + name + "的自动转发成功！！"));
                 break;
             case "收藏":
-                reply(FunKt.mif.at(qq).plus("请输入需要自动收藏的收藏夹的名称"));
+                group.sendMessage(FunKt.mif.at(qq).plus("请输入需要自动收藏的收藏夹的名称"));
                 String faContent = Message.Companion.firstString(session.waitNextMessage());
                 jsonObject.put("content", faContent);
                 biliBiliEntity.setForwardJsonArray(
                         biliBiliEntity.getForwardJsonArray().fluentAdd(jsonObject)
                 );
-                reply(FunKt.getMif().at(qq).plus("添加" + name + "的自动收藏成功！！"));
+                group.sendMessage(FunKt.getMif().at(qq).plus("添加" + name + "的自动收藏成功！！"));
                 break;
             default: return;
         }
@@ -215,9 +215,9 @@ public class BiliBiliController extends QQController {
     }
 
     @Action("哔哩哔哩举报 {bvId}")
-    public String report(BiliBiliEntity biliBiliEntity, String bvId, long qq,
+    public String report(BiliBiliEntity biliBiliEntity, String bvId, long qq, Group group,
                          @PathVar(value = 2, type = PathVar.Type.Integer) Integer page) throws IOException {
-        reply(FunKt.getMif().at(qq).plus("正在为您举报中！！"));
+        group.sendMessage(FunKt.getMif().at(qq).plus("正在为您举报中！！"));
         if (page == null) page = 1;
         String oid = biliBiliLogic.getOidByBvId(bvId);
         List<Map<String, String>> list = biliBiliLogic.getReplay(biliBiliEntity, oid, page);

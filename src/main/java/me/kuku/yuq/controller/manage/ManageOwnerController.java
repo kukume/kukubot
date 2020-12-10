@@ -11,7 +11,7 @@ import com.icecreamqaq.yuq.annotation.GroupController;
 import com.icecreamqaq.yuq.annotation.PathVar;
 import com.icecreamqaq.yuq.annotation.QMsg;
 import com.icecreamqaq.yuq.controller.ContextSession;
-import com.icecreamqaq.yuq.controller.QQController;
+import com.icecreamqaq.yuq.entity.Group;
 import com.icecreamqaq.yuq.message.Message;
 import com.icecreamqaq.yuq.message.MessageItemFactory;
 import me.kuku.yuq.entity.GroupEntity;
@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @GroupController
-public class ManageOwnerController extends QQController {
+public class ManageOwnerController {
     @Config("YuQ.Mirai.bot.master")
     private String master;
     @Inject
@@ -170,9 +170,9 @@ public class ManageOwnerController extends QQController {
 
     @Action("加问答 {q}")
     @QMsg(at = true)
-    public String qa(ContextSession session, long qq, GroupEntity groupEntity, String q){
+    public String qa(ContextSession session, long qq, GroupEntity groupEntity, String q, Group group){
         MessageItemFactory mif = FunKt.getMif();
-        reply(mif.at(qq).plus("请输入回答语句！！"));
+        group.sendMessage(mif.at(qq).plus("请输入回答语句！！"));
         Message a = session.waitNextMessage();
         JSONObject jsonObject = new JSONObject();
         JSONArray aJsonArray = BotUtils.messageToJsonArray(a);

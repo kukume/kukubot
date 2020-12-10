@@ -8,7 +8,6 @@ import com.icecreamqaq.yuq.annotation.PathVar;
 import com.icecreamqaq.yuq.annotation.QMsg;
 import com.icecreamqaq.yuq.controller.BotActionContext;
 import com.icecreamqaq.yuq.controller.ContextSession;
-import com.icecreamqaq.yuq.controller.QQController;
 import com.icecreamqaq.yuq.entity.Group;
 import com.icecreamqaq.yuq.message.Image;
 import com.icecreamqaq.yuq.message.Message;
@@ -29,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("unused")
 @GroupController
-public class QQLoginController extends QQController {
+public class QQLoginController{
     @Inject
     private QQMailLogic qqMailLogic;
     @Inject
@@ -126,14 +125,14 @@ public class QQLoginController extends QQController {
 
     @Action("超级签到")
     @QMsg(at = true, atNewLine = true)
-    public String allSign(QQLoginEntity qqLoginEntity, long group, long qq) throws IOException {
-        reply(FunKt.getMif().at(qq).plus("请稍后！！！正在为您签到中~~~"));
+    public String allSign(QQLoginEntity qqLoginEntity, Group group, long qq) throws IOException {
+        group.sendMessage(FunKt.getMif().at(qq).plus("请稍后！！！正在为您签到中~~~"));
         String str1 = qqLoginLogic.qqSign(qqLoginEntity);
         if (!str1.contains("更新QQ")){
             try {
                 StringBuilder sb = new StringBuilder();
                 qqLoginLogic.anotherSign(qqLoginEntity);
-                String str2 = qqLoginLogic.groupLottery(qqLoginEntity, group);
+                String str2 = qqLoginLogic.groupLottery(qqLoginEntity, group.getId());
                 String str3;
                 if (qqLoginLogic.vipSign(qqLoginEntity).contains("失败"))
                     str3 = "签到失败";
@@ -215,9 +214,9 @@ public class QQLoginController extends QQController {
 
     @Action("续期")
     @QMsg(at = true)
-    public String renew(QQLoginEntity qqLoginEntity, long qq) throws IOException {
+    public String renew(QQLoginEntity qqLoginEntity, long qq, Group group) throws IOException {
         if (qqLoginEntity.getPassword() == null) return "续期QQ邮箱中转站文件失败！！，需要使用密码登录QQ！";
-        reply(FunKt.getMif().at(qq).plus("正在续期中，请稍后~~~~~"));
+        group.sendMessage(FunKt.getMif().at(qq).plus("正在续期中，请稍后~~~~~"));
         return qqMailLogic.fileRenew(qqLoginEntity);
     }
 
@@ -237,8 +236,8 @@ public class QQLoginController extends QQController {
 
     @Action("自定义机型 {iMei}")
     @QMsg(at = true)
-    public String changePhoneOnline(QQLoginEntity qqLoginEntity, String iMei, long qq, ContextSession session) throws IOException {
-        reply(FunKt.getMif().at(qq).plus("请输入您需要自定义的机型！！"));
+    public String changePhoneOnline(QQLoginEntity qqLoginEntity, String iMei, long qq, ContextSession session, Group group) throws IOException {
+        group.sendMessage(FunKt.getMif().at(qq).plus("请输入您需要自定义的机型！！"));
         Message nextMessage = session.waitNextMessage();
         String phone = Message.Companion.firstString(nextMessage);
         return qqLoginLogic.changePhoneOnline(qqLoginEntity, iMei, phone);

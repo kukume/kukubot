@@ -8,7 +8,7 @@ import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.annotation.GroupController;
 import com.icecreamqaq.yuq.annotation.QMsg;
 import com.icecreamqaq.yuq.controller.ContextSession;
-import com.icecreamqaq.yuq.controller.QQController;
+import com.icecreamqaq.yuq.entity.Group;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.WeiboEntity;
 import me.kuku.yuq.logic.ToolLogic;
@@ -23,13 +23,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @GroupController
-public class WeiboController extends QQController {
+public class WeiboController {
     @Inject
     private WeiboLogic weiboLogic;
     @Inject
     private WeiboService weiboService;
-    @Inject
-    private ToolLogic toolLogic;
 
     @Before
     public WeiboEntity before(long qq){
@@ -49,7 +47,7 @@ public class WeiboController extends QQController {
 
     @Action("微博/add/{type}/{username}")
     @QMsg(at = true)
-    public String weiboAdd(WeiboEntity weiboEntity, String type, String username, ContextSession session, long qq) throws IOException {
+    public String weiboAdd(WeiboEntity weiboEntity, String type, String username, ContextSession session, long qq, Group group) throws IOException {
         Result<List<WeiboPojo>> result = weiboLogic.getIdByName(username);
         List<WeiboPojo> list = result.getData();
         if (list == null) return result.getMessage();
@@ -65,13 +63,13 @@ public class WeiboController extends QQController {
                 weiboEntity.setLikeJsonArray(weiboEntity.getLikeJsonArray().fluentAdd(jsonObject));
                 break;
             case "评论":
-                reply(FunKt.getMif().at(qq).plus("请输入需要评论的内容！！"));
+                group.sendMessage(FunKt.getMif().at(qq).plus("请输入需要评论的内容！！"));
                 String commentContent = messageCompanion.firstString(session.waitNextMessage());
                 jsonObject.put("content", commentContent);
                 weiboEntity.setCommentJsonArray(weiboEntity.getCommentJsonArray().fluentAdd(jsonObject));
                 break;
             case "转发":
-                reply(FunKt.getMif().at(qq).plus("请输入需要转发的内容！！"));
+                group.sendMessage(FunKt.getMif().at(qq).plus("请输入需要转发的内容！！"));
                 String forwardContent = messageCompanion.firstString(session.waitNextMessage());
                 jsonObject.put("content", forwardContent);
                 weiboEntity.setForwardJsonArray(weiboEntity.getForwardJsonArray().fluentAdd(jsonObject));

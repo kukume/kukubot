@@ -7,7 +7,6 @@ import com.icecreamqaq.yuq.annotation.PathVar;
 import com.icecreamqaq.yuq.annotation.PrivateController;
 import com.icecreamqaq.yuq.annotation.QMsg;
 import com.icecreamqaq.yuq.controller.ContextSession;
-import com.icecreamqaq.yuq.controller.QQController;
 import com.icecreamqaq.yuq.entity.Contact;
 import com.icecreamqaq.yuq.entity.Group;
 import com.icecreamqaq.yuq.entity.Member;
@@ -26,7 +25,7 @@ import java.util.Map;
 
 @GroupController
 @PrivateController
-public class BindQQController extends QQController {
+public class BindQQController {
     @Inject
     private QQLoginService qqLoginService;
 
@@ -69,7 +68,7 @@ public class BindQQController extends QQController {
                 QQUtils.saveOrUpdate(qqLoginService, map, qq.getId(), pwd, group);
                 return "绑定或者更新QQ成功！！";
             case 10009:
-                reply(result.getMessage());
+                qq.sendMessage(Message.Companion.toMessage(result.getMessage()));
                 Map<String, String> smsMap = result.getData();
                 Message codeMessage = session.waitNextMessage(1000 * 60 * 2);
                 String code = Message.Companion.firstString(codeMessage);

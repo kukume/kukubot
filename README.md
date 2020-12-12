@@ -3,7 +3,7 @@
 * [YuQ-Mirai-SuperDemo](https://github.com/YuQWorks/YuQ-SuperDemo)
 * [Mirai](https://github.com/mamoe/mirai)
 
-**Jar包下载**：https://github.com/kukume/kuku-bot/actions
+**Jar包下载**：https://file.kuku.me
 
 ## 功能
 * QQ签到
@@ -22,7 +22,7 @@
 
 mirai-console版：[https://www.kuku.me/archives/7/](https://www.kuku.me/archives/7/)
 
-安装教程：[https://w.url.cn/s/AD764XH](https://w.url.cn/s/AD764XH)
+安装教程：[https://www.kuku.me/archives/6/](https://www.kuku.me/archives/6/)
 
 ## 说明
 * 数据库使用h2，目录`db`下

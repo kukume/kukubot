@@ -589,7 +589,7 @@ public class ToolLogicImpl implements ToolLogic {
     public String teachYou(String content, String type) throws IOException {
         String msg;
         String url;
-        String suffix = URLEncoder.encode(Base64.getEncoder().encodeToString(content.getBytes()), "utf-8");
+        String suffix = URLEncoder.encode(Base64.getEncoder().encodeToString(content.getBytes(StandardCharsets.UTF_8)), "utf-8");
         switch (type){
             case "baidu":
                 msg = "百度";

@@ -32,7 +32,7 @@ public class ManageNotController {
     @Inject
     private ToolLogic toolLogic;
 
-    private final String version = "v2.1.0";
+    private final String version = "v2.1.1";
 
     @Before
     public GroupEntity before(Long group){

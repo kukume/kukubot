@@ -6,7 +6,6 @@ import com.IceCreamQAQ.Yu.annotation.JobCenter;
 import com.IceCreamQAQ.Yu.util.IO;
 import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
-import com.icecreamqaq.yuq.entity.Group;
 import com.icecreamqaq.yuq.entity.Member;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.GroupEntity;
@@ -67,8 +66,7 @@ public class MyJob {
                 Map<Long, Member> members = FunKt.getYuq().getGroups().get(group).getMembers();
                 Message message = Message.Companion.toMessage(
                         "程序有更新啦，快去更新吧。\n如果您使用的是docker版，请参考 https://www.kuku.me/archives/8/ 的更新教程\n" +
-                                "如果不是，那么请手动替换最新jar包并重启：https://github.com/kukume/kuku-bot/actions，\n" +
-                                "选择最新的workflows然后下载Artifacts"
+                                "如果不是，那么请手动替换最新jar包并重启：https://file.kuku.me"
                 );
                 long qq = Long.parseLong(master);
                 if (members.containsKey(qq)){

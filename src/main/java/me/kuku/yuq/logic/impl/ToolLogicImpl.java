@@ -476,18 +476,29 @@ public class ToolLogicImpl implements ToolLogic {
     }
 
     @Override
-    public List<Map<String, String>> hostLocPost() throws IOException {
-        String html = OkHttpUtils.getStr("https://www.hostloc.com/forum.php?mod=forumdisplay&fid=45&filter=author&orderby=dateline",
-                OkHttpUtils.addUA(UA.PC));
-        Elements elements = Jsoup.parse(html).getElementsByTag("tbody");
+    public List<Map<String, String>> hostLocPost() {
         List<Map<String, String>> list = new ArrayList<>();
+        String html;
+        try {
+            html = OkHttpUtils.getStr("https://www.hostloc.com/forum.php?mod=forumdisplay&fid=45&filter=author&orderby=dateline",
+                    OkHttpUtils.addUA(UA.PC));
+        } catch (IOException e) {
+//            e.printStackTrace();
+            return list;
+        }
+        Elements elements = Jsoup.parse(html).getElementsByTag("tbody");
         for (Element ele: elements){
             if (!ele.attr("id").startsWith("normalth")) continue;
             Element s = ele.getElementsByClass("s").first();
             String title = s.text();
             String url = "https://www.hostloc.com/" + s.attr("href");
             String name = ele.select("cite a").first().text();
-            String time = ele.select("em a span").first().text();
+            String time = null;
+            try {
+                time = ele.select("em a span").first().text();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             String id = BotUtils.regex("tid=", "&", url);
             Map<String, String> map = new HashMap<>();
             map.put("title", title);
@@ -772,5 +783,10 @@ public class ToolLogicImpl implements ToolLogic {
                 .append("  - 珍贵：").append(statsJsonObject.getString("luxurious_chest_number")).append("个 华丽：")
                 .append(statsJsonObject.getString("precious_chest_number")).append("个");
         return sb.toString();
+    }
+
+    @Override
+    public byte[] cosplay() throws IOException {
+        return OkHttpUtils.getBytes("https://api.ixxcc.com/cosplay.php?return=img");
     }
 }

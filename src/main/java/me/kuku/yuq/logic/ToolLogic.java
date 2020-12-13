@@ -45,7 +45,7 @@ public interface ToolLogic {
     String searchQuestion(String question) throws IOException;
     Result<Map<String, String>> bvToAv(String bv) throws IOException;
     List<Map<String, String>> zhiHuHot() throws IOException;
-    List<Map<String, String>> hostLocPost() throws IOException;
+    List<Map<String, String>> hostLocPost();
     String wordSegmentation(String text) throws IOException;
     String acgPic() throws IOException;
     byte[] danBooRuPic(String type) throws IOException;
@@ -58,4 +58,5 @@ public interface ToolLogic {
     String songByQQ(String name) throws IOException;
     Result<String> songBy163(String name) throws IOException;
     String genShinUserInfo(long id) throws IOException;
+    byte[] cosplay() throws IOException;
 }

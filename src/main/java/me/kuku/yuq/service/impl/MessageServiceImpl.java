@@ -44,4 +44,9 @@ public class MessageServiceImpl implements MessageService {
         }
         return map;
     }
+
+    @Override
+    public List<MessageEntity> findLastMessage(Long qq, Long group) {
+        return messageDao.findByQQAndGroup(qq, group);
+    }
 }

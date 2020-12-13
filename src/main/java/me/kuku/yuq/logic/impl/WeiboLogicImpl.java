@@ -110,8 +110,10 @@ public class WeiboLogicImpl implements WeiboLogic {
             weiboPojo.setIsForward(true);
             weiboPojo.setForwardId(forwardJsonObject.getString("id"));
             weiboPojo.setForwardTime(forwardJsonObject.getString("created_at"));
-            String name = forwardJsonObject.getJSONObject("user").getString("screen_name");
-            if (name == null) name = "原微博已删除";
+            JSONObject forwardUserJsonObject = forwardJsonObject.getJSONObject("user");
+            String name = null;
+            if (forwardUserJsonObject == null) name = "原微博已删除";
+            else forwardUserJsonObject.getString("screen_name");
             weiboPojo.setForwardName(name);
             weiboPojo.setForwardText(Jsoup.parse(forwardJsonObject.getString("text")).text());
             weiboPojo.setForwardBid(forwardJsonObject.getString("bid"));

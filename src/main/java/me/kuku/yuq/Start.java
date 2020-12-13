@@ -29,7 +29,7 @@ public class Start {
         File yuqFile = new File("conf/YuQ.properties");
         if (!yuqFile.exists()){
             try {
-                byte[] bytes = OkHttpUtils.downloadBytes("https://ty.kuku.me/kuku/bot/YuQ.properties");
+                byte[] bytes = OkHttpUtils.downloadBytes("https://file.kuku.me/kuku-bot/YuQ.properties");
                 IO.writeFile(yuqFile, bytes);
             } catch (IOException e) {
                 e.printStackTrace();

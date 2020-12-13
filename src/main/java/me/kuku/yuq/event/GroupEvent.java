@@ -9,13 +9,17 @@ import com.icecreamqaq.yuq.event.GroupMemberLeaveEvent;
 import com.icecreamqaq.yuq.event.GroupMemberRequestEvent;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.GroupEntity;
+import me.kuku.yuq.entity.MessageEntity;
 import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.service.DaoService;
 import me.kuku.yuq.service.GroupService;
+import me.kuku.yuq.service.MessageService;
 import me.kuku.yuq.service.QQService;
+import me.kuku.yuq.utils.BotUtils;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.util.List;
 
 @EventListener
 public class GroupEvent {
@@ -27,6 +31,8 @@ public class GroupEvent {
     private DaoService daoService;
     @Inject
     private QQService qqService;
+    @Inject
+    private MessageService messageService;
 
     @Event
     public void groupMemberRequest(GroupMemberRequestEvent e){
@@ -63,7 +69,13 @@ public class GroupEvent {
             groupService.save(groupEntity);
             msg = "刚刚，" + e.getMember().getName() + "退群了，已加入本群黑名单！！";
         }else msg = "刚刚，" + e.getMember().getName() + "离开了我们！！";
+        msg += "\n他在本群最后说的一句话是：";
         e.getGroup().sendMessage(Message.Companion.toMessage(msg));
+        List<MessageEntity> messageList = messageService.findLastMessage(qq, group);
+        Message finallyMessage;
+        if (messageList.size() == 0) finallyMessage = Message.Companion.toMessage("他好像还没有说过话！！");
+        else finallyMessage = BotUtils.jsonArrayToMessage(messageList.get(0).getContentJsonArray());
+        e.getGroup().sendMessage(finallyMessage);
     }
 
     @Event

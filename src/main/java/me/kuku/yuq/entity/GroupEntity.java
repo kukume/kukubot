@@ -59,6 +59,18 @@ public class GroupEntity {
 
     public GroupEntity(Long group){
         this.group = group;
+        this.colorPic = false;
+        this.status = false;
+        this.recall = false;
+        this.pic = false;
+        this.leaveGroupBlack = false;
+        this.welcomeMsg = false;
+        this.autoReview = false;
+        this.onTimeAlarm = false;
+        this.locMonitor = false;
+        this.flashNotify = false;
+        this.maxCommandCountOnTime = -1;
+        this.maxViolationCount = 5;
     }
 
     public JSONArray getBlackJsonArray(){

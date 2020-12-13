@@ -377,12 +377,11 @@ public class ToolController {
     }
 
     @Action("语音合成 {text}")
-    public void voice(String text, Group group, long qq) throws IOException {
+    public Message voice(String text, Group group, long qq) throws IOException {
         Result<byte[]> result = qqAiLogic.voiceSynthesis(text);
         if (result.getCode() == 200){
-            net.mamoe.mirai.contact.Group miraiGroup = Bot.getInstance(FunKt.getYuq().getBotId()).getGroup(group.getId());
-            miraiGroup.sendMessage(miraiGroup.uploadVoice(new ByteArrayInputStream(result.getData())));
-        }else group.sendMessage(FunKt.getMif().at(qq).plus(result.getMessage()));
+            return FunKt.getMif().voiceByByteArray(result.getData()).toMessage();
+        }else return FunKt.getMif().at(qq).plus(result.getMessage());
     }
 
     @QMsg(at = true)
@@ -530,5 +529,10 @@ public class ToolController {
                 .imageByInputStream(new ByteArrayInputStream(
                         toolLogic.piXivPicProxy(picList.get((int) (Math.random() * picList.size())))
                 )).toMessage();
+    }
+
+    @Action("cosplay")
+    public Message cosplay() throws IOException {
+        return FunKt.getMif().imageByByteArray(toolLogic.cosplay()).toMessage();
     }
 }

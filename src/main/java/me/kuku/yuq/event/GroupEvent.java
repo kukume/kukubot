@@ -19,7 +19,9 @@ import me.kuku.yuq.utils.BotUtils;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 
 @EventListener
 public class GroupEvent {
@@ -69,12 +71,19 @@ public class GroupEvent {
             groupService.save(groupEntity);
             msg = "刚刚，" + e.getMember().getName() + "退群了，已加入本群黑名单！！";
         }else msg = "刚刚，" + e.getMember().getName() + "离开了我们！！";
-        msg += "\n他在本群最后说的一句话是：";
-        e.getGroup().sendMessage(Message.Companion.toMessage(msg));
         List<MessageEntity> messageList = messageService.findLastMessage(qq, group);
         Message finallyMessage;
-        if (messageList.size() == 0) finallyMessage = Message.Companion.toMessage("他好像还没有说过话！！");
-        else finallyMessage = BotUtils.jsonArrayToMessage(messageList.get(0).getContentJsonArray());
+        if (messageList.size() == 0) {
+            finallyMessage = Message.Companion.toMessage("他好像还没有说过话！！");
+        }
+        else {
+            MessageEntity messageEntity = messageList.get(0);
+            msg += "\n尽管他就这么的走了，但是我们仍然不要忘记他在[" +
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA).format(messageEntity.getDate()) +
+                    "]说的最后一句话：";
+            finallyMessage = BotUtils.jsonArrayToMessage(messageEntity.getContentJsonArray());
+        }
+        e.getGroup().sendMessage(Message.Companion.toMessage(msg));
         e.getGroup().sendMessage(finallyMessage);
     }
 
@@ -104,7 +113,7 @@ public class GroupEvent {
                             "欢迎加入本群\n" +
                                     "您是本群的第" + (e.getGroup().getMembers().size() + 1) + "位成员\n" +
                                     "您可以愉快的与大家交流啦！！"
-                    ).plus(FunKt.getMif().imageByUrl("https://q.qlogo.cn/g?b=qq&nk=" + qq + "&s=640"))
+                    ).plus(FunKt.getMif().imageByUrl(e.getMember().getAvatar()))
                     .plus("一言：" + toolLogic.hiToKoTo().get("text"))
             );
         }

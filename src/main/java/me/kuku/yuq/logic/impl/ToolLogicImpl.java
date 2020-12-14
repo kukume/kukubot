@@ -476,42 +476,6 @@ public class ToolLogicImpl implements ToolLogic {
     }
 
     @Override
-    public List<Map<String, String>> hostLocPost() {
-        List<Map<String, String>> list = new ArrayList<>();
-        String html;
-        try {
-            html = OkHttpUtils.getStr("https://www.hostloc.com/forum.php?mod=forumdisplay&fid=45&filter=author&orderby=dateline",
-                    OkHttpUtils.addUA(UA.PC));
-        } catch (IOException e) {
-//            e.printStackTrace();
-            return list;
-        }
-        Elements elements = Jsoup.parse(html).getElementsByTag("tbody");
-        for (Element ele: elements){
-            if (!ele.attr("id").startsWith("normalth")) continue;
-            Element s = ele.getElementsByClass("s").first();
-            String title = s.text();
-            String url = "https://www.hostloc.com/" + s.attr("href");
-            String name = ele.select("cite a").first().text();
-            String time = null;
-            try {
-                time = ele.select("em a span").first().text();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            String id = BotUtils.regex("tid=", "&", url);
-            Map<String, String> map = new HashMap<>();
-            map.put("title", title);
-            map.put("url", url);
-            map.put("name", name);
-            map.put("time", time);
-            map.put("id", id);
-            list.add(map);
-        }
-        return list;
-    }
-
-    @Override
     public String wordSegmentation(String text) throws IOException {
         JSONObject jsonObject = OkHttpUtils.getJson("https://api.devopsclub.cn/api/segcut?text=" + URLEncoder.encode(text, "utf-8"));
         if (jsonObject.getInteger("code") == 0){
@@ -788,5 +752,10 @@ public class ToolLogicImpl implements ToolLogic {
     @Override
     public byte[] cosplay() throws IOException {
         return OkHttpUtils.getBytes("https://api.ixxcc.com/cosplay.php?return=img");
+    }
+
+    @Override
+    public byte[] photo() throws IOException {
+        return OkHttpUtils.getBytes("https://api.pixivweb.com/api.php?return=img");
     }
 }

@@ -5,6 +5,7 @@ import com.IceCreamQAQ.Yu.annotation.JobCenter;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.GroupEntity;
+import me.kuku.yuq.logic.HostLocLogic;
 import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.service.GroupService;
 
@@ -22,6 +23,8 @@ public class GroupJob {
     private GroupService groupService;
     @Inject
     private ToolLogic toolLogic;
+    @Inject
+    private HostLocLogic hostLocLogic;
 
     private int locId = 0;
 
@@ -40,8 +43,8 @@ public class GroupJob {
     }
 
     @Cron("1m")
-    public void locMonitor() throws IOException {
-        List<Map<String, String>> list = toolLogic.hostLocPost();
+    public void locMonitor() {
+        List<Map<String, String>> list = hostLocLogic.post();
         if (list.size() == 0) return;
         List<Map<String, String>> newList = new ArrayList<>();
         if (locId != 0){

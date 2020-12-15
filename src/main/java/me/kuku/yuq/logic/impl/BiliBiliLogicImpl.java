@@ -88,10 +88,9 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
                 }
             }
             if (text == null) {
-                try {
-                    text = cardJsonObject.getJSONObject("vest").getString("content");
-                }catch (NullPointerException e){
-                    e.printStackTrace();
+                JSONObject vestJsonObject = cardJsonObject.getJSONObject("vest");
+                if (vestJsonObject != null){
+                    text = vestJsonObject.getString("content");
                 }
             }
             if (text == null && cardJsonObject.containsKey("title")){

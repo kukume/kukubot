@@ -22,8 +22,6 @@ public class GroupJob {
     @Inject
     private GroupService groupService;
     @Inject
-    private ToolLogic toolLogic;
-    @Inject
     private HostLocLogic hostLocLogic;
 
     private int locId = 0;

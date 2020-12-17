@@ -94,6 +94,7 @@ public class BotUtils {
     }
 
     public static JSONArray messageToJsonArray(Message rm){
+        if (rm == null) return null;
         ArrayList<MessageItem> body = rm.getBody();
         JSONArray aJsonArray = new JSONArray();
         for (MessageItem messageItem: body){
@@ -105,6 +106,7 @@ public class BotUtils {
             }else if (messageItem instanceof ImageReceive){
                 ImageReceive image = (ImageReceive) messageItem;
                 aJsonObject.put("type", "image");
+                aJsonObject.put("id", image.getId());
                 aJsonObject.put("content", image.getUrl());
             }else if (messageItem instanceof Face){
                 Face face = (Face) messageItem;

@@ -20,7 +20,10 @@ import me.kuku.yuq.utils.BotUtils;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @EventListener
 public class GroupManageEvent {
@@ -36,8 +39,7 @@ public class GroupManageEvent {
     @Named("CommandCountOnTime")
     public EhcacheHelp<Integer> eh;
 
-    private Long lastQQ = null;
-    private Message lastRepeatMessage = null;
+    private Map<Long, Message> lastRepeatMessageMap = new HashMap<>();
 
     @Event(weight = Event.Weight.high)
     public void status(GroupMessageEvent e){
@@ -66,11 +68,12 @@ public class GroupManageEvent {
         if (list.size() < 2) return;
         MessageEntity firstMessage = list.get(0);
         MessageEntity secondMessage = list.get(1);
-        if (firstMessage.equals(secondMessage) && !e.getMessage().bodyEquals(lastRepeatMessage) && !firstMessage.getQq().equals(lastQQ)){
-            lastRepeatMessage = e.getMessage();
+        if (firstMessage.equals(secondMessage) &&
+                !BotUtils.messageToJsonArray(e.getMessage()).equals(BotUtils.messageToJsonArray(lastRepeatMessageMap.get(groupNum))) &&
+                !firstMessage.getQq().equals(secondMessage.getQq())){
+            lastRepeatMessageMap.put(groupNum, e.getMessage());
             e.getGroup().sendMessage(e.getMessage());
         }
-        lastQQ = e.getSender().getId();
     }
 
     @Event

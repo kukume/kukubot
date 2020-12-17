@@ -2,6 +2,7 @@ package me.kuku.yuq.entity;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -39,8 +40,22 @@ public class MessageEntity {
 
     public boolean equals(Object obj){
         if (obj instanceof MessageEntity){
-            return ((MessageEntity) obj).getContentJsonArray().equals(getContentJsonArray());
-        }
-        return false;
+            JSONArray contentJsonArray1 = getContentJsonArray();
+            JSONArray contentJsonArray2 = ((MessageEntity) obj).getContentJsonArray();
+            if (contentJsonArray1.size() != contentJsonArray2.size()) return false;
+            for (int i = 0; i < contentJsonArray1.size(); i++){
+                JSONObject jsonObject1 = contentJsonArray1.getJSONObject(i);
+                JSONObject jsonObject2 = contentJsonArray2.getJSONObject(i);
+                String type1 = jsonObject1.getString("type");
+                String type2 = jsonObject2.getString("type");
+                if (!type1.equals(type2)) return false;
+                if (type1.equals("image")){
+                    if (!jsonObject1.getString("id").equals(jsonObject2.getString("id"))) return false;
+                }else {
+                    if (!jsonObject1.getString("content").equals(jsonObject2.getString("content"))) return false;
+                }
+            }
+        } else return false;
+        return true;
     }
 }

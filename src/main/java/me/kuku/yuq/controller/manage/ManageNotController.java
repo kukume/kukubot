@@ -2,6 +2,7 @@ package me.kuku.yuq.controller.manage;
 
 import com.IceCreamQAQ.Yu.annotation.Action;
 import com.IceCreamQAQ.Yu.annotation.Before;
+import com.IceCreamQAQ.Yu.annotation.Config;
 import com.IceCreamQAQ.Yu.annotation.Synonym;
 import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
@@ -31,8 +32,8 @@ public class ManageNotController {
     private RecallService recallService;
     @Inject
     private ToolLogic toolLogic;
-
-    private final String version = "v2.1.1";
+    @Config("YuQ.Mirai.bot.version")
+    private String version;
 
     @Before
     public GroupEntity before(Long group){

@@ -66,14 +66,14 @@ public class ManageAdminController {
         return "禁言成功！！";
     }
 
-    @Action("机器人 {status}")
+    @Action("kukubot {status}")
     @Synonym({"loc监控 {status}", "整点报时 {status}", "自动审核 {status}",
             "欢迎语 {status}", "退群拉黑 {status}", "鉴黄 {status}", "色图 {status}",
             "撤回通知 {status}", "闪照通知 {status}"})
     @QMsg(at = true)
     public String onOrOff(GroupEntity groupEntity, boolean status, @PathVar(0) String op){
         switch (op){
-            case "机器人": groupEntity.setStatus(status); break;
+            case "kukubot": groupEntity.setStatus(status); break;
             case "loc监控": groupEntity.setLocMonitor(status); break;
             case "整点报时": groupEntity.setOnTimeAlarm(status); break;
             case "自动审核": groupEntity.setAutoReview(status); break;

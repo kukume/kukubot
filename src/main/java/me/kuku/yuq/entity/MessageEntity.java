@@ -36,4 +36,11 @@ public class MessageEntity {
     public void setContentJsonArray(JSONArray jsonArray){
         this.content = jsonArray.toString();
     }
+
+    public boolean equals(Object obj){
+        if (obj instanceof MessageEntity){
+            return ((MessageEntity) obj).getContentJsonArray().equals(getContentJsonArray());
+        }
+        return false;
+    }
 }

@@ -12,4 +12,5 @@ public interface MessageService {
     void save(MessageEntity messageEntity);
     Map<Long, Long> findCountQQByGroupAndToday(Long group);
     List<MessageEntity> findLastMessage(Long qq, Long group);
+    List<MessageEntity> findByGroupExcludeQQ(Long group, Long qq);
 }

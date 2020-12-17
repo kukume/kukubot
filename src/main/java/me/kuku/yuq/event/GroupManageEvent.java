@@ -9,15 +9,18 @@ import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.event.GroupMessageEvent;
 import com.icecreamqaq.yuq.message.*;
 import me.kuku.yuq.entity.GroupEntity;
+import me.kuku.yuq.entity.MessageEntity;
 import me.kuku.yuq.entity.QQEntity;
 import me.kuku.yuq.logic.QQAILogic;
 import me.kuku.yuq.service.GroupService;
+import me.kuku.yuq.service.MessageService;
 import me.kuku.yuq.service.QQService;
 import me.kuku.yuq.utils.BotUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
+import java.util.List;
 
 @EventListener
 public class GroupManageEvent {
@@ -28,8 +31,47 @@ public class GroupManageEvent {
     @Inject
     private QQAILogic qqaiLogic;
     @Inject
+    private MessageService messageService;
+    @Inject
     @Named("CommandCountOnTime")
     public EhcacheHelp<Integer> eh;
+
+    private Long lastQQ = null;
+    private Message lastRepeatMessage = null;
+
+    @Event(weight = Event.Weight.high)
+    public void status(GroupMessageEvent e){
+        GroupEntity groupEntity = groupService.findByGroup(e.getGroup().getId());
+        boolean status = true;
+        Message message = e.getMessage();
+        List<String> list = message.toPath();
+        if (list.size() == 2) {
+            String pa = list.get(1);
+            if ("kukubot".equals(list.get(0)) && pa.equals("开") || pa.equals("关")) {
+                status = false;
+            }
+        }
+        if (groupEntity != null && groupEntity.getStatus()){
+            status = false;
+        }
+        if (status){
+            e.setCancel(true);
+        }
+    }
+
+    @Event(weight = Event.Weight.low)
+    public void repeat(GroupMessageEvent e){
+        long groupNum = e.getGroup().getId();
+        List<MessageEntity> list = messageService.findByGroupExcludeQQ(groupNum, FunKt.getYuq().getBotId());
+        if (list.size() < 2) return;
+        MessageEntity firstMessage = list.get(0);
+        MessageEntity secondMessage = list.get(1);
+        if (firstMessage.equals(secondMessage) && !e.getMessage().bodyEquals(lastRepeatMessage) && !firstMessage.getQq().equals(lastQQ)){
+            lastRepeatMessage = e.getMessage();
+            e.getGroup().sendMessage(e.getMessage());
+        }
+        lastQQ = e.getSender().getId();
+    }
 
     @Event
     public void inter(GroupMessageEvent e) throws IOException {

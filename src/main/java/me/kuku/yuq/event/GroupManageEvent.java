@@ -39,7 +39,7 @@ public class GroupManageEvent {
     @Named("CommandCountOnTime")
     public EhcacheHelp<Integer> eh;
 
-    private Map<Long, Message> lastRepeatMessageMap = new HashMap<>();
+    private final Map<Long, Message> lastRepeatMessageMap = new HashMap<>();
 
     @Event(weight = Event.Weight.high)
     public void status(GroupMessageEvent e){

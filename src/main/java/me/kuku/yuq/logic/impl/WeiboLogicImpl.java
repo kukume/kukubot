@@ -239,7 +239,8 @@ public class WeiboLogicImpl implements WeiboLogic {
             String result = URLDecoder.decode(reason, "gbk");
             return Result.failure(result, null);
         }else {
-            String phoneHtml = OkHttpUtils.getStr("https://login.sina.com.cn/protection/index?token=$token&callback_url=https%3A%2F%2Fweibo.com");
+            // 账号需要验证
+            String phoneHtml = OkHttpUtils.getStr("https://login.sina.com.cn/protection/index?token=" + token + "&callback_url=https%3A%2F%2Fweibo.com");
             String phone = Jsoup.parse(phoneHtml).getElementById("ss0").attr("value");
             Map<String, String> phoneMap = new HashMap<>();
             phoneMap.put("encrypt_mobile", phone);

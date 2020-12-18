@@ -17,7 +17,6 @@ import com.icecreamqaq.yuq.message.MessageItemFactory;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.logic.BiliBiliLogic;
 import me.kuku.yuq.logic.WeiboLogic;
-import me.kuku.yuq.logic.MyApiLogic;
 import me.kuku.yuq.pojo.*;
 import me.kuku.yuq.service.GroupService;
 import me.kuku.yuq.utils.BotUtils;

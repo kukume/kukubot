@@ -7,7 +7,7 @@ import me.kuku.yuq.controller.bilibili.BiliBiliController;
 import me.kuku.yuq.controller.bilibili.BiliBiliLoginController;
 import me.kuku.yuq.controller.manage.ManageAdminController;
 import me.kuku.yuq.controller.manage.ManageNotController;
-import me.kuku.yuq.controller.manage.ManageOwnerController;
+import me.kuku.yuq.controller.manage.ManageSuperAdminController;
 import me.kuku.yuq.controller.netease.BindNeTeaseController;
 import me.kuku.yuq.controller.netease.NeTeaseController;
 import me.kuku.yuq.controller.qqlogin.BindQQController;
@@ -45,7 +45,7 @@ public class MenuController {
     @Action("manage")
     public String manage(){
         return menu(ManageNotController.class) + "\n" +
-                menu(ManageOwnerController.class) + "\n" +
+                menu(ManageSuperAdminController.class) + "\n" +
                 menu(ManageAdminController.class);
     }
 

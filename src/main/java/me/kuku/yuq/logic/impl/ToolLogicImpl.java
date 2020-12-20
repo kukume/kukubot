@@ -33,10 +33,8 @@ public class ToolLogicImpl implements ToolLogic {
     private final String myApi = "https://api.kuku.me";
     @Override
     public String dogLicking() throws IOException {
-        JSONObject jsonObject = OkHttpUtils.getJson("http://api.yyhy.me/tg.php?type=api");
-        if (jsonObject.getInteger("code") == 1)
-            return jsonObject.getString("date") + "\n" + jsonObject.getString("content");
-        else return "获取失败！！";
+        // https://api.oick.cn/dog/api.php
+        return OkHttpUtils.getStr("https://v1.alapi.cn/api/dog?format=text");
     }
 
     private Result<String> baiKeByUrl(String url) throws IOException {

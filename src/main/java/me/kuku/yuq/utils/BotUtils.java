@@ -13,6 +13,7 @@ import okhttp3.Cookie;
 import okhttp3.Response;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -26,20 +27,13 @@ public class BotUtils {
 
     public static String shortUrl(String url){
         try {
-            Response response = OkHttpUtils.get("https://sina.lt/images/transparent.gif",
-                    OkHttpUtils.addUA(UA.PC));
-            response.close();
-            String cookie = OkHttpUtils.getCookie(response);
-            if (!url.startsWith("http")){
-                url = "http://" + url;
-            }
-            JSONObject jsonObject = OkHttpUtils.getJson("https://sina.lt/api.php?from=w&url=" + Base64.getEncoder().encodeToString(url.getBytes(StandardCharsets.UTF_8)) + "&site=dwz.date",
-                    OkHttpUtils.addHeaders(cookie, null, UA.PC));
-            if ("ok".equals(jsonObject.getString("result"))) return jsonObject.getJSONObject("data").getString("short_url");
-            else return jsonObject.getString("data");
+            JSONObject jsonObject = OkHttpUtils.getJson("https://tb.am/action/json-url.php?url_long=" + URLEncoder.encode(url, "utf-8"));
+            if (jsonObject.getInteger("statusCode") == 200){
+                return jsonObject.getString("shorturl");
+            }else return jsonObject.getString("message");
         } catch (IOException e) {
             e.printStackTrace();
-            return "短链接异常！！";
+            return "缩短失败，原链接：" + url;
         }
     }
 

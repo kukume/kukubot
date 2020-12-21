@@ -20,7 +20,9 @@ public interface WeiboLogic {
     Result<Map<String, String>> login(Map<String, String> map, String door) throws IOException;
     WeiboEntity loginSuccess(String cookie, String referer, String url) throws IOException;
     Result<Map<String, String>> preparedLogin(String username, String password) throws IOException;
-    Result<WeiboEntity> loginBySms(String token, String phone, String code) throws IOException;
+    Result<Map<String, String>> loginBySms1(String token) throws IOException;
+    Result<WeiboEntity> loginBySms2(String token, String phone, String code) throws IOException;
+    Result<WeiboEntity> loginByPrivateMsg(String token) throws IOException;
     Result<WeiboEntity> loginByQQ(QQLoginEntity qqLoginEntity) throws IOException;
     Map<String, String> loginByQr1() throws IOException;
     Result<WeiboEntity> loginByQr2(String id) throws IOException;

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class WeiboLogicImpl implements WeiboLogic {
     @Override
@@ -159,7 +160,7 @@ public class WeiboLogicImpl implements WeiboLogic {
 
     private Map<String, String> loginParams(String username) throws IOException {
         Response response = OkHttpUtils.get(String.format("https://login.sina.com.cn/sso/prelogin.php?entry=weibo&callback=sinaSSOController.preloginCallBack&su=%s&rsakt=mod&checkpin=1&client=ssologin.js(v1.4.19)&_=%s",
-                URLEncoder.encode(username, "utf-8"), new Date().getTime()));
+                username, new Date().getTime()), OkHttpUtils.addReferer("https://weibo.com/login.php?url=https%3A%2F%2Fweibo.com%2F"));
         JSONObject jsonObject = OkHttpUtils.getJsonp(response);
         Map<String, String> map = new HashMap<>();
         for (Map.Entry<String, Object> entry: jsonObject.entrySet()){
@@ -224,10 +225,10 @@ public class WeiboLogicImpl implements WeiboLogic {
         paramMap.put("returntype", "META");
         Response response = OkHttpUtils.post("https://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.19)&_=" + new Date().getTime(),
                 paramMap, OkHttpUtils.addCookie(map.get("cookie")));
-        String html = OkHttpUtils.getCookie(response);
+        String html = OkHttpUtils.getStr(response);
         String url = BotUtils.regex("location.replace\\(\"", "\"\\);", html);
         if (url == null) return Result.failure("获取失败！！", null);
-        String token = BotUtils.regex("token%3D", "\"", html);
+        String token = BotUtils.regex("token%3D", "\"\\);", html);
         String cookie = OkHttpUtils.getCookie(response);
         map.put("cookie", cookie);
         if (url.contains("https://login.sina.com.cn/crossdomain2.php")){
@@ -239,17 +240,8 @@ public class WeiboLogicImpl implements WeiboLogic {
             String result = URLDecoder.decode(reason, "gbk");
             return Result.failure(result, null);
         }else {
-            // 账号需要验证
-            String phoneHtml = OkHttpUtils.getStr("https://login.sina.com.cn/protection/index?token=" + token + "&callback_url=https%3A%2F%2Fweibo.com");
-            String phone = Jsoup.parse(phoneHtml).getElementById("ss0").attr("value");
-            Map<String, String> phoneMap = new HashMap<>();
-            phoneMap.put("encrypt_mobile", phone);
-            JSONObject smsJsonObject = OkHttpUtils.postJson("https://login.sina.com.cn/protection/mobile/sendcode?token=" + token, phoneMap);
-            if (smsJsonObject.getInteger("retcode") == 20000000){
-                map.put("token", token);
-                map.put("phone", phone);
-                return Result.failure(201, "请输入短信验证码！！");
-            }else return Result.failure(smsJsonObject.getString("msg"), null);
+            map.put("token", token);
+            return Result.failure(201, "账号需要验证！！", map);
         }
     }
 
@@ -276,7 +268,22 @@ public class WeiboLogicImpl implements WeiboLogic {
     }
 
     @Override
-    public Result<WeiboEntity> loginBySms(String token, String phone, String code) throws IOException {
+    public Result<Map<String, String>> loginBySms1(String token) throws IOException {
+        String phoneHtml = OkHttpUtils.getStr("https://login.sina.com.cn/protection/index?token=" + token + "&callback_url=https%3A%2F%2Fweibo.com");
+        String phone = Jsoup.parse(phoneHtml).getElementById("ss0").attr("value");
+        Map<String, String> phoneMap = new HashMap<>();
+        phoneMap.put("encrypt_mobile", phone);
+        JSONObject smsJsonObject = OkHttpUtils.postJson("https://login.sina.com.cn/protection/mobile/sendcode?token=" + token, phoneMap);
+        if (smsJsonObject.getInteger("retcode") == 20000000){
+            Map<String, String> map = new HashMap<>();
+            map.put("token", token);
+            map.put("phone", phone);
+            return Result.success("请输入短信验证码！！", map);
+        }else return Result.failure(smsJsonObject.getString("msg"), null);
+    }
+
+    @Override
+    public Result<WeiboEntity> loginBySms2(String token, String phone, String code) throws IOException {
         String refererUrl = "https://login.sina.com.cn/protection/mobile/confirm?token=" + token;
         Map<String, String> map = new HashMap<>();
         map.put("encrypt_mobile", phone);
@@ -294,6 +301,46 @@ public class WeiboLogicImpl implements WeiboLogic {
             case 8518: return Result.failure("验证码错误或已经过期！！！", null);
             default: return Result.failure(jsonObject.getString("msg"), null);
         }
+    }
+
+    @SuppressWarnings("UnnecessaryContinue")
+    @Override
+    public Result<WeiboEntity> loginByPrivateMsg(String token) throws IOException {
+        Map<String, String> map = new HashMap<>();
+        String referer = "https://passport.weibo.com/protection/index?token=" + token + "&callback_url=https%3A%2F%2Fweibo.com%2Flogin.php%3Furl%3Dhttps%253A%252F%252Fweibo.com%252F";
+        map.put("token", token);
+        JSONObject jsonObject = OkHttpUtils.postJson("https://passport.weibo.com/protection/privatemsg/send", map,
+                OkHttpUtils.addReferer(referer));
+        if (jsonObject.getInteger("retcode") == 20000000){
+            while (true){
+                try {
+                    TimeUnit.SECONDS.sleep(3);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                jsonObject = OkHttpUtils.postJson("https://passport.weibo.com/protection/privatemsg/getstatus",
+                        map, OkHttpUtils.addReferer(referer));
+                Integer code = jsonObject.getInteger("retcode");
+                 if (code == 20000000) {
+                    JSONObject dataJsonObject = jsonObject.getJSONObject("data");
+                    Integer statusCode = dataJsonObject.getInteger("status_code");
+                    if (statusCode == 2){
+                        String resultUrl = dataJsonObject.getString("redirect_url");
+                        Response response = OkHttpUtils.get(resultUrl, OkHttpUtils.addReferer(referer));
+                        String html = OkHttpUtils.getStr(response);
+                        String cookie = OkHttpUtils.getCookie(response);
+                        String secondUrl = BotUtils.regex("location.replace\\(\"", "\"\\);", html);
+                        if (secondUrl == null) return Result.failure("登录失败，请稍后再试！！", null);
+                        return Result.success(loginSuccess(cookie, resultUrl, secondUrl));
+                    } else if (statusCode == 3){
+                        return Result.failure("手机客户端拒绝此次登录，请重发私信", null);
+                    } else if (statusCode == 1) continue;
+                    else if (statusCode == 4) return Result.failure("验证已过期，请重新发送私信", null);
+                    else return Result.failure(dataJsonObject.getString("status_msg"), null);
+                }
+                else return Result.failure(jsonObject.getString("msg"), null);
+            }
+        }else return Result.failure(jsonObject.getString("msg"), null);
     }
 
     @Override
@@ -346,6 +393,7 @@ public class WeiboLogicImpl implements WeiboLogic {
                 Response response = OkHttpUtils.get("https://login.sina.com.cn/sso/login.php?entry=weibo&returntype=TEXT&crossdomain=1&cdult=3&domain=weibo.com&alt=" + alt + "&savestate=30&callback=STK_160104719639113");
                 String cookie = OkHttpUtils.getCookie(response);
                 jsonObject = OkHttpUtils.getJsonp(response);
+                assert jsonObject != null;
                 JSONArray jsonArray = jsonObject.getJSONArray("crossDomainUrlList");
                 String url = jsonArray.getString(3);
                 Response finallyResponse = OkHttpUtils.get(url);

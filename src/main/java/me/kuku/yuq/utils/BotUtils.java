@@ -8,15 +8,11 @@ import com.icecreamqaq.yuq.message.*;
 import com.icecreamqaq.yuq.mirai.MiraiBot;
 import com.icecreamqaq.yuq.mirai.message.ImageReceive;
 import me.kuku.yuq.entity.QQLoginEntity;
-import me.kuku.yuq.pojo.UA;
 import okhttp3.Cookie;
-import okhttp3.Response;
 
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

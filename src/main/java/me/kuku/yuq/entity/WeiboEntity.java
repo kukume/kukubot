@@ -43,7 +43,7 @@ public class WeiboEntity {
         this.mobileCookie = mobileCookie;
     }
 
-    public WeiboEntity(long qq, long group){
+    public WeiboEntity(Long qq, Long group){
         this.qq = qq;
         this.group = group;
     }

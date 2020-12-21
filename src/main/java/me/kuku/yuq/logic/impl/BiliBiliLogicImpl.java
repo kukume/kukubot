@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import me.kuku.yuq.entity.BiliBiliEntity;
+import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.logic.BiliBiliLogic;
 import me.kuku.yuq.pojo.BiliBiliPojo;
 import me.kuku.yuq.pojo.Result;
@@ -233,6 +234,11 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
             Response response = OkHttpUtils.get(successUrl, OkHttpUtils.addReferer("https://passport.bilibili.com/login"));
             return Result.success(getBiliBiliEntityByResponse(response));
         }
+    }
+
+    @Override
+    public Result<BiliBiliEntity> loginByQQ(QQLoginEntity qqLoginEntity) {
+        return null;
     }
 
     private BiliBiliEntity getBiliBiliEntityByResponse(Response response){

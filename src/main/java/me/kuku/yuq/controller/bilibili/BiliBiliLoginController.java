@@ -1,6 +1,7 @@
 package me.kuku.yuq.controller.bilibili;
 
 import com.IceCreamQAQ.Yu.annotation.Action;
+import com.IceCreamQAQ.Yu.annotation.Synonym;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.annotation.GroupController;
 import com.icecreamqaq.yuq.entity.Group;
@@ -26,6 +27,7 @@ public class BiliBiliLoginController {
     private ToolLogic toolLogic;
 
     @Action("bllogin qr")
+    @Synonym({"bilibililogin qr"})
     public void biliBiliLoginByQr(Group group, Long qq) throws IOException {
         String url = biliBiliLogic.loginByQr1();
         byte[] qrUrl = toolLogic.creatQr(url);

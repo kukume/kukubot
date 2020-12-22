@@ -363,12 +363,22 @@ public class WeiboLogicImpl implements WeiboLogic {
         secondResponse.close();
         String refererUrl = secondResponse.header("location");
         if (refererUrl == null) return Result.failure("登录失败，请稍后再试！！", null);
-        Response thirdResponse = OkHttpUtils.get(refererUrl);
-        String thirdHtml = OkHttpUtils.getStr(thirdResponse);
-        String cnCookie = OkHttpUtils.getCookie(thirdResponse);
-        String secondUrl = BotUtils.regex("location.replace\\(\"", "\"\\);", thirdHtml);
-        if (secondUrl == null) return Result.failure("登录失败，请稍后再试！！", null);
-        return Result.success(loginSuccess(cnCookie, refererUrl, secondUrl));
+        Response thirdResponse = OkHttpUtils.get(refererUrl, OkHttpUtils.addCookie(weiboCookie));
+        thirdResponse.close();
+//        String cnCookie = OkHttpUtils.getCookie(thirdResponse);
+        String firstSuccessUrl = thirdResponse.header("location");
+        if (firstSuccessUrl == null) return Result.failure("登录失败，请稍后再试！！", null);
+        Response secondSuccessResponse = OkHttpUtils.get(firstSuccessUrl);
+        secondSuccessResponse.close();
+        String thirdSuccessUrl = secondSuccessResponse.header("location");
+        Response fourthSuccessResponse = OkHttpUtils.get(thirdSuccessUrl);
+        fourthSuccessResponse.close();
+        String pcCookie = OkHttpUtils.getCookie(fourthSuccessResponse);
+        String finallyUrl = fourthSuccessResponse.header("location");
+        Response finallyResponse = OkHttpUtils.get(finallyUrl);
+        finallyResponse.close();
+        String mobileCookie = OkHttpUtils.getCookie(finallyResponse);
+        return Result.success(new WeiboEntity(pcCookie, mobileCookie));
     }
 
     @Override

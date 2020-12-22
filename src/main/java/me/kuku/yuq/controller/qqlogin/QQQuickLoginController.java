@@ -7,23 +7,20 @@ import com.IceCreamQAQ.Yu.annotation.Synonym;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.annotation.GroupController;
 import com.icecreamqaq.yuq.controller.BotActionContext;
-import me.kuku.yuq.entity.BiliBiliEntity;
-import me.kuku.yuq.entity.MotionEntity;
-import me.kuku.yuq.entity.QQLoginEntity;
-import me.kuku.yuq.entity.WeiboEntity;
+import me.kuku.yuq.entity.*;
 import me.kuku.yuq.logic.BiliBiliLogic;
 import me.kuku.yuq.logic.LeXinMotionLogic;
+import me.kuku.yuq.logic.NeTeaseLogic;
 import me.kuku.yuq.logic.WeiboLogic;
 import me.kuku.yuq.pojo.Result;
-import me.kuku.yuq.service.BiliBiliService;
-import me.kuku.yuq.service.MotionService;
-import me.kuku.yuq.service.QQLoginService;
-import me.kuku.yuq.service.WeiboService;
+import me.kuku.yuq.service.*;
 
 import javax.inject.Inject;
 import java.io.IOException;
 
 @GroupController
+@Path("qqquicklogin")
+@SuppressWarnings("unused")
 public class QQQuickLoginController {
 
 	@Inject
@@ -40,6 +37,10 @@ public class QQQuickLoginController {
 	private BiliBiliLogic biliBiliLogic;
 	@Inject
 	private LeXinMotionLogic leXinMotionLogic;
+	@Inject
+	private NeTeaseLogic neTeaseLogic;
+	@Inject
+	private NeTeaseService neTeaseService;
 
 	@Before
 	public void before(long qq, BotActionContext actionContext){
@@ -65,14 +66,21 @@ public class QQQuickLoginController {
 
 	@Action("bilibili")
 	@Synonym("bl")
-	public String biliBiliLogin(QQLoginEntity qqLoginEntity, long qq, long group){
+	public String biliBiliLogin(QQLoginEntity qqLoginEntity, long qq, long group) throws IOException {
 		BiliBiliEntity biliBiliEntity = biliBiliService.findByQQ(qq);
 		if (biliBiliEntity == null) biliBiliEntity = new BiliBiliEntity(qq, group);
-//		biliBiliLogic.
-		return "";
+		Result<BiliBiliEntity> result = biliBiliLogic.loginByQQ(qqLoginEntity);
+		if (result.getCode() == 200){
+			BiliBiliEntity newBiliBiliEntity = result.getData();
+			biliBiliEntity.setCookie(newBiliBiliEntity.getCookie());
+			biliBiliEntity.setUserId(newBiliBiliEntity.getUserId());
+			biliBiliEntity.setToken(newBiliBiliEntity.getToken());
+			biliBiliService.save(biliBiliEntity);
+			return "绑定或者更新哔哩哔哩成功！！";
+		}else return result.getMessage();
 	}
 
-	@Action("qqquicklogin lexin")
+	@Action("lexin")
 	public String leXinLogin(QQLoginEntity qqLoginEntity, long qq, long group) throws IOException {
 		MotionEntity motionEntity = motionService.findByQQ(qq);
 		if (motionEntity == null) motionEntity = new MotionEntity(qq);
@@ -84,6 +92,20 @@ public class QQQuickLoginController {
 			motionEntity.setLeXinAccessToken(newMotionEntity.getLeXinAccessToken());
 			motionService.save(motionEntity);
 			return "绑定或者更新乐心运行成功！！";
+		}else return result.getMessage();
+	}
+
+	@Action("wy")
+	public String wyLogin(QQLoginEntity qqLoginEntity, long qq, long group) throws IOException {
+		NeTeaseEntity neTeaseEntity = neTeaseService.findByQQ(qq);
+		if (neTeaseEntity == null) neTeaseEntity = new NeTeaseEntity(qq);
+		Result<NeTeaseEntity> result = neTeaseLogic.loginByQQ(qqLoginEntity);
+		if (result.getCode() == 200){
+			NeTeaseEntity newNeTeaseEntity = result.getData();
+			neTeaseEntity.set__csrf(newNeTeaseEntity.get__csrf());
+			neTeaseEntity.setMUSIC_U(newNeTeaseEntity.getMUSIC_U());
+			neTeaseService.save(neTeaseEntity);
+			return "绑定或者更新网易成功！！";
 		}else return result.getMessage();
 	}
 

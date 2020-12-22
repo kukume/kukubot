@@ -54,7 +54,7 @@ public class QQUtils {
         int len = token.length();
         long hash = 0L;
         for (int i = 0; i < len; i++){
-            hash += (hash << 5) + (Integer.parseInt(String.valueOf(token.charAt(i))) & 2147483647);
+            hash += (hash << 5) + (((int) token.charAt(i)) & 2147483647);
             hash = hash & 2147483647;
         }
         return hash & 2147483647;

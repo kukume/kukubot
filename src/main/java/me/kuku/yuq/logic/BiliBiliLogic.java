@@ -19,7 +19,7 @@ public interface BiliBiliLogic {
     List<BiliBiliPojo> getAllDynamicById(String id) throws IOException;
     String loginByQr1() throws IOException;
     Result<BiliBiliEntity> loginByQr2(String url) throws IOException;
-    Result<BiliBiliEntity> loginByQQ(QQLoginEntity qqLoginEntity);
+    Result<BiliBiliEntity> loginByQQ(QQLoginEntity qqLoginEntity) throws IOException;
     Result<List<BiliBiliPojo>> getFriendDynamic(BiliBiliEntity biliBiliEntity) throws IOException;
     Boolean isLiveOnline(String id) throws IOException;
     String liveSign(BiliBiliEntity biliBiliEntity) throws IOException;

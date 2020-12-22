@@ -1,6 +1,7 @@
 package me.kuku.yuq.controller;
 
 import com.IceCreamQAQ.Yu.annotation.Action;
+import com.IceCreamQAQ.Yu.annotation.Path;
 import com.IceCreamQAQ.Yu.annotation.Synonym;
 import com.icecreamqaq.yuq.annotation.GroupController;
 import me.kuku.yuq.controller.bilibili.BiliBiliController;
@@ -13,6 +14,7 @@ import me.kuku.yuq.controller.netease.NeTeaseController;
 import me.kuku.yuq.controller.qqlogin.BindQQController;
 import me.kuku.yuq.controller.qqlogin.QQJobController;
 import me.kuku.yuq.controller.qqlogin.QQLoginController;
+import me.kuku.yuq.controller.qqlogin.QQQuickLoginController;
 import me.kuku.yuq.controller.warframe.WarframeController;
 import me.kuku.yuq.controller.weibo.WeiboController;
 import me.kuku.yuq.controller.weibo.WeiboNotController;
@@ -52,14 +54,15 @@ public class MenuController {
     @Action("wy")
     public String wy(){
         return menu(NeTeaseController.class) + "\n" +
-                menu(BindNeTeaseController.class);
+                menu(BindNeTeaseController.class) + "\n";
     }
 
     @Action("qq")
     public String qq(){
         return menu(QQLoginController.class) + "\n" +
                 menu(BindQQController.class) + "\n" +
-                menu(QQJobController.class);
+                menu(QQJobController.class) + "\n" +
+                menu(QQQuickLoginController.class);
     }
 
     @Action("setting")
@@ -77,17 +80,22 @@ public class MenuController {
 
     private String menu(Class<?> clazz){
         StringBuilder sb = new StringBuilder();
+        String first = "";
+        Path path = clazz.getAnnotation(Path.class);
+        if (path != null){
+            first = path.value() + " ";
+        }
         Method[] methods = clazz.getMethods();
         for (Method method: methods){
             Action action = method.getAnnotation(Action.class);
             if (action != null){
-                sb.append(action.value()).append("\n");
+                sb.append(first).append(action.value()).append("\n");
             }
             Synonym synonym = method.getAnnotation(Synonym.class);
             if (synonym != null){
                 String[] arr = synonym.value();
                 for (String str: arr){
-                    sb.append(str).append("\n");
+                    sb.append(first).append(str).append("\n");
                 }
             }
         }

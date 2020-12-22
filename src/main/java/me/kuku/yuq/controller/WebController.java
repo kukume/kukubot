@@ -8,6 +8,7 @@ import com.icecreamqaq.yuq.entity.Member;
 import com.icecreamqaq.yuq.message.Message;
 
 @com.IceCreamQAQ.YuWeb.annotation.WebController
+@SuppressWarnings("unused")
 public class WebController {
     @Action("groupMessage")
     public String groupMessage(String group, String msg){

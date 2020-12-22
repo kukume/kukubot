@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 @JobCenter
+@SuppressWarnings("unused")
 public class WeiboJob {
     @Inject
     private WeiboLogic weiboLogic;

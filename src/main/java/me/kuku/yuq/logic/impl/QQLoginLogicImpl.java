@@ -27,6 +27,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+@SuppressWarnings("unused")
 public class QQLoginLogicImpl implements QQLoginLogic {
     @Override
     public Result<Map<String, String>> groupUploadImage(QQLoginEntity qqLoginEntity, String url) throws IOException {

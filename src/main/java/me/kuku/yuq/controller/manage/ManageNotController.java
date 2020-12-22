@@ -25,6 +25,7 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 
 @GroupController
+@SuppressWarnings("unused")
 public class ManageNotController {
     @Inject
     private GroupService groupService;

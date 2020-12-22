@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+@SuppressWarnings("unused")
 public class LeXinMotionLogicImpl implements LeXinMotionLogic {
     @Override
     public byte[] getCaptchaImage(String phone) throws IOException {

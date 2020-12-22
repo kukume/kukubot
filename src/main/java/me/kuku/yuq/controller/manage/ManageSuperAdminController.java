@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @GroupController
+@SuppressWarnings("unused")
 public class ManageSuperAdminController {
     @Config("YuQ.Mirai.bot.master")
     private String master;
@@ -40,9 +41,7 @@ public class ManageSuperAdminController {
     @Before
     public GroupEntity before(long group, long qq){
         GroupEntity groupEntity = groupService.findByGroup(group);
-        if (groupEntity == null) groupEntity = new GroupEntity(group);
-        JSONArray superAdminJsonArray = groupEntity.getSuperAdminJsonArray();
-        if (String.valueOf(qq).equals(master) || superAdminJsonArray.contains(String.valueOf(qq))) return groupEntity;
+        if (String.valueOf(qq).equals(master) || groupEntity.isSuperAdmin(qq)) return groupEntity;
         else throw FunKt.getMif().at(qq).plus("您的权限不足，无法执行！！").toThrowable();
     }
 

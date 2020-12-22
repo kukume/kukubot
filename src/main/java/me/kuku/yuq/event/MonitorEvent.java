@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.List;
 
 @EventListener
+@SuppressWarnings("unused")
 public class MonitorEvent {
     @Inject
     private GroupService groupService;

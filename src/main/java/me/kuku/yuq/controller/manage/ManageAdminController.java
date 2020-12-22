@@ -4,7 +4,6 @@ import com.IceCreamQAQ.Yu.annotation.Action;
 import com.IceCreamQAQ.Yu.annotation.Before;
 import com.IceCreamQAQ.Yu.annotation.Config;
 import com.IceCreamQAQ.Yu.annotation.Synonym;
-import com.alibaba.fastjson.JSONArray;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.annotation.GroupController;
 import com.icecreamqaq.yuq.annotation.PathVar;
@@ -16,6 +15,7 @@ import me.kuku.yuq.service.GroupService;
 import javax.inject.Inject;
 
 @GroupController
+@SuppressWarnings("unused")
 public class ManageAdminController {
     @Config("YuQ.Mirai.bot.master")
     private String master;
@@ -26,8 +26,7 @@ public class ManageAdminController {
     public GroupEntity before(long qq, long group){
         GroupEntity groupEntity = groupService.findByGroup(group);
         if (groupEntity == null) groupEntity = new GroupEntity(group);
-        JSONArray adminJsonArray = groupEntity.getAdminJsonArray();
-        if (adminJsonArray.contains(String.valueOf(qq)) || qq == Long.parseLong(master)){
+        if (groupEntity.isAdmin(qq) || qq == Long.parseLong(master)){
             return groupEntity;
         }else throw FunKt.getMif().at(qq).plus("您的权限不足，无法执行！！").toThrowable();
     }

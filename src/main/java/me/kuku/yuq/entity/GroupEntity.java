@@ -2,6 +2,7 @@ package me.kuku.yuq.entity;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -155,5 +156,16 @@ public class GroupEntity {
     public JSONArray getSuperAdminJsonArray(){
         if (superAdminList == null) return new JSONArray();
         else return JSON.parseArray(superAdminList);
+    }
+
+    public boolean isSuperAdmin(long qq){
+        if (isAdmin(qq)) return true;
+        JSONArray superAdminJsonArray = getSuperAdminJsonArray();
+        return superAdminJsonArray.contains(String.valueOf(qq));
+    }
+
+    public boolean isAdmin(long qq){
+        JSONArray adminJsonArray = getAdminJsonArray();
+        return adminJsonArray.contains(String.valueOf(qq));
     }
 }

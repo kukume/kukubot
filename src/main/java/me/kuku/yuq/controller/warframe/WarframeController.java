@@ -23,6 +23,7 @@ import java.io.IOException;
 
 @GroupController
 @PrivateController
+@SuppressWarnings("unused")
 public class WarframeController {
 
     @Config("warframe.info.api.host")

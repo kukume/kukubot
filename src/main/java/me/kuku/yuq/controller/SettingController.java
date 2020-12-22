@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 @PrivateController
+@SuppressWarnings("unused")
 public class SettingController {
     @Inject
     private GroupService groupService;

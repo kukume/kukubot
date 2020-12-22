@@ -8,6 +8,7 @@ import me.kuku.yuq.utils.BotUtils;
 
 import javax.inject.Inject;
 
+@SuppressWarnings("unused")
 public class BotLogicImpl implements BotLogic {
     @Inject
     private OkHttpWebImpl web;

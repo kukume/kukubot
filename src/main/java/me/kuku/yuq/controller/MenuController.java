@@ -22,6 +22,7 @@ import me.kuku.yuq.controller.weibo.WeiboNotController;
 import java.lang.reflect.Method;
 
 @GroupController
+@SuppressWarnings("unused")
 public class MenuController {
 
     @Action("help")

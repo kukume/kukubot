@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
  */
 @Getter
 @AllArgsConstructor
+@SuppressWarnings("unused")
 public enum WorldStateKey {
     news("新闻"),
     events("事件"),

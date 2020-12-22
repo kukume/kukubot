@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.List;
 
 @GroupController
+@SuppressWarnings("unused")
 public class BeforeController {
     @Inject
     @Named("CommandCountOnTime")

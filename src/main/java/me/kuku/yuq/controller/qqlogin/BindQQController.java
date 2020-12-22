@@ -25,6 +25,7 @@ import java.util.Map;
 
 @GroupController
 @PrivateController
+@SuppressWarnings("unused")
 public class BindQQController {
     @Inject
     private QQLoginService qqLoginService;

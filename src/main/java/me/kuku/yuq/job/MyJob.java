@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 @JobCenter
+@SuppressWarnings("unused")
 public class MyJob {
     @Config("YuQ.Mirai.bot.master")
     public String master;

@@ -17,6 +17,8 @@ public class MotionEntity {
     private Integer id;
     @Column(unique = true)
     private Long qq;
+    @Column(name = "group_")
+    private Long group;
     private String leXinPhone;
     private String leXinPassword;
     @Lob
@@ -26,12 +28,14 @@ public class MotionEntity {
     @Lob
     @Column(columnDefinition="text")
     private String leXinAccessToken;
+    private Boolean leXinStatus;
     private Integer step;
     private String miPhone;
     private String miPassword;
     @Lob
     @Column(columnDefinition="text")
     private String miLoginToken;
+    private Boolean miStatus;
 
     public MotionEntity(String leXinPhone, String leXinPassword, String leXinCookie, String leXinUserId, String leXinAccessToken){
         this.leXinPhone = leXinPhone;
@@ -41,7 +45,11 @@ public class MotionEntity {
         this.leXinAccessToken = leXinAccessToken;
     }
 
-    public MotionEntity(long qq){
+    public MotionEntity(Long qq, Long group){
+        this.group = group;
+        this.leXinStatus = false;
+        this.miStatus = false;
         this.qq = qq;
+        this.step = 0;
     }
 }

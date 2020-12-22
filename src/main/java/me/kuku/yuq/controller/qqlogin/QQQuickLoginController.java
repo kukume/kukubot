@@ -83,7 +83,7 @@ public class QQQuickLoginController {
 	@Action("lexin")
 	public String leXinLogin(QQLoginEntity qqLoginEntity, long qq, long group) throws IOException {
 		MotionEntity motionEntity = motionService.findByQQ(qq);
-		if (motionEntity == null) motionEntity = new MotionEntity(qq);
+		if (motionEntity == null) motionEntity = new MotionEntity(qq, group);
 		Result<MotionEntity> result = leXinMotionLogic.loginByQQ(qqLoginEntity);
 		if (result.getCode() == 200){
 			MotionEntity newMotionEntity = result.getData();

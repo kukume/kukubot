@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+@SuppressWarnings({"unused", "FieldCanBeLocal"})
 public class ToolLogicImpl implements ToolLogic {
     private final String url = "https://www.mxnzp.com/api";
     private final String appId = "ghpgtsokjvkjdmlk";

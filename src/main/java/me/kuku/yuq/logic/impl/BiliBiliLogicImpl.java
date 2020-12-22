@@ -24,6 +24,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
+@SuppressWarnings("unused")
 public class BiliBiliLogicImpl implements BiliBiliLogic {
     @Override
     public Result<List<BiliBiliPojo>> getIdByName(String username) throws IOException {

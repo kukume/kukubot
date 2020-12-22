@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+@SuppressWarnings("unused")
 public class HostLocLogicImpl implements HostLocLogic {
     @Override
     public Result<String> login(String username, String password) throws IOException {

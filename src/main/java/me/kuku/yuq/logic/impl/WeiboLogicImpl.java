@@ -25,6 +25,7 @@ import java.net.URLEncoder;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+@SuppressWarnings("unused")
 public class WeiboLogicImpl implements WeiboLogic {
     @Override
     public List<String> hotSearch() throws IOException {

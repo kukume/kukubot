@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @GroupController
+@SuppressWarnings("unused")
 public class WeiboController {
     @Inject
     private WeiboLogic weiboLogic;

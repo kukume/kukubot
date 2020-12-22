@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @GroupController
+@SuppressWarnings("unused")
 public class WeiboNotController {
     @Inject
     private WeiboLogic weiboLogic;

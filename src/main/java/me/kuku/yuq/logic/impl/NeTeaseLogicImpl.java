@@ -7,7 +7,6 @@ import me.kuku.yuq.entity.NeTeaseEntity;
 import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.logic.NeTeaseLogic;
 import me.kuku.yuq.pojo.Result;
-import me.kuku.yuq.pojo.UA;
 import me.kuku.yuq.utils.AESUtils;
 import me.kuku.yuq.utils.OkHttpUtils;
 import me.kuku.yuq.utils.QQUtils;
@@ -19,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings({"unused", "FieldCanBeLocal"})
 public class NeTeaseLogicImpl implements NeTeaseLogic {
     private final String referer = "https://music.163.com/";
     private final String vi = "0102030405060708";

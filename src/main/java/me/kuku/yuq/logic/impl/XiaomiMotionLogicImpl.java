@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+@SuppressWarnings("unused")
 public class XiaomiMotionLogicImpl implements XiaomiMotionLogic {
 
     private final String ua = "Dalvik/2.1.0 (Linux; U; Android 10; V1914A Build/QP1A.190711.020)";

@@ -9,6 +9,8 @@ import java.util.List;
 public interface QQService {
     QQEntity findByQQAndGroup(Long qq, Long group);
     void save(QQEntity qqEntity);
+    @SuppressWarnings("UnusedReturnValue")
     int delByQQAndGroup(Long qq, Long group);
     List<QQEntity> findAll();
+    List<QQEntity> findByHostLocPush(boolean hostLocPush);
 }

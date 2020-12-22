@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Locale;
 
 @EventListener
+@SuppressWarnings("unused")
 public class GroupEvent {
     @Inject
     private ToolLogic toolLogic;

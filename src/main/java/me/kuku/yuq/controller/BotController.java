@@ -33,9 +33,12 @@ import java.util.List;
 import java.util.Map;
 
 @GroupController
+@SuppressWarnings("unused")
 public class BotController {
     @Config("YuQ.Mirai.user.qq")
     private String qq;
+    @Config("YuQ.Mirai.bot.master")
+    private String master;
     @Inject
     private QQLoginLogic qqLoginLogic;
     @Inject
@@ -46,6 +49,9 @@ public class BotController {
     private GroupService groupService;
     @Inject
     private BotLogic botLogic;
+
+    private List<Long> notSpeakByDay = null;
+    private List<Long> notSpeakByNever = null;
 
     @Before
     public void before(BotActionContext actionContext){
@@ -86,14 +92,15 @@ public class BotController {
         Result<List<GroupMember>> result = qqLoginLogic.groupMemberInfo(qqLoginEntity, group);
         if (result.getCode() == 200){
             List<GroupMember> list = result.getData();
-//            List<Long> qqList = new ArrayList<>();
+            List<Long> qqList = new ArrayList<>();
             StringBuilder sb = new StringBuilder().append("本群").append(day).append("天未发言的成员如下：").append("\n");
             for (GroupMember groupMember : list) {
                 if ((new Date().getTime() - groupMember.getLastTime()) / (1000 * 60 * 60 * 24) > Integer.parseInt(day)){
                     sb.append(groupMember.getQq()).append("\n");
-//                    qqList.add(groupMember.getQq());
+                    qqList.add(groupMember.getQq());
                 }
             }
+            notSpeakByDay = qqList;
             return sb.deleteCharAt(sb.length() - 1).toString();
         }else return result.getMessage();
     }
@@ -103,17 +110,54 @@ public class BotController {
         Result<List<GroupMember>> result = qqLoginLogic.groupMemberInfo(qqLoginEntity, group);
         if (result.getCode() == 200){
             List<GroupMember> list = result.getData();
-//            List<Long> qqList = new ArrayList<>();
+            List<Long> qqList = new ArrayList<>();
             StringBuilder sb = new StringBuilder().append("本群从未发言的成员如下：").append("\n");
             for (GroupMember groupMember : list) {
                 if ((groupMember.getLastTime().equals(groupMember.getJoinTime()) || groupMember.getIntegral() <= 1)
                 && new Date().getTime() - groupMember.getJoinTime() > 1000 * 60 * 60 * 24){
                     sb.append(groupMember.getQq()).append("\n");
-//                    qqList.add(groupMember.getQq());
+                    qqList.add(groupMember.getQq());
                 }
             }
+            notSpeakByNever = qqList;
             return sb.deleteCharAt(sb.length() - 1).toString();
         }else return result.getMessage();
+    }
+
+    @Action("t未发言")
+    @QMsg(at = true)
+    public String tNotSpeakByDay(Group group, long qq){
+        if (notSpeakByDay == null) return "请先发送<列出x天未发言>！！";
+        GroupEntity groupEntity = groupService.findByGroup(group.getId());
+        if (groupEntity.isSuperAdmin(qq) || qq == Long.parseLong(master)){
+            for (Long innerQQ : notSpeakByDay) {
+                try {
+                    group.get(innerQQ).kick("一定时间内未发言");
+                } catch (PermissionDeniedException e) {
+                    e.printStackTrace();
+                    return "机器人的权限不足，无法执行";
+                }
+            }
+            return "踢出成功！！";
+        }else return "您的权限不足，无法执行";
+    }
+
+    @Action("t从未发言")
+    @QMsg(at = true)
+    public String tNotSpeakByNever(long qq, Group group){
+        if (notSpeakByNever == null) return "请先发送<列出从未发言>！！";
+        GroupEntity groupEntity = groupService.findByGroup(group.getId());
+        if (groupEntity.isSuperAdmin(qq) || qq == Long.parseLong(master)){
+            for (Long innerQQ : notSpeakByNever) {
+                try {
+                    group.get(innerQQ).kick("从未发言");
+                } catch (PermissionDeniedException e) {
+                    e.printStackTrace();
+                    return "机器人的权限不足，无法执行";
+                }
+            }
+            return "踢出成功！！";
+        }else return "您的权限不足，无法执行";
     }
 
     @Action("查询 {qqNo}")

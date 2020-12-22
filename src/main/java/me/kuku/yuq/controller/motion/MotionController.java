@@ -19,6 +19,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 
 @GroupController
+@SuppressWarnings("unused")
 public class MotionController {
     @Inject
     private MotionService motionService;
@@ -47,7 +48,11 @@ public class MotionController {
         if (!result.contains("成功")){
             Result<MotionEntity> loginResult = leXinMotionLogic.loginByPassword(motionEntity.getLeXinPhone(), motionEntity.getLeXinPassword());
             MotionEntity loginMotionEntity = loginResult.getData();
-            if (loginMotionEntity == null) return loginResult.getMessage();
+            if (loginMotionEntity == null) {
+                motionEntity.setLeXinStatus(false);
+                motionService.save(motionEntity);
+                return loginResult.getMessage();
+            }
             motionEntity.setLeXinCookie(loginMotionEntity.getLeXinCookie());
             motionEntity.setLeXinAccessToken(loginMotionEntity.getLeXinAccessToken());
             motionService.save(motionEntity);
@@ -94,7 +99,11 @@ public class MotionController {
         if (result.contains("登录已失效")){
             Result<String> loginResult = xiaomiMotionLogic.login(motionEntity.getMiPhone(), motionEntity.getMiPassword());
             loginToken = loginResult.getData();
-            if (loginToken == null) return loginResult.getMessage();
+            if (loginToken == null) {
+                motionEntity.setMiStatus(false);
+                motionService.save(motionEntity);
+                return loginResult.getMessage();
+            }
             motionEntity.setMiLoginToken(loginToken);
             motionService.save(motionEntity);
             result = xiaomiMotionLogic.changeStep(loginToken, step);

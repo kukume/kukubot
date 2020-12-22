@@ -5,22 +5,35 @@ import com.IceCreamQAQ.Yu.annotation.JobCenter;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.YuQ;
 import com.icecreamqaq.yuq.message.Message;
+import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.entity.HostLocEntity;
+import me.kuku.yuq.entity.QQEntity;
 import me.kuku.yuq.logic.HostLocLogic;
 import me.kuku.yuq.pojo.Result;
+import me.kuku.yuq.service.GroupService;
 import me.kuku.yuq.service.HostLocService;
+import me.kuku.yuq.service.QQService;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @JobCenter
+@SuppressWarnings("unused")
 public class HostLocJob {
 
     @Inject
     private HostLocService hostLocService;
     @Inject
     private HostLocLogic hostLocLogic;
+    @Inject
+    private GroupService groupService;
+    @Inject
+    private QQService qqService;
+
+    private int locId = 0;
 
     @Cron("At::d::07")
     public void sign(){
@@ -55,6 +68,39 @@ public class HostLocJob {
                 }
             }
         }
+    }
+
+    @Cron("1m")
+    public void locMonitor() {
+        List<Map<String, String>> list = hostLocLogic.post();
+        if (list.size() == 0) return;
+        List<Map<String, String>> newList = new ArrayList<>();
+        if (locId != 0){
+            for (Map<String, String> map: list){
+                if (Integer.parseInt(map.get("id")) <= locId) break;
+                newList.add(map);
+            }
+        }
+        locId = Integer.parseInt(list.get(0).get("id"));
+        List<GroupEntity> groupList = groupService.findByLocMonitor(true);
+        List<QQEntity> qqList = qqService.findByHostLocPush(true);
+        newList.forEach( locMap -> {
+            String str = "Loc有新帖了！！" + "\n" +
+                    "标题：" + locMap.get("title") + "\n" +
+                    "昵称：" + locMap.get("name") + "\n" +
+                    "链接：" + locMap.get("url");
+            Message message = Message.Companion.toMessage(str);
+            for (GroupEntity groupEntity: groupList){
+                FunKt.getYuq().getGroups().get(groupEntity.getGroup()).sendMessage(
+                        message
+                );
+            }
+            for (QQEntity qqEntity: qqList){
+                FunKt.getYuq().getGroups().get(qqEntity.getGroupEntity().getGroup()).get(qqEntity.getQq()).sendMessage(
+                        message
+                );
+            }
+        });
     }
 
 }

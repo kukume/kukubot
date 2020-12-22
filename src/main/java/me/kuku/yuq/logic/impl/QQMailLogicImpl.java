@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@SuppressWarnings("unused")
 public class QQMailLogicImpl implements QQMailLogic {
 
     Result<Map<String, String>> login(QQLoginEntity qqLoginEntity){

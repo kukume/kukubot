@@ -17,6 +17,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.*;
 
+@SuppressWarnings("unused")
 public class QQAILogicImpl implements QQAILogic {
     @Inject
     private ConfigService configService;

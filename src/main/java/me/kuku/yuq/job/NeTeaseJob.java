@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.List;
 
 @JobCenter
+@SuppressWarnings("unused")
 public class NeTeaseJob {
     @Inject
     private NeTeaseLogic neTeaseLogic;

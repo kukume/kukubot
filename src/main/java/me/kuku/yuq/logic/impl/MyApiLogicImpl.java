@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.List;
 
+@SuppressWarnings("unused")
 public class MyApiLogicImpl implements MyApiLogic {
 
     private final String api = "https://api.kuku.me";

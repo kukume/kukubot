@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings("unused")
 public class QQGroupLogicImpl implements QQGroupLogic {
     @Inject
     private OkHttpWebImpl web;
@@ -389,7 +390,7 @@ public class QQGroupLogicImpl implements QQGroupLogic {
         map.put("text", text);
         if (picId == null) picId = "";
         map.put("pic_id", picId);
-        JSONObject jsonObject = null;
+        JSONObject jsonObject;
         try {
             jsonObject = OkHttpUtils.postJson("https://qun.qq.com/cgi-bin/qiandao/sign/publish", map,
                     OkHttpUtils.addHeaders(BotUtils.toQQLoginEntity(web, miraiBot).getCookieWithGroup(), null, UA.QQ2));

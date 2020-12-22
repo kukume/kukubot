@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @GroupController
+@SuppressWarnings("unused")
 public class BiliBiliLoginController {
     @Inject
     private BiliBiliLogic biliBiliLogic;

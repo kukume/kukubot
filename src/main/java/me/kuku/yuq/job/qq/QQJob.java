@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 @JobCenter
+@SuppressWarnings("unused")
 public class QQJob {
     @Inject
     private QQLoginService qqLoginService;

@@ -14,6 +14,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 
 @PrivateController
+@SuppressWarnings("unused")
 public class BindNeTeaseController {
     @Inject
     private NeTeaseLogic neTeaseLogic;

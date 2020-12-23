@@ -12,13 +12,16 @@ import com.icecreamqaq.yuq.annotation.PathVar;
 import com.icecreamqaq.yuq.annotation.QMsg;
 import com.icecreamqaq.yuq.controller.ContextSession;
 import com.icecreamqaq.yuq.entity.Group;
+import com.icecreamqaq.yuq.entity.Member;
 import com.icecreamqaq.yuq.message.Message;
 import com.icecreamqaq.yuq.message.MessageItemFactory;
 import me.kuku.yuq.entity.GroupEntity;
+import me.kuku.yuq.entity.QQEntity;
 import me.kuku.yuq.logic.BiliBiliLogic;
 import me.kuku.yuq.logic.WeiboLogic;
 import me.kuku.yuq.pojo.*;
 import me.kuku.yuq.service.GroupService;
+import me.kuku.yuq.service.QQService;
 import me.kuku.yuq.utils.BotUtils;
 
 import javax.inject.Inject;
@@ -37,6 +40,8 @@ public class ManageSuperAdminController {
     private WeiboLogic weiboLogic;
     @Inject
     private BiliBiliLogic biliBiliLogic;
+    @Inject
+    private QQService qqService;
 
     @Before
     public GroupEntity before(long group, long qq){
@@ -129,12 +134,29 @@ public class ManageSuperAdminController {
         return type + "成功！！";
     }
 
+
+    @Action("t {qqNo}")
+    @QMsg(at = true)
+    public String kick(Member qqNo){
+        qqNo.kick("");
+        return "踢出成功！！";
+    }
+
     @Action("违规次数 {count}")
     @QMsg(at = true)
     public String maxViolationCount(GroupEntity groupEntity, int count){
         groupEntity.setMaxViolationCount(count);
         groupService.save(groupEntity);
         return "已设置本群最大违规次数为" + count + "次";
+    }
+
+    @Action("清除违规 {qqNum}")
+    public String clear(GroupEntity groupEntity, long qq){
+        QQEntity qqEntity = qqService.findByQQAndGroup(qq, groupEntity.getGroup());
+        if (qqEntity == null) qqEntity = new QQEntity(qq, groupEntity);
+        qqEntity.setViolationCount(0);
+        qqService.save(qqEntity);
+        return "清除违规成功！！";
     }
 
     @Action("指令限制 {count}")

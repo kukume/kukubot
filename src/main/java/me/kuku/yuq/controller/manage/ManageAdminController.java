@@ -38,13 +38,6 @@ public class ManageAdminController {
         return sb.toString();
     }
 
-    @Action("t {qqNo}")
-    @QMsg(at = true)
-    public String kick(Member qqNo){
-        qqNo.kick("");
-        return "踢出成功！！";
-    }
-
     @Action("禁言 {qqNo}")
     @QMsg(at = true)
     public String shutUp(long group, long qqNo, @PathVar(2) String timeStr){

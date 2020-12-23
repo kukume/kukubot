@@ -60,6 +60,7 @@ public class MyQQController extends QQController {
     @QMsg(at = true)
     public String locPush(QQEntity qqEntity, boolean status){
         qqEntity.setHostLocPush(status);
+        qqService.save(qqEntity);
         if (status) return "hostLoc私聊推送已开启！！";
         else return "hostLoc私聊推送已关闭！！";
     }

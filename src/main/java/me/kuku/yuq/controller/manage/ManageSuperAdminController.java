@@ -181,7 +181,7 @@ public class ManageSuperAdminController {
 
     @Action("加问答 {q}")
     @QMsg(at = true)
-    public String qa(ContextSession session, long qq, GroupEntity groupEntity, String q, Group group){
+    public String qa(ContextSession session, long qq, GroupEntity groupEntity, String q, Group group, @PathVar(2) String type){
         MessageItemFactory mif = FunKt.getMif();
         group.sendMessage(mif.at(qq).plus("请输入回答语句！！"));
         Message a = session.waitNextMessage();
@@ -189,7 +189,10 @@ public class ManageSuperAdminController {
         JSONArray aJsonArray = BotUtils.messageToJsonArray(a);
         jsonObject.put("q", q);
         jsonObject.put("a", aJsonArray);
-        jsonObject.put("type", "PARTIAL");
+        if (type == null) type = "PARTIAL";
+        if (!"ALL".equalsIgnoreCase(type)) type = "PARTIAL";
+        else type = "ALL";
+        jsonObject.put("type", type);
         JSONArray jsonArray = groupEntity.getQaJsonArray();
         jsonArray.add(jsonObject);
         groupEntity.setQaJsonArray(jsonArray);

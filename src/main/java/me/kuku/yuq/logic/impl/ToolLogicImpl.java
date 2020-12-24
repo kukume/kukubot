@@ -141,8 +141,7 @@ public class ToolLogicImpl implements ToolLogic {
                     "主办单位性质：" + data.getString("organizer_nature") + "\n" +
                     "网站备案/许可证号：" + data.getString("recording_license_number") + "\n" +
                     "网站名称：" + data.getString("site_name") + "\n" +
-                    "网站首页网址：" + data.getString("site_index_url") + "\n" +
-                    "审核时间：" + data.getString("review_time");
+                    "网站首页网址：" + data.getString("site_index_url");
         }
     }
 

@@ -1,7 +1,7 @@
 package me.kuku.yuq.controller.manage;
 
 import com.IceCreamQAQ.Yu.annotation.Before;
-import com.IceCreamQAQ.Yu.annotation.Cache;
+import com.IceCreamQAQ.Yu.annotation.Catch;
 import com.IceCreamQAQ.Yu.annotation.Global;
 import com.IceCreamQAQ.Yu.cache.EhcacheHelp;
 import com.IceCreamQAQ.Yu.entity.DoNone;
@@ -10,6 +10,7 @@ import com.icecreamqaq.yuq.annotation.GroupController;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.service.GroupService;
+import net.mamoe.mirai.contact.BotIsBeingMutedException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -44,8 +45,14 @@ public class BeforeController {
     }
 
     @Global
-    @Cache
+    @Catch(error = IOException.class)
     public void interIO(IOException e, long qq){
         FunKt.getMif().at(qq).plus("出现io异常了，请重试！！");
+    }
+
+    @Global
+    @Catch(error = BotIsBeingMutedException.class)
+    public void innerMuted(BotIsBeingMutedException e, long qq, long group){
+        FunKt.getYuq().getGroups().get(group).get(qq).sendMessage(Message.Companion.toMessage("机器人被禁言了，不能发送消息啦！！"));
     }
 }

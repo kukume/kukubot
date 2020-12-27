@@ -35,7 +35,7 @@ public class HostLocJob {
 
     private int locId = 0;
 
-    @Cron("At::d::07")
+    @Cron("At::d::07:00")
     public void sign(){
         List<HostLocEntity> list = hostLocService.findAll();
         for (HostLocEntity hostLocEntity: list){

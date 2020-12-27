@@ -163,7 +163,7 @@ public class BiliBiliJob {
         });
     }
 
-    @Cron("At::d::08")
+    @Cron("At::d::08:00")
     public void biliBilliTask() throws IOException {
         List<BiliBiliEntity> list = biliBiliService.findByTask(true);
         for (BiliBiliEntity biliBiliEntity: list){

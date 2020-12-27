@@ -30,7 +30,8 @@ public class MotionJob {
     @Inject
     private QQLoginLogic qqLoginLogic;
 
-    @Cron("At::d::08")
+    @SuppressWarnings("DuplicatedCode")
+    @Cron("At::d::08:00")
     public void motion(){
         List<MotionEntity> list = motionService.findAll();
         for (MotionEntity motionEntity : list) {

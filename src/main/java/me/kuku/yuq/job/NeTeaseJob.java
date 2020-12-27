@@ -18,7 +18,7 @@ public class NeTeaseJob {
     @Inject
     private NeTeaseService neTeaseService;
 
-    @Cron("At::d::09")
+    @Cron("At::d::09:00")
     public void ne(){
         List<NeTeaseEntity> list = neTeaseService.findAll();
         list.forEach(neTeaseEntity -> {

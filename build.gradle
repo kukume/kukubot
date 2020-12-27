@@ -7,7 +7,7 @@ group 'me.kuku'
 version '1.0-SNAPSHOT'
 
 repositories {
-    maven{ url "https://nexus.kuku.me/repository/docker-public/"}
+    maven{ url "https://nexus.kuku.me/repository/maven-public/"}
     mavenCentral()
     jcenter()
     maven{ url "https://dl.bintray.com/icecreamqaq/mirai/"}

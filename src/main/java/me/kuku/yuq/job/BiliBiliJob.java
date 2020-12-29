@@ -36,7 +36,7 @@ public class BiliBiliJob {
     private final Map<Long, Long> userMap = new HashMap<>();
     private final Map<Long, Map<Long, Boolean>> liveMap = new HashMap<>();
 
-    @Cron("30s")
+    @Cron("2m")
     public void biliBiliGroupMonitor() {
         List<GroupEntity> groupList = groupService.findAll();
         for (GroupEntity groupEntity: groupList){
@@ -84,7 +84,7 @@ public class BiliBiliJob {
         }
     }
 
-    @Cron("30s")
+    @Cron("2m")
     public void biliBiliQQMonitor() throws IOException {
         List<BiliBiliEntity> biliBiliList = biliBiliService.findByMonitor(true);
         for (BiliBiliEntity biliBiliEntity: biliBiliList){
@@ -132,7 +132,7 @@ public class BiliBiliJob {
         }
     }
 
-    @Cron("30s")
+    @Cron("2m")
     public void liveMonitor(){
         List<BiliBiliEntity> list = biliBiliService.findAll();
         list.forEach( biliBiliEntity -> {

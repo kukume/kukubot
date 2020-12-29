@@ -35,7 +35,7 @@ public class MyApiJob {
     private final Map<Long, Map<Long, Long>> twitterMap = new HashMap<>();
     private final Map<Long, Map<Long, Long>> insMap = new HashMap<>();
 
-    @Cron("1m")
+    @Cron("2m")
     public void twitterJob(){
         List<QQEntity> qqList = qqService.findAll();
         for (QQEntity qqEntity: qqList){
@@ -77,7 +77,7 @@ public class MyApiJob {
         }
     }
 
-    @Cron("1m")
+    @Cron("2m")
     public void insJob(){
         List<QQEntity> qqList = qqService.findAll();
         for (QQEntity qqEntity: qqList){

@@ -10,8 +10,6 @@ repositories {
     maven{ url "https://nexus.kuku.me/repository/maven-public/"}
     mavenCentral()
     jcenter()
-    maven{ url "https://dl.bintray.com/icecreamqaq/mirai/"}
-    maven{ url "https://maven.IceCreamQAQ.com/repository/maven-public/"}
 }
 
 dependencies {

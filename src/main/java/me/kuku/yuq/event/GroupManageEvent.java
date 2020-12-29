@@ -9,7 +9,6 @@ import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.event.GroupMessageEvent;
 import com.icecreamqaq.yuq.message.*;
 import me.kuku.yuq.entity.GroupEntity;
-import me.kuku.yuq.entity.MessageEntity;
 import me.kuku.yuq.entity.QQEntity;
 import me.kuku.yuq.logic.QQAILogic;
 import me.kuku.yuq.service.GroupService;
@@ -20,9 +19,9 @@ import me.kuku.yuq.utils.BotUtils;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @EventListener
 @SuppressWarnings("unused")
@@ -39,7 +38,9 @@ public class GroupManageEvent {
     @Named("CommandCountOnTime")
     public EhcacheHelp<Integer> eh;
 
-    private final Map<Long, Message> lastRepeatMessageMap = new HashMap<>();
+    private final Map<Long, JSONArray> lastMessage = new ConcurrentHashMap<>();
+    private final Map<Long, Long> lastQQ = new ConcurrentHashMap<>();
+    private final Map<Long, JSONArray> lastRepeatMessage = new ConcurrentHashMap<>();
 
     @Event(weight = Event.Weight.high)
     public void status(GroupMessageEvent e){
@@ -63,17 +64,22 @@ public class GroupManageEvent {
 
     @Event(weight = Event.Weight.low)
     public void repeat(GroupMessageEvent e){
-        long groupNum = e.getGroup().getId();
-        List<MessageEntity> list = messageService.findByGroupExcludeQQ(groupNum, FunKt.getYuq().getBotId());
-        if (list.size() < 2) return;
-        MessageEntity firstMessage = list.get(0);
-        MessageEntity secondMessage = list.get(1);
-        if (firstMessage.equals(secondMessage) &&
-                !BotUtils.equalsMessageJsonArray(BotUtils.messageToJsonArray(e.getMessage()), BotUtils.messageToJsonArray(lastRepeatMessageMap.get(groupNum))) &&
-                !firstMessage.getQq().equals(secondMessage.getQq())){
-            lastRepeatMessageMap.put(groupNum, e.getMessage());
-            e.getGroup().sendMessage(e.getMessage());
+        long group = e.getGroup().getId();
+        long qq = e.getSender().getId();
+        JSONArray nowJsonArray = BotUtils.messageToJsonArray(e.getMessage());
+        if (lastMessage.containsKey(group)){
+//            synchronized (this) {
+                JSONArray oldJsonArray = lastMessage.get(group);
+                if (BotUtils.equalsMessageJsonArray(nowJsonArray, oldJsonArray) &&
+                        !BotUtils.equalsMessageJsonArray(nowJsonArray, lastRepeatMessage.get(group))
+                        && lastQQ.get(group) != qq) {
+                    lastRepeatMessage.put(group, nowJsonArray);
+                    e.getGroup().sendMessage(e.getMessage());
+                }
+//            }
         }
+        lastMessage.put(group, nowJsonArray);
+        lastQQ.put(group, qq);
     }
 
     @Event

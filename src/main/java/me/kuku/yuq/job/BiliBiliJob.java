@@ -172,9 +172,10 @@ public class BiliBiliJob {
             biliBiliLogic.report(biliBiliEntity, firstRank.get("aid"), firstRank.get("cid"), 300);
             biliBiliLogic.share(biliBiliEntity, firstRank.get("aid"));
             biliBiliLogic.liveSign(biliBiliEntity);
-            for (int i = 0; i < 2; i++){
+            int[] arr = {2, 2, 1};
+            for (int i = 0; i < 3; i++){
                 Map<String, String> randomMap = ranking.get((int) (Math.random() * ranking.size()));
-                biliBiliLogic.tossCoin(biliBiliEntity, randomMap.get("aid"), 2);
+                biliBiliLogic.tossCoin(biliBiliEntity, randomMap.get("aid"), arr[i]);
             }
         }
     }

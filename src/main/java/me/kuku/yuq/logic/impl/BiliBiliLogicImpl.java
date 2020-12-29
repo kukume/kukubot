@@ -358,10 +358,10 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
         map.put("cross_domain", "true");
         map.put("csrf", biliBiliEntity.getToken());
         JSONObject jsonObject = OkHttpUtils.postJson("https://api.bilibili.com/x/web-interface/coin/add", map,
-                OkHttpUtils.addHeader().add("cookie", biliBiliEntity.getCommentList())
+                OkHttpUtils.addHeader().add("cookie", biliBiliEntity.getCookie())
                         .add("referer", "https://www.bilibili.com/video/").build());
         if (jsonObject.getInteger("code").equals(0)) return "对该动态（视频）投硬币成功！！";
-        else return "对该动态（视频）投硬币成功！！，" + jsonObject.getString("message");
+        else return "对该动态（视频）投硬币失败！！，" + jsonObject.getString("message");
     }
 
     @Override

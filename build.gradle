@@ -7,7 +7,6 @@ group 'me.kuku'
 version '1.0-SNAPSHOT'
 
 repositories {
-    maven{ url "https://nexus.kuku.me/repository/maven-public/"}
     mavenCentral()
     jcenter()
     maven { url "https://maven.icecreamqaq.com/repository/maven-public/" }

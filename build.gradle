@@ -10,6 +10,7 @@ repositories {
     maven{ url "https://nexus.kuku.me/repository/maven-public/"}
     mavenCentral()
     jcenter()
+    maven { url "https://maven.icecreamqaq.com/repository/maven-public/" }
 }
 
 dependencies {

@@ -60,6 +60,7 @@ public class GroupEntity {
     private Integer maxCommandCountOnTime;
     private Boolean locMonitor;
     private Boolean flashNotify;
+    private Boolean repeat;
 
     public GroupEntity(Long group){
         this.group = group;
@@ -75,6 +76,7 @@ public class GroupEntity {
         this.flashNotify = false;
         this.maxCommandCountOnTime = -1;
         this.maxViolationCount = 5;
+        this.repeat = true;
     }
 
     public JSONArray getBlackJsonArray(){

@@ -65,9 +65,17 @@ public class GroupManageEvent {
     @Event(weight = Event.Weight.low)
     public void repeat(GroupMessageEvent e){
         long group = e.getGroup().getId();
-        long qq = e.getSender().getId();
-        JSONArray nowJsonArray = BotUtils.messageToJsonArray(e.getMessage());
-        if (lastMessage.containsKey(group)){
+        GroupEntity groupEntity = groupService.findByGroup(group);
+        Boolean repeat = groupEntity.getRepeat();
+        if (repeat == null) {
+            repeat = true;
+            groupEntity.setRepeat(repeat);
+            groupService.save(groupEntity);
+        }
+        if (repeat) {
+            long qq = e.getSender().getId();
+            JSONArray nowJsonArray = BotUtils.messageToJsonArray(e.getMessage());
+            if (lastMessage.containsKey(group)) {
 //            synchronized (this) {
                 JSONArray oldJsonArray = lastMessage.get(group);
                 if (BotUtils.equalsMessageJsonArray(nowJsonArray, oldJsonArray) &&
@@ -77,9 +85,10 @@ public class GroupManageEvent {
                     e.getGroup().sendMessage(e.getMessage());
                 }
 //            }
+            }
+            lastMessage.put(group, nowJsonArray);
+            lastQQ.put(group, qq);
         }
-        lastMessage.put(group, nowJsonArray);
-        lastQQ.put(group, qq);
     }
 
     @Event

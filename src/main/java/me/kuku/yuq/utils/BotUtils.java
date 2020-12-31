@@ -8,13 +8,13 @@ import com.icecreamqaq.yuq.message.*;
 import com.icecreamqaq.yuq.mirai.MiraiBot;
 import com.icecreamqaq.yuq.mirai.message.ImageReceive;
 import me.kuku.yuq.entity.QQLoginEntity;
+import me.kuku.yuq.pojo.UA;
 import okhttp3.Cookie;
 
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,10 +23,13 @@ public class BotUtils {
 
     public static String shortUrl(String url){
         try {
-            JSONObject jsonObject = OkHttpUtils.getJson("https://tb.am/action/json-url.php?url_long=" + URLEncoder.encode(url, "utf-8"));
-            if (jsonObject.getInteger("statusCode") == 200){
-                return jsonObject.getString("shorturl");
-            }else return jsonObject.getString("message");
+            String b64Url = Base64.getEncoder().encodeToString(url.getBytes(StandardCharsets.UTF_8));
+            JSONObject jsonObject = OkHttpUtils.getJson("https://www.fanghong.net/cbfh.php?cb=4&sturl=3&longurl=" +
+                    URLEncoder.encode(b64Url, "utf-8"),
+                    OkHttpUtils.addUA(UA.PC));
+            if (jsonObject.getInteger("result") == 1){
+                return jsonObject.getString("dwz_url");
+            }else return jsonObject.getString("msg");
         } catch (IOException e) {
             e.printStackTrace();
             return "缩短失败，原链接：" + url;

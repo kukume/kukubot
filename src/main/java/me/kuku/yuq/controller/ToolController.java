@@ -387,9 +387,7 @@ public class ToolController {
     @QMsg(at = true)
     @Action("防红 {url}")
     public String preventRed(String url) throws IOException {
-        boolean b = new Random().nextBoolean();
-        if (b) return toolLogic.preventQQRed(url);
-        else return toolLogic.preventQQWechatRed(url);
+        return toolLogic.preventQQRed(url);
     }
 
     @Action("戳 {qqNo}")

@@ -17,9 +17,7 @@ dependencies {
     implementation 'org.projectlombok:lombok:1.18.16'
     annotationProcessor 'org.projectlombok:lombok:1.18.16'
     implementation 'com.IceCreamQAQ.YuQ:YuQ-Mirai:0.1.0.0-DEV7'
-    implementation ('com.IceCreamQAQ.Yu:Yu-DB:0.0.2.0-DEV8'){
-        exclude group: 'mysql', module: 'mysql-connector-java'
-    }
+    implementation 'com.IceCreamQAQ.Yu:Yu-DB:0.0.2.0-DEV8'
     implementation 'com.IceCreamQAQ.Yu:WebCore:0.0.2.0-DEV4'
     implementation 'org.jsoup:jsoup:1.13.1'
     implementation 'com.h2database:h2:1.4.200'

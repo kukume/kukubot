@@ -587,21 +587,11 @@ public class ToolLogicImpl implements ToolLogic {
 
     @Override
     public String preventQQRed(String url) throws IOException {
-        Map<String, String> map = new HashMap<>();
-        map.put("url", url);
-        map.put("type", "2");
-        map.put("dwz", "2");
-        JSONObject jsonObject = OkHttpUtils.postJson("https://www.91she.cn/ajax.php?act=creat", map,
+        String b64Url = Base64.getEncoder().encodeToString(url.getBytes(StandardCharsets.UTF_8));
+        JSONObject jsonObject = OkHttpUtils.getJson("https://www.fanghong.net/cbfh.php?cb=1&sturl=1&longurl="
+                + URLEncoder.encode(b64Url, "utf-8"),
                 OkHttpUtils.addUA(UA.PC));
-        if (jsonObject.getInteger("code") == 0) return jsonObject.getString("dwz1");
-        else return jsonObject.getString("msg");
-    }
-
-    @Override
-    public String preventQQWechatRed(String url) throws IOException {
-        JSONObject jsonObject = OkHttpUtils.getJson(String.format("http://fh.dw81.cn:81/dwz.php?type=ty&longurl=%s&dwzapi=500", url),
-                OkHttpUtils.addUA(UA.PC));
-        if (jsonObject.getInteger("code") == 1) return jsonObject.getString("ae_url");
+        if (jsonObject.getInteger("result") == 1) return jsonObject.getString("dwz_url");
         else return jsonObject.getString("msg");
     }
 

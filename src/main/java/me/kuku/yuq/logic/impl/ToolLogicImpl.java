@@ -426,7 +426,7 @@ public class ToolLogicImpl implements ToolLogic {
     @Override
     public byte[] queryTime() throws IOException {
         SimpleDateFormat sdf = new SimpleDateFormat("HH-mm");
-        return OkHttpUtils.downloadBytes("https://ty.kuku.me/images/time/" + sdf.format(new Date()) + ".jpg");
+        return OkHttpUtils.downloadBytes("https://share.kuku.me/189/images/time/" + sdf.format(new Date()) + ".jpg");
     }
 
     @Override

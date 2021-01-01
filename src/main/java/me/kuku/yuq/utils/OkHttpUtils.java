@@ -314,6 +314,7 @@ public class OkHttpUtils {
             response = get(url);
             int code = response.code();
             if (code == 302 || code == 301){
+                response.close();
                 url = response.header("location");
             }else break;
         }

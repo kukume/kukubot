@@ -538,4 +538,15 @@ public class ToolController {
     public Image photo() throws IOException {
         return FunKt.getMif().imageByByteArray(toolLogic.photo());
     }
+
+    @Action("kuku上传 {image}")
+    @QMsg(at = true)
+    public String uploadImage(Image image){
+        try {
+            return "您上传的图片链接如下：" + toolLogic.uploadImage(OkHttpUtils.getBytes(image.getUrl()));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "图片上传失败，请稍后再试！！";
+        }
+    }
 }

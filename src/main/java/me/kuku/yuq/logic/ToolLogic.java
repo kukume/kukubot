@@ -58,4 +58,5 @@ public interface ToolLogic {
     String genShinUserInfo(long id) throws IOException;
     byte[] cosplay() throws IOException;
     byte[] photo() throws IOException;
+    String uploadImage(byte[] bytes);
 }

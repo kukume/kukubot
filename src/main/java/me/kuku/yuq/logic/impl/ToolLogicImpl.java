@@ -11,6 +11,9 @@ import me.kuku.yuq.pojo.UA;
 import me.kuku.yuq.utils.BotUtils;
 import me.kuku.yuq.utils.MD5Utils;
 import me.kuku.yuq.utils.OkHttpUtils;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -745,5 +748,19 @@ public class ToolLogicImpl implements ToolLogic {
     @Override
     public byte[] photo() throws IOException {
         return OkHttpUtils.getBytes("https://api.pixivweb.com/api.php?return=img");
+    }
+
+    @Override
+    public String uploadImage(byte[] bytes) {
+        MultipartBody body = new MultipartBody.Builder().setType(MultipartBody.FORM)
+                .addFormDataPart("file", "kukuapi",
+                        RequestBody.create(bytes, MediaType.parse("image/*"))).build();
+        try {
+            JSONObject jsonObject = OkHttpUtils.postJson("https://api.kuku.me/tool/upload", body);
+            return jsonObject.getJSONObject("image").getString("url");
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "图片上传失败，请稍后再试！！";
+        }
     }
 }

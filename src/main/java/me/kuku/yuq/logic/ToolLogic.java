@@ -59,4 +59,5 @@ public interface ToolLogic {
     byte[] cosplay() throws IOException;
     byte[] photo() throws IOException;
     String uploadImage(byte[] bytes);
+    String abstractWords(String word);
 }

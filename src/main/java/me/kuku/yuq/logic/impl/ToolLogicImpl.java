@@ -20,6 +20,9 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -599,72 +602,6 @@ public class ToolLogicImpl implements ToolLogic {
     }
 
     @Override
-    public String songByQQ(String name) throws IOException {
-        Response firstResponse = OkHttpUtils.get("https://c.y.qq.com/soso/fcgi-bin/client_search_cp?w="+URLEncoder.encode(name, "utf-8")+"&format=json");
-        JSONObject jsonObject = OkHttpUtils.getJson(firstResponse);
-        JSONObject songJsonObject = jsonObject.getJSONObject("data").getJSONObject("song").getJSONArray("list").getJSONObject(0);
-        String songName = songJsonObject.getString("songname");
-        String mid = songJsonObject.getString("songmid");
-        Response secondResponse = OkHttpUtils.get("https://u.y.qq.com/cgi-bin/musicu.fcg?format=json&data=%7B%22req_0%22%3A%7B%22module%22%3A%22vkey.GetVkeyServer%22%2C%22method%22%3A%22CgiGetVkey%22%2C%22param%22%3A%7B%22guid%22%3A%22358840384%22%2C%22songmid%22%3A%5B%22"+mid+"%22%5D%2C%22songtype%22%3A%5B0%5D%2C%22uin%22%3A%220%22%2C%22loginflag%22%3A1%2C%22platform%22%3A%2220%22%7D%7D%2C%22comm%22%3A%7B%22uin%22%3A%220%22%2C%22format%22%3A%22json%22%2C%22ct%22%3A24%2C%22cv%22%3A0%7D%7D");
-        JSONObject secondJsonObject = OkHttpUtils.getJson(secondResponse);
-        JSONObject dataJsonObject = secondJsonObject.getJSONObject("req_0").getJSONObject("data");
-        JSONObject urlJsonObject = dataJsonObject.getJSONArray("midurlinfo").getJSONObject(0);
-        String musicUrl = dataJsonObject.getJSONArray("sip").getString(0) + urlJsonObject.getString("purl");
-//        String jumpUrl = "https://y.qq.com/n/yqq/song/"+mid+".html";
-//        Response thirdResponse = OkHttpUtils.get(jumpUrl, OkHttpUtils.addUA(UA.MOBILE));
-//        String html = OkHttpUtils.getStr(thirdResponse);
-        String songid = songJsonObject.getString("songid");
-        String albumId = songJsonObject.getString("albumid");
-        String singer = songJsonObject.getJSONArray("singer").getJSONObject(0).getString("name");
-        return "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>" +
-                "<msg serviceID=\"2\" templateID=\"1\" action=\"web\" brief=\"[分享] "+songName+"\" sourceMsgId=\"0\" " +
-                "url=\"https://i.y.qq.com/v8/playsong.html?_wv=1&amp;songid="+songid+"&amp;souce=qqshare&amp;source=qqshare&amp;ADTAG=qqshare\" " +
-                "flag=\"0\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"2\">" +
-                "<audio cover=\"http://imgcache.qq.com/music/photo/album_500/"+albumId.substring(albumId.length() - 2)+"/500_albumpic_"+albumId+"_0.jpg\" " +
-                "src=\""+musicUrl+"\" /><title>"+songName+"</title><summary>"+singer+"</summary></item><source name=\"QQ音乐\" " +
-                "icon=\"https://i.gtimg.cn/open/app_icon/01/07/98/56/1101079856_100_m.png\" " +
-                "url=\"http://web.p.qq.com/qqmpmobile/aio/app.html?id=1101079856\" action=\"app\" " +
-                "a_actionData=\"com.tencent.qqmusic\" i_actionData=\"tencent1101079856://\" appid=\"1101079856\" /></msg>";
-    }
-
-
-    @Override
-    public Result<String> songBy163(String name) throws IOException {
-        String neTeaseUrl = "https://netease.kuku.me";
-        Response response = OkHttpUtils.get(neTeaseUrl +"/search?keywords="+URLEncoder.encode(name, "utf-8"));
-        JSONObject jsonObject = OkHttpUtils.getJson(response);
-        JSONObject resultJsonObject = jsonObject.getJSONObject("result");
-        if (resultJsonObject.getInteger("songCount") != 0){
-            JSONObject songJsonObject = resultJsonObject.getJSONArray("songs").getJSONObject(0);
-            Integer id = songJsonObject.getInteger("id");
-            Response secondResponse = OkHttpUtils.get(neTeaseUrl +"/song/url?id="+id);
-            JSONObject secondJsonObject = OkHttpUtils.getJson(secondResponse);
-            String url = secondJsonObject.getJSONArray("data").getJSONObject(0).getString("url");
-            if (url != null){
-                String songName = songJsonObject.getString("name");
-                String author = songJsonObject.getJSONArray("artists").getJSONObject(0).getString("name");
-                Response thirdResponse = OkHttpUtils.get("https://y.music.163.com/m/song?id="+id, OkHttpUtils.addUA(UA.MOBILE));
-                String html = OkHttpUtils.getStr(thirdResponse);
-                String imageUrl = Jsoup.parse(html).select("meta[property=og:image]").first().attr("content");
-                 return Result.success("成功","<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>" +
-                                "<msg serviceID=\"2\" templateID=\"1\" action=\"web\" brief=\"[分享] "+songName+"\" sourceMsgId=\"0\" " +
-                                "url=\"http://music.163.com/m/song/"+id+"\" " +
-                                "flag=\"0\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"2\">" +
-                                "<audio cover=\""+imageUrl+"?param=90y90\" " +
-                                "src=\"https://music.163.com/song/media/outer/url?id="+id+".mp3\" /><title>"+songName+"</title><summary>"+author+"</summary></item><source name=\"网易云音乐\" " +
-                                "icon=\"https://pic.rmb.bdstatic.com/911423bee2bef937975b29b265d737b3.png\" " +
-                                "url=\"http://web.p.qq.com/qqmpmobile/aio/app.html?id=100495085\" action=\"app\" " +
-                                "a_actionData=\"com.netease.cloudmusic\" i_actionData=\"tencent100495085://\" appid=\"100495085\" /></msg>"
-                        );
-            }else {
-                return Result.failure(500, "可能该歌曲没有版权或者无法下载！");
-            }
-        }else {
-            return Result.failure(500, "未找到该歌曲！！");
-        }
-    }
-
-    @Override
     public String genShinUserInfo(long id) throws IOException {
         Map<String, String> map = new HashMap<>();
         String mhyVersion = "2.1.0";
@@ -761,6 +698,60 @@ public class ToolLogicImpl implements ToolLogic {
         } catch (IOException e) {
             e.printStackTrace();
             return "图片上传失败，请稍后再试！！";
+        }
+    }
+
+    @Override
+    public String songByQQ(String name) throws IOException {
+        JSONObject jsonObject = OkHttpUtils.getJson("https://c.y.qq.com/soso/fcgi-bin/client_search_cp?w=" + URLEncoder.encode(name, "utf-8") + "&format=json");
+        JSONObject songJsonObject = jsonObject.getJSONObject("data").getJSONObject("song").getJSONArray("list").getJSONObject(0);
+        String songName = songJsonObject.getString("songname");
+        String author = songJsonObject.getJSONArray("singer").getJSONObject(0).getString("name");
+        String mid = songJsonObject.getString("songmid");
+        JSONObject secondJsonObject = OkHttpUtils.getJson("https://u.y.qq.com/cgi-bin/musicu.fcg?format=json&data=%7B%22req_0%22%3A%7B%22module%22%3A%22vkey.GetVkeyServer%22%2C%22method%22%3A%22CgiGetVkey%22%2C%22param%22%3A%7B%22guid%22%3A%22358840384%22%2C%22songmid%22%3A%5B%22" + mid + "%22%5D%2C%22songtype%22%3A%5B0%5D%2C%22uin%22%3A%220%22%2C%22loginflag%22%3A1%2C%22platform%22%3A%2220%22%7D%7D%2C%22comm%22%3A%7B%22uin%22%3A%220%22%2C%22format%22%3A%22json%22%2C%22ct%22%3A24%2C%22cv%22%3A0%7D%7D");
+        JSONObject dataJsonObject = secondJsonObject.getJSONObject("req_0").getJSONObject("data");
+        JSONObject urlJsonObject = dataJsonObject.getJSONArray("midurlinfo").getJSONObject(0);
+        String suffixUrl = urlJsonObject.getString("purl");
+        if ("".equals(suffixUrl)) suffixUrl = dataJsonObject.getString("testfile2g");
+        String musicUrl = dataJsonObject.getJSONArray("sip").getString(0) + suffixUrl;
+        String jumpUrl = "https://y.qq.com/n/yqq/song/" + mid + ".html";
+        String html = OkHttpUtils.getStr(jumpUrl, OkHttpUtils.addUA(UA.PC));
+        String imageUrl = Jsoup.parse(html).select(".main .mod_data .data__cover img").first().attr("src");
+        return "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID=\"2\" templateID=\"12345\" action=\"web\" brief=\"音乐分享[" + songName + "]\" sourceMsgId=\"0\" url=\"" + jumpUrl + "\" flag=\"0\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"2\"><audio cover=\"http:" + imageUrl +"\" src=\"" + musicUrl + "\" /><title>" + songName + "</title><summary>" + author + "</summary></item><source name=\"\" icon=\"\" action=\"\" appid=\"-1\" /></msg>";
+    }
+
+    @Override
+    public Result<String> songBy163(String name) throws IOException {
+        String url = "https://netease.kuku.me";
+        JSONObject jsonObject = OkHttpUtils.getJson(url + "/search?keywords=" + URLEncoder.encode(name, "utf-8"));
+        JSONObject resultJsonObject = jsonObject.getJSONObject("result");
+        if (resultJsonObject.getInteger("songCount") != 0){
+            JSONObject songJsonObject = resultJsonObject.getJSONArray("songs").getJSONObject(0);
+            Integer id = songJsonObject.getInteger("id");
+            JSONObject secondJsonObject = OkHttpUtils.getJson(url + "/song/url?id=" + id);
+            String songUrl = secondJsonObject.getJSONArray("data").getJSONObject(0).getString("url");
+            if (songUrl != null){
+                String songName = songJsonObject.getString("name");
+                String author = songJsonObject.getJSONArray("artists").getJSONObject(0).getString("name");
+                String html = OkHttpUtils.getStr("https://y.music.163.com/m/song?id=" + id, OkHttpUtils.addUA(UA.MOBILE));
+                String imageUrl = Jsoup.parse(html).select("meta[property=og:image]").first().attr("content");
+                String jumpUrl = "https://music.163.com/song?id=" + id;
+                return Result.success("<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID=\"2\" templateID=\"12345\" action=\"web\" brief=\"音乐分享[" + songName + "]\" sourceMsgId=\"0\" url=\"" + jumpUrl + "\" flag=\"0\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"2\"><audio cover=\"http:" + imageUrl +"\" src=\"" + songUrl + "\" /><title>" + songName + "</title><summary>" + author + "</summary></item><source name=\"\" icon=\"\" action=\"\" appid=\"-1\" /></msg>");
+            }else return Result.failure("可能该歌曲没有版权或者无法下载！", null);
+        }else return Result.failure("未找到该歌曲！！", null);
+    }
+
+    @Override
+    public String abstractWords(String word) {
+        ScriptEngine se = new ScriptEngineManager().getEngineByName("JavaScript");
+        try {
+            String str = OkHttpUtils.downloadStr("https://share.kuku.me/189/kuku/chouxianghua.js");
+            se.eval(str);
+            Object o = se.eval("chouxiang(\"" + word + "\")");
+            return o.toString();
+        } catch (ScriptException | IOException e) {
+            e.printStackTrace();
+            return "生成失败，请重试！！";
         }
     }
 }

@@ -549,4 +549,10 @@ public class ToolController {
             return "图片上传失败，请稍后再试！！";
         }
     }
+
+    @Action("抽象话 {word}")
+    @QMsg(at = true)
+    public String abstractWords(String word){
+        return "抽象话如下：\n" + toolLogic.abstractWords(word);
+    }
 }

@@ -81,7 +81,7 @@ public class MenuController {
 
     @Action("菜单")
     public String menu(){
-        return "https://api.kuku.me/menu.html";
+        return "https://api.kuku.me/menu";
     }
 
 

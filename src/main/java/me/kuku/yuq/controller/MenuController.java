@@ -1,8 +1,6 @@
 package me.kuku.yuq.controller;
 
 import com.IceCreamQAQ.Yu.annotation.Action;
-import com.IceCreamQAQ.Yu.annotation.Path;
-import com.IceCreamQAQ.Yu.annotation.Synonym;
 import com.icecreamqaq.yuq.annotation.GroupController;
 import me.kuku.yuq.controller.bilibili.BiliBiliController;
 import me.kuku.yuq.controller.bilibili.BiliBiliLoginController;
@@ -18,8 +16,9 @@ import me.kuku.yuq.controller.qqlogin.QQQuickLoginController;
 import me.kuku.yuq.controller.warframe.WarframeController;
 import me.kuku.yuq.controller.weibo.WeiboController;
 import me.kuku.yuq.controller.weibo.WeiboNotController;
+import me.kuku.yuq.utils.BotUtils;
 
-import java.lang.reflect.Method;
+import java.util.List;
 
 @GroupController
 @SuppressWarnings("unused")
@@ -27,79 +26,79 @@ public class MenuController {
 
     @Action("help")
     public String help(){
-        return menu(MenuController.class);
+        return parse("help", MenuController.class);
     }
 
     @Action("tool")
     public String tool(){
-        return menu(ToolController.class);
+        return parse("tool", ToolController.class);
     }
 
     @Action("bilibili")
     public String bl(){
-        return menu(BiliBiliLoginController.class) + "\n" + menu(BiliBiliController.class);
+        return parse("bilibili", BiliBiliLoginController.class, BiliBiliController.class);
     }
 
     @Action("bot")
     public String bot(){
-        return menu(BotController.class);
+        return parse("bot", BotController.class);
     }
 
     @Action("manage")
     public String manage(){
-        return menu(ManageNotController.class) + "\n" +
-                menu(ManageSuperAdminController.class) + "\n" +
-                menu(ManageAdminController.class);
+        return parse("manage", ManageNotController.class, ManageSuperAdminController.class, ManageAdminController.class);
     }
 
     @Action("wy")
     public String wy(){
-        return menu(NeTeaseController.class) + "\n" +
-                menu(BindNeTeaseController.class) + "\n";
+        return parse("网易", NeTeaseController.class, BindNeTeaseController.class);
     }
 
     @Action("qq")
     public String qq(){
-        return menu(QQLoginController.class) + "\n" +
-                menu(BindQQController.class) + "\n" +
-                menu(QQJobController.class) + "\n" +
-                menu(QQQuickLoginController.class);
+        return parse("qq", QQLoginController.class, BindQQController.class, QQJobController.class, QQQuickLoginController.class);
     }
 
     @Action("setting")
     public String setting(){
-        return menu(SettingController.class);
+        return parse("设置", SettingController.class);
     }
 
     @Action("wb")
     public String wb(){
-        return menu(WeiboNotController.class) + "\n" + menu(WeiboController.class);
+        return parse("微博", WeiboNotController.class, WeiboController.class);
     }
 
     @Action("wf")
-    public String wf() { return menu(WarframeController.class);}
-
-    private String menu(Class<?> clazz){
-        StringBuilder sb = new StringBuilder();
-        String first = "";
-        Path path = clazz.getAnnotation(Path.class);
-        if (path != null){
-            first = path.value() + " ";
-        }
-        Method[] methods = clazz.getMethods();
-        for (Method method: methods){
-            Action action = method.getAnnotation(Action.class);
-            if (action != null){
-                sb.append(first).append(action.value()).append("\n");
-            }
-            Synonym synonym = method.getAnnotation(Synonym.class);
-            if (synonym != null){
-                String[] arr = synonym.value();
-                for (String str: arr){
-                    sb.append(first).append(str).append("\n");
-                }
-            }
-        }
-        return sb.deleteCharAt(sb.length() - 1).toString();
+    public String wf() {
+        return parse("wf",  WarframeController.class);
     }
+
+    @Action("ark")
+    public String ark(){
+        return parse("ark", ArkNightsController.class);
+    }
+
+    @Action("菜单")
+    public String menu(){
+        return "https://api.kuku.me/menu.html";
+    }
+
+
+    private String parse(String name, Class<?>...classes){
+        List<String> list = BotUtils.menu(classes);
+        StringBuilder sb = new StringBuilder().append("╭┅═☆━━━━━━━").append(name).append("━━━┅╮").append("\n");
+        for (int i = 0; i < list.size(); i+=2) {
+            sb.append("||").append(list.get(i));
+            if (i + 1 < list.size()){
+                sb.append("   ").append(list.get(i + 1)).append("||");
+            }else sb.append("||");
+            if (i + 1 < list.size()){
+                sb.append("\n");
+            }
+        }
+        return sb.append("╰┅━━━━━━━━━━━━━★═┅╯").toString();
+    }
+
+
 }

@@ -1,5 +1,8 @@
 package me.kuku.yuq.utils;
 
+import com.IceCreamQAQ.Yu.annotation.Action;
+import com.IceCreamQAQ.Yu.annotation.Path;
+import com.IceCreamQAQ.Yu.annotation.Synonym;
 import com.IceCreamQAQ.Yu.util.OkHttpWebImpl;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -12,6 +15,7 @@ import me.kuku.yuq.pojo.UA;
 import okhttp3.Cookie;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -200,6 +204,36 @@ public class BotUtils {
             if (userId.equals(jsonObject.getString("id"))) list.add(jsonObject);
         }
         return list;
+    }
+
+    public static List<String> menu(Class<?>...clazzArr){
+        List<String> list = new ArrayList<>();
+        for (Class<?> clazz : clazzArr) {
+            String first = "";
+            Path path = clazz.getAnnotation(Path.class);
+            if (path != null){
+                first = path.value() + " ";
+            }
+            Method[] methods = clazz.getMethods();
+            for (Method method: methods){
+                Action action = method.getAnnotation(Action.class);
+                if (action != null){
+                    list.add(first + action.value());
+                }
+                Synonym synonym = method.getAnnotation(Synonym.class);
+                if (synonym != null){
+                    String[] arr = synonym.value();
+                    for (String str: arr){
+                        list.add(first + str);
+                    }
+                }
+            }
+        }
+        return list;
+    }
+
+    public static String removeLastLine(StringBuilder sb){
+        return sb.deleteCharAt(sb.length() - 1).toString();
     }
 
 }

@@ -26,9 +26,6 @@ import me.kuku.yuq.service.GroupService;
 import me.kuku.yuq.service.MessageService;
 import me.kuku.yuq.utils.BotUtils;
 import me.kuku.yuq.utils.OkHttpUtils;
-import net.mamoe.mirai.Bot;
-import net.mamoe.mirai.contact.Member;
-import net.mamoe.mirai.message.action.Nudge;
 import okhttp3.Response;
 import oshi.SystemInfo;
 import oshi.hardware.CentralProcessor;
@@ -389,21 +386,6 @@ public class ToolController {
     public String preventRed(String url) throws IOException {
         return toolLogic.preventQQRed(url);
     }
-
-    @Action("戳 {qqNo}")
-    @QMsg(at = true)
-    public String stamp(long qqNo, long group){
-        if (!"Android".equals(protocol)) return "戳一戳必须使用Android才能使用！！";
-        Bot bot = Bot.getInstance(FunKt.getYuq().getBotId());
-        net.mamoe.mirai.contact.Group groupObj = bot.getGroup(group);
-        Member member;
-        if (qqNo == bot.getId()) member = groupObj.getBotAsMember();
-        else member = groupObj.getMembers().get(qqNo);
-        boolean b = Nudge.Companion.sendNudge(groupObj, member.nudge());
-        if (b) return "戳成功！！";
-        else return "戳失败，对方已关闭戳一戳！！";
-    }
-
 
     @Action("点歌 {name}")
     public Object musicFromQQ(String name) throws IOException {

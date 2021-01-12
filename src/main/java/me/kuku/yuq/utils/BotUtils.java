@@ -27,13 +27,10 @@ public class BotUtils {
 
     public static String shortUrl(String url){
         try {
-            String b64Url = Base64.getEncoder().encodeToString(url.getBytes(StandardCharsets.UTF_8));
-            JSONObject jsonObject = OkHttpUtils.getJson("https://www.fanghong.net/cbfh.php?cb=4&sturl=3&longurl=" +
-                    URLEncoder.encode(b64Url, "utf-8"),
+            Map<String, String> map = new HashMap<>();
+            map.put("url", url);
+            return OkHttpUtils.postStr("https://api.kuku.me/tool/short", map,
                     OkHttpUtils.addUA(UA.PC));
-            if (jsonObject.getInteger("result") == 1){
-                return jsonObject.getString("dwz_url");
-            }else return jsonObject.getString("msg");
         } catch (IOException e) {
             e.printStackTrace();
             return "缩短失败，原链接：" + url;
@@ -79,15 +76,19 @@ public class BotUtils {
     }
 
     public static QQLoginEntity toQQLoginEntity(OkHttpWebImpl web, MiraiBot miraiBot){
-        ConcurrentHashMap<String, Map<String, Cookie>> map = web.getDomainMap();
-        Map<String, Cookie> qunMap = map.get("qun.qq.com");
-        String groupPsKey = qunMap.get("p_skey").value();
-        Map<String, Cookie> qqMap = map.get("qq.com");
-        String sKey = qqMap.get("skey").value();
-        Map<String, Cookie> qZoneMap = map.get("qzone.qq.com");
-        String psKey = qZoneMap.get("p_skey").value();
-        return new QQLoginEntity(null, FunKt.getYuq().getBotId(), 0L, "", sKey, psKey, groupPsKey, miraiBot.superKey,
-                QQUtils.getToken(miraiBot.superKey).toString(), null, true);
+        try {
+            ConcurrentHashMap<String, Map<String, Cookie>> map = web.getDomainMap();
+            Map<String, Cookie> qunMap = map.get("qun.qq.com");
+            String groupPsKey = qunMap.get("p_skey").value();
+            Map<String, Cookie> qqMap = map.get("qq.com");
+            String sKey = qqMap.get("skey").value();
+            Map<String, Cookie> qZoneMap = map.get("qzone.qq.com");
+            String psKey = qZoneMap.get("p_skey").value();
+            return new QQLoginEntity(null, FunKt.getYuq().getBotId(), 0L, "", sKey, psKey, groupPsKey, miraiBot.superKey,
+                    QQUtils.getToken(miraiBot.superKey).toString(), null, true);
+        }catch (Exception e){
+            return new QQLoginEntity();
+        }
     }
 
     public static JSONArray messageToJsonArray(Message rm){
@@ -122,6 +123,10 @@ public class BotUtils {
                 JsonEx jsonEx = (JsonEx) messageItem;
                 aJsonObject.put("type", "at");
                 aJsonObject.put("content", jsonEx.getValue());
+            }else if (messageItem instanceof Voice){
+                Voice voice = (Voice) messageItem;
+                aJsonObject.put("type", "voice");
+                aJsonObject.put("content", voice.getUrl());
             }else continue;
             aJsonArray.add(aJsonObject);
         }
@@ -151,6 +156,13 @@ public class BotUtils {
                     break;
                 case "json":
                     msg.plus(mif.jsonEx(aJsonObject.getString("content")));
+                    break;
+                case "voice":
+                    try {
+                        msg.plus(mif.voiceByByteArray(OkHttpUtils.getBytes(aJsonObject.getString("content"))));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     break;
             }
         }

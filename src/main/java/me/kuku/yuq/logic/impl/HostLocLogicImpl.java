@@ -84,7 +84,8 @@ public class HostLocLogicImpl implements HostLocLogic {
             try {
                 time = ele.select("em a span").first().text();
             } catch (Exception e) {
-                e.printStackTrace();
+//                e.printStackTrace();
+                return list;
             }
             String id = BotUtils.regex("tid=", "&", url);
             Map<String, String> map = new HashMap<>();

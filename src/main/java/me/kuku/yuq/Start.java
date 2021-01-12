@@ -3,6 +3,7 @@ package me.kuku.yuq;
 import com.IceCreamQAQ.Yu.loader.AppClassloader;
 import com.IceCreamQAQ.Yu.util.IO;
 import com.icecreamqaq.yuq.YuQStarter;
+import com.icecreamqaq.yuq.mirai.YuQMiraiStart;
 import me.kuku.yuq.utils.OkHttpUtils;
 
 import java.io.File;
@@ -11,6 +12,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class Start {
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void main(String[] args) {
         // 从conf文件夹拉设备信息到根目录
         String deviceName = "device.json";
@@ -36,6 +38,6 @@ public class Start {
             }
         }
         AppClassloader.registerTransformerList("com.IceCreamQAQ.Yu.web.WebClassTransformer");
-        YuQStarter.start();
+        YuQMiraiStart.start();
     }
 }

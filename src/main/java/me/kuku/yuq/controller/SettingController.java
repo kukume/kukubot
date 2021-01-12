@@ -5,6 +5,7 @@ import com.IceCreamQAQ.Yu.annotation.Before;
 import com.IceCreamQAQ.Yu.annotation.Config;
 import com.IceCreamQAQ.Yu.annotation.Synonym;
 import com.IceCreamQAQ.Yu.util.OkHttpWebImpl;
+import com.alibaba.fastjson.JSONArray;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.annotation.PathVar;
 import com.icecreamqaq.yuq.annotation.PrivateController;
@@ -115,4 +116,24 @@ public class SettingController {
         configService.save(configEntity);
         return "绑定loLiCon的apiKey成功！！";
     }
+
+    @Action("加超管 {groupNum} {qqNum}")
+    @Synonym({"删超管 {groupNum} {qqNum}"})
+    public String addSuperAdmin(long groupNum, Long qqNum, @PathVar(0) String str){
+        Map<Long, Group> groups = FunKt.getYuq().getGroups();
+        if (groups.containsKey(groupNum)) {
+            GroupEntity groupEntity = groupService.findByGroup(groupNum);
+            if (groupEntity == null) groupEntity = new GroupEntity(groupNum);
+            if (str.startsWith("加"))
+                groupEntity.setSuperAdminJsonArray(groupEntity.getSuperAdminJsonArray().fluentAdd(qqNum.toString()));
+            else if (str.startsWith("删")){
+                JSONArray superAdminJsonArray = groupEntity.getSuperAdminJsonArray();
+                BotUtils.delManager(superAdminJsonArray, qqNum.toString());
+                groupEntity.setSuperAdminJsonArray(superAdminJsonArray);
+            }else return null;
+            groupService.save(groupEntity);
+            return String.format("添加{%s}群的{%s}为超管成功！！", groupNum, qqNum);
+        }else return "机器人并没有加入这个群！！";
+    }
+
 }

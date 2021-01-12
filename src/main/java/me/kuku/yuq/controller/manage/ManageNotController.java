@@ -56,6 +56,7 @@ public class ManageNotController {
             case "查超管":
                 sb.append("本群超级管理员列表如下").append("\n");
                 groupEntity.getSuperAdminJsonArray().forEach(obj -> sb.append(obj).append("\n"));
+                break;
             case "查黑名单":
                 sb.append("本群黑名单列表如下：").append("\n");
                 groupEntity.getBlackJsonArray().forEach(obj -> sb.append(obj).append("\n"));

@@ -11,11 +11,9 @@ import com.icecreamqaq.yuq.annotation.PathVar;
 import com.icecreamqaq.yuq.annotation.QMsg;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.GroupEntity;
-import me.kuku.yuq.entity.QQEntity;
 import me.kuku.yuq.entity.RecallEntity;
 import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.service.GroupService;
-import me.kuku.yuq.service.QQService;
 import me.kuku.yuq.service.RecallService;
 import me.kuku.yuq.utils.BotUtils;
 
@@ -44,7 +42,7 @@ public class ManageNotController {
     }
 
     @Action("查管")
-    @Synonym({"查黑名单", "查白名单", "查违规词", "查拦截", "查微博监控", "查哔哩哔哩监控", "查问答", "查超管"})
+    @Synonym({"查黑名单", "查白名单", "查违规词", "查拦截", "查微博监控", "查哔哩哔哩监控", "查问答", "查超管", "查指令限制"})
     @QMsg(at = true, atNewLine = true)
     public String query(GroupEntity groupEntity, @PathVar(0) String type){
         StringBuilder sb = new StringBuilder();
@@ -94,6 +92,12 @@ public class ManageNotController {
                 groupEntity.getQaJsonArray().forEach(obj -> {
                     JSONObject jsonObject = (JSONObject) obj;
                     sb.append(jsonObject.getString("q")).append("\n");
+                });
+                break;
+            case "查指令限制":
+                sb.append("本群的指令限制列表如下：").append("\n");
+                groupEntity.getCommandLimitJsonObject().forEach((k, v) -> {
+                    sb.append(k).append("->").append(v).append("次").append("\n");
                 });
                 break;
             default: return null;

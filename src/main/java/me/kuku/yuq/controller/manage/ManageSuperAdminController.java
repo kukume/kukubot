@@ -44,9 +44,9 @@ public class ManageSuperAdminController {
     private QQService qqService;
 
     @Before
-    public GroupEntity before(long group, long qq){
+    public GroupEntity before(long group, Member qq){
         GroupEntity groupEntity = groupService.findByGroup(group);
-        if (String.valueOf(qq).equals(master) || groupEntity.isSuperAdmin(qq)) return groupEntity;
+        if (String.valueOf(qq).equals(master) || groupEntity.isSuperAdmin(qq.getId())) return groupEntity;
         else throw FunKt.getMif().at(qq).plus("您的权限不足，无法执行！！").toThrowable();
     }
 
@@ -164,7 +164,7 @@ public class ManageSuperAdminController {
     public String maxCommandCount(GroupEntity groupEntity, int count){
         groupEntity.setMaxCommandCountOnTime(count);
         groupService.save(groupEntity);
-        return "已设置本群单个指令每人每分钟最大触发次数为" + count + "次";
+        return "已设置本群单个指令每人十分钟最大触发次数为" + count + "次";
     }
 
     @Action("色图切换 {type}")
@@ -177,6 +177,28 @@ public class ManageSuperAdminController {
         groupEntity.setColorPicType(colorPicType);
         groupService.save(groupEntity);
         return "色图切换成" + type + "成功！！";
+    }
+
+    @Action("加指令限制 {command} {count}")
+    @QMsg(at = true)
+    public String addCommandLimit(GroupEntity groupEntity, String command, int count){
+        List<String> list = BotUtils.allCommand();
+        if (!list.contains(command)) return "添加失败！！没有发现{" + command + "}这个指令！！";
+        JSONObject jsonObject = groupEntity.getCommandLimitJsonObject();
+        jsonObject.put(command, count);
+        groupEntity.setCommandLimitJsonObject(jsonObject);
+        groupService.save(groupEntity);
+        return "加指令限制成功！！已设置指令{" + command + "}十分钟之内只会响应" + count + "次";
+    }
+
+    @Action("删指令限制 {command}")
+    @QMsg(at = true)
+    public String delCommandLimit(GroupEntity groupEntity, String command){
+        JSONObject jsonObject = groupEntity.getCommandLimitJsonObject();
+        jsonObject.remove(command);
+        groupEntity.setCommandLimitJsonObject(jsonObject);
+        groupService.save(groupEntity);
+        return "删指令{" + command + "}限制成功！！";
     }
 
     @Action("加问答 {q}")

@@ -10,6 +10,24 @@ import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.message.*;
 import com.icecreamqaq.yuq.mirai.MiraiBot;
 import com.icecreamqaq.yuq.mirai.message.ImageReceive;
+import me.kuku.yuq.controller.*;
+import me.kuku.yuq.controller.bilibili.BiliBiliController;
+import me.kuku.yuq.controller.bilibili.BiliBiliLoginController;
+import me.kuku.yuq.controller.hostloc.HostLocController;
+import me.kuku.yuq.controller.hostloc.HostLocLoginController;
+import me.kuku.yuq.controller.manage.ManageAdminController;
+import me.kuku.yuq.controller.manage.ManageNotController;
+import me.kuku.yuq.controller.manage.ManageOwnerController;
+import me.kuku.yuq.controller.manage.ManageSuperAdminController;
+import me.kuku.yuq.controller.motion.BindStepController;
+import me.kuku.yuq.controller.motion.MotionController;
+import me.kuku.yuq.controller.netease.BindNeTeaseController;
+import me.kuku.yuq.controller.netease.NeTeaseController;
+import me.kuku.yuq.controller.qqlogin.BindQQController;
+import me.kuku.yuq.controller.qqlogin.QQJobController;
+import me.kuku.yuq.controller.qqlogin.QQLoginController;
+import me.kuku.yuq.controller.qqlogin.QQQuickLoginController;
+import me.kuku.yuq.controller.warframe.WarframeController;
 import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.pojo.UA;
 import okhttp3.Cookie;
@@ -240,6 +258,22 @@ public class BotUtils {
                     }
                 }
             }
+        }
+        return list;
+    }
+
+    public static List<String> allCommand(){
+        List<String> list = menu(BiliBiliController.class, BiliBiliLoginController.class, HostLocController.class, HostLocLoginController.class,
+                ManageAdminController.class, ManageNotController.class, ManageOwnerController.class, ManageSuperAdminController.class,
+                BindStepController.class, MotionController.class, BindNeTeaseController.class, NeTeaseController.class,
+                BindQQController.class, QQJobController.class, QQLoginController.class, QQQuickLoginController.class,
+                WarframeController.class, ArkNightsController.class, BotController.class, MenuController.class,
+                MyQQController.class, QQBindController.class, SettingController.class, ToolController.class, ToolController.class);
+        for (int i = 0; i < list.size(); i++){
+            String str = list.get(i);
+            String command = str.split(" ")[0];
+            if (command.contains("/")) command = str.split("/")[0];
+            list.set(i, command);
         }
         return list;
     }

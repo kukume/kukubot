@@ -8,6 +8,7 @@ import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.annotation.GroupController;
 import com.icecreamqaq.yuq.annotation.PathVar;
 import com.icecreamqaq.yuq.annotation.QMsg;
+import com.icecreamqaq.yuq.entity.Member;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.service.GroupService;
 
@@ -22,10 +23,10 @@ public class ManageAdminController {
     private GroupService groupService;
 
     @Before
-    public GroupEntity before(long qq, long group){
+    public GroupEntity before(Member qq, long group){
         GroupEntity groupEntity = groupService.findByGroup(group);
         if (groupEntity == null) groupEntity = new GroupEntity(group);
-        if (groupEntity.isAdmin(qq) || qq == Long.parseLong(master)){
+        if (groupEntity.isAdmin(qq.getId()) || qq.getId() == Long.parseLong(master) || qq.isAdmin()){
             return groupEntity;
         }else throw FunKt.getMif().at(qq).plus("您的权限不足，无法执行！！").toThrowable();
     }

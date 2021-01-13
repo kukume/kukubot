@@ -50,8 +50,6 @@ public class GroupManageEvent {
             group = ((GroupMemberEvent) e).getGroup().getId();
         }else if (e instanceof GroupMemberRequestEvent){
             group = ((GroupMemberRequestEvent) e).getGroup().getId();
-        }else if (e instanceof GroupInviteEvent){
-            group = ((GroupInviteEvent) e).getGroup().getId();
         }else if (e instanceof GroupRecallEvent){
             group = ((GroupRecallEvent) e).getGroup().getId();
         }else if (e instanceof GroupMessageEvent){
@@ -219,7 +217,7 @@ public class GroupManageEvent {
                 Integer maxCount = groupEntity.getMaxCommandCountOnTime();
                 if (maxCount == null) maxCount = -1;
                 if (maxCount > 0){
-                    String key = e.getSender().getId() + q;
+                    String key = "qq" + e.getSender().getId() + q;
                     Integer num = eh.get(key);
                     if (num == null) num = 0;
                     if (num >= maxCount) return;

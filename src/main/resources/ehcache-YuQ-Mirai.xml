@@ -22,10 +22,10 @@
     />
 
     <cache
-        name="CommandCountOnTime"
-        maxElementsInMemory="10000"
-        eternal="false"
-        overflowToDisk="false"
-        timeToIdleSeconds="60"
+            name="CommandCountOnTime"
+            maxElementsInMemory="10000"
+            eternal="false"
+            overflowToDisk="false"
+            timeToIdleSeconds="600"
     />
 </ehcache>

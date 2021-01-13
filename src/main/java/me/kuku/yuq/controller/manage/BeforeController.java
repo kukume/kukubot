@@ -5,6 +5,7 @@ import com.IceCreamQAQ.Yu.annotation.Catch;
 import com.IceCreamQAQ.Yu.annotation.Global;
 import com.IceCreamQAQ.Yu.cache.EhcacheHelp;
 import com.IceCreamQAQ.Yu.entity.DoNone;
+import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.annotation.GroupController;
 import com.icecreamqaq.yuq.message.Message;
@@ -29,19 +30,39 @@ public class BeforeController {
     @Global
     @Before
     public void before(Message message, Long group, Long qq){
+        List<String> list = message.toPath();
+        if (list.size() == 0) return;
         GroupEntity groupEntity = groupService.findByGroup(group);
         if (groupEntity == null) return;
         Integer maxCount = groupEntity.getMaxCommandCountOnTime();
         if (maxCount == null) maxCount = -1;
         if (maxCount < 0) return;
-        List<String> list = message.toPath();
-        if (list.size() == 0) return;
         String command = list.get(0);
-        String key = qq.toString() + command;
+        String key = "qq" + qq.toString() + command;
         Integer num = eh.get(key);
         if (num == null) num = 0;
         if (num >= maxCount) throw new DoNone();
         eh.set(key, ++num);
+    }
+
+    @Global
+    @Before
+    public void before(Message message, Long group){
+        List<String> list = message.toPath();
+        if (list.size() == 0) return;
+        GroupEntity groupEntity = groupService.findByGroup(group);
+        if (groupEntity == null) return;
+        JSONObject jsonObject = groupEntity.getCommandLimitJsonObject();
+        String command = list.get(0);
+        if (jsonObject.containsKey(command)){
+            Integer maxCount = jsonObject.getInteger(command);
+            if (maxCount < 0) return;
+            String key = "group" + group.toString() + command;
+            Integer num = eh.get(key);
+            if (num == null) num = 0;
+            if (num >= maxCount) throw new DoNone();
+            eh.set(key, ++num);
+        }
     }
 
     @Global

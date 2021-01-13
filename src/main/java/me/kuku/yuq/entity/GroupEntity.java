@@ -47,6 +47,9 @@ public class GroupEntity {
     @Lob
     @Column(columnDefinition="text")
     private String interceptList;
+    @Lob
+    @Column(columnDefinition = "text")
+    private String commandLimitList;
     private Boolean colorPic;
     private Boolean status;
     private Boolean recall;
@@ -158,6 +161,15 @@ public class GroupEntity {
     public JSONArray getSuperAdminJsonArray(){
         if (superAdminList == null) return new JSONArray();
         else return JSON.parseArray(superAdminList);
+    }
+
+    public JSONObject getCommandLimitJsonObject(){
+        if (commandLimitList == null) return new JSONObject();
+        else return JSON.parseObject(commandLimitList);
+    }
+
+    public void setCommandLimitJsonObject(JSONObject jsonObject){
+        this.commandLimitList = jsonObject.toString();
     }
 
     public boolean isSuperAdmin(long qq){

@@ -3,6 +3,7 @@ package me.kuku.yuq.controller;
 import com.IceCreamQAQ.Yu.annotation.Action;
 import com.IceCreamQAQ.Yu.annotation.Config;
 import com.IceCreamQAQ.Yu.annotation.Synonym;
+import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.annotation.GroupController;
 import com.icecreamqaq.yuq.annotation.PathVar;
@@ -40,6 +41,8 @@ import java.text.DecimalFormat;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("unused")
@@ -65,6 +68,7 @@ public class ToolController {
     private String protocol;
 
     private final LocalDateTime startTime;
+    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(4);
 
     public ToolController(){
         startTime = LocalDateTime.now();
@@ -536,5 +540,24 @@ public class ToolController {
     @QMsg(at = true)
     public String abstractWords(String word){
         return "抽象话如下：\n" + toolLogic.abstractWords(word);
+    }
+
+    @Action("窥屏检测")
+    public void checkPeeping(Group group){
+        String random = BotUtils.randomNum(8);
+        group.sendMessage(FunKt.getMif().xmlEx(1, "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID=\"1\" templateID=\"-1\" action=\"app\" actionData=\"com.netease.cloudmusic\" brief=\"点击启动网抑\" sourceMsgId=\"0\" url=\"https://www.kuku.me/archives/6/\" flag=\"2\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"12\" advertiser_id=\"0\" aid=\"0\"><picture cover=\"https://api.kuku.me/tool/peeping/check/" + random + "\" w=\"0\" h=\"0\" /><title>启动网抑音乐</title></item><source name=\"今天你网抑了吗\" icon=\"\" action=\"\" appid=\"0\" /></msg>").toMessage());
+        executorService.schedule(() -> {
+            String msg;
+            try {
+                JSONObject jsonObject = OkHttpUtils.getJson("https://api.kuku.me/tool/peeping/result/" + random);
+                if (jsonObject.getInteger("code") == 200){
+                    msg = jsonObject.getString("data");
+                }else msg = jsonObject.getString("message");
+            } catch (IOException e) {
+                e.printStackTrace();
+                msg = "查询失败，请重试！！";
+            }
+            group.sendMessage(FunKt.getMif().text(msg).toMessage());
+        }, 15, TimeUnit.SECONDS);
     }
 }

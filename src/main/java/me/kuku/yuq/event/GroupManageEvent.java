@@ -81,10 +81,12 @@ public class GroupManageEvent {
     public void repeat(GroupMessageEvent e){
         long group = e.getGroup().getId();
         GroupEntity groupEntity = groupService.findByGroup(group);
-        Boolean repeat = groupEntity.getRepeat();
+        Boolean repeat;
+        if (groupEntity == null) repeat = true;
+        else repeat = groupEntity.getRepeat();
         if (repeat == null) {
             repeat = true;
-            groupEntity.setRepeat(repeat);
+            groupEntity.setRepeat(true);
             groupService.save(groupEntity);
         }
         if (repeat) {

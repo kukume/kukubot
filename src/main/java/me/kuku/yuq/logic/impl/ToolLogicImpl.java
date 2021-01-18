@@ -113,11 +113,7 @@ public class ToolLogicImpl implements ToolLogic {
 
     @Override
     public String queryIp(String ip) throws IOException {
-        String str = OkHttpUtils.getStr("http://ipaddr.cz88.net/data.php?ip=" + ip,
-                OkHttpUtils.addUA(UA.PC));
-        String[] split = str.split("'");
-        // 1-ip  3 - addr 5 - ua
-        return split[3];
+        return OkHttpUtils.getStr("https://api.kuku.me/tool/ip?ip=" + ip);
     }
 
     @Override

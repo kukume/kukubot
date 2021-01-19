@@ -3,6 +3,7 @@ package me.kuku.yuq.controller;
 import com.IceCreamQAQ.Yu.annotation.Action;
 import com.IceCreamQAQ.Yu.annotation.Config;
 import com.IceCreamQAQ.Yu.annotation.Synonym;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.annotation.GroupController;
@@ -545,13 +546,22 @@ public class ToolController {
     @Action("窥屏检测")
     public void checkPeeping(Group group){
         String random = BotUtils.randomNum(4);
-        group.sendMessage(FunKt.getMif().jsonEx("{\"app\":\"com.tencent.miniapp\",\"desc\":\"\",\"view\":\"notification\",\"ver\":\"1.0.0.11\",\"prompt\":\"QQ程序\",\"appID\":\"\",\"sourceName\":\"\",\"actionData\":\"\",\"actionData_A\":\"\",\"sourceUrl\":\"\",\"meta\":{\"notification\":{\"appInfo\":{\"appName\":\"三楼有只猫\",\"appType\":4,\"appid\":1109659848,\"iconUrl\":\"https:\\/\\/api.kuku.me\\/tool\\/peeping\\/check\\/" + random + "\"},\"button\":[],\"data\":[],\"emphasis_keyword\":\"\",\"title\":\"这里有你想要的一切\"}},\"text\":\"\",\"extraApps\":[],\"sourceAd\":\"\",\"extra\":\"\"}").toMessage());
+        group.sendMessage(FunKt.getMif().jsonEx("{\"app\":\"com.tencent.miniapp\",\"desc\":\"\",\"view\":\"notification\",\"ver\":\"1.0.0.11\",\"prompt\":\"QQ程序\",\"appID\":\"\",\"sourceName\":\"\",\"actionData\":\"\",\"actionData_A\":\"\",\"sourceUrl\":\"\",\"meta\":{\"notification\":{\"appInfo\":{\"appName\":\"三楼有只猫\",\"appType\":4,\"appid\":1109659848,\"iconUrl\":\"https:\\/\\/api.kuku.me\\/tool\\/peeping\\/check\\/" + random + "\"},\"button\":[],\"data\":[],\"emphasis_keyword\":\"\",\"title\":\"请等待15s\"}},\"text\":\"\",\"extraApps\":[],\"sourceAd\":\"\",\"extra\":\"\"}").toMessage());
         executorService.schedule(() -> {
             String msg;
             try {
                 JSONObject jsonObject = OkHttpUtils.getJson("https://api.kuku.me/tool/peeping/result/" + random);
                 if (jsonObject.getInteger("code") == 200){
-                    msg = jsonObject.getString("data");
+                    StringBuilder sb = new StringBuilder();
+                    JSONArray jsonArray = jsonObject.getJSONObject("data").getJSONArray("list");
+                    sb.append("检测到共有").append(jsonArray.size()).append("位小伙伴在窥屏").append("\n");
+                    for (int i = 0; i < jsonArray.size(); i++){
+                        JSONObject singleJsonObject = jsonArray.getJSONObject(i);
+                        sb.append(singleJsonObject.getString("ip"))
+                                .append("-").append(singleJsonObject.getString("address"))
+                                /*.append("-").append(singleJsonObject.getString("simpleUserAgent"))*/.append("\n");
+                    }
+                    msg = BotUtils.removeLastLine(sb);
                 }else msg = jsonObject.getString("message");
             } catch (IOException e) {
                 e.printStackTrace();

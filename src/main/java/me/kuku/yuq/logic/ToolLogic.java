@@ -1,6 +1,7 @@
 package me.kuku.yuq.logic;
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind;
+import me.kuku.yuq.pojo.CodeType;
 import me.kuku.yuq.pojo.Result;
 
 import java.io.IOException;
@@ -60,4 +61,8 @@ public interface ToolLogic {
     byte[] photo() throws IOException;
     String uploadImage(byte[] bytes);
     String abstractWords(String word);
+    String executeCode(String code, String type) throws IOException;
+    default String executeCode(String code, CodeType codeType) throws IOException{
+        return executeCode(code, codeType.getType());
+    }
 }

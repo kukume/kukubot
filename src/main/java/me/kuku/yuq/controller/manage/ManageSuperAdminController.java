@@ -46,7 +46,7 @@ public class ManageSuperAdminController {
     @Before
     public GroupEntity before(long group, Member qq){
         GroupEntity groupEntity = groupService.findByGroup(group);
-        if (String.valueOf(qq).equals(master) || groupEntity.isSuperAdmin(qq.getId()) || qq.isAdmin()) return groupEntity;
+        if (String.valueOf(qq.getId()).equals(master) || groupEntity.isSuperAdmin(qq.getId()) || qq.isAdmin()) return groupEntity;
         else throw FunKt.getMif().at(qq).plus("您的权限不足，无法执行！！").toThrowable();
     }
 

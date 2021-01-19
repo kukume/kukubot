@@ -750,4 +750,17 @@ public class ToolLogicImpl implements ToolLogic {
             return "生成失败，请重试！！";
         }
     }
+
+    @Override
+    public String executeCode(String code, String type) throws IOException {
+        String html = OkHttpUtils.getStr("http://www.dooccn.com/" + type + "/", OkHttpUtils.addUA(UA.PC));
+        String id = BotUtils.regex("langid = ", ";", html);
+        Map<String, String> map = new HashMap<>();
+        map.put("language", id);
+        map.put("code", Base64.getEncoder().encodeToString(code.getBytes(StandardCharsets.UTF_8)));
+        map.put("stdin", "123\nhaha2\n");
+        JSONObject jsonObject = OkHttpUtils.postJson("http://runcode-api2-ng.dooccn.com/compile2", map,
+                OkHttpUtils.addUA(UA.PC));
+        return jsonObject.getString("output");
+    }
 }

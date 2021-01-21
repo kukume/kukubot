@@ -17,7 +17,7 @@ public enum CodeType {
 	Csharp("csharp"),
 	Fsharp("fsharp"),
 	JavaSeven("java1.7"),
-	JavaEight("java1.8"),
+	JavaEight("java"),
 	Shell("shell"),
 	C("c"),
 	Cpp("cpp"),

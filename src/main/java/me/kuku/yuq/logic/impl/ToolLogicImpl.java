@@ -760,7 +760,7 @@ public class ToolLogicImpl implements ToolLogic {
         map.put("code", Base64.getEncoder().encodeToString(code.getBytes(StandardCharsets.UTF_8)));
         map.put("stdin", "123\nhaha2\n");
         JSONObject jsonObject = OkHttpUtils.postJson("http://runcode-api2-ng.dooccn.com/compile2", map,
-                OkHttpUtils.addUA(UA.PC));
+                OkHttpUtils.addHeaders(null, "http://www.dooccn.com/", UA.PC));
         return jsonObject.getString("output");
     }
 }

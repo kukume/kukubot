@@ -21,6 +21,7 @@ import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.logic.QQAILogic;
 import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.logic.MyApiLogic;
+import me.kuku.yuq.pojo.CodeType;
 import me.kuku.yuq.pojo.InstagramPojo;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.ConfigService;
@@ -569,5 +570,14 @@ public class ToolController {
             }
             group.sendMessage(FunKt.getMif().text(msg).toMessage());
         }, 15, TimeUnit.SECONDS);
+    }
+
+    @Action("code java")
+    @QMsg(at = true)
+    public String codeExecute(ContextSession session, Group group, long qq) throws IOException {
+        group.sendMessage(FunKt.getMif().at(qq).plus("请输入代码！！"));
+        Message message = session.waitNextMessage();
+        String code = Message.Companion.firstString(message);
+        return toolLogic.executeCode(code, CodeType.JavaEight);
     }
 }

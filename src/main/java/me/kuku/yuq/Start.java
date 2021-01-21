@@ -2,7 +2,6 @@ package me.kuku.yuq;
 
 import com.IceCreamQAQ.Yu.loader.AppClassloader;
 import com.IceCreamQAQ.Yu.util.IO;
-import com.icecreamqaq.yuq.YuQStarter;
 import com.icecreamqaq.yuq.mirai.YuQMiraiStart;
 import me.kuku.yuq.utils.OkHttpUtils;
 

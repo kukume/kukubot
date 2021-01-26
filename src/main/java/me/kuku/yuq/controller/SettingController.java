@@ -108,6 +108,54 @@ public class SettingController {
         return "绑定qqAI的信息成功！！";
     }
 
+    @Action("baiduai ocr")
+    @Synonym({"baiduai contentCensor", "baiduai speech"})
+    public String settingBaiduAI(ContextSession session, Contact qq, @PathVar(1) String type){
+        qq.sendMessage(BotUtils.toMessage("请输入appId"));
+        Message firstMessage = session.waitNextMessage();
+        String appId = BotUtils.firstString(firstMessage);
+        qq.sendMessage(BotUtils.toMessage("请输入appKey"));
+        Message secondMessage = session.waitNextMessage();
+        String appKey = BotUtils.firstString(secondMessage);
+        qq.sendMessage(BotUtils.toMessage("请输入secretKey"));
+        Message thirdMessage = session.waitNextMessage();
+        String secretKey = BotUtils.firstString(thirdMessage);
+        String appIdType = null;
+        String appKeyType = null;
+        String secretKeyType = null;
+        switch (type){
+            case "ocr":
+                appIdType = "baiduAIOcrAppId";
+                appKeyType = "baiduAIOcrAppKey";
+                secretKeyType = "baiduAIOcrSecretKey";
+                break;
+            case "contentCensor":
+                appIdType = "baiduAIContentCensorAppId";
+                appKeyType = "baiduAIContentCensorAppKey";
+                secretKeyType = "baiduAIContentCensorSecretKey";
+                break;
+            case "speech":
+                appIdType = "baiduAISpeechAppId";
+                appKeyType = "baiduAISpeechAppKey";
+                secretKeyType = "baiduAISpeechSecretKey";
+                break;
+            default: return null;
+        }
+        ConfigEntity appIdConfigEntity = configService.findByType(appIdType);
+        if (appIdConfigEntity == null) appIdConfigEntity = new ConfigEntity(appIdType);
+        ConfigEntity appKeyConfigEntity = configService.findByType(appKeyType);
+        if (appKeyConfigEntity == null) appKeyConfigEntity = new ConfigEntity(appKeyType);
+        ConfigEntity secretKeyConfigEntity = configService.findByType(secretKeyType);
+        if (secretKeyConfigEntity == null) secretKeyConfigEntity = new ConfigEntity(secretKeyType);
+        appIdConfigEntity.setContent(appId);
+        appKeyConfigEntity.setContent(appKey);
+        secretKeyConfigEntity.setContent(secretKey);
+        configService.save(appIdConfigEntity);
+        configService.save(appKeyConfigEntity);
+        configService.save(secretKeyConfigEntity);
+        return "绑定百度AI的信息成功！！";
+    }
+
     @Action("lolicon {apiKey}")
     public String settingLoLiCon(String apiKey){
         ConfigEntity configEntity = configService.findByType("loLiCon");

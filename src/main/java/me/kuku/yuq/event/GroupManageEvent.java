@@ -8,9 +8,12 @@ import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.event.*;
 import com.icecreamqaq.yuq.message.*;
+import me.kuku.yuq.entity.ConfigEntity;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.entity.QQEntity;
-import me.kuku.yuq.logic.QQAILogic;
+import me.kuku.yuq.logic.AILogic;
+import me.kuku.yuq.pojo.ConfigType;
+import me.kuku.yuq.service.ConfigService;
 import me.kuku.yuq.service.GroupService;
 import me.kuku.yuq.service.MessageService;
 import me.kuku.yuq.service.QQService;
@@ -31,9 +34,14 @@ public class GroupManageEvent {
     @Inject
     private QQService qqService;
     @Inject
-    private QQAILogic qqaiLogic;
+    private AILogic qqAILogic;
     @Inject
     private MessageService messageService;
+    @Inject
+    private ConfigService configService;
+    @Inject
+    @Named("baiduAILogic")
+    private AILogic baiduAILogic;
     @Inject
     @Named("CommandCountOnTime")
     public EhcacheHelp<Integer> eh;
@@ -136,6 +144,7 @@ public class GroupManageEvent {
         JSONArray violationJsonArray = groupEntity.getViolationJsonArray();
         int code = 0;
         String vio = null;
+        ConfigEntity configEntity = configService.findByType(ConfigType.BaiduAIOcrAppId.getType());
         out:for (int i = 0; i < violationJsonArray.size(); i++){
             String violation = violationJsonArray.getString(i);
             String nameCard = e.getSender().getNameCard();
@@ -150,10 +159,11 @@ public class GroupManageEvent {
                     if (text.getText().contains(violation)) code = 1;
                 }else if (item instanceof Image){
                     Image image = (Image) item;
-                    String result = qqaiLogic.generalOCR(image.getUrl());
+                    String result;
+                    if (configEntity == null){
+                        result = qqAILogic.generalOCR(image.getUrl());
+                    }else result = baiduAILogic.generalOCR(image.getUrl());
                     if (result.contains(violation)) code = 1;
-                    boolean b = qqaiLogic.pornIdentification(image.getUrl());
-                    if (b) code = 2;
                 }else if (item instanceof XmlEx){
                     XmlEx xmlEx = (XmlEx) item;
                     if (xmlEx.getValue().contains(violation)) code = 1;
@@ -164,6 +174,17 @@ public class GroupManageEvent {
                 if (code != 0){
                  vio = violation;
                  break out;
+                }
+            }
+        }
+        for (MessageItem item : message.getBody()) {
+            if (item instanceof Image){
+                Image image = (Image) item;
+                if (groupEntity.getPic()) {
+                    boolean b;
+                    if (configEntity == null) b = qqAILogic.pornIdentification(image.getUrl());
+                    else b = baiduAILogic.pornIdentification(image.getUrl());
+                    if (b) code = 2;
                 }
             }
         }
@@ -189,6 +210,26 @@ public class GroupManageEvent {
                 e.getGroup().sendMessage(Message.Companion.toMessage(
                         qqEntity.getQq() + "违规次数已达上限，送飞机票一张！！"
                 ));
+            }
+        }
+    }
+
+    @Event
+    public void voiceIdentify(GroupMessageEvent e){
+        GroupEntity groupEntity = groupService.findByGroup(e.getGroup().getId());
+        if (groupEntity == null || groupEntity.getVoiceIdentify() == null || !groupEntity.getVoiceIdentify()) return;
+        Message message = e.getMessage();
+        for (MessageItem item : message.getBody()) {
+            if (item instanceof Voice){
+                String url = ((Voice) item).getUrl();
+                try {
+                    String ss = baiduAILogic.voiceIdentify(url);
+                    Message sendMessage = BotUtils.toMessage("语言识别如下：\n" + ss);
+                    sendMessage.setReply(message.getSource());
+                    e.getGroup().sendMessage(sendMessage);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
             }
         }
     }

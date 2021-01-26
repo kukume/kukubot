@@ -48,4 +48,14 @@ public enum CodeType {
 	CodeType(String type){
 		this.type = type;
 	}
+
+	public static CodeType parse(String type){
+		CodeType[] values = CodeType.values();
+		for (CodeType value : values) {
+			if (value.getType().equals(type)){
+				return value;
+			}
+		}
+		return null;
+	}
 }

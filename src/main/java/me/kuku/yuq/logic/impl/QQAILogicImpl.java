@@ -3,7 +3,7 @@ package me.kuku.yuq.logic.impl;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import me.kuku.yuq.entity.ConfigEntity;
-import me.kuku.yuq.logic.QQAILogic;
+import me.kuku.yuq.logic.AILogic;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.ConfigService;
 import me.kuku.yuq.utils.BotUtils;
@@ -18,7 +18,7 @@ import java.net.URLEncoder;
 import java.util.*;
 
 @SuppressWarnings("unused")
-public class QQAILogicImpl implements QQAILogic {
+public class QQAILogicImpl implements AILogic {
     @Inject
     private ConfigService configService;
 
@@ -133,5 +133,10 @@ public class QQAILogicImpl implements QQAILogic {
             String base64 = jsonObject.getJSONObject("data").getString("speech");
             return Result.success(Base64.getDecoder().decode(base64));
         }else return Result.failure(jsonObject.getString("msg"), null);
+    }
+
+    @Override
+    public String voiceIdentify(String voiceUrl) throws IOException {
+        return null;
     }
 }

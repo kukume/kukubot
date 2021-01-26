@@ -12,7 +12,7 @@ import com.icecreamqaq.yuq.message.*;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.entity.MessageEntity;
 import me.kuku.yuq.entity.RecallEntity;
-import me.kuku.yuq.logic.QQAILogic;
+import me.kuku.yuq.logic.AILogic;
 import me.kuku.yuq.service.GroupService;
 import me.kuku.yuq.service.MessageService;
 import me.kuku.yuq.service.RecallService;
@@ -34,7 +34,7 @@ public class MonitorEvent {
     @Inject
     private RecallService recallService;
     @Inject
-    private QQAILogic qqaiLogic;
+    private AILogic AILogic;
 
     @Event
     public void saveMessageGroup(GroupMessageEvent e){
@@ -90,7 +90,7 @@ public class MonitorEvent {
                         sb.append(textStr);
                     }
                 }
-                String textChat = qqaiLogic.textChat(sb.toString(), String.valueOf(e.getSender().getId()));
+                String textChat = AILogic.textChat(sb.toString(), String.valueOf(e.getSender().getId()));
                 e.getGroup().sendMessage(FunKt.getMif().at(e.getSender().getId()).plus(textChat));
             }
         }

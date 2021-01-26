@@ -22,9 +22,7 @@
 
 ## 教程文章
 
-**Docker**版（将在提交代码后自动更新）：[https://www.kuku.me/archives/8/](https://www.kuku.me/archives/8/)
-
-mirai-console版：[https://www.kuku.me/archives/7/](https://www.kuku.me/archives/7/)
+**Docker**版：[https://www.kuku.me/archives/8/](https://www.kuku.me/archives/8/)
 
 安装教程：[https://www.kuku.me/archives/6/](https://www.kuku.me/archives/6/)
 

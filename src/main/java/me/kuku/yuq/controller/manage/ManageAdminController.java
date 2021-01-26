@@ -61,7 +61,7 @@ public class ManageAdminController {
     @Action("kukubot {status}")
     @Synonym({"loc监控 {status}", "整点报时 {status}", "自动审核 {status}",
             "欢迎语 {status}", "退群拉黑 {status}", "鉴黄 {status}", "色图 {status}",
-            "撤回通知 {status}", "闪照通知 {status}", "复读 {status}"})
+            "撤回通知 {status}", "闪照通知 {status}", "复读 {status}", "语音识别 {status}"})
     @QMsg(at = true)
     public String onOrOff(GroupEntity groupEntity, boolean status, @PathVar(0) String op){
         switch (op){
@@ -76,6 +76,7 @@ public class ManageAdminController {
             case "撤回通知": groupEntity.setRecall(status); break;
             case "闪照通知": groupEntity.setFlashNotify(status); break;
             case "复读": groupEntity.setRepeat(status); break;
+            case "语音识别": groupEntity.setVoiceIdentify(status); break;
             default: return null;
         }
         groupService.save(groupEntity);

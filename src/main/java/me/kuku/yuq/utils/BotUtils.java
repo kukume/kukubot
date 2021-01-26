@@ -34,13 +34,12 @@ import okhttp3.Cookie;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@SuppressWarnings("UnusedReturnValue")
 public class BotUtils {
 
     public static String shortUrl(String url){
@@ -279,7 +278,16 @@ public class BotUtils {
     }
 
     public static String removeLastLine(StringBuilder sb){
-        return sb.deleteCharAt(sb.length() - 1).toString();
+        if ("\n".equals(sb.substring(sb.length() - 1, sb.length()))) return sb.deleteCharAt(sb.length() - 1).toString();
+        else return sb.toString();
+    }
+
+    public static Message toMessage(String str){
+        return Message.Companion.toMessage(str);
+    }
+
+    public static String firstString(Message message){
+        return Message.Companion.firstString(message);
     }
 
 }

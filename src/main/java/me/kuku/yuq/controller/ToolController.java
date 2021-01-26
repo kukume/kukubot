@@ -3,6 +3,7 @@ package me.kuku.yuq.controller;
 import com.IceCreamQAQ.Yu.annotation.Action;
 import com.IceCreamQAQ.Yu.annotation.Config;
 import com.IceCreamQAQ.Yu.annotation.Synonym;
+import com.IceCreamQAQ.Yu.di.YuContext;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
@@ -18,10 +19,11 @@ import com.icecreamqaq.yuq.message.MessageItemFactory;
 import com.icecreamqaq.yuq.message.XmlEx;
 import me.kuku.yuq.entity.ConfigEntity;
 import me.kuku.yuq.entity.GroupEntity;
-import me.kuku.yuq.logic.QQAILogic;
+import me.kuku.yuq.logic.AILogic;
 import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.logic.MyApiLogic;
 import me.kuku.yuq.pojo.CodeType;
+import me.kuku.yuq.pojo.ConfigType;
 import me.kuku.yuq.pojo.InstagramPojo;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.ConfigService;
@@ -35,6 +37,7 @@ import oshi.hardware.CentralProcessor;
 import oshi.hardware.GlobalMemory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -55,7 +58,10 @@ public class ToolController {
     @Inject
     private GroupService groupService;
     @Inject
-    private QQAILogic qqAiLogic;
+    private AILogic qqAILogic;
+    @Inject
+    @Named("baiduAILogic")
+    private AILogic baiduAILogic;
     @Inject
     private ConfigService configService;
     @Inject
@@ -68,6 +74,8 @@ public class ToolController {
     private MyApiLogic myApiLogic;
     @Config("YuQ.Mirai.protocol")
     private String protocol;
+    @Inject
+    private YuContext yuContext;
 
     private final LocalDateTime startTime;
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(4);
@@ -352,7 +360,14 @@ public class ToolController {
     @Synonym({"ocr {img}"})
     @QMsg(at = true, atNewLine = true)
     public String ocr(Image img) throws IOException {
-        return qqAiLogic.generalOCR(img.getUrl());
+        ConfigEntity configEntity = configService.findByType(ConfigType.BaiduAIOcrAppId.getType());
+        String result;
+        if (configEntity == null){
+            result = qqAILogic.generalOCR(img.getUrl());
+        }else {
+            result = baiduAILogic.generalOCR(img.getUrl());
+        }
+        return result;
     }
 
     @Action("github加速 {url}")
@@ -381,7 +396,7 @@ public class ToolController {
 
     @Action("语音合成 {text}")
     public Message voice(String text, Group group, long qq) throws IOException {
-        Result<byte[]> result = qqAiLogic.voiceSynthesis(text);
+        Result<byte[]> result = qqAILogic.voiceSynthesis(text);
         if (result.getCode() == 200){
             return FunKt.getMif().voiceByByteArray(result.getData()).toMessage();
         }else return FunKt.getMif().at(qq).plus(result.getMessage());
@@ -572,12 +587,14 @@ public class ToolController {
         }, 15, TimeUnit.SECONDS);
     }
 
-    @Action("code java")
-    @QMsg(at = true)
-    public String codeExecute(ContextSession session, Group group, long qq) throws IOException {
+    @Action("code {type}")
+    @QMsg(at = true, atNewLine = true)
+    public String codeExecute(ContextSession session, Group group, long qq, String type) throws IOException {
+        CodeType codeType = CodeType.parse(type);
+        if (codeType == null) return "没有找到这个语言类型！！";
         group.sendMessage(FunKt.getMif().at(qq).plus("请输入代码！！"));
         Message message = session.waitNextMessage();
         String code = Message.Companion.firstString(message);
-        return toolLogic.executeCode(code, CodeType.JavaEight);
+        return toolLogic.executeCode(code, codeType);
     }
 }

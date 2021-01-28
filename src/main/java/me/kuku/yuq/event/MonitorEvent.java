@@ -5,24 +5,34 @@ import com.IceCreamQAQ.Yu.annotation.EventListener;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
+import com.icecreamqaq.yuq.entity.Group;
 import com.icecreamqaq.yuq.event.GroupMessageEvent;
 import com.icecreamqaq.yuq.event.GroupRecallEvent;
 import com.icecreamqaq.yuq.event.SendMessageEvent;
 import com.icecreamqaq.yuq.message.*;
+import me.kuku.yuq.entity.ConfigEntity;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.entity.MessageEntity;
 import me.kuku.yuq.entity.RecallEntity;
 import me.kuku.yuq.logic.AILogic;
+import me.kuku.yuq.logic.TeambitionLogic;
+import me.kuku.yuq.pojo.ConfigType;
+import me.kuku.yuq.pojo.Result;
+import me.kuku.yuq.pojo.TeambitionPojo;
+import me.kuku.yuq.service.ConfigService;
 import me.kuku.yuq.service.GroupService;
 import me.kuku.yuq.service.MessageService;
 import me.kuku.yuq.service.RecallService;
 import me.kuku.yuq.utils.BotUtils;
+import me.kuku.yuq.utils.OkHttpUtils;
 
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @EventListener
 @SuppressWarnings("unused")
@@ -35,6 +45,12 @@ public class MonitorEvent {
     private RecallService recallService;
     @Inject
     private AILogic AILogic;
+    @Inject
+    private TeambitionLogic teambitionLogic;
+    @Inject
+    private ConfigService configService;
+
+    private final ExecutorService executorService = Executors.newFixedThreadPool(2);
 
     @Event
     public void saveMessageGroup(GroupMessageEvent e){
@@ -42,6 +58,12 @@ public class MonitorEvent {
                 new MessageEntity(null, e.getMessage().source.getId(), e.getGroup().getId(), e.getSender().getId(),
                         BotUtils.messageToJsonArray(e.getMessage()).toString(), new Date())
         );
+        executorService.execute(() -> {
+            ConfigEntity configEntity = configService.findByType(ConfigType.Teambition.getType());
+            if (configEntity != null){
+                uploadToTeam(e.getMessage(), configEntity, e.getGroup());
+            }
+        });
     }
 
     @Event
@@ -127,6 +149,37 @@ public class MonitorEvent {
                             .plus("\n妄图发送闪照：\n")
                             .plus(FunKt.getMif().imageByUrl(fl.getUrl()));
                     e.getGroup().sendMessage(msg);
+                }
+            }
+        }
+    }
+
+
+    private void uploadToTeam(Message message, ConfigEntity configEntity, Group group){
+        ArrayList<MessageItem> list = message.getBody();
+        GroupEntity groupEntity = groupService.findByGroup(group.getId());
+        for (MessageItem item: list){
+            if (item instanceof Image){
+                Image image = (Image) item;
+                String url = image.getUrl();
+                String id = image.getId();
+                JSONObject jsonObject = configEntity.getContentJsonObject();
+                String cookie = jsonObject.getString("cookie");
+                String auth = jsonObject.getString("auth");
+                String projectName = jsonObject.getString("project");
+                TeambitionPojo teambitionPojo = new TeambitionPojo(cookie, auth);
+                try {
+                    byte[] bytes = OkHttpUtils.getBytes(url);
+                    Result<String> result = teambitionLogic.uploadToProject(teambitionPojo, projectName, bytes, "图片", id);
+                    if (result.isSuccess()){
+                        if (groupEntity.getUploadPicNotice() != null && groupEntity.getUploadPicNotice()){
+                            group.sendMessage(BotUtils.toMessage(
+                                    "发现图片，Teambition链接：\n" + result.getData()
+                            ));
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
         }

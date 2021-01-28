@@ -128,8 +128,8 @@ public class ManageNotController {
         JSONArray jsonArray = jsonObject.getJSONObject("data").getJSONArray("data");
         String version = versionNo;
         if (jsonArray.size() != 0) version = jsonArray.getJSONObject(0).getString("version");
-        return "当前程序版本：" + version + "（" + versionNo + "）\n" +
-                "最新程序版本：" + gitVersion + "（" + versionNo + "）";
+        return "当前程序版本：" + this.version + "（" + this.versionNo + "）\n" +
+                "最新程序版本：" + gitVersion + "（" + version + "）";
     }
 
     @Action("开关")

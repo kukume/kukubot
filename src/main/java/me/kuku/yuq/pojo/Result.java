@@ -22,6 +22,14 @@ public class Result<T> {
         this.data = data;
     }
 
+    public boolean isSuccess(){
+        return this.code == 200;
+    }
+
+    public boolean isFailure(){
+        return this.code != 200;
+    }
+
     public static Result<Void> success(){
         return new Result<>(ResultStatus.SUCCESS, null);
     }
@@ -47,6 +55,10 @@ public class Result<T> {
 
     public static <T> Result<T> failure(T data){
         return failure(ResultStatus.INTERNAL_SERVER_ERROR, data);
+    }
+
+    public static <T> Result<T> failure(String msg){
+        return failure(msg, null);
     }
 
     public static <T> Result<T> failure(ResultStatus resultStatus){

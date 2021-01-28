@@ -3,12 +3,14 @@ package me.kuku.yuq.utils;
 import javax.crypto.Cipher;
 import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+import java.util.Optional;
 
 public class RSAUtils {
     /**
@@ -20,6 +22,11 @@ public class RSAUtils {
      * RSA最大解密密文大小
      */
     private static final int MAX_DECRYPT_BLOCK = 128;
+
+
+    private static final String PUBLIC_KEY_HEADER = "-----BEGIN PUBLIC KEY-----";
+
+    private static final String PUBLIC_KEY_FOOTER = "-----END PUBLIC KEY-----";
 
     /**
      * 获取密钥对
@@ -58,6 +65,18 @@ public class RSAUtils {
         return keyFactory.generatePublic(keySpec);
     }
 
+
+    // 解析PublicKey
+    public static PublicKey getPublicKeyOriginal(String keyString) throws Exception {
+        String content = keyString
+                .replace(PUBLIC_KEY_HEADER, "")
+                .replace(PUBLIC_KEY_FOOTER, "")
+                .replaceAll("\n", "");
+        byte[] contentBytes = Base64.getDecoder().decode(content.getBytes(StandardCharsets.UTF_8));
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        return keyFactory.generatePublic(new X509EncodedKeySpec(contentBytes));
+    }
+
     public static PublicKey getPublicKey(String modulus, String publicExponent)
 
             throws NoSuchAlgorithmException, InvalidKeySpecException {
@@ -82,7 +101,7 @@ public class RSAUtils {
      * @return
      */
     public static String encrypt(String data, PublicKey publicKey) throws Exception {
-        Cipher cipher = Cipher.getInstance("RSA");
+        Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWITHSHA-256ANDMGF1PADDING");
         cipher.init(Cipher.ENCRYPT_MODE, publicKey);
         int inputLen = data.getBytes().length;
         ByteArrayOutputStream out = new ByteArrayOutputStream();

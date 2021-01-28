@@ -6,11 +6,13 @@ import com.IceCreamQAQ.Yu.annotation.Config;
 import com.IceCreamQAQ.Yu.annotation.Synonym;
 import com.IceCreamQAQ.Yu.util.OkHttpWebImpl;
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.annotation.PathVar;
 import com.icecreamqaq.yuq.annotation.PrivateController;
 import com.icecreamqaq.yuq.controller.BotActionContext;
 import com.icecreamqaq.yuq.controller.ContextSession;
+import com.icecreamqaq.yuq.controller.QQController;
 import com.icecreamqaq.yuq.entity.Contact;
 import com.icecreamqaq.yuq.entity.Group;
 import com.icecreamqaq.yuq.message.Message;
@@ -19,6 +21,10 @@ import me.kuku.yuq.entity.ConfigEntity;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.logic.QQLoginLogic;
+import me.kuku.yuq.logic.TeambitionLogic;
+import me.kuku.yuq.pojo.ConfigType;
+import me.kuku.yuq.pojo.Result;
+import me.kuku.yuq.pojo.TeambitionPojo;
 import me.kuku.yuq.service.ConfigService;
 import me.kuku.yuq.service.GroupService;
 import me.kuku.yuq.utils.BotUtils;
@@ -31,7 +37,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 @PrivateController
 @SuppressWarnings("unused")
-public class SettingController {
+public class SettingController extends QQController {
     @Inject
     private GroupService groupService;
     @Config("YuQ.Mirai.bot.master")
@@ -44,6 +50,8 @@ public class SettingController {
     private MiraiBot miraiBot;
     @Inject
     private ConfigService configService;
+    @Inject
+    private TeambitionLogic teambitionLogic;
 
     @Before
     public void before(long qq, BotActionContext actionContext){
@@ -120,9 +128,9 @@ public class SettingController {
         qq.sendMessage(BotUtils.toMessage("请输入secretKey"));
         Message thirdMessage = session.waitNextMessage();
         String secretKey = BotUtils.firstString(thirdMessage);
-        String appIdType = null;
-        String appKeyType = null;
-        String secretKeyType = null;
+        String appIdType;
+        String appKeyType;
+        String secretKeyType;
         switch (type){
             case "ocr":
                 appIdType = "baiduAIOcrAppId";
@@ -182,6 +190,29 @@ public class SettingController {
             groupService.save(groupEntity);
             return String.format("添加{%s}群的{%s}为超管成功！！", groupNum, qqNum);
         }else return "机器人并没有加入这个群！！";
+    }
+
+    @Action("teambition {phone} {password}")
+    public String addTeam(String phone, String password, ContextSession session) throws IOException {
+        reply("请输入需要绑定的项目名称");
+        Message projectMessage = session.waitNextMessage();
+        String project = BotUtils.firstString(projectMessage);
+        Result<TeambitionPojo> loginResult = teambitionLogic.login(phone, password);
+        if (loginResult.isFailure()){
+            return loginResult.getMessage();
+        }
+        TeambitionPojo teambitionPojo = loginResult.getData();
+        ConfigEntity configEntity = configService.findByType(ConfigType.Teambition.getType());
+        if (configEntity == null) configEntity = new ConfigEntity(ConfigType.Teambition.getType());
+        JSONObject jsonObject = configEntity.getContentJsonObject();
+        jsonObject.put("phone", phone);
+        jsonObject.put("password", password);
+        jsonObject.put("cookie", teambitionPojo.getCookie());
+        jsonObject.put("auth", teambitionPojo.getStrikerAuth());
+        jsonObject.put("project", project);
+        configEntity.setContentJsonObject(jsonObject);
+        configService.save(configEntity);
+        return "绑定Teambition成功！！";
     }
 
 }

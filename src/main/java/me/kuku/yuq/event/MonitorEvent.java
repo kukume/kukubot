@@ -28,7 +28,10 @@ import me.kuku.yuq.utils.OkHttpUtils;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -174,7 +177,8 @@ public class MonitorEvent {
                     if (result.isSuccess()){
                         if (groupEntity.getUploadPicNotice() != null && groupEntity.getUploadPicNotice()){
                             group.sendMessage(BotUtils.toMessage(
-                                    "发现图片，Teambition链接：\n" + result.getData()
+                                    "发现图片，Teambition链接：\n" + "https://api.kuku.me/kuku/" +
+                                            URLEncoder.encode(Base64.getEncoder().encodeToString(("图片/" + id).getBytes(StandardCharsets.UTF_8)), "utf-8")
                             ));
                         }
                     }

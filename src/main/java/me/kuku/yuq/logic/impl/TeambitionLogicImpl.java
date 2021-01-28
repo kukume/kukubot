@@ -150,7 +150,7 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 		if (projectResult.isFailure()) return Result.failure("没有查询到这个项目Id");
 		if (path.length == 0) return Result.failure("参数不正确！！");
 		Map<String, String> map = projectResult.getData();
-		String parentId = map.get("parentId");
+		String parentId = map.get("rootId");
 		String projectId = map.get("id");
 		String finallyParentId = getFinallyParentId(teambitionPojo, parentId, projectId, path);
 		String str = OkHttpUtils.getStr("https://www.teambition.com/api/works?_parentId=" + finallyParentId +

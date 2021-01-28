@@ -176,11 +176,10 @@ public class MonitorEvent {
                     Result<String> result = teambitionLogic.uploadToProject(teambitionPojo, projectName, bytes, "图片", id);
                     if (result.isSuccess()){
                         if (groupEntity.getUploadPicNotice() != null && groupEntity.getUploadPicNotice()){
-                            Message sendMessage = BotUtils.toMessage(
-                                    "发现图片，Teambition链接：\n" + "https://api.kuku.me/teambition/" + jsonObject.getString("name") + "/" +
+                            Message sendMessage = FunKt.getMif().imageById(id).plus(
+                                    "\n发现图片，Teambition链接：\n" + "https://api.kuku.me/teambition/" + jsonObject.getString("name") + "/" +
                                             URLEncoder.encode(Base64.getEncoder().encodeToString(("图片/" + id).getBytes(StandardCharsets.UTF_8)), "utf-8")
                             );
-                            sendMessage.setReply(message.getSource());
                             group.sendMessage(sendMessage);
                         }
                     }

@@ -8,11 +8,9 @@ import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.event.*;
 import com.icecreamqaq.yuq.message.*;
-import me.kuku.yuq.entity.ConfigEntity;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.entity.QQEntity;
 import me.kuku.yuq.logic.AILogic;
-import me.kuku.yuq.pojo.ConfigType;
 import me.kuku.yuq.service.ConfigService;
 import me.kuku.yuq.service.GroupService;
 import me.kuku.yuq.service.MessageService;
@@ -22,6 +20,7 @@ import me.kuku.yuq.utils.BotUtils;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -144,7 +143,7 @@ public class GroupManageEvent {
         JSONArray violationJsonArray = groupEntity.getViolationJsonArray();
         int code = 0;
         String vio = null;
-        ConfigEntity configEntity = configService.findByType(ConfigType.BaiduAIOcrAppId.getType());
+        List<Image> images = new ArrayList<>();
         out:for (int i = 0; i < violationJsonArray.size(); i++){
             String violation = violationJsonArray.getString(i);
             String nameCard = e.getSender().getNameCard();
@@ -159,10 +158,8 @@ public class GroupManageEvent {
                     if (text.getText().contains(violation)) code = 1;
                 }else if (item instanceof Image){
                     Image image = (Image) item;
-                    String result;
-                    if (configEntity == null){
-                        result = qqAILogic.generalOCR(image.getUrl());
-                    }else result = baiduAILogic.generalOCR(image.getUrl());
+                    images.add(image);
+                    String result = baiduAILogic.generalOCR(image.getUrl());
                     if (result.contains(violation)) code = 1;
                 }else if (item instanceof XmlEx){
                     XmlEx xmlEx = (XmlEx) item;
@@ -177,13 +174,10 @@ public class GroupManageEvent {
                 }
             }
         }
-        for (MessageItem item : message.getBody()) {
-            if (item instanceof Image){
-                Image image = (Image) item;
+        if (groupEntity.getPic()) {
+            for (Image image : images) {
                 if (groupEntity.getPic()) {
-                    boolean b;
-                    if (configEntity == null) b = qqAILogic.pornIdentification(image.getUrl());
-                    else b = baiduAILogic.pornIdentification(image.getUrl());
+                    boolean b = baiduAILogic.pornIdentification(image.getUrl());
                     if (b) code = 2;
                 }
             }

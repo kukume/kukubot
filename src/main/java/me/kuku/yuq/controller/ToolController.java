@@ -360,14 +360,7 @@ public class ToolController {
     @Synonym({"ocr {img}"})
     @QMsg(at = true, atNewLine = true)
     public String ocr(Image img) throws IOException {
-        ConfigEntity configEntity = configService.findByType(ConfigType.BaiduAIOcrAppId.getType());
-        String result;
-        if (configEntity == null){
-            result = qqAILogic.generalOCR(img.getUrl());
-        }else {
-            result = baiduAILogic.generalOCR(img.getUrl());
-        }
-        return result;
+        return baiduAILogic.generalOCR(img.getUrl());
     }
 
     @Action("github加速 {url}")

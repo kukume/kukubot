@@ -20,7 +20,7 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.net.URLEncoder;
 
-@SuppressWarnings({"SameParameterValue", "unused", "ConstantConditions"})
+@SuppressWarnings({"SameParameterValue", "unused"})
 @Named("baiduAILogic")
 public class BaiduAILogicImpl implements AILogic {
 

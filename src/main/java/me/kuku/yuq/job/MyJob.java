@@ -36,6 +36,8 @@ public class MyJob {
     @Config("YuQ.Mirai.bot.versionNo")
     private String versionNo;
 
+    private int lastVersion = -1;
+
     @Cron("1h")
     public void backUp(){
         File confFile = new File("conf");
@@ -55,9 +57,11 @@ public class MyJob {
 
     @Cron("1h")
     public void checkUpdate() throws IOException {
-        JSONObject jsonObject = OkHttpUtils.getJson("https://api.kuku.me/bot/version/" + versionNo);
+        if (lastVersion == -1) lastVersion = Integer.parseInt(versionNo);
+        JSONObject jsonObject = OkHttpUtils.getJson("https://api.kuku.me/bot/version/" + lastVersion);
         JSONArray jsonArray = jsonObject.getJSONObject("data").getJSONArray("data");
         if (jsonArray.size() != 0){
+            lastVersion = jsonArray.getJSONObject(0).getInteger("version");
             StringBuilder log = new StringBuilder();
             for (int i = 0; i < jsonArray.size(); i++){
                 JSONObject singleJsonObject = jsonArray.getJSONObject(i);

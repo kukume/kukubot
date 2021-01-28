@@ -197,6 +197,9 @@ public class SettingController extends QQController {
         reply("请输入需要绑定的项目名称");
         Message projectMessage = session.waitNextMessage();
         String project = BotUtils.firstString(projectMessage);
+        reply("请输入api中添加的名称");
+        Message nameMessage = session.waitNextMessage();
+        String name = BotUtils.firstString(nameMessage);
         Result<TeambitionPojo> loginResult = teambitionLogic.login(phone, password);
         if (loginResult.isFailure()){
             return loginResult.getMessage();
@@ -210,6 +213,7 @@ public class SettingController extends QQController {
         jsonObject.put("cookie", teambitionPojo.getCookie());
         jsonObject.put("auth", teambitionPojo.getStrikerAuth());
         jsonObject.put("project", project);
+        jsonObject.put("name", name);
         configEntity.setContentJsonObject(jsonObject);
         configService.save(configEntity);
         return "绑定Teambition成功！！";

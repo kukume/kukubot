@@ -239,7 +239,11 @@ public class BotController {
                 "https://img.kuku.me/images/2021/01/17/RRPG.jpg",
                 "https://img.kuku.me/images/2021/01/17/422Hd.jpg",
                 "https://img.kuku.me/images/2021/01/17/42ILN.jpg",
-                "https://img.kuku.me/images/2021/01/17/426zV.jpg"
+                "https://img.kuku.me/images/2021/01/17/426zV.jpg",
+                "https://img.kuku.me/images/2021/01/29/447pC.png",
+                "https://img.kuku.me/images/2021/01/29/44C5q.png",
+                "https://img.kuku.me/images/2021/01/29/44h4g.png",
+                "https://img.kuku.me/images/2021/01/29/44lZU.png"
         };
         String url = urlArr[(int) (Math.random() * urlArr.length)];
         return FunKt.getMif().at(resultQQ).plus(FunKt.getMif().imageByUrl(url)).plus("龙王，已蝉联" + map.get("desc") + "，快喷水！！");

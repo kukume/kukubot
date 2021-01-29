@@ -30,6 +30,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
@@ -132,8 +133,8 @@ public class MonitorEvent {
         if (groupEntity == null) return;
         if (Boolean.valueOf(true).equals(groupEntity.getRecall())){
             if (!e.getSender().equals(e.getOperator())) return;
-            e.getGroup().sendMessage(FunKt.getMif().text("群成员").plus(FunKt.getMif().at(qq)).plus("\n妄图撤回一条消息。\n消息内容为：\n")
-                    .plus(BotUtils.jsonArrayToMessage(messageEntity.getContentJsonArray())));
+            e.getGroup().sendMessage(FunKt.getMif().text("群成员").plus(FunKt.getMif().at(qq)).plus("\n妄图撤回一条消息。\n消息内容为："));
+            e.getGroup().sendMessage(BotUtils.jsonArrayToMessage(messageEntity.getContentJsonArray()));
         }
     }
 
@@ -161,6 +162,10 @@ public class MonitorEvent {
     private void uploadToTeam(Message message, ConfigEntity configEntity, Group group){
         ArrayList<MessageItem> list = message.getBody();
         GroupEntity groupEntity = groupService.findByGroup(group.getId());
+        LocalDate localDate = LocalDate.now();
+        String year = String.valueOf(localDate.getYear());
+        String month = String.valueOf(localDate.getMonth().getValue());
+        String day = String.valueOf(localDate.getDayOfMonth());
         for (MessageItem item: list){
             if (item instanceof Image){
                 Image image = (Image) item;
@@ -173,12 +178,14 @@ public class MonitorEvent {
                 TeambitionPojo teambitionPojo = new TeambitionPojo(cookie, auth);
                 try {
                     byte[] bytes = OkHttpUtils.getBytes(url);
-                    Result<String> result = teambitionLogic.uploadToProject(teambitionPojo, projectName, bytes, "图片", id);
+                    Result<String> result = teambitionLogic.uploadToProject(teambitionPojo, projectName, bytes,
+                            "图片", year, month, day, id);
                     if (result.isSuccess()){
+                        String path = "图片/" + year + "/" + month + "/" + day + "/" + id;
                         if (groupEntity.getUploadPicNotice() != null && groupEntity.getUploadPicNotice()){
                             Message sendMessage = FunKt.getMif().imageById(id).plus(
                                     "\n发现图片，Teambition链接：\n" + "https://api.kuku.me/teambition/" + jsonObject.getString("name") + "/" +
-                                            URLEncoder.encode(Base64.getEncoder().encodeToString(("图片/" + id).getBytes(StandardCharsets.UTF_8)), "utf-8")
+                                            URLEncoder.encode(Base64.getEncoder().encodeToString((path).getBytes(StandardCharsets.UTF_8)), "utf-8")
                             );
                             group.sendMessage(sendMessage);
                         }

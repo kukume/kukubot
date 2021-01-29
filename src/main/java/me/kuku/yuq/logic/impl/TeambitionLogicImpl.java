@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-@SuppressWarnings({"SpellCheckingInspection", "DuplicatedCode"})
+@SuppressWarnings({"SpellCheckingInspection", "DuplicatedCode", "unused"})
 public class TeambitionLogicImpl implements TeambitionLogic {
 
 	//https://www.teambition.com/project/60112787ada80cf27620e452/works/60112787ada80cf27620e453
@@ -57,7 +57,7 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 		}
 	}
 
-	private String getFolderId(TeambitionPojo teambitionPojo, String parentId, String projectId, String name) throws IOException {
+	private String getFolderId(TeambitionPojo teambitionPojo, String parentId, String projectId, String name, boolean isCreate) throws IOException {
 		String str = OkHttpUtils.getStr("https://www.teambition.com/api/collections?_parentId=" + parentId
 				+ "&_projectId=" + projectId + "&order=updatedDesc&count=50&page=1&_=" + System.currentTimeMillis(),
 				OkHttpUtils.addHeaders(teambitionPojo.getCookie(), "", UA.PC));
@@ -68,7 +68,9 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 				return jsonObject.getString("_id");
 			}
 		}
-		return null;
+		if (isCreate)
+			return creatFolder(teambitionPojo, parentId, projectId, name);
+		else return null;
 	}
 
 	public Result<Map<String, String>> project(TeambitionPojo teambitionPojo, String name) throws IOException {
@@ -96,7 +98,7 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 		if (projectResult.isFailure()) return Result.failure("没有查询到这个项目Id");
 		if (path.length == 0) return Result.failure("参数不正确！！");
 		Map<String, String> projectMap = projectResult.getData();
-		String parentId = getFinallyParentId(teambitionPojo, projectMap.get("rootId"), projectMap.get("id"), path);
+		String parentId = getFinallyParentId(teambitionPojo, projectMap.get("rootId"), projectMap.get("id"), true, path);
 		String fileType = FileUtils.getFileTypeByStream(bytes);
 		String fileName = path[path.length - 1];
 		if (!fileName.contains(".")) fileName += "." + fileType;
@@ -133,15 +135,35 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 		return Result.success(uploadJsonArray.getJSONObject(0).getString("downloadUrl"));
 	}
 
-	private String getFinallyParentId(TeambitionPojo teambitionPojo, String rootParentId, String projectId, String...path) throws IOException {
+	private String getFinallyParentId(TeambitionPojo teambitionPojo, String rootParentId, String projectId, boolean isCreate, String...path) throws IOException {
 		String finallyParentId = rootParentId;
 		if (path.length != 1) {
 			for (int i = 0; i < path.length - 1; i++) {
 				String name = path[i];
-				finallyParentId = getFolderId(teambitionPojo, finallyParentId, projectId, name);
+				finallyParentId = getFolderId(teambitionPojo, finallyParentId, projectId, name, isCreate);
 			}
 		}
 		return finallyParentId;
+	}
+
+	private String creatFolder(TeambitionPojo teambitionPojo, String parentId, String projectId, String name) throws IOException {
+		JSONObject jsonObject = new JSONObject();
+		jsonObject.put("collectionType", "");
+		jsonObject.put("color", "blue");
+		jsonObject.put("created", "");
+		jsonObject.put("description", "");
+		jsonObject.put("objectType", "collection");
+		jsonObject.put("recentWorks", new JSONArray());
+		jsonObject.put("subCount", null);
+		jsonObject.put("title", name);
+		jsonObject.put("updated", "");
+		jsonObject.put("workCount", 0);
+		jsonObject.put("_creatorId", "");
+		jsonObject.put("_parentId", parentId);
+		jsonObject.put("_projectId", projectId);
+		JSONObject resultJsonObject = OkHttpUtils.postJson("https://www.teambition.com/api/collections",
+				OkHttpUtils.addJson(jsonObject.toString()), OkHttpUtils.addHeaders(teambitionPojo.getCookie(), "", UA.PC));
+		return resultJsonObject.getString("_id");
 	}
 
 	@Override
@@ -152,17 +174,21 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 		Map<String, String> map = projectResult.getData();
 		String parentId = map.get("rootId");
 		String projectId = map.get("id");
-		String finallyParentId = getFinallyParentId(teambitionPojo, parentId, projectId, path);
-		String str = OkHttpUtils.getStr("https://www.teambition.com/api/works?_parentId=" + finallyParentId +
-				"&_projectId=" + projectId + "&order=updatedDesc&count=50&page=1&_=" + System.currentTimeMillis(),
-				OkHttpUtils.addHeaders(teambitionPojo.getCookie(), "", UA.PC));
-		JSONArray jsonArray = JSON.parseArray(str);
-		String fileName = path[path.length - 1];
-		for (int i = 0; i < jsonArray.size(); i++){
-			JSONObject jsonObject = jsonArray.getJSONObject(i);
-			if (jsonObject.getString("fileName").equals(fileName)){
-				return Result.success(jsonObject.getString("downloadUrl"));
+		String finallyParentId = getFinallyParentId(teambitionPojo, parentId, projectId, false, path);
+		int page = 1;
+		while (true) {
+			String str = OkHttpUtils.getStr("https://www.teambition.com/api/works?_parentId=" + finallyParentId +
+							"&_projectId=" + projectId + "&order=updatedDesc&count=50&page=" + page++ + "&_=" + System.currentTimeMillis(),
+					OkHttpUtils.addHeaders(teambitionPojo.getCookie(), "", UA.PC));
+			JSONArray jsonArray = JSON.parseArray(str);
+			String fileName = path[path.length - 1];
+			for (int i = 0; i < jsonArray.size(); i++) {
+				JSONObject jsonObject = jsonArray.getJSONObject(i);
+				if (jsonObject.getString("fileName").equals(fileName)) {
+					return Result.success(jsonObject.getString("downloadUrl"));
+				}
 			}
+			if (jsonArray.size() < 50) break;
 		}
 		return Result.failure("没有找到这个文件！！");
 	}

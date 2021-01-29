@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import lombok.val;
 import me.kuku.yuq.logic.ToolLogic;
+import me.kuku.yuq.pojo.CodeType;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.pojo.UA;
 import me.kuku.yuq.utils.BotUtils;
@@ -343,7 +344,7 @@ public class ToolLogicImpl implements ToolLogic {
             String ipInfo = queryIp(ip);
             return "====查询结果====\n" + "域名/IP：" + domain + "\n" +
                     "IP：" + ip + "\n" +
-                    "延迟：" + time + "msg" + "\n" +
+                    "延迟：" + time + "ms" + "\n" +
                     "位置：" + ipInfo;
         }else return "ping失败，请稍后再试！！";
     }
@@ -468,11 +469,6 @@ public class ToolLogicImpl implements ToolLogic {
             return Result.success(map);
         }else if (code == -404) return Result.failure("没有找到该BV号！！", null);
         else return Result.failure(jsonObject.getString("message"), null);
-    }
-
-    @Override
-    public List<Map<String, String>> zhiHuHot() {
-        return null;
     }
 
     @Override
@@ -752,7 +748,8 @@ public class ToolLogicImpl implements ToolLogic {
     }
 
     @Override
-    public String executeCode(String code, String type) throws IOException {
+    public String executeCode(String code, CodeType codeType) throws IOException {
+        String type = codeType.getType();
         String html = OkHttpUtils.getStr("http://www.dooccn.com/" + type + "/", OkHttpUtils.addUA(UA.PC));
         String id = BotUtils.regex("langid = ", ";", html);
         Map<String, String> map = new HashMap<>();

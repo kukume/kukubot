@@ -55,7 +55,7 @@ public class MyJob {
         }
     }
 
-    @Cron("1h")
+    @Cron("1s")
     public void checkUpdate() throws IOException {
         if (lastVersion == -1) lastVersion = Integer.parseInt(versionNo);
         JSONObject jsonObject = OkHttpUtils.getJson("https://api.kuku.me/bot/version/" + lastVersion);
@@ -77,7 +77,7 @@ public class MyJob {
             Message message = BotUtils.toMessage(
                     "程序有更新啦。日志如下：\n" + logStr
             );
-            Message updateMessage = BotUtils.toMessage("更新方法：如果您使用的是docker版，请参考 https://www.kuku.me/archives/8/ 的更新教程" +
+            Message updateMessage = BotUtils.toMessage("更新方法：如果您使用的是docker版，请参考 https://www.kuku.me/archives/8/ 的更新教程，" +
                     "如果不是，那么请手动替换最新jar包并重启：https://file.kuku.me" );
             long qq = Long.parseLong(master);
             if (members.containsKey(qq)){

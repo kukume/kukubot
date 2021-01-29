@@ -23,7 +23,6 @@ import me.kuku.yuq.logic.AILogic;
 import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.logic.MyApiLogic;
 import me.kuku.yuq.pojo.CodeType;
-import me.kuku.yuq.pojo.ConfigType;
 import me.kuku.yuq.pojo.InstagramPojo;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.ConfigService;
@@ -321,18 +320,6 @@ public class ToolController {
                             "链接：" + map.get("url")
             );
         }else return Message.Companion.toMessage(result.getMessage());
-    }
-
-    @Action("知乎热榜")
-    @QMsg(at = true, atNewLine = true)
-    public String zhiHuHot() throws IOException {
-        List<Map<String, String>> list = toolLogic.zhiHuHot();
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < list.size(); i++){
-            Map<String, String> map = list.get(i);
-            sb.append(i + 1).append("、").append(map.get("title")).append("\n");
-        }
-        return sb.deleteCharAt(sb.length() - 1).toString();
     }
 
     @Action("分词")

@@ -46,6 +46,7 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 				OkHttpUtils.addJson(JSON.toJSONString(params)),
 				OkHttpUtils.addHeaders(cookie, url, UA.PC));
 		if (loginReponse.code() == 200){
+			loginReponse.close();
 			cookie += OkHttpUtils.getCookie(loginReponse);
 			String hh = OkHttpUtils.getStr("https://www.teambition.com/todo", OkHttpUtils.addHeaders(cookie, "", UA.PC));
 			hh = Jsoup.parse(hh).getElementById("teambition-config").text();

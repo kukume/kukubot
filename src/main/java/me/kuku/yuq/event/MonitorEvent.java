@@ -179,9 +179,9 @@ public class MonitorEvent {
                 try {
                     byte[] bytes = OkHttpUtils.getBytes(url);
                     Result<String> result = teambitionLogic.uploadToProject(teambitionPojo, projectName, bytes,
-                            "图片", year, month, day, id);
+                            "qqpic", year, month, day, id);
                     if (result.isSuccess()){
-                        String path = "图片/" + year + "/" + month + "/" + day + "/" + id;
+                        String path = "qqpic/" + year + "/" + month + "/" + day + "/" + id;
                         if (groupEntity.getUploadPicNotice() != null && groupEntity.getUploadPicNotice()){
                             Message sendMessage = FunKt.getMif().imageById(id).plus(
                                     "\n发现图片，Teambition链接：\n" + "https://api.kuku.me/teambition/" + jsonObject.getString("name") + "/" +

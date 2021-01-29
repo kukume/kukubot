@@ -3,7 +3,6 @@ package me.kuku.yuq.controller;
 import com.IceCreamQAQ.Yu.annotation.Action;
 import com.IceCreamQAQ.Yu.annotation.Config;
 import com.IceCreamQAQ.Yu.annotation.Synonym;
-import com.IceCreamQAQ.Yu.di.YuContext;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
@@ -13,18 +12,14 @@ import com.icecreamqaq.yuq.annotation.QMsg;
 import com.icecreamqaq.yuq.controller.ContextSession;
 import com.icecreamqaq.yuq.entity.Group;
 import com.icecreamqaq.yuq.job.RainInfo;
-import com.icecreamqaq.yuq.message.Image;
-import com.icecreamqaq.yuq.message.Message;
-import com.icecreamqaq.yuq.message.MessageItemFactory;
-import com.icecreamqaq.yuq.message.XmlEx;
+import com.icecreamqaq.yuq.message.*;
 import me.kuku.yuq.entity.ConfigEntity;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.logic.AILogic;
+import me.kuku.yuq.logic.TeambitionLogic;
 import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.logic.MyApiLogic;
-import me.kuku.yuq.pojo.CodeType;
-import me.kuku.yuq.pojo.InstagramPojo;
-import me.kuku.yuq.pojo.Result;
+import me.kuku.yuq.pojo.*;
 import me.kuku.yuq.service.ConfigService;
 import me.kuku.yuq.service.GroupService;
 import me.kuku.yuq.service.MessageService;
@@ -41,8 +36,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -74,7 +71,7 @@ public class ToolController {
     @Config("YuQ.Mirai.protocol")
     private String protocol;
     @Inject
-    private YuContext yuContext;
+    private TeambitionLogic teambitionLogic;
 
     private final LocalDateTime startTime;
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(4);
@@ -273,7 +270,7 @@ public class ToolController {
         String resultUrl;
         if (pwd == null)
             resultUrl = "https://v1.alapi.cn/api/lanzou?url=" + URLEncoder.encode(url, "utf-8");
-        else resultUrl = "https://v1.alapi.cn/api/lanzou?url=" + URLEncoder.encode(url, "utf-8") + "&pwd=$pwd";
+        else resultUrl = "https://v1.alapi.cn/api/lanzou?url=" + URLEncoder.encode(url, "utf-8") + "&pwd=" + pwd;
         return BotUtils.shortUrl(resultUrl);
     }
 
@@ -522,15 +519,25 @@ public class ToolController {
         return FunKt.getMif().imageByByteArray(toolLogic.photo());
     }
 
-    @Action("kuku上传 {image}")
+    @Action("kuku上传")
     @QMsg(at = true)
-    public String uploadImage(Image image){
-        try {
-            return "您上传的图片链接如下：" + toolLogic.uploadImage(OkHttpUtils.getBytes(image.getUrl()));
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "图片上传失败，请稍后再试！！";
+    public String uploadImage(Message message, ContextSession session, Group group, long qq) {
+        group.sendMessage(FunKt.getMif().at(qq).plus("请发送需要上传的图片"));
+        Message imageMessage = session.waitNextMessage();
+        StringBuilder sb = new StringBuilder().append("您上传的图片链接如下：");
+        int i = 1;
+        for (MessageItem item : imageMessage.getBody()) {
+            if (item instanceof Image) {
+                sb.append(i++).append("、");
+                try {
+                    sb.append(toolLogic.uploadImage(OkHttpUtils.getBytes(((Image) item).getUrl())))
+                        .append("\n");
+                } catch (IOException e) {
+                    sb.append("图片上传失败，请稍后再试！！").append("\b");
+                }
+            }
         }
+        return BotUtils.removeLastLine(sb);
     }
 
     @Action("抽象话 {word}")
@@ -576,5 +583,48 @@ public class ToolController {
         Message message = session.waitNextMessage();
         String code = Message.Companion.firstString(message);
         return toolLogic.executeCode(code, codeType);
+    }
+
+    @Action("teambition上传")
+    @QMsg(at = true, atNewLine = true)
+    public String teambitionUpload(ContextSession session, Group group, long qq){
+        ConfigEntity configEntity = configService.findByType(ConfigType.Teambition.getType());
+        if (configEntity == null) return "机器人还没有配置Teambition，请联系机器人主人进行配置。";
+        JSONObject jsonObject = configEntity.getContentJsonObject();
+        group.sendMessage(FunKt.getMif().at(qq).plus("请发送需要上传的图片"));
+        Message imageMessage = session.waitNextMessage();
+        LocalDate localDate = LocalDate.now();
+        String year = String.valueOf(localDate.getYear());
+        String month = String.valueOf(localDate.getMonth().getValue());
+        String day = String.valueOf(localDate.getDayOfMonth());
+        StringBuilder sb = new StringBuilder().append("您上传的图片链接如下：").append("\n");
+        int i = 1;
+        for (MessageItem item : imageMessage.getBody()) {
+            if (item instanceof Image){
+                Image image = (Image) item;
+                String url = image.getUrl();
+                String id = image.getId();
+                sb.append(i++).append("、");
+                try {
+                    Result<String> result = teambitionLogic.uploadToProject(
+                            new TeambitionPojo(jsonObject.getString("cookie"), jsonObject.getString("auth")),
+                            jsonObject.getString("project"), OkHttpUtils.getBytes(url),
+                            "pic", year, month, day, id
+                    );
+                    if (result.isSuccess()){
+                        String path = "pic/" + year + "/" + month + "/" + day + "/" + id;
+                        sb.append("https://api.kuku.me/teambition/")
+                                .append(jsonObject.getString("name")).append("/")
+                                .append(URLEncoder.encode(Base64.getEncoder().encodeToString((path).getBytes(StandardCharsets.UTF_8)), "utf-8"))
+                                .append("\n");
+                    }else {
+                        sb.append("上传失败！！").append("\n");
+                    }
+                } catch (IOException e) {
+                    sb.append("网络出现异常，上传失败").append("\n");
+                }
+            }
+        }
+        return BotUtils.removeLastLine(sb);
     }
 }

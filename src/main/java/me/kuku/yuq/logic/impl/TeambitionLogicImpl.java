@@ -54,7 +54,8 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 			String auth = loginSucJsonObject.getJSONObject("userInfo").getString("strikerAuth");
 			return Result.success(new TeambitionPojo(cookie, auth));
 		}else {
-			return Result.failure("");
+			JSONObject jsonObject = OkHttpUtils.getJson(response);
+			return Result.failure(jsonObject.getString("message"));
 		}
 	}
 

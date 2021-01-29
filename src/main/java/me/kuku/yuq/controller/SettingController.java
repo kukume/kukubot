@@ -28,9 +28,11 @@ import me.kuku.yuq.pojo.TeambitionPojo;
 import me.kuku.yuq.service.ConfigService;
 import me.kuku.yuq.service.GroupService;
 import me.kuku.yuq.utils.BotUtils;
+import me.kuku.yuq.utils.OkHttpUtils;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -217,6 +219,34 @@ public class SettingController extends QQController {
         configEntity.setContentJsonObject(jsonObject);
         configService.save(configEntity);
         return "绑定Teambition成功！！";
+    }
+
+    @Action("teambitionapi {phone} {password}")
+    public String addTeamApi(String phone, String password, ContextSession session) throws IOException {
+        reply("请输入需要绑定的项目名称");
+        Message projectMessage = session.waitNextMessage();
+        String project = BotUtils.firstString(projectMessage);
+        reply("请输入需要设置的名称（将会在api链接中显示）");
+        Message nameMessage = session.waitNextMessage();
+        String name = BotUtils.firstString(nameMessage);
+        Map<String, String> map = new HashMap<>();
+        map.put("name", name);
+        map.put("phone", phone);
+        map.put("password", password);
+        map.put("project", project);
+        JSONObject jsonObject = OkHttpUtils.postJson("https://api.kuku.me/teambition", map);
+        if (jsonObject.getInteger("code") == 200){
+            return "绑定成功！！";
+        }else return "绑定失败！！" + jsonObject.getString("message");
+    }
+
+    @Action("teambitionapidel {name} {password}")
+    public String delTeamApi(String name, String password) throws IOException {
+        Map<String, String> map = new HashMap<>();
+        map.put("name", name);
+        map.put("password", password);
+        JSONObject jsonObject = OkHttpUtils.deleteJson("https://api.kuku.me/teambition", map);
+        return jsonObject.getString("data");
     }
 
 }

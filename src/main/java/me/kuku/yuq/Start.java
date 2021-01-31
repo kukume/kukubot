@@ -1,6 +1,5 @@
 package me.kuku.yuq;
 
-import com.IceCreamQAQ.Yu.hook.HookItem;
 import com.IceCreamQAQ.Yu.hook.YuHook;
 import com.IceCreamQAQ.Yu.loader.AppClassloader;
 import com.IceCreamQAQ.Yu.util.IO;

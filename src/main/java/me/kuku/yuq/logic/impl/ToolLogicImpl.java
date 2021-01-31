@@ -4,12 +4,12 @@ import com.IceCreamQAQ.Yu.util.IO;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import lombok.val;
 import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.pojo.CodeType;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.pojo.UA;
 import me.kuku.yuq.utils.BotUtils;
+import me.kuku.yuq.utils.DateTimeFormatterUtils;
 import me.kuku.yuq.utils.MD5Utils;
 import me.kuku.yuq.utils.OkHttpUtils;
 import okhttp3.MediaType;
@@ -25,11 +25,11 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
@@ -313,7 +313,7 @@ public class ToolLogicImpl implements ToolLogic {
             }
             String xmlStr = String.format("<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID=\"146\" templateID=\"1\" action=\"web\" brief=\"[分享] %s %s\" sourcePublicUin=\"2658655094\" sourceMsgId=\"0\" url=\"https://weather.mp.qq.com/pages/aio?_wv=1090533159&amp;_wwv=196612&amp;scene=1&amp;adcode=%s&amp;timeStamp=%s\" flag=\"0\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"2\" advertiser_id=\"0\" aid=\"0\"><picture cover=\"https://imgcache.qq.com/ac/qqweather/image/share_icon/%s.png\" w=\"0\" h=\"0\" /><title>%s %s</title><summary>%s\n" +
                     "空气质量:%s</summary></item><source name=\"QQ天气\" icon=\"https://url.cn/JS8oE7\" action=\"plugin\" a_actionData=\"mqqapi://app/action?pkg=com.tencent.mobileqq&amp;cmp=com.tencent.biz.pubaccount.AccountDetailActivity&amp;uin=2658655094\" i_actionData=\"mqqapi://card/show_pslcard?src_type=internal&amp;card_type=public_account&amp;uin=2658655094&amp;version=1\" appid=\"-1\" /></msg>",
-                    city, weather, code, new Date().getTime(), wPic, city, weather, temperature, air);
+                    city, weather, code, System.currentTimeMillis(), wPic, city, weather, temperature, air);
             return Result.success(xmlStr);
         }else return Result.failure("没有找到这个城市", null);
     }
@@ -428,8 +428,13 @@ public class ToolLogicImpl implements ToolLogic {
 
     @Override
     public byte[] queryTime() throws IOException {
-        SimpleDateFormat sdf = new SimpleDateFormat("HH-mm");
-        return OkHttpUtils.downloadBytes("https://share.kuku.me/189/images/time/" + sdf.format(new Date()) + ".jpg");
+        String name = DateTimeFormatterUtils.formatNow("HH-mm") + ".jpg";
+        File file = new File("time" + File.separator + name);
+        if (file.exists()){
+            return IO.read(new FileInputStream(file), true);
+        }else {
+            return OkHttpUtils.downloadBytes("https://file.kuku.me/time/time/" + name);
+        }
     }
 
     @Override
@@ -598,7 +603,7 @@ public class ToolLogicImpl implements ToolLogic {
         Map<String, String> map = new HashMap<>();
         String mhyVersion = "2.1.0";
         String n = MD5Utils.toMD5(mhyVersion);
-        String i = String.valueOf(new Date().getTime()).substring(0, 10);
+        String i = String.valueOf(System.currentTimeMillis()).substring(0, 10);
         String r = BotUtils.randomStr(6);
         String c = MD5Utils.toMD5("salt=" + n + "&t=" + i + "&r=" + r);
         String ds = i + "," + r + "," + c;

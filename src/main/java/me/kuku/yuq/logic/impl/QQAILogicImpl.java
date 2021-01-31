@@ -50,7 +50,7 @@ public class QQAILogicImpl implements AILogic {
         }
         Map<String, String> map = new HashMap<>();
         map.put("app_id", appId);
-        map.put("time_stamp", String.valueOf(new Date().getTime() / 1000));
+        map.put("time_stamp", String.valueOf(System.currentTimeMillis() / 1000));
         map.put("nonce_str", BotUtils.randomStr(16));
         FormBody.Builder builder = new FormBody.Builder();
         map.putAll(otherParams);

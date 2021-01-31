@@ -161,7 +161,7 @@ public class WeiboLogicImpl implements WeiboLogic {
 
     private Map<String, String> loginParams(String username) throws IOException {
         Response response = OkHttpUtils.get(String.format("https://login.sina.com.cn/sso/prelogin.php?entry=weibo&callback=sinaSSOController.preloginCallBack&su=%s&rsakt=mod&checkpin=1&client=ssologin.js(v1.4.19)&_=%s",
-                username, new Date().getTime()), OkHttpUtils.addReferer("https://weibo.com/login.php?url=https%3A%2F%2Fweibo.com%2F"));
+                username, System.currentTimeMillis()), OkHttpUtils.addReferer("https://weibo.com/login.php?url=https%3A%2F%2Fweibo.com%2F"));
         JSONObject jsonObject = OkHttpUtils.getJsonp(response);
         Map<String, String> map = new HashMap<>();
         for (Map.Entry<String, Object> entry: jsonObject.entrySet()){
@@ -224,7 +224,7 @@ public class WeiboLogicImpl implements WeiboLogic {
         paramMap.put("prelt", "55");
         paramMap.put("url", "https://weibo.com/ajaxlogin.php?framelogin=1&callback=parent.sinaSSOController.feedBackUrlCallBack");
         paramMap.put("returntype", "META");
-        Response response = OkHttpUtils.post("https://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.19)&_=" + new Date().getTime(),
+        Response response = OkHttpUtils.post("https://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.19)&_=" + System.currentTimeMillis(),
                 paramMap, OkHttpUtils.addCookie(map.get("cookie")));
         String html = OkHttpUtils.getStr(response);
         String url = BotUtils.regex("location.replace\\(\"", "\"\\);", html);
@@ -252,7 +252,7 @@ public class WeiboLogicImpl implements WeiboLogic {
         String jsonStr = BotUtils.regex("sinaSSOController.setCrossDomainUrlList\\(", "\\);", html);
         JSONObject urlJsonObject = JSON.parseObject(jsonStr);
         String pcUrl = urlJsonObject.getJSONArray("arrURL").getString(0);
-        Response pcResponse = OkHttpUtils.get(pcUrl + "&callback=sinaSSOController.doCrossDomainCallBack&scriptId=ssoscript0&client=ssologin.js(v1.4.19)&_=" + new Date().getTime());
+        Response pcResponse = OkHttpUtils.get(pcUrl + "&callback=sinaSSOController.doCrossDomainCallBack&scriptId=ssoscript0&client=ssologin.js(v1.4.19)&_=" + System.currentTimeMillis());
         pcResponse.close();
         String pcCookie = OkHttpUtils.getCookie(pcResponse);
         String mobileCookie = getMobileCookie(cookie);
@@ -354,7 +354,7 @@ public class WeiboLogicImpl implements WeiboLogic {
         Response startResponse = OkHttpUtils.get(startUrl);
         startResponse.close();
         String cookie = OkHttpUtils.getCookie(startResponse);
-        String str = OkHttpUtils.getStr("https://ssl.ptlogin2.qq.com/pt_open_login?openlogin_data=which%3D%26refer_cgi%3Dauthorize%26response_type%3Dcode%26client_id%3D101019034%26state%3D%26display%3D%26openapi%3D%2523%26switch%3D0%26src%3D1%26sdkv%3D%26sdkp%3Da%26tid%3D1597734121%26pf%3D%26need_pay%3D0%26browser%3D0%26browser_error%3D%26serial%3D%26token_key%3D%26redirect_uri%3Dhttps%253A%252F%252Fpassport.weibo.com%252Fothersitebind%252Fbind%253Fsite%253Dqq%2526state%253D" + code + "%2526bentry%253Dminiblog%2526wl%253D%26sign%3D%26time%3D%26status_version%3D%26status_os%3D%26status_machine%3D%26page_type%3D1%26has_auth%3D0%26update_auth%3D0%26auth_time%3D" + new Date().getTime() + "&auth_token=" + QQUtils.getToken2(qqLoginEntity.getSuperToken()) + "&pt_vcode_v1=0&pt_verifysession_v1=&verifycode=&u=" + qqLoginEntity.getQq() + "&pt_randsalt=0&ptlang=2052&low_login_enable=0&u1=http%3A%2F%2Fconnect.qq.com&from_ui=1&fp=loginerroralert&device=2&aid=716027609&daid=383&pt_3rd_aid=101019034&ptredirect=1&h=1&g=1&pt_uistyle=35&regmaster=&",
+        String str = OkHttpUtils.getStr("https://ssl.ptlogin2.qq.com/pt_open_login?openlogin_data=which%3D%26refer_cgi%3Dauthorize%26response_type%3Dcode%26client_id%3D101019034%26state%3D%26display%3D%26openapi%3D%2523%26switch%3D0%26src%3D1%26sdkv%3D%26sdkp%3Da%26tid%3D1597734121%26pf%3D%26need_pay%3D0%26browser%3D0%26browser_error%3D%26serial%3D%26token_key%3D%26redirect_uri%3Dhttps%253A%252F%252Fpassport.weibo.com%252Fothersitebind%252Fbind%253Fsite%253Dqq%2526state%253D" + code + "%2526bentry%253Dminiblog%2526wl%253D%26sign%3D%26time%3D%26status_version%3D%26status_os%3D%26status_machine%3D%26page_type%3D1%26has_auth%3D0%26update_auth%3D0%26auth_time%3D" + System.currentTimeMillis() + "&auth_token=" + QQUtils.getToken2(qqLoginEntity.getSuperToken()) + "&pt_vcode_v1=0&pt_verifysession_v1=&verifycode=&u=" + qqLoginEntity.getQq() + "&pt_randsalt=0&ptlang=2052&low_login_enable=0&u1=http%3A%2F%2Fconnect.qq.com&from_ui=1&fp=loginerroralert&device=2&aid=716027609&daid=383&pt_3rd_aid=101019034&ptredirect=1&h=1&g=1&pt_uistyle=35&regmaster=&",
                 OkHttpUtils.addHeaders(qqLoginEntity.getCookieWithSuper() + cookie, startUrl));
         Result<String> result = QQUtils.getResultUrl(str);
         String url = result.getData();

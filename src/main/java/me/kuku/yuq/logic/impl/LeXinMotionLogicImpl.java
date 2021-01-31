@@ -63,7 +63,7 @@ public class LeXinMotionLogicImpl implements LeXinMotionLogic {
             String openId = BotUtils.regex("openid=", "&", url);
             String accessToken = BotUtils.regex("access_token=", "&", url);
             Response response = OkHttpUtils.post("https://sports.lifesense.com/sessions_service/loginFromOpenId?systemType=2&version=3.7.5",
-                    OkHttpUtils.addJson("{\"openAccountType\":2,\"clientId\":\"" + BotUtils.randomStr(33) + "}\",\"expireTime\":" + (new Date().getTime() + 1000L * 60 * 60 * 24 * 90) + ",\"appType\":6,\"openId\":\"" + openId + "\",\"roleType\":0,\"openAccessToken\":\"" + accessToken + "\"}"));
+                    OkHttpUtils.addJson("{\"openAccountType\":2,\"clientId\":\"" + BotUtils.randomStr(33) + "}\",\"expireTime\":" + (System.currentTimeMillis() + 1000L * 60 * 60 * 24 * 90) + ",\"appType\":6,\"openId\":\"" + openId + "\",\"roleType\":0,\"openAccessToken\":\"" + accessToken + "\"}"));
             JSONObject jsonObject = OkHttpUtils.getJson(response);
             String cookie = OkHttpUtils.getCookie(response);
             if (jsonObject.getInteger("code") == 200){
@@ -92,7 +92,7 @@ public class LeXinMotionLogicImpl implements LeXinMotionLogic {
         SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         Date date = new Date();
-        String tenTime = String.valueOf(date.getTime()).substring(0, 10);
+        String tenTime = String.valueOf(System.currentTimeMillis()).substring(0, 10);
         JSONObject jsonObject = OkHttpUtils.postJson("https://sports.lifesense.com/sport_service/sport/sport/uploadMobileStepV2?country=%E4%B8%AD%E5%9B%BD&city=%E6%9F%B3%E5%B7%9E&cityCode=450200&timezone=Asia%2FShanghai&latitude=24.368694&os_country=CN&channel=qq&language=zh&openudid=&platform=android&province=%E5%B9%BF%E8%A5%BF%E5%A3%AE%E6%97%8F%E8%87%AA%E6%B2%BB%E5%8C%BA&appType=6&requestId=" + BotUtils.randomStr(32) + "&countryCode=&systemType=2&longitude=109.532216&devicemodel=V1914A&area=CN&screenwidth=1080&os_langs=zh&provinceCode=450000&promotion_channel=qq&rnd=3d51742c&version=4.6.7&areaCode=450203&requestToken=" + BotUtils.randomStr(32) + "&network_type=wifi&osversion=10&screenheight=2267&ts=" + tenTime,
                 OkHttpUtils.addJson(String.format("{\"list\":[{\"active\":1,\"calories\":%d,\"created\":\"%s\",\"dataSource\":2,\"dayMeasurementTime\":\"%s\",\"deviceId\":\"M_NULL\",\"distance\":%d,\"id\":\"%s\",\"isUpload\":0,\"measurementTime\":\"%s\",\"priority\":0,\"step\":%d,\"type\":2,\"updated\":%s,\"userId\":\"%s\",\"DataSource\":2,\"exerciseTime\":0}]}",
                         step / 4, dateTimeFormat.format(date), dateFormat.format(date), step / 3, BotUtils.randomStr(32), dateTimeFormat.format(date), step, tenTime + "000", motionEntity.getLeXinUserId())),

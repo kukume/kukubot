@@ -67,20 +67,20 @@ public class QQLoginLogicImpl implements QQLoginLogic {
         StringBuilder sb = new StringBuilder();
         String gtk2 = qqLoginEntity.getGtk2();
         Headers cookie = OkHttpUtils.addCookie(qqLoginEntity.getCookie());
-        JSONObject jsonObject = OkHttpUtils.getJson(String.format("https://iyouxi3.vip.qq.com/ams3.0.php?_c=page&actid=79968&format=json&g_tk=%s&cachetime=%d", gtk2, new Date().getTime()), cookie);
+        JSONObject jsonObject = OkHttpUtils.getJson(String.format("https://iyouxi3.vip.qq.com/ams3.0.php?_c=page&actid=79968&format=json&g_tk=%s&cachetime=%d", gtk2, System.currentTimeMillis()), cookie);
         switch (jsonObject.getInteger("ret")){
             case 0: sb.append("会员面板签到成功！！\n"); break;
             case 10601: sb.append("会员面板今天已经签到！\n"); break;
             case 10002: sb.append("会员面板签到失败！请更新QQ！\n"); break;
             case 20101: sb.append("会员面板签到失败，不是QQ会员！\n"); break;
         }
-        jsonObject = OkHttpUtils.getJson(String.format("https://iyouxi3.vip.qq.com/ams3.0.php?_c=page&actid=403490&rand=0.27489888%s&g_tk=%s&format=json", new Date().getTime(), gtk2), cookie);
+        jsonObject = OkHttpUtils.getJson(String.format("https://iyouxi3.vip.qq.com/ams3.0.php?_c=page&actid=403490&rand=0.27489888%s&g_tk=%s&format=json", System.currentTimeMillis(), gtk2), cookie);
         switch (jsonObject.getInteger("ret")){
             case 0: sb.append("会员电脑端签到成功！！\n"); break;
             case 10601: sb.append("会员电脑端今天已经签到！\n"); break;
             case 10002: sb.append("会员电脑端签到失败！请更新QQ！\n"); break;
         }
-        jsonObject = OkHttpUtils.getJson(String.format("https://iyouxi3.vip.qq.com/ams3.0.php?actid=52002&rand=0.27489888%s&g_tk=%s", new Date().getTime(), gtk2), cookie);
+        jsonObject = OkHttpUtils.getJson(String.format("https://iyouxi3.vip.qq.com/ams3.0.php?actid=52002&rand=0.27489888%s&g_tk=%s", System.currentTimeMillis(), gtk2), cookie);
         switch (jsonObject.getInteger("ret")){
             case 0: sb.append("会员手机端签到成功！！\n"); break;
             case 10601: sb.append("会员手机端今天已经签到！\n"); break;
@@ -105,13 +105,13 @@ public class QQLoginLogicImpl implements QQLoginLogic {
             case 1010: sb.append("今天已经领取过金豆了！\n"); break;
             default: sb.append("领取金豆失败！！");
         }
-        OkHttpUtils.get(String.format("https://iyouxi3.vip.qq.com/ams3.0.php?g_tk=%s&actid=27754&_=%d", gtk2, new Date().getTime()), cookie).close();
-        OkHttpUtils.get(String.format("https://iyouxi3.vip.qq.com/ams3.0.php?g_tk=%s&actid=27754&_=%d", gtk2, new Date().getTime()), cookie).close();
-        OkHttpUtils.get(String.format("https://iyouxi3.vip.qq.com/ams3.0.php?g_tk=%s&actid=22894&_c=page&_=%d", gtk2, new Date().getTime()), cookie).close();
-        OkHttpUtils.get(String.format("https://iyouxi4.vip.qq.com/ams3.0.php?g_tk=%s&actid=239371&_c=page&format=json&_=%d", gtk2, new Date().getTime()), cookie).close();
-        OkHttpUtils.get(String.format("https://iyouxi3.vip.qq.com/ams3.0.php?g_tk=%s&actid=22887&_c=page&format=json&_=%d", gtk2, new Date().getTime()), cookie).close();
-        OkHttpUtils.get(String.format("https://iyouxi3.vip.qq.com/ams3.0.php?g_tk=%s&actid=202041&_c=page&format=json&_=%d", gtk2, new Date().getTime()), cookie).close();
-        OkHttpUtils.get(String.format("https://iyouxi3.vip.qq.com/ams3.0.php?g_tk=%s&actid=202049&_c=page&format=json&_=%d", gtk2, new Date().getTime()), cookie).close();
+        OkHttpUtils.get(String.format("https://iyouxi3.vip.qq.com/ams3.0.php?g_tk=%s&actid=27754&_=%d", gtk2, System.currentTimeMillis()), cookie).close();
+        OkHttpUtils.get(String.format("https://iyouxi3.vip.qq.com/ams3.0.php?g_tk=%s&actid=27754&_=%d", gtk2, System.currentTimeMillis()), cookie).close();
+        OkHttpUtils.get(String.format("https://iyouxi3.vip.qq.com/ams3.0.php?g_tk=%s&actid=22894&_c=page&_=%d", gtk2, System.currentTimeMillis()), cookie).close();
+        OkHttpUtils.get(String.format("https://iyouxi4.vip.qq.com/ams3.0.php?g_tk=%s&actid=239371&_c=page&format=json&_=%d", gtk2, System.currentTimeMillis()), cookie).close();
+        OkHttpUtils.get(String.format("https://iyouxi3.vip.qq.com/ams3.0.php?g_tk=%s&actid=22887&_c=page&format=json&_=%d", gtk2, System.currentTimeMillis()), cookie).close();
+        OkHttpUtils.get(String.format("https://iyouxi3.vip.qq.com/ams3.0.php?g_tk=%s&actid=202041&_c=page&format=json&_=%d", gtk2, System.currentTimeMillis()), cookie).close();
+        OkHttpUtils.get(String.format("https://iyouxi3.vip.qq.com/ams3.0.php?g_tk=%s&actid=202049&_c=page&format=json&_=%d", gtk2, System.currentTimeMillis()), cookie).close();
         return sb.toString();
     }
 
@@ -152,7 +152,7 @@ public class QQLoginLogicImpl implements QQLoginLogic {
         Map<String, String> map = new HashMap<>();
         map.put("uin", qqLoginEntity.getQq().toString());
         map.put("format", "json");
-        JSONObject jsonObject = OkHttpUtils.postJson(String.format("https://vip.qzone.qq.com/fcg-bin/v2/fcg_mobile_vip_site_checkin?t=0.89457%d&g_tk=%s&qzonetoken=423659183", new Date().getTime(), gtkP),
+        JSONObject jsonObject = OkHttpUtils.postJson(String.format("https://vip.qzone.qq.com/fcg-bin/v2/fcg_mobile_vip_site_checkin?t=0.89457%d&g_tk=%s&qzonetoken=423659183", System.currentTimeMillis(), gtkP),
                 map, OkHttpUtils.addCookie(qqLoginEntity.getCookieWithQQZone()));
         switch (jsonObject.getInteger("code")){
             case 0: sb.append("黄钻签到成功！"); break;
@@ -163,7 +163,7 @@ public class QQLoginLogicImpl implements QQLoginLogic {
         map.put("option", "sign");
         map.put("uin", qqLoginEntity.getQq().toString());
         map.put("format", "json");
-        jsonObject = OkHttpUtils.postJson(String.format("https://activity.qzone.qq.com/fcg-bin/fcg_huangzuan_daily_signing?t=0.%s906035&g_tk=%s&qzonetoken=-1", new Date().getTime(), gtkP),
+        jsonObject = OkHttpUtils.postJson(String.format("https://activity.qzone.qq.com/fcg-bin/fcg_huangzuan_daily_signing?t=0.%s906035&g_tk=%s&qzonetoken=-1", System.currentTimeMillis(), gtkP),
                 map, OkHttpUtils.addCookie(qqLoginEntity.getCookieWithQQZone()));
         switch (jsonObject.getInteger("code")){
             case 0: sb.append("黄钻公众号签到成功！"); break;
@@ -176,7 +176,7 @@ public class QQLoginLogicImpl implements QQLoginLogic {
 
     @Override
     public String qqVideoSign1(QQLoginEntity qqLoginEntity) throws IOException {
-        JSONObject jsonObject = OkHttpUtils.getJsonp(String.format("https://vip.video.qq.com/fcgi-bin/comm_cgi?name=hierarchical_task_system&cmd=2&_=%s8906", new Date().getTime()),
+        JSONObject jsonObject = OkHttpUtils.getJsonp(String.format("https://vip.video.qq.com/fcgi-bin/comm_cgi?name=hierarchical_task_system&cmd=2&_=%s8906", System.currentTimeMillis()),
                 OkHttpUtils.addCookie(qqLoginEntity.getCookie()));
         switch (jsonObject.getInteger("ret")){
             case 0: return "腾讯视频会员签到成功";
@@ -188,7 +188,7 @@ public class QQLoginLogicImpl implements QQLoginLogic {
 
     @Override
     public String qqVideoSign2(QQLoginEntity qqLoginEntity) throws IOException {
-        Response response = OkHttpUtils.get("https://access.video.qq.com/user/auth_login?vappid=11059694&vsecret=fdf61a6be0aad57132bc5cdf78ac30145b6cd2c1470b0cfe&login_flag=1&type=qq&appid=101483052&g_tk=" + qqLoginEntity.getGtk() + "&g_vstk=&g_actk=&callback=jQuery19107079438303985055_1588043611061&_=" + new Date().getTime(),
+        Response response = OkHttpUtils.get("https://access.video.qq.com/user/auth_login?vappid=11059694&vsecret=fdf61a6be0aad57132bc5cdf78ac30145b6cd2c1470b0cfe&login_flag=1&type=qq&appid=101483052&g_tk=" + qqLoginEntity.getGtk() + "&g_vstk=&g_actk=&callback=jQuery19107079438303985055_1588043611061&_=" + System.currentTimeMillis(),
                 OkHttpUtils.addCookie(qqLoginEntity.getCookie() + "video_guid=87f1f5fd3c3ebf5a; video_platform=2; "));
         response.close();
         String cookie = OkHttpUtils.getCookie(response);
@@ -242,13 +242,13 @@ public class QQLoginLogicImpl implements QQLoginLogic {
         Map<String, String> map = new HashMap<>();
         map.put("outCharset", "utf-8");
         map.put("iAppId", "0");
-        map.put("llTime", String.valueOf(new Date().getTime()));
+        map.put("llTime", String.valueOf(System.currentTimeMillis()));
         map.put("format", "json");
         map.put("iActionType", "6");
         map.put("strUid", qqLoginEntity.getQq().toString());
         map.put("uin", qqLoginEntity.getQq().toString());
         map.put("inCharset", "utf-8");
-        JSONObject jsonObject1 = OkHttpUtils.postJson("https://h5.qzone.qq.com/webapp/json/QQBigVipTask/CompleteTask?t=0." + new Date().getTime() + "906319&g_tk=" + qqLoginEntity.getGtkP(),
+        JSONObject jsonObject1 = OkHttpUtils.postJson("https://h5.qzone.qq.com/webapp/json/QQBigVipTask/CompleteTask?t=0." + System.currentTimeMillis() + "906319&g_tk=" + qqLoginEntity.getGtkP(),
                 map, OkHttpUtils.addCookie(qqLoginEntity.getCookieWithQQZone()));
         map.clear();
         map.put("appid", "qq_big_vip");
@@ -257,7 +257,7 @@ public class QQLoginLogicImpl implements QQLoginLogic {
         map.put("format", "json");
         map.put("inCharset", "utf-8");
         map.put("outCharset", "utf-8");
-        JSONObject jsonObject2 = OkHttpUtils.postJson("https://vip.qzone.qq.com/fcg-bin/v2/fcg_vip_task_checkin?t=0" + new Date().getTime() + "082161&g_tk=" + qqLoginEntity.getGtkP(), map,
+        JSONObject jsonObject2 = OkHttpUtils.postJson("https://vip.qzone.qq.com/fcg-bin/v2/fcg_vip_task_checkin?t=0" + System.currentTimeMillis() + "082161&g_tk=" + qqLoginEntity.getGtkP(), map,
                 OkHttpUtils.addCookie(qqLoginEntity.getCookieWithQQZone()));
         if (jsonObject1.getInteger("ret") == 0 && jsonObject2.getInteger("code") == 0) return "大会员签到成功！！";
         else if (jsonObject1.getInteger("ret") == -3000 && jsonObject2.getInteger("code") == -3000) return "大会员签到失败！请更新QQ！";
@@ -417,7 +417,7 @@ public class QQLoginLogicImpl implements QQLoginLogic {
             case 1000005: sb.append("游戏大厅2签到失败！请更新QQ！\n"); break;
             default: sb.append("游戏大厅签到2失败！").append(jsonObject.getString("resultstr")).append("\n");
         }
-        Response response = OkHttpUtils.get("http://info.gamecenter.qq.com/cgi-bin/gc_my_tab_async_fcgi?merge=1&ver=0&st=" + new Date().getTime() + "746&sid=&uin=" + qq + "&number=0&path=489&plat=qq&gamecenter=1&_wv=1031&_proxy=1&gc_version=2&ADTAG=gamecenter&notShowPub=1&param=%7B%220%22%3A%7B%22param%22%3A%7B%22platform%22%3A1%2C%22tt%22%3A1%7D%2C%22module%22%3A%22gc_my_tab%22%2C%22method%22%3A%22sign_in%22%7D%7D&g_tk=" + gtk,
+        Response response = OkHttpUtils.get("http://info.gamecenter.qq.com/cgi-bin/gc_my_tab_async_fcgi?merge=1&ver=0&st=" + System.currentTimeMillis() + "746&sid=&uin=" + qq + "&number=0&path=489&plat=qq&gamecenter=1&_wv=1031&_proxy=1&gc_version=2&ADTAG=gamecenter&notShowPub=1&param=%7B%220%22%3A%7B%22param%22%3A%7B%22platform%22%3A1%2C%22tt%22%3A1%7D%2C%22module%22%3A%22gc_my_tab%22%2C%22method%22%3A%22sign_in%22%7D%7D&g_tk=" + gtk,
                 OkHttpUtils.addCookie(qqLoginEntity.getCookie()));
         if (response.code() == 200){
             jsonObject = OkHttpUtils.getJson(response);
@@ -506,7 +506,7 @@ public class QQLoginLogicImpl implements QQLoginLogic {
             case 100000: sb.append("领取爱心失败，请更新QQ！");
             default: sb.append("领取爱心失败！");
         }
-        Response response = OkHttpUtils.get("https://buluo.qq.com/cgi-bin/bar/card/bar_list_by_page?uin=" + qqLoginEntity.getQq() + "&neednum=30&startnum=0&r=0.98389" + new Date().getTime(),
+        Response response = OkHttpUtils.get("https://buluo.qq.com/cgi-bin/bar/card/bar_list_by_page?uin=" + qqLoginEntity.getQq() + "&neednum=30&startnum=0&r=0.98389" + System.currentTimeMillis(),
                 OkHttpUtils.addHeaders(qqLoginEntity.getCookie(), "https://buluo.qq.com/mobile/personal.html"));
         if (response.code() != 200){
             response.close();
@@ -521,7 +521,7 @@ public class QQLoginLogicImpl implements QQLoginLogic {
                 map.clear();
                 map.put("bid", singleJsonObject.getString("bid"));
                 map.put("bkn", gtk);
-                map.put("r", "0.84746" + new Date().getTime());
+                map.put("r", "0.84746" + System.currentTimeMillis());
                 try {
                     JSONObject resultJsonObject = OkHttpUtils.postJson("https://buluo.qq.com/cgi-bin/bar/user/sign", map,
                             OkHttpUtils.addHeaders(qqLoginEntity.getCookie(), "https://buluo.qq.com/mobile/personal.html"));
@@ -554,7 +554,7 @@ public class QQLoginLogicImpl implements QQLoginLogic {
     @Override
     public String motionSign(QQLoginEntity qqLoginEntity) throws IOException {
         int step = (int) (Math.random() * 88888 + 11111);
-        long time = new Date().getTime();
+        long time = System.currentTimeMillis();
         Map<String, String> map = new HashMap<>();
         map.put("params", String.format("{\"reqtype\":11,\"mbtodayStep\":%d,\"todayStep\":%d,\"timestamp\":%d}", step, step, time));
         map.put("l5apiKey", "daka.server");
@@ -578,14 +578,14 @@ public class QQLoginLogicImpl implements QQLoginLogic {
             String cookie = qqLoginEntity.getCookie(psKey) + "DomainID=176; ";
             String gtk = qqLoginEntity.getGtk();
             StringBuilder sb = new StringBuilder();
-            JSONObject jsonObject = OkHttpUtils.getJson(String.format("https://app.gamevip.qq.com/cgi-bin/gamevip_sign/GameVip_SignIn?format=json&g_tk=%s&_=%s", gtk, new Date().getTime()),
+            JSONObject jsonObject = OkHttpUtils.getJson(String.format("https://app.gamevip.qq.com/cgi-bin/gamevip_sign/GameVip_SignIn?format=json&g_tk=%s&_=%s", gtk, System.currentTimeMillis()),
                     OkHttpUtils.addHeaders(cookie, "https://gamevip.qq.com/sign_pop/sign_pop_v2.html"));
             switch (jsonObject.getInteger("result")){
                 case 0: sb.append("蓝钻签到成功！当前签到积分").append(jsonObject.getString("SignScore")).append("点\n"); break;
                 case 1000005: sb.append("蓝钻签到失败，请更新QQ！！\n"); break;
                 default: sb.append("蓝钻签到失败！").append(jsonObject.getString("resultstr"));
             }
-            jsonObject = OkHttpUtils.getJson(String.format("https://app.gamevip.qq.com/cgi-bin/gamevip_sign/GameVip_Lottery?format=json&g_tk=%s&_=%s0334", gtk, new Date().getTime()),
+            jsonObject = OkHttpUtils.getJson(String.format("https://app.gamevip.qq.com/cgi-bin/gamevip_sign/GameVip_Lottery?format=json&g_tk=%s&_=%s0334", gtk, System.currentTimeMillis()),
                     OkHttpUtils.addHeaders(cookie, "https://gamevip.qq.com/sign_pop/sign_pop_v2.html"));
             switch (jsonObject.getInteger("result")){
                 case 0: sb.append("蓝钻抽奖成功！\n"); break;
@@ -702,7 +702,7 @@ public class QQLoginLogicImpl implements QQLoginLogic {
                 id = Integer.parseInt(arr[(int) (Math.random() * arr.length)]);
             }else id = getBubbleId(qqLoginEntity, result.getData(), name);
             if (id != null){
-                JSONObject jsonObject = OkHttpUtils.getJsonp("https://g.vip.qq.com/bubble/bubbleSetup?id=" + id + "&platformId=2&uin=" + qqLoginEntity.getQq() + "&version=8.3.0.4480&diyText=%7B%22diyText%22%3A%22" + text + "%22%7D&format=jsonp&t=" + new Date().getTime() + "&g_tk=" + qqLoginEntity.getGtk() + "&p_tk=" + qqLoginEntity.getPt4Token() + "&callback=jsonp0",
+                JSONObject jsonObject = OkHttpUtils.getJsonp("https://g.vip.qq.com/bubble/bubbleSetup?id=" + id + "&platformId=2&uin=" + qqLoginEntity.getQq() + "&version=8.3.0.4480&diyText=%7B%22diyText%22%3A%22" + text + "%22%7D&format=jsonp&t=" + System.currentTimeMillis() + "&g_tk=" + qqLoginEntity.getGtk() + "&p_tk=" + qqLoginEntity.getPt4Token() + "&callback=jsonp0",
                         OkHttpUtils.addCookie(qqLoginEntity.getCookie(result.getData())));
                 switch (jsonObject.getInteger("ret")){
                     case 0: return "更换气泡成功，由于缓存等原因，效果可能会在较长一段时间后生效！";
@@ -739,7 +739,7 @@ public class QQLoginLogicImpl implements QQLoginLogic {
         LocalDate now = LocalDate.now();
         String nowDate = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.CHINA));
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.CHINA);
-        JSONObject jsonObject = OkHttpUtils.postJson("https://proxy.vac.qq.com/cgi-bin/srfentry.fcgi?ts=" + new Date().getTime() + "&g_tk=" + qqLoginEntity.getGtk(),
+        JSONObject jsonObject = OkHttpUtils.postJson("https://proxy.vac.qq.com/cgi-bin/srfentry.fcgi?ts=" + System.currentTimeMillis() + "&g_tk=" + qqLoginEntity.getGtk(),
                 OkHttpUtils.addJson(String.format("{\"13357\":{\"month\":%s,\"pageIndex\":1,\"pageSize\":20,\"sUin\":\"%s\",\"year\":%d}}",
                         now.getMonth().getValue(), qqLoginEntity.getQq(), now.getYear())),
                 OkHttpUtils.addCookie(qqLoginEntity.getCookie()));
@@ -843,7 +843,7 @@ public class QQLoginLogicImpl implements QQLoginLogic {
             map.put("inCharset", "utf-8");
             map.put("outCharset", "utf-8");
             JSONObject jsonObject = OkHttpUtils.postJson(String.format("https://h5.qzone.qq.com/proxy/domain/activity.qzone.qq.com/fcg-bin/fcg_weishi_task_report_login?t=0%s030444&g_tk=%s",
-                    new Date().getTime(), gtk), map, OkHttpUtils.addCookie(cookie));
+                    System.currentTimeMillis(), gtk), map, OkHttpUtils.addCookie(cookie));
             if (jsonObject.getInteger("code") == 0) sb.append("微视签到成功！！");
             else sb.append("微视签到失败，").append(jsonObject.getString("message"));
             Map<String, String> headerMap = new HashMap<>();
@@ -1019,7 +1019,7 @@ public class QQLoginLogicImpl implements QQLoginLogic {
         if (result.getCode() == 200){
             String psKey = result.getData();
             String url = String.format("https://mq.vip.qq.com/m/growth/rank?ADTAG=vipcenter&_wvSb=1&traceNum=2&traceId=%s%s",
-                    qqLoginEntity.getQq(), String.valueOf(new Date().getTime()).substring(0, 11));
+                    qqLoginEntity.getQq(), String.valueOf(System.currentTimeMillis()).substring(0, 11));
             Response response = OkHttpUtils.get(url, OkHttpUtils.addCookie(qqLoginEntity.getCookie(psKey)));
             if (response.code() == 200){
                 String html = OkHttpUtils.getStr(response);
@@ -1046,7 +1046,7 @@ public class QQLoginLogicImpl implements QQLoginLogic {
     @Override
     public Result<List<GroupMember>> groupMemberInfo(QQLoginEntity qqLoginEntity, Long group) throws IOException {
         JSONObject jsonObject = OkHttpUtils.getJson(String.format("https://qinfo.clt.qq.com/cgi-bin/qun_info/get_members_info_v1?friends=1&gc=%s&bkn=%s&src=qinfo_v3&_ti=%s",
-                group, qqLoginEntity.getGtk(), new Date().getTime()), OkHttpUtils.addCookie(qqLoginEntity.getCookie()));
+                group, qqLoginEntity.getGtk(), System.currentTimeMillis()), OkHttpUtils.addCookie(qqLoginEntity.getCookie()));
         switch (jsonObject.getInteger("ec")){
             case 0:
                 JSONObject membersJsonObject = jsonObject.getJSONObject("members");
@@ -1068,7 +1068,7 @@ public class QQLoginLogicImpl implements QQLoginLogic {
         Result<String> result = QQSuperLoginUtils.vipLogin(qqLoginEntity);
         if (result.getCode() == 200){
             String psKey = result.getData();
-            JSONObject jsonObject = OkHttpUtils.getJson("https://proxy.vip.qq.com/cgi-bin/srfentry.fcgi?ts=" + new Date().getTime() + "&daid=18&g_tk=" + qqLoginEntity.getGtk(psKey) + "&data=%7B%2213031%22:%7B%22req%22:%7B%22sModel%22:%22" + phone + "%22,%22sManu%22:%22vivo%22,%22sIMei%22:%22" + iMei + "%22,%22iAppType%22:3,%22sVer%22:%228.4.1.4680%22,%22lUin%22:" + qqLoginEntity.getQq() + ",%22bShowInfo%22:true,%22sDesc%22:%22%22,%22sModelShow%22:%22" + phone + "%22%7D%7D%7D&pt4_token=" + qqLoginEntity.getPt4Token(),
+            JSONObject jsonObject = OkHttpUtils.getJson("https://proxy.vip.qq.com/cgi-bin/srfentry.fcgi?ts=" + System.currentTimeMillis() + "&daid=18&g_tk=" + qqLoginEntity.getGtk(psKey) + "&data=%7B%2213031%22:%7B%22req%22:%7B%22sModel%22:%22" + phone + "%22,%22sManu%22:%22vivo%22,%22sIMei%22:%22" + iMei + "%22,%22iAppType%22:3,%22sVer%22:%228.4.1.4680%22,%22lUin%22:" + qqLoginEntity.getQq() + ",%22bShowInfo%22:true,%22sDesc%22:%22%22,%22sModelShow%22:%22" + phone + "%22%7D%7D%7D&pt4_token=" + qqLoginEntity.getPt4Token(),
                     OkHttpUtils.addCookie(qqLoginEntity.getCookie(psKey)));
             if (jsonObject.getInteger("ecode") == 0) return "修改在线手机型号成功！！";
             else if (jsonObject.getInteger("ecode") == -500000) return "修改失败，请更新QQ！！";

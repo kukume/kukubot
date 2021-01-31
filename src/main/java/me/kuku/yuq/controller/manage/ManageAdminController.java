@@ -26,7 +26,8 @@ public class ManageAdminController {
     public GroupEntity before(Member qq, long group){
         GroupEntity groupEntity = groupService.findByGroup(group);
         if (groupEntity == null) groupEntity = new GroupEntity(group);
-        if (groupEntity.isAdmin(qq.getId()) || qq.getId() == Long.parseLong(master) || qq.isAdmin()){
+        if (groupEntity.isAdmin(qq.getId()) || groupEntity.isSuperAdmin(qq.getId())
+                || qq.getId() == Long.parseLong(master) || qq.isAdmin()){
             return groupEntity;
         }else throw FunKt.getMif().at(qq).plus("您的权限不足，无法执行！！").toThrowable();
     }

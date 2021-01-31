@@ -27,6 +27,7 @@ dependencies {
     implementation ('com.baidu.aip:java-sdk:4.15.3'){
         exclude group: 'org.slf4j', module: 'slf4j-simple'
     }
+    implementation 'net.mamoe:mirai-core-jvm:2.2.1'
 //    implementation 'net.mamoe:mirai-login-solver-selenium:1.0-dev-10'
 }
 

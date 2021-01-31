@@ -17,7 +17,10 @@ import com.icecreamqaq.yuq.message.Message;
 import com.icecreamqaq.yuq.message.MessageItemFactory;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.entity.QQEntity;
+import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.logic.BiliBiliLogic;
+import me.kuku.yuq.logic.BotLogic;
+import me.kuku.yuq.logic.QQLoginLogic;
 import me.kuku.yuq.logic.WeiboLogic;
 import me.kuku.yuq.pojo.*;
 import me.kuku.yuq.service.GroupService;
@@ -42,6 +45,10 @@ public class ManageSuperAdminController {
     private BiliBiliLogic biliBiliLogic;
     @Inject
     private QQService qqService;
+    @Inject
+    private BotLogic botLogic;
+    @Inject
+    private QQLoginLogic qqLoginLogic;
 
     @Before
     public GroupEntity before(long group, Member qq){
@@ -134,6 +141,11 @@ public class ManageSuperAdminController {
         return type + "成功！！";
     }
 
+    @Action("全体禁言 {status}")
+    public String allShutUp(long group, boolean status) throws IOException {
+        QQLoginEntity qqLoginEntity = botLogic.getQQLoginEntity();
+        return qqLoginLogic.allShutUp(qqLoginEntity, group, status);
+    }
 
     @Action("t {qqNo}")
     @QMsg(at = true)

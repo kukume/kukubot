@@ -12,11 +12,10 @@ import me.kuku.yuq.logic.ArkNightsLogic;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.QQBindService;
 import me.kuku.yuq.utils.BotUtils;
+import me.kuku.yuq.utils.DateTimeFormatterUtils;
 
 import javax.inject.Inject;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -28,7 +27,7 @@ public class ArkNightsController {
 	@Inject
 	private ArkNightsLogic arkNightsLogic;
 
-	private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	private final String pattern = "yyyy-MM-dd HH:mm:ss";
 
 	@Before
 	public void before(long qq, BotActionContext actionContext){
@@ -46,7 +45,8 @@ public class ArkNightsController {
 			StringBuilder sb = new StringBuilder().append("商品名称    金额    时间").append("\n");
 			List<Map<String, String>> list = result.getData();
 			for (Map<String, String> map : list) {
-				sb.append(map.get("productName")).append("    ").append(map.get("amount")).append("    ").append(sdf.format(new Date(Long.parseLong(map.get("payTime"))))).append("\n");
+				sb.append(map.get("productName")).append("    ").append(map.get("amount")).append("    ")
+						.append(DateTimeFormatterUtils.format(Long.parseLong(map.get("payTime")), pattern)).append("\n");
 			}
 			return BotUtils.removeLastLine(sb);
 		}else return result.getMessage();
@@ -61,7 +61,7 @@ public class ArkNightsController {
 			StringBuilder sb = new StringBuilder().append("时间         获得干员").append("\n");
 			List<Map<String, String>> list = result.getData();
 			for (Map<String, String> map : list) {
-				sb.append(sdf.format(new Date(Long.parseLong(map.get("ts"))))).append("   ").append(map.get("result")).append("\n");
+				sb.append(DateTimeFormatterUtils.format(Long.parseLong(map.get("ts")), pattern)).append("   ").append(map.get("result")).append("\n");
 			}
 			return BotUtils.removeLastLine(sb);
 		}else return result.getMessage();
@@ -76,7 +76,7 @@ public class ArkNightsController {
 			StringBuilder sb = new StringBuilder().append("时间         变更     操作").append("\n");
 			List<Map<String, String>> list = result.getData();
 			for (Map<String, String> map : list) {
-				sb.append(sdf.format(new Date(Long.parseLong(map.get("ts"))))).append("   ").append(map.get("coin")).append("     ").append(map.get("operation")).append("\n");
+				sb.append(DateTimeFormatterUtils.format(Long.parseLong(map.get("ts")), pattern)).append("   ").append(map.get("coin")).append("     ").append(map.get("operation")).append("\n");
 			}
 			return BotUtils.removeLastLine(sb);
 		}else return result.getMessage();

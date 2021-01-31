@@ -3,11 +3,13 @@ package me.kuku.yuq.job;
 import com.IceCreamQAQ.Yu.annotation.Cron;
 import com.IceCreamQAQ.Yu.annotation.JobCenter;
 import com.icecreamqaq.yuq.FunKt;
+import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.service.GroupService;
 import me.kuku.yuq.utils.DateTimeFormatterUtils;
 
 import javax.inject.Inject;
+import java.io.File;
 import java.util.List;
 
 @JobCenter
@@ -23,10 +25,18 @@ public class GroupJob {
         int hour = Integer.parseInt(hourStr);
         if (hour == 0) hour = 12;
         if (hour > 12) hour -= 12;
-        String url = "https://share.kuku.me/189/kuku/bot/time/" + hour + ".jpg";
+        String name = hour + ".jpg";
+        File file = new File("hour" + File.separator + name);
+        Message message;
+        if (file.exists()){
+            message = FunKt.getMif().imageByFile(file).toMessage();
+        }else {
+            String url = "https://file.kuku.me/time/hour/" + name;
+            message = FunKt.getMif().imageByUrl(url).toMessage();
+        }
         list.forEach(groupEntity ->
                 FunKt.getYuq().getGroups().get(groupEntity.getGroup())
-                .sendMessage(FunKt.getMif().imageByUrl(url).toMessage())
+                .sendMessage(message)
         );
     }
 }

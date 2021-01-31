@@ -48,15 +48,29 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 		if (loginReponse.code() == 200){
 			loginReponse.close();
 			cookie += OkHttpUtils.getCookie(loginReponse);
-			String hh = OkHttpUtils.getStr("https://www.teambition.com/todo", OkHttpUtils.addHeaders(cookie, "", UA.PC));
-			hh = Jsoup.parse(hh).getElementById("teambition-config").text();
-			JSONObject loginSucJsonObject = JSON.parseObject(hh);
-			String auth = loginSucJsonObject.getJSONObject("userInfo").getString("strikerAuth");
-			return Result.success(new TeambitionPojo(cookie, auth));
+			TeambitionPojo teambitionPojo = new TeambitionPojo();
+			teambitionPojo.setCookie(cookie);
+			teambitionPojo = getAuth(teambitionPojo).getData();
+			return Result.success(teambitionPojo);
 		}else {
 			JSONObject jsonObject = OkHttpUtils.getJson(response);
 			return Result.failure(jsonObject.getString("message"));
 		}
+	}
+
+	@Override
+	public Result<TeambitionPojo> getAuth(TeambitionPojo teambitionPojo) throws IOException {
+		Response response = OkHttpUtils.get("https://www.teambition.com/todo", OkHttpUtils.addHeaders(teambitionPojo.getCookie(), "", UA.PC));
+		if (response.code() != 200){
+			response.close();
+			return Result.failure("cookie已失效，请重新登录！！");
+		}
+		String hh = OkHttpUtils.getStr(response);
+		hh = Jsoup.parse(hh).getElementById("teambition-config").text();
+		JSONObject loginSucJsonObject = JSON.parseObject(hh);
+		String auth = loginSucJsonObject.getJSONObject("userInfo").getString("strikerAuth");
+		teambitionPojo.setStrikerAuth(auth);
+		return Result.success(teambitionPojo);
 	}
 
 	private String getFolderId(TeambitionPojo teambitionPojo, String parentId, String projectId, String name, boolean isCreate) throws IOException {
@@ -78,6 +92,10 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 	public Result<Map<String, String>> project(TeambitionPojo teambitionPojo, String name) throws IOException {
 		Response response = OkHttpUtils.get("https://www.teambition.com/api/v2/projects?_organizationId=000000000000000000000405&selectBy=joined&orderBy=name&pageToken=&pageSize=20&_=" +
 				System.currentTimeMillis(), OkHttpUtils.addHeaders(teambitionPojo.getCookie(), "", UA.PC));
+		if (response.code() != 200){
+			response.close();
+			return Result.failure(501, "cookie已失效，请重新登录！！");
+		}
 		String str = OkHttpUtils.getStr(response);
 		JSONObject jsonObject = JSON.parseObject(str);
 		JSONArray jsonArray = jsonObject.getJSONArray("result");
@@ -97,7 +115,7 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 	@Override
 	public Result<String> uploadToProject(TeambitionPojo teambitionPojo, String projectName, byte[] bytes, String...path) throws IOException {
 		Result<Map<String, String>> projectResult = project(teambitionPojo, projectName);
-		if (projectResult.isFailure()) return Result.failure("没有查询到这个项目Id");
+		if (projectResult.isFailure()) return Result.failure(projectResult.getCode(), projectResult.getMessage());
 		if (path.length == 0) return Result.failure("参数不正确！！");
 		Map<String, String> projectMap = projectResult.getData();
 		String parentId = getFinallyParentId(teambitionPojo, projectMap.get("rootId"), projectMap.get("id"), true, path);
@@ -114,6 +132,10 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 		map.put("Authorization", teambitionPojo.getStrikerAuth());
 		JSONObject jsonObject = OkHttpUtils.postJson("https://tcs.teambition.net/upload", body,
 				OkHttpUtils.addHeaders(map));
+		if (jsonObject.containsKey("error")){
+			// token/ auth失效
+			return Result.failure(502, jsonObject.getString("message"));
+		}
 		JSONObject params = new JSONObject();
 		JSONArray works = new JSONArray();
 		JSONObject worksJsonObject = new JSONObject();
@@ -171,7 +193,7 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 	@Override
 	public Result<String> fileDownloadUrl(TeambitionPojo teambitionPojo, String projectName, String...path) throws IOException {
 		Result<Map<String, String>> projectResult = project(teambitionPojo, projectName);
-		if (projectResult.isFailure()) return Result.failure("没有查询到这个项目Id");
+		if (projectResult.isFailure()) return Result.failure(projectResult.getCode(), projectResult.getMessage());
 		if (path.length == 0) return Result.failure("参数不正确！！");
 		Map<String, String> map = projectResult.getData();
 		String parentId = map.get("rootId");

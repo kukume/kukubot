@@ -10,6 +10,7 @@ import java.io.IOException;
 @AutoBind
 public interface TeambitionLogic {
 	Result<TeambitionPojo> login(String phone, String password) throws IOException;
+	Result<TeambitionPojo> getAuth(TeambitionPojo teambitionPojo) throws IOException;
 	Result<String> uploadToProject(TeambitionPojo teambitionPojo, String projectName, byte[] bytes, String...path) throws IOException;
 	Result<String> fileDownloadUrl(TeambitionPojo teambitionPojo, String projectName, String...path) throws IOException;
 }

@@ -180,6 +180,37 @@ public class MonitorEvent {
                     byte[] bytes = OkHttpUtils.getBytes(url);
                     Result<String> result = teambitionLogic.uploadToProject(teambitionPojo, projectName, bytes,
                             "qqpic", year, month, day, id);
+                    if (result.isFailure()){
+                        boolean b = true;
+                        if (result.getCode() == 501){
+                            Result<TeambitionPojo> loginResult = teambitionLogic.login(jsonObject.getString("phone"),
+                                    jsonObject.getString("password"));
+                            if (loginResult.isFailure()) b = false;
+                            else {
+                                TeambitionPojo pojo = loginResult.getData();
+                                cookie = pojo.getCookie();
+                                auth = pojo.getStrikerAuth();
+                                jsonObject.put("cookie", cookie);
+                                jsonObject.put("auth", auth);
+                                configEntity.setContentJsonObject(jsonObject);
+                                configService.save(configEntity);
+                            }
+                        }else if (result.getCode() == 502){
+                            Result<TeambitionPojo> loginResult = teambitionLogic.getAuth(teambitionPojo);
+                            if (loginResult.isFailure()) b = false;
+                            else {
+                                TeambitionPojo pojo = loginResult.getData();
+                                auth = pojo.getStrikerAuth();
+                                jsonObject.put("auth", auth);
+                                configEntity.setContentJsonObject(jsonObject);
+                                configService.save(configEntity);
+                            }
+                        }else b = false;
+                        if (b){
+                            result = teambitionLogic.uploadToProject(teambitionPojo, projectName, bytes,
+                                    "qqpic", year, month, day, id);
+                        }else return;
+                    }
                     if (result.isSuccess()){
                         String path = "qqpic/" + year + "/" + month + "/" + day + "/" + id;
                         if (groupEntity.getUploadPicNotice() != null && groupEntity.getUploadPicNotice()){

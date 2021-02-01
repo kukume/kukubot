@@ -55,7 +55,7 @@ public class MyJob {
         }
     }
 
-    @Cron("1s")
+    @Cron("1h")
     public void checkUpdate() throws IOException {
         if (lastVersion == -1) lastVersion = Integer.parseInt(versionNo);
         JSONObject jsonObject = OkHttpUtils.getJson("https://api.kuku.me/bot/version/" + lastVersion);

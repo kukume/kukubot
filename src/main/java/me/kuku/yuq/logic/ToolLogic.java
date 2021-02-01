@@ -61,4 +61,5 @@ public interface ToolLogic {
     String uploadImage(byte[] bytes);
     String abstractWords(String word);
     String executeCode(String code, CodeType codeType) throws IOException;
+    String urlToPic(String url) throws IOException;
 }

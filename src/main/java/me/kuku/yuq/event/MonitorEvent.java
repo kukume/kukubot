@@ -16,6 +16,7 @@ import me.kuku.yuq.entity.MessageEntity;
 import me.kuku.yuq.entity.RecallEntity;
 import me.kuku.yuq.logic.AILogic;
 import me.kuku.yuq.logic.TeambitionLogic;
+import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.pojo.ConfigType;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.pojo.TeambitionPojo;
@@ -53,8 +54,10 @@ public class MonitorEvent {
     private TeambitionLogic teambitionLogic;
     @Inject
     private ConfigService configService;
+    @Inject
+    private ToolLogic toolLogic;
 
-    private final ExecutorService executorService = Executors.newFixedThreadPool(2);
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @Event
     public void saveMessageGroup(GroupMessageEvent e){
@@ -72,10 +75,31 @@ public class MonitorEvent {
 
     @Event
     public void saveMessageMy(SendMessageEvent.Post e){
-        messageService.save(
-                new MessageEntity(null, e.getMessageSource().getId(), e.getSendTo().getId(),
-                        FunKt.getYuq().getBotId(), BotUtils.messageToJsonArray(e.getMessage()).toString(), new Date())
-        );
+        Message message = e.getMessage();
+        try {
+            int id = e.getMessageSource().getId();
+            messageService.save(
+                    new MessageEntity(null, id, e.getSendTo().getId(),
+                            FunKt.getYuq().getBotId(), BotUtils.messageToJsonArray(message).toString(), new Date())
+            );
+        } catch (Exception ex) {
+            e.getSendTo().sendMessage(BotUtils.toMessage("消息被屏蔽，正在把文字转换成图片中，请稍后！！！"));
+            StringBuilder sb = new StringBuilder();
+            for (MessageItem item : message.getBody()) {
+                if (item instanceof Text){
+                    sb.append(((Text) item).getText()).append(" ");
+                }
+            }
+            try {
+                String url = "https://api.kuku.me/tool/word?word=" + URLEncoder.encode(sb.toString(), "utf-8");
+//                String picUrl = toolLogic.urlToPic(url);
+//                e.getSendTo().sendMessage(FunKt.getMif().imageByUrl(picUrl).toMessage());
+                byte[] bytes = OkHttpUtils.getBytes("https://api.kuku.me/tool/urlToPic?url=" + URLEncoder.encode(url, "utf-8"));
+                e.getSendTo().sendMessage(FunKt.getMif().imageByByteArray(bytes).toMessage());
+            } catch (Exception iex) {
+                e.getSendTo().sendMessage(BotUtils.toMessage("转换图片失败，完蛋！！"));
+            }
+        }
     }
 
     @Event

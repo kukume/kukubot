@@ -114,7 +114,7 @@ public class ManageNotController {
         List<RecallEntity> recallList = recallService.findByGroupAndQQ(group, qqNo);
         int all = recallList.size();
         if (num == null) num = 1;
-        if (num > all) return FunKt.getMif().at(qq).plus("您要查询的QQ只有" + all + "条撤回消息，超过范围了！！");
+        if (num > all || num < 0) return FunKt.getMif().at(qq).plus("您要查询的QQ只有" + all + "条撤回消息，超过范围了！！");
         RecallEntity recallEntity = recallList.get(num - 1);
         String timeStr = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(recallEntity.getDate());
         return FunKt.getMif().at(qq).plus("\n该消息撤回时间为" + timeStr + "\n消息内容为：\n")

@@ -12,10 +12,7 @@ import me.kuku.yuq.utils.BotUtils;
 import me.kuku.yuq.utils.DateTimeFormatterUtils;
 import me.kuku.yuq.utils.MD5Utils;
 import me.kuku.yuq.utils.OkHttpUtils;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import okhttp3.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -765,5 +762,33 @@ public class ToolLogicImpl implements ToolLogic {
         JSONObject jsonObject = OkHttpUtils.postJson("http://runcode-api2-ng.dooccn.com/compile2", map,
                 OkHttpUtils.addHeaders(null, "http://www.dooccn.com/", UA.PC));
         return jsonObject.getString("output");
+    }
+
+    @Override
+    public String urlToPic(String url) throws IOException {
+        Response response = OkHttpUtils.get("https://www.iloveimg.com/zh-cn/html-to-image", OkHttpUtils.addUA(UA.PC));
+        String cookie = OkHttpUtils.getCookie(response);
+        String str = OkHttpUtils.getStr(response);
+        String token = "Bearer " + BotUtils.regex("\"token\":\"", "\"", str);
+        String taskId = BotUtils.regex("ilovepdfConfig.taskId = '", "';", str);
+        MultipartBody uploadBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
+                .addFormDataPart("task", taskId)
+                .addFormDataPart("cloud_file", url).build();
+        Map<String, String> headersMap = new HashMap<>();
+        headersMap.put("Authorization", token);
+        headersMap.put("user-agent", UA.PC.getValue());
+        Headers headers = OkHttpUtils.addHeaders(headersMap);
+        JSONObject uploadJsonObject = OkHttpUtils.postJson("https://api1h.ilovepdf.com/v1/upload", uploadBody, headers);
+        String serverFileName = uploadJsonObject.getString("server_filename");
+        MultipartBody previewBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
+                .addFormDataPart("server_filename", serverFileName)
+                .addFormDataPart("task", taskId)
+                .addFormDataPart("url", url)
+                .addFormDataPart("view_width", "320")
+                .addFormDataPart("to_format", "jpg")
+                .addFormDataPart("block_ads", "false")
+                .addFormDataPart("remove_popups", "false").build();
+        JSONObject jsonObject = OkHttpUtils.postJson("https://api1h.ilovepdf.com/v1/preview", previewBody, headers);
+        return "https://api1h.ilovepdf.com/thumbnails/" + jsonObject.getString("thumbnail");
     }
 }

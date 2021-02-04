@@ -12,7 +12,6 @@ import java.util.Map;
 @AutoBind
 public interface QQLoginLogic {
     Result<Map<String, String>> groupUploadImage(QQLoginEntity qqLoginEntity, String url) throws IOException;
-    String groupLottery(QQLoginEntity qqLoginEntity, Long group) throws IOException;
     String vipSign(QQLoginEntity qqLoginEntity) throws IOException;
     String queryVip(QQLoginEntity qqLoginEntity) throws IOException;
     String phoneGameSign(QQLoginEntity qqLoginEntity) throws IOException;

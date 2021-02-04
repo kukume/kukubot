@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @GroupController
 @SuppressWarnings("unused")
@@ -131,10 +132,16 @@ public class BotController {
         if (groupEntity.isSuperAdmin(qq) || qq == Long.parseLong(master)){
             for (Long innerQQ : notSpeakByDay) {
                 try {
+                    try {
+                        TimeUnit.SECONDS.sleep(1);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     group.get(innerQQ).kick("一定时间内未发言");
                 } catch (PermissionDeniedException e) {
-                    e.printStackTrace();
                     return "机器人的权限不足，无法执行";
+                } catch (Exception e){
+                    qqGroupLogic.deleteGroupMember(qq, group.getId(), true);
                 }
             }
             return "踢出成功！！";
@@ -149,9 +156,13 @@ public class BotController {
         if (groupEntity.isSuperAdmin(qq) || qq == Long.parseLong(master)){
             for (Long innerQQ : notSpeakByNever) {
                 try {
+                    try {
+                        TimeUnit.SECONDS.sleep(1);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     group.get(innerQQ).kick("从未发言");
                 } catch (PermissionDeniedException e) {
-                    e.printStackTrace();
                     return "机器人的权限不足，无法执行";
                 }
             }

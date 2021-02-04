@@ -46,23 +46,6 @@ public class QQLoginLogicImpl implements QQLoginLogic {
     }
 
     @Override
-    public String groupLottery(QQLoginEntity qqLoginEntity, Long group) throws IOException {
-        Map<String, String> map = new HashMap<>();
-        map.put("bkn", qqLoginEntity.getGtk());
-        map.put("from", "0");
-        map.put("gc", group.toString());
-        map.put("client", "1");
-        map.put("version", "8.3.0.4480");
-        JSONObject jsonObject = OkHttpUtils.postJson("https://pay.qun.qq.com/cgi-bin/group_pay/good_feeds/draw_lucky_gift", map,
-                OkHttpUtils.addCookie(qqLoginEntity.getCookie()));
-        if (jsonObject.getInteger("ec").equals(0)) {
-            if (jsonObject.getInteger("lucky_code") == 7779) return "抱歉，等级不够41级，无法抽礼物";
-            else if ("".equals(jsonObject.getString("name")) || jsonObject.getString("name") == null) return "抱歉，没有抽到礼物！！";
-            else return "抽礼物成功，抽到了" + jsonObject.getString("name");
-        }else return "抽礼物失败，请更新QQ！！";
-    }
-
-    @Override
     public String vipSign(QQLoginEntity qqLoginEntity) throws IOException {
         StringBuilder sb = new StringBuilder();
         String gtk2 = qqLoginEntity.getGtk2();

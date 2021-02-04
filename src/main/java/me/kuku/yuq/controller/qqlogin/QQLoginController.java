@@ -90,39 +90,6 @@ public class QQLoginController{
         return qqLoginLogic.sendFlower(qqLoginEntity, qqNo, group);
     }
 
-    @Action("群礼物")
-    @QMsg(at = true)
-    public String lottery(QQLoginEntity qqLoginEntity, Group group, Long qq) throws IOException {
-        Result<List<Map<String, String>>> result = qqZoneLogic.queryGroup(qqLoginEntity);
-        if (result.getCode() == 200){
-            new Thread(() -> {
-                List<Map<String, String>> list = result.getData();
-                StringBuilder sb = new StringBuilder();
-                if (list != null){
-                    list.forEach(map -> {
-                        try {
-                            TimeUnit.SECONDS.sleep(3);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        long itGroup = Long.parseLong(map.get("group"));
-                        try {
-                            String loResult = qqLoginLogic.groupLottery(qqLoginEntity, itGroup);
-                            if (loResult.contains("成功")) sb.append(loResult).append("\n");
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    });
-                    String str;
-                    if (sb.toString().equals("")) str = "啥都没抽到";
-                    else str = sb.deleteCharAt(sb.length() - 1).toString();
-                    group.sendMessage(FunKt.getMif().at(qq).plus(str));
-                }
-            }).start();
-            return "抽礼物正在运行中";
-        }else return result.getMessage();
-    }
-
     @Action("超级签到")
     @QMsg(at = true, atNewLine = true)
     public String allSign(QQLoginEntity qqLoginEntity, Group group, long qq) throws IOException {
@@ -132,54 +99,52 @@ public class QQLoginController{
             try {
                 StringBuilder sb = new StringBuilder();
                 qqLoginLogic.anotherSign(qqLoginEntity);
-                String str2 = qqLoginLogic.groupLottery(qqLoginEntity, group.getId());
-                String str3;
+                String str2;
                 if (qqLoginLogic.vipSign(qqLoginEntity).contains("失败"))
-                    str3 = "签到失败";
-                else str3 = "签到成功";
-                String str4 = qqLoginLogic.phoneGameSign(qqLoginEntity);
-                String str5 = qqLoginLogic.yellowSign(qqLoginEntity);
-                String str6 = qqLoginLogic.qqVideoSign1(qqLoginEntity);
-                String str7 = qqLoginLogic.qqVideoSign2(qqLoginEntity);
-                String str8 = qqLoginLogic.bigVipSign(qqLoginEntity);
-                String str9;
+                    str2 = "签到失败";
+                else str2 = "签到成功";
+                String str3 = qqLoginLogic.phoneGameSign(qqLoginEntity);
+                String str4 = qqLoginLogic.yellowSign(qqLoginEntity);
+                String str5 = qqLoginLogic.qqVideoSign1(qqLoginEntity);
+                String str6 = qqLoginLogic.qqVideoSign2(qqLoginEntity);
+                String str7 = qqLoginLogic.bigVipSign(qqLoginEntity);
+                String str8;
                 if (qqLoginLogic.qqMusicSign(qqLoginEntity).contains("失败"))
-                    str9 = "签到失败";
-                else str9 = "签到成功";
-                String str10;
+                    str8 = "签到失败";
+                else str8 = "签到成功";
+                String str9;
                 if (qqLoginLogic.qPetSign(qqLoginEntity).contains("失败"))
-                    str10 = "领取失败";
-                else str10 = "领取成功";
-                String str11;
+                    str9 = "领取失败";
+                else str9 = "领取成功";
+                String str10;
                 if (qqLoginLogic.tribeSign(qqLoginEntity).contains("成功"))
-                    str11 = "领取成功";
-                else str11 = "领取失败";
-                String str12 = qqLoginLogic.motionSign(qqLoginEntity);
-                String str13;
+                    str10 = "领取成功";
+                else str10 = "领取失败";
+                String str11 = qqLoginLogic.motionSign(qqLoginEntity);
+                String str12;
                 if (qqLoginLogic.blueSign(qqLoginEntity).contains("成功"))
-                    str13 = "签到成功";
-                else str13 = "签到失败";
-                String str14 = qqLoginLogic.sVipMornSign(qqLoginEntity);
-                String str15 = qqLoginLogic.weiYunSign(qqLoginEntity);
-                String str16 = qqLoginLogic.weiShiSign(qqLoginEntity);
-                String str17 = qqLoginLogic.growthLike(qqLoginEntity);
+                    str12 = "签到成功";
+                else str12 = "签到失败";
+                String str13 = qqLoginLogic.sVipMornSign(qqLoginEntity);
+                String str14 = qqLoginLogic.weiYunSign(qqLoginEntity);
+                String str15 = qqLoginLogic.weiShiSign(qqLoginEntity);
+                String str16 = qqLoginLogic.growthLike(qqLoginEntity);
                 sb.append("手机打卡：").append(str1).append("\n")
-                        .append("群等级抽奖：").append(str2).append("\n")
-                        .append("会员签到：").append(str3).append("\n")
-                        .append("手游加速：").append(str4).append("\n")
-                        .append("黄钻签到：").append(str5).append("\n")
-                        .append("腾讯视频签到1：").append(str6).append("\n")
-                        .append("腾讯视频签到2：").append(str7).append("\n")
-                        .append("大会员签到；").append(str8).append("\n")
-                        .append("音乐签到：").append(str9).append("\n")
-                        .append("大乐斗签到：").append(str10).append("\n")
-                        .append("兴趣部落：").append(str11).append("\n")
-                        .append("运动签到：").append(str12).append("\n")
-                        .append("蓝钻签到：").append(str13).append("\n")
-                        .append("svip打卡报名：").append(str14).append("\n")
-                        .append("微云签到：").append(str15).append("\n")
-                        .append("微视签到：").append(str16).append("\n")
-                        .append("排行榜点赞：").append(str17);
+                        .append("会员签到：").append(str2).append("\n")
+                        .append("手游加速：").append(str3).append("\n")
+                        .append("黄钻签到：").append(str4).append("\n")
+                        .append("腾讯视频签到1：").append(str5).append("\n")
+                        .append("腾讯视频签到2：").append(str6).append("\n")
+                        .append("大会员签到；").append(str7).append("\n")
+                        .append("音乐签到：").append(str8).append("\n")
+                        .append("大乐斗签到：").append(str9).append("\n")
+                        .append("兴趣部落：").append(str10).append("\n")
+                        .append("运动签到：").append(str11).append("\n")
+                        .append("蓝钻签到：").append(str12).append("\n")
+                        .append("svip打卡报名：").append(str13).append("\n")
+                        .append("微云签到：").append(str14).append("\n")
+                        .append("微视签到：").append(str15).append("\n")
+                        .append("排行榜点赞：").append(str16);
 //                return sb.toString();
                 return "超级签到成功！！";
             }catch (Exception e){

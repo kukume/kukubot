@@ -207,6 +207,9 @@ public class SettingController extends QQController {
             return loginResult.getMessage();
         }
         TeambitionPojo teambitionPojo = loginResult.getData();
+        Result<TeambitionPojo> projectResult = teambitionLogic.project(teambitionPojo, project);
+        if (projectResult.isFailure()) return projectResult.getMessage();
+        teambitionPojo = projectResult.getData();
         ConfigEntity configEntity = configService.findByType(ConfigType.Teambition.getType());
         if (configEntity == null) configEntity = new ConfigEntity(ConfigType.Teambition.getType());
         JSONObject jsonObject = configEntity.getContentJsonObject();
@@ -215,6 +218,8 @@ public class SettingController extends QQController {
         jsonObject.put("cookie", teambitionPojo.getCookie());
         jsonObject.put("auth", teambitionPojo.getStrikerAuth());
         jsonObject.put("project", project);
+        jsonObject.put("projectId", teambitionPojo.getProjectId());
+        jsonObject.put("rootId", teambitionPojo.getRootId());
         jsonObject.put("name", name);
         configEntity.setContentJsonObject(jsonObject);
         configService.save(configEntity);

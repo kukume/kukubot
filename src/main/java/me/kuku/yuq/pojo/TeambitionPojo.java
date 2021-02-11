@@ -11,4 +11,6 @@ import lombok.NoArgsConstructor;
 public class TeambitionPojo {
 	private String cookie;
 	private String strikerAuth;
+	private String projectId;
+	private String rootId;
 }

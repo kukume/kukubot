@@ -73,7 +73,8 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 		return Result.success(teambitionPojo);
 	}
 
-	private String getFolderId(TeambitionPojo teambitionPojo, String parentId, String projectId, String name, boolean isCreate) throws IOException {
+	private String getFolderId(TeambitionPojo teambitionPojo, String parentId, String name, boolean isCreate) throws IOException {
+		String projectId = teambitionPojo.getProjectId();
 		String str = OkHttpUtils.getStr("https://www.teambition.com/api/collections?_parentId=" + parentId
 				+ "&_projectId=" + projectId + "&order=updatedDesc&count=50&page=1&_=" + System.currentTimeMillis(),
 				OkHttpUtils.addHeaders(teambitionPojo.getCookie(), "", UA.PC));
@@ -85,11 +86,12 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 			}
 		}
 		if (isCreate)
-			return creatFolder(teambitionPojo, parentId, projectId, name);
+			return creatFolder(teambitionPojo, parentId, name);
 		else return null;
 	}
 
-	public Result<Map<String, String>> project(TeambitionPojo teambitionPojo, String name) throws IOException {
+	@Override
+	public Result<TeambitionPojo> project(TeambitionPojo teambitionPojo, String name) throws IOException {
 		Response response = OkHttpUtils.get("https://www.teambition.com/api/v2/projects?_organizationId=000000000000000000000405&selectBy=joined&orderBy=name&pageToken=&pageSize=20&_=" +
 				System.currentTimeMillis(), OkHttpUtils.addHeaders(teambitionPojo.getCookie(), "", UA.PC));
 		if (response.code() != 200){
@@ -102,10 +104,9 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 		for (int i = 0; i < jsonArray.size(); i++){
 			JSONObject singleJsonObject = jsonArray.getJSONObject(i);
 			if (singleJsonObject.getString("name").equals(name)){
-				Map<String, String> map = new HashMap<>();
-				map.put("id", singleJsonObject.getString("_id"));
-				map.put("rootId", singleJsonObject.getString("_rootCollectionId"));
-				return Result.success(map);
+				teambitionPojo.setProjectId(singleJsonObject.getString("_id"));
+				teambitionPojo.setRootId(singleJsonObject.getString("_rootCollectionId"));
+				return Result.success(teambitionPojo);
 			}
 		}
 		return Result.failure("没有查询到这个项目名称！！");
@@ -113,12 +114,9 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 
 	@SuppressWarnings("ConstantConditions")
 	@Override
-	public Result<String> uploadToProject(TeambitionPojo teambitionPojo, String projectName, byte[] bytes, String...path) throws IOException {
-		Result<Map<String, String>> projectResult = project(teambitionPojo, projectName);
-		if (projectResult.isFailure()) return Result.failure(projectResult.getCode(), projectResult.getMessage());
+	public Result<String> uploadToProject(TeambitionPojo teambitionPojo, byte[] bytes, String...path) throws IOException {
 		if (path.length == 0) return Result.failure("参数不正确！！");
-		Map<String, String> projectMap = projectResult.getData();
-		String parentId = getFinallyParentId(teambitionPojo, projectMap.get("rootId"), projectMap.get("id"), true, path);
+		String parentId = getFinallyParentId(teambitionPojo, true, path);
 		String fileType = FileUtils.getFileTypeByStream(bytes);
 		String fileName = path[path.length - 1];
 		if (!fileName.contains(".")) fileName += "." + fileType;
@@ -159,18 +157,18 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 		return Result.success(uploadJsonArray.getJSONObject(0).getString("downloadUrl"));
 	}
 
-	private String getFinallyParentId(TeambitionPojo teambitionPojo, String rootParentId, String projectId, boolean isCreate, String...path) throws IOException {
-		String finallyParentId = rootParentId;
+	private String getFinallyParentId(TeambitionPojo teambitionPojo, boolean isCreate, String...path) throws IOException {
+		String finallyParentId = teambitionPojo.getRootId();
 		if (path.length != 1) {
 			for (int i = 0; i < path.length - 1; i++) {
 				String name = path[i];
-				finallyParentId = getFolderId(teambitionPojo, finallyParentId, projectId, name, isCreate);
+				finallyParentId = getFolderId(teambitionPojo, finallyParentId, name, isCreate);
 			}
 		}
 		return finallyParentId;
 	}
 
-	private String creatFolder(TeambitionPojo teambitionPojo, String parentId, String projectId, String name) throws IOException {
+	private String creatFolder(TeambitionPojo teambitionPojo, String parentId, String name) throws IOException {
 		JSONObject jsonObject = new JSONObject();
 		jsonObject.put("collectionType", "");
 		jsonObject.put("color", "blue");
@@ -184,21 +182,18 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 		jsonObject.put("workCount", 0);
 		jsonObject.put("_creatorId", "");
 		jsonObject.put("_parentId", parentId);
-		jsonObject.put("_projectId", projectId);
+		jsonObject.put("_projectId", teambitionPojo.getProjectId());
 		JSONObject resultJsonObject = OkHttpUtils.postJson("https://www.teambition.com/api/collections",
 				OkHttpUtils.addJson(jsonObject.toString()), OkHttpUtils.addHeaders(teambitionPojo.getCookie(), "", UA.PC));
 		return resultJsonObject.getString("_id");
 	}
 
 	@Override
-	public Result<String> fileDownloadUrl(TeambitionPojo teambitionPojo, String projectName, String...path) throws IOException {
-		Result<Map<String, String>> projectResult = project(teambitionPojo, projectName);
-		if (projectResult.isFailure()) return Result.failure(projectResult.getCode(), projectResult.getMessage());
+	public Result<String> fileDownloadUrl(TeambitionPojo teambitionPojo, String...path) throws IOException {
 		if (path.length == 0) return Result.failure("参数不正确！！");
-		Map<String, String> map = projectResult.getData();
-		String parentId = map.get("rootId");
-		String projectId = map.get("id");
-		String finallyParentId = getFinallyParentId(teambitionPojo, parentId, projectId, false, path);
+		String parentId = teambitionPojo.getRootId();
+		String projectId = teambitionPojo.getProjectId();
+		String finallyParentId = getFinallyParentId(teambitionPojo,false, path);
 		int page = 1;
 		while (true) {
 			String str = OkHttpUtils.getStr("https://www.teambition.com/api/works?_parentId=" + finallyParentId +

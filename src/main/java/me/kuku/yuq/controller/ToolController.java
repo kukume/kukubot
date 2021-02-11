@@ -607,16 +607,17 @@ public class ToolController {
                 sb.append(i++).append("、");
                 try {
                     Result<String> result = teambitionLogic.uploadToProject(
-                            new TeambitionPojo(jsonObject.getString("cookie"), jsonObject.getString("auth")),
-                            jsonObject.getString("project"), OkHttpUtils.getBytes(url),
+                            new TeambitionPojo(jsonObject.getString("cookie"), jsonObject.getString("auth"),
+                                    jsonObject.getString("projectId"), jsonObject.getString("rootId")),
+                            OkHttpUtils.getBytes(url),
                             "pic", year, month, day, id
                     );
                     if (result.isSuccess()){
                         String path = "pic/" + year + "/" + month + "/" + day + "/" + id;
-                        sb.append("https://api.kuku.me/teambition/")
-                                .append(jsonObject.getString("name")).append("/")
-                                .append(URLEncoder.encode(Base64.getEncoder().encodeToString((path).getBytes(StandardCharsets.UTF_8)), "utf-8"))
-                                .append("\n");
+                        String resultUrl = "https://api.kuku.me/teambition/" +
+                                jsonObject.getString("name") + "/" +
+                                URLEncoder.encode(Base64.getEncoder().encodeToString((path).getBytes(StandardCharsets.UTF_8)), "utf-8");
+                        sb.append(BotUtils.shortUrl(resultUrl)).append("\n");
                     }else {
                         sb.append("上传失败！！").append("\n");
                     }

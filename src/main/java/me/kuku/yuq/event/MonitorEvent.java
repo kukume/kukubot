@@ -82,7 +82,7 @@ public class MonitorEvent {
                     new MessageEntity(null, id, e.getSendTo().getId(),
                             FunKt.getYuq().getBotId(), BotUtils.messageToJsonArray(message).toString(), new Date())
             );
-        } catch (Exception ex) {
+        } catch (IndexOutOfBoundsException ex) {
             e.getSendTo().sendMessage(BotUtils.toMessage("消息被屏蔽，正在把文字转换成图片中，请稍后！！！"));
             StringBuilder sb = new StringBuilder();
             for (MessageItem item : message.getBody()) {
@@ -199,10 +199,11 @@ public class MonitorEvent {
                 String cookie = jsonObject.getString("cookie");
                 String auth = jsonObject.getString("auth");
                 String projectName = jsonObject.getString("project");
-                TeambitionPojo teambitionPojo = new TeambitionPojo(cookie, auth);
+                TeambitionPojo teambitionPojo = new TeambitionPojo(cookie, auth,
+                        jsonObject.getString("projectId"), jsonObject.getString("rootId"));
                 try {
                     byte[] bytes = OkHttpUtils.getBytes(url);
-                    Result<String> result = teambitionLogic.uploadToProject(teambitionPojo, projectName, bytes,
+                    Result<String> result = teambitionLogic.uploadToProject(teambitionPojo, bytes,
                             "qqpic", year, month, day, id);
                     if (result.isFailure()){
                         boolean b = true;
@@ -231,17 +232,18 @@ public class MonitorEvent {
                             }
                         }else b = false;
                         if (b){
-                            result = teambitionLogic.uploadToProject(teambitionPojo, projectName, bytes,
+                            result = teambitionLogic.uploadToProject(teambitionPojo, bytes,
                                     "qqpic", year, month, day, id);
                         }else return;
                     }
                     if (result.isSuccess()){
                         String path = "qqpic/" + year + "/" + month + "/" + day + "/" + id;
                         if (groupEntity.getUploadPicNotice() != null && groupEntity.getUploadPicNotice()){
+                            String resultUrl = "https://api.kuku.me/teambition/" +
+                                    jsonObject.getString("name") + "/" +
+                                    URLEncoder.encode(Base64.getEncoder().encodeToString((path).getBytes(StandardCharsets.UTF_8)), "utf-8");
                             Message sendMessage = FunKt.getMif().imageById(id).plus(
-                                    "\n发现图片，Teambition链接：\n" + "https://api.kuku.me/teambition/" + jsonObject.getString("name") + "/" +
-                                            URLEncoder.encode(Base64.getEncoder().encodeToString((path).getBytes(StandardCharsets.UTF_8)), "utf-8")
-                            );
+                                    "\n发现图片，Teambition链接：\n" + BotUtils.shortUrl(resultUrl));
                             group.sendMessage(sendMessage);
                         }
                     }

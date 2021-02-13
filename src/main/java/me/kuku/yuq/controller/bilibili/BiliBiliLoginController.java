@@ -10,6 +10,7 @@ import me.kuku.yuq.logic.BiliBiliLogic;
 import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.BiliBiliService;
+import me.kuku.yuq.utils.ExecutorUtils;
 
 import javax.inject.Inject;
 import java.io.ByteArrayInputStream;
@@ -35,20 +36,20 @@ public class BiliBiliLoginController {
         group.sendMessage(FunKt.getMif().at(qq).plus("请使用哔哩哔哩APP扫码登录：")
                 .plus(FunKt.getMif().imageByInputStream(new ByteArrayInputStream(qrUrl))));
         AtomicInteger i = new AtomicInteger();
-        new Thread(() -> {
-            while (true){
+        ExecutorUtils.execute(() -> {
+            while (true) {
                 try {
                     TimeUnit.SECONDS.sleep(3);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                if (i.incrementAndGet() >= 20){
+                if (i.incrementAndGet() >= 20) {
                     group.sendMessage(FunKt.getMif().at(qq).plus("您的二维码已失效！！"));
                     break;
                 }
                 try {
                     Result<BiliBiliEntity> result = biliBiliLogic.loginByQr2(url);
-                    switch (result.getCode()){
+                    switch (result.getCode()) {
                         case 500:
                             group.sendMessage(FunKt.getMif().at(qq).plus(result.getMessage()));
                             return;
@@ -68,6 +69,6 @@ public class BiliBiliLoginController {
                     break;
                 }
             }
-        }).start();
+        });
     }
 }

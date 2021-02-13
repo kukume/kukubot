@@ -14,6 +14,7 @@ import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.QQLoginService;
+import me.kuku.yuq.utils.ExecutorUtils;
 import me.kuku.yuq.utils.QQPasswordLoginUtils;
 import me.kuku.yuq.utils.QQQrCodeLoginUtils;
 import me.kuku.yuq.utils.QQUtils;
@@ -35,20 +36,20 @@ public class BindQQController {
     public Message bindQQ(Group group, long qq) throws IOException {
         Map<String, Object> map = QQQrCodeLoginUtils.getQrCode();
         byte[] bytes = (byte[]) map.get("qrCode");
-        new Thread(() -> {
+        ExecutorUtils.execute(() -> {
             String msg;
             try {
                 Result<Map<String, String>> result = QQUtils.qrCodeLoginVerify(map.get("sig").toString());
-                if (result.getCode() == 200){
+                if (result.getCode() == 200) {
                     QQUtils.saveOrUpdate(qqLoginService, result.getData(), qq, null, group.getId());
                     msg = "绑定或更新QQ成功！！";
-                }else msg = result.getMessage();
+                } else msg = result.getMessage();
             } catch (IOException e) {
                 e.printStackTrace();
                 msg = "";
             }
             group.sendMessage(FunKt.getMif().at(qq).plus(msg));
-        }).start();
+        });
         return FunKt.getMif().imageByInputStream(new ByteArrayInputStream(bytes)).plus("qzone.qq.com的扫码登录");
     }
 

@@ -25,6 +25,7 @@ import me.kuku.yuq.service.GroupService;
 import me.kuku.yuq.service.MessageService;
 import me.kuku.yuq.service.RecallService;
 import me.kuku.yuq.utils.BotUtils;
+import me.kuku.yuq.utils.ExecutorUtils;
 import me.kuku.yuq.utils.OkHttpUtils;
 
 import javax.inject.Inject;
@@ -36,8 +37,6 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @EventListener
 @SuppressWarnings("unused")
@@ -57,15 +56,13 @@ public class MonitorEvent {
     @Inject
     private ToolLogic toolLogic;
 
-    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
-
     @Event
     public void saveMessageGroup(GroupMessageEvent e){
         messageService.save(
                 new MessageEntity(null, e.getMessage().source.getId(), e.getGroup().getId(), e.getSender().getId(),
                         BotUtils.messageToJsonArray(e.getMessage()).toString(), new Date())
         );
-        executorService.execute(() -> {
+        ExecutorUtils.execute(() -> {
             ConfigEntity configEntity = configService.findByType(ConfigType.Teambition.getType());
             if (configEntity != null){
                 uploadToTeam(e.getMessage(), configEntity, e.getGroup());

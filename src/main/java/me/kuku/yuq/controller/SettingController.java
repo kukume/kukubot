@@ -260,13 +260,13 @@ public class SettingController extends QQController {
 
     @Action("dcloud {email} {password}")
     public String addDCloud(String email, String password, ContextSession session) throws IOException {
+        reply("请输入服务空间的spaceId！！");
+        Message idMessage = session.waitNextMessage();
+        String spaceId = BotUtils.firstString(idMessage);
         DCloudPojo dCloudPojo = dCloudLogic.getData();
         reply(FunKt.getMif().imageByByteArray(dCloudPojo.getCaptchaImage()).plus("请输入图片验证码！！"));
         Message codeMessage = session.waitNextMessage();
         String code = BotUtils.firstString(codeMessage);
-        reply("请输入服务空间的spaceId！！");
-        Message idMessage = session.waitNextMessage();
-        String spaceId = BotUtils.firstString(idMessage);
         Result<DCloudPojo> loginResult = dCloudLogic.login(dCloudPojo, email, password, code);
         if (loginResult.isFailure()) return loginResult.getMessage();
         dCloudPojo = loginResult.getData();

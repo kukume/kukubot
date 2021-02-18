@@ -15,10 +15,7 @@ import com.icecreamqaq.yuq.job.RainInfo;
 import com.icecreamqaq.yuq.message.*;
 import me.kuku.yuq.entity.ConfigEntity;
 import me.kuku.yuq.entity.GroupEntity;
-import me.kuku.yuq.logic.AILogic;
-import me.kuku.yuq.logic.TeambitionLogic;
-import me.kuku.yuq.logic.ToolLogic;
-import me.kuku.yuq.logic.MyApiLogic;
+import me.kuku.yuq.logic.*;
 import me.kuku.yuq.pojo.*;
 import me.kuku.yuq.service.ConfigService;
 import me.kuku.yuq.service.GroupService;
@@ -72,6 +69,8 @@ public class ToolController {
     private String protocol;
     @Inject
     private TeambitionLogic teambitionLogic;
+    @Inject
+    private DCloudLogic dCloudLogic;
 
     private final LocalDateTime startTime;
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(4);
@@ -621,6 +620,35 @@ public class ToolController {
                     }else {
                         sb.append("上传失败！！").append("\n");
                     }
+                } catch (IOException e) {
+                    sb.append("网络出现异常，上传失败").append("\n");
+                }
+            }
+        }
+        return BotUtils.removeLastLine(sb);
+    }
+
+    @Action("dcloud上传")
+    public String dCloudUpload(Group group, long qq, ContextSession session){
+        ConfigEntity configEntity = configService.findByType(ConfigType.DCloud.getType());
+        if (configEntity == null) return "机器人还没有配置dCloud，请联系机器人主人进行配置。";
+        JSONObject jsonObject = configEntity.getContentJsonObject();
+        group.sendMessage(FunKt.getMif().at(qq).plus("请发送需要上传的图片"));
+        Message imageMessage = session.waitNextMessage();
+        DCloudPojo dCloudPojo = new DCloudPojo(jsonObject.getString("cookie"), jsonObject.getString("token"));
+        String spaceId = jsonObject.getString("spaceId");
+        StringBuilder sb = new StringBuilder().append("您上传的图片链接如下：").append("\n");
+        int i = 1;
+        for (MessageItem item : imageMessage.getBody()) {
+            if (item instanceof Image) {
+                Image image = (Image) item;
+                String url = image.getUrl();
+                String id = image.getId();
+                sb.append(i++).append("、");
+                try {
+                    Result<String> result = dCloudLogic.upload(dCloudPojo, spaceId, id, OkHttpUtils.getBytes(url));
+                    if (result.isFailure()) sb.append(result.getMessage()).append("\n");
+                    else sb.append(result.getData()).append("\n");
                 } catch (IOException e) {
                     sb.append("网络出现异常，上传失败").append("\n");
                 }

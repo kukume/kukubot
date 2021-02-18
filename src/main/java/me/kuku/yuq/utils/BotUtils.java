@@ -46,11 +46,12 @@ public class BotUtils {
         try {
             Map<String, String> map = new HashMap<>();
             map.put("url", url);
-            return OkHttpUtils.postStr("https://api.kuku.me/tool/short", map,
+            String ss = OkHttpUtils.postStr("https://api.kuku.me/tool/short", map,
                     OkHttpUtils.addUA(UA.PC));
+            if (ss.contains("失败")) return url;
+            else return ss;
         } catch (IOException e) {
-            e.printStackTrace();
-            return "缩短失败，原链接：" + url;
+            return url;
         }
     }
 

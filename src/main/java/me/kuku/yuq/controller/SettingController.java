@@ -20,9 +20,11 @@ import com.icecreamqaq.yuq.mirai.MiraiBot;
 import me.kuku.yuq.entity.ConfigEntity;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.entity.QQLoginEntity;
+import me.kuku.yuq.logic.DCloudLogic;
 import me.kuku.yuq.logic.QQLoginLogic;
 import me.kuku.yuq.logic.TeambitionLogic;
 import me.kuku.yuq.pojo.ConfigType;
+import me.kuku.yuq.pojo.DCloudPojo;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.pojo.TeambitionPojo;
 import me.kuku.yuq.service.ConfigService;
@@ -54,6 +56,8 @@ public class SettingController extends QQController {
     private ConfigService configService;
     @Inject
     private TeambitionLogic teambitionLogic;
+    @Inject
+    private DCloudLogic dCloudLogic;
 
     @Before
     public void before(long qq, BotActionContext actionContext){
@@ -252,6 +256,30 @@ public class SettingController extends QQController {
         map.put("password", password);
         JSONObject jsonObject = OkHttpUtils.deleteJson("https://api.kuku.me/teambition", map);
         return jsonObject.getString("data");
+    }
+
+    @Action("dcloud {email} {password}")
+    public String addDCloud(String email, String password, ContextSession session) throws IOException {
+        DCloudPojo dCloudPojo = dCloudLogic.getData();
+        reply(FunKt.getMif().imageByByteArray(dCloudPojo.getCaptchaImage()).plus("请输入图片验证码！！"));
+        Message codeMessage = session.waitNextMessage();
+        String code = BotUtils.firstString(codeMessage);
+        reply("请输入服务空间的spaceId！！");
+        Message idMessage = session.waitNextMessage();
+        String spaceId = BotUtils.firstString(idMessage);
+        Result<DCloudPojo> loginResult = dCloudLogic.login(dCloudPojo, email, password, code);
+        if (loginResult.isFailure()) return loginResult.getMessage();
+        dCloudPojo = loginResult.getData();
+        ConfigEntity configEntity = configService.findByType("dCloud");
+        if (configEntity == null) configEntity = new ConfigEntity("dCloud");
+        JSONObject jsonObject = new JSONObject();
+        // 有验证码，自动更新不了cookie
+        jsonObject.put("cookie", dCloudPojo.getCookie());
+        jsonObject.put("token", dCloudPojo.getToken());
+        jsonObject.put("spaceId", spaceId);
+        configEntity.setContentJsonObject(jsonObject);
+        configService.save(configEntity);
+        return "绑定dCloud成功！！";
     }
 
 }

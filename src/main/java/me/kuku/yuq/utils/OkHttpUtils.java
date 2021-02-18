@@ -72,12 +72,12 @@ public class OkHttpUtils {
         return post(url, new HashMap<>(), emptyHeaders());
     }
 
-    private static Response put(String url, RequestBody requestBody, Headers headers) throws IOException {
+    public static Response put(String url, RequestBody requestBody, Headers headers) throws IOException {
         Request request = new Request.Builder().url(url).put(requestBody).headers(headers).build();
         return okHttpClient.newCall(request).execute();
     }
 
-    private static Response put(String url, RequestBody requestBody) throws IOException {
+    public static Response put(String url, RequestBody requestBody) throws IOException {
         return put(url, requestBody, emptyHeaders());
     }
 

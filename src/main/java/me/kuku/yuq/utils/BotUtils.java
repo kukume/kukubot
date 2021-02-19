@@ -34,6 +34,7 @@ import okhttp3.Cookie;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.URLEncoder;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -43,13 +44,14 @@ import java.util.regex.Pattern;
 public class BotUtils {
 
     public static String shortUrl(String url){
+        // http://www.uc4.cn/
         try {
-            Map<String, String> map = new HashMap<>();
-            map.put("url", url);
-            String ss = OkHttpUtils.postStr("https://api.kuku.me/tool/short", map,
-                    OkHttpUtils.addUA(UA.PC));
-            if (ss.contains("失败")) return url;
-            else return ss;
+            if (!url.startsWith("http") && !url.startsWith("https")) url = "http://" + url;
+            JSONObject jsonObject = OkHttpUtils.getJson("http://uc4.cn/ajax.php?act=creat1&url=" +
+                    URLEncoder.encode(url, "utf-8") + "&pattern=1&type=a6bcn&id=", OkHttpUtils.addUA(UA.PC));
+            if (jsonObject.getInteger("code") == 0){
+                return jsonObject.getString("dwz");
+            }else return url;
         } catch (IOException e) {
             return url;
         }

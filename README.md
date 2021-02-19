@@ -12,7 +12,7 @@
 * 推送最新微博、哔哩哔哩动态到群聊（指定用户名）、私聊（我的关注）
 * twitter推送、instagram推送、HostLoc推送
 * 修改步数（wx and alipay and qq）
-* 图床（图片取直链）（qq、teambition）
+* 图床（图片取直链）（qq、teambition、dCloud）
 * 群管功能
 * 一些小工具
 

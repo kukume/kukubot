@@ -567,19 +567,19 @@ public class ToolLogicImpl implements ToolLogic {
         switch (type){
             case "baidu":
                 msg = "百度";
-                url = "https://tool.kuku.me/teachsearch/baidu/index.html?q=" + suffix;
+                url = "https://static.kukuqaq.com/teachsearch/baidu/index.html?q=" + suffix;
                 break;
             case "google":
                 msg = "谷歌";
-                url = "https://tool.kuku.me/teachsearch/google/index.html?q=" + suffix;
+                url = "https://static.kukuqaq.com/teachsearch/google/index.html?q=" + suffix;
                 break;
             case "bing":
                 msg = "必应";
-                url = "https://tool.kuku.me/teachsearch/bing/index.html?q=" + suffix;
+                url = "https://static.kukuqaq.com/teachsearch/bing/index.html?q=" + suffix;
                 break;
             case "sougou":
                 msg = "搜狗";
-                url = "https://tool.kuku.me/teachsearch/sougou/index.html?q=" + suffix;
+                url = "https://static.kukuqaq.com/teachsearch/sougou/index.html?q=" + suffix;
                 break;
             default: return null;
         }

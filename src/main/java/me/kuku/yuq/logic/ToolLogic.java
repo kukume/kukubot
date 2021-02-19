@@ -5,8 +5,6 @@ import me.kuku.yuq.pojo.CodeType;
 import me.kuku.yuq.pojo.Result;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.List;
 import java.util.Map;
 
 @AutoBind

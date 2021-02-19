@@ -508,11 +508,6 @@ public class ToolController {
                 )).toMessage();
     }
 
-    @Action("cosplay")
-    public Message cosplay() throws IOException {
-        return FunKt.getMif().imageByByteArray(toolLogic.cosplay()).toMessage();
-    }
-
     @Action("写真")
     public Image photo() throws IOException {
         return FunKt.getMif().imageByByteArray(toolLogic.photo());

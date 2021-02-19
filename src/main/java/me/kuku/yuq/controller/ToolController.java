@@ -264,7 +264,7 @@ public class ToolController {
                         group.sendMessage(FunKt.getMif().imageByInputStream(new ByteArrayInputStream(bytes)).toMessage());
                     }
                 }else group.sendMessage(Message.Companion.toMessage("色图类型不匹配！！"));
-            } catch (IOException e) {
+            } catch (Exception e) {
                 group.sendMessage(FunKt.getMif().at(qq).plus("色图获取失败，请重试！"));
             }
         });

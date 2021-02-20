@@ -32,12 +32,13 @@ public class BeforeController {
     public void before(Message message, Long group, Long qq){
         List<String> list = message.toPath();
         if (list.size() == 0) return;
+        String command = list.get(0);
+        if (command.equals("指令限制") || command.equals("加指令限制")) return;
         GroupEntity groupEntity = groupService.findByGroup(group);
         if (groupEntity == null) return;
         Integer maxCount = groupEntity.getMaxCommandCountOnTime();
         if (maxCount == null) maxCount = -1;
         if (maxCount < 0) return;
-        String command = list.get(0);
         String key = "qq" + qq.toString() + command;
         Integer num = eh.get(key);
         if (num == null) num = 0;

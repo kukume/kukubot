@@ -291,4 +291,13 @@ public class SettingController extends QQController {
         return "绑定dCloud成功！！";
     }
 
+    @Action("saucenao {apiKey}")
+    public String sauceNao(String apiKey){
+        ConfigEntity configEntity = configService.findByType(ConfigType.SauceNao.getType());
+        if (configEntity == null) configEntity = new ConfigEntity(ConfigType.SauceNao.getType());
+        configEntity.setContent(apiKey);
+        configService.save(configEntity);
+        return "绑定sauceNao成功！！";
+    }
+
 }

@@ -8,3 +8,6 @@
 /dependency-reduced-pom.xml
 /device.json
 /yuq.iml
+/conf/
+/cache/servers.json
+/cache/session.bin

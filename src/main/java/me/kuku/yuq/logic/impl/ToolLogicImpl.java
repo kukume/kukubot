@@ -529,19 +529,16 @@ public class ToolLogicImpl implements ToolLogic {
     }
 
     @Override
-    public String identifyPic(String url) throws IOException {
-        JSONObject jsonObject = OkHttpUtils.getJson("https://saucenao.com/search.php?url=" + url + "&output_type=2");
+    public String sauceNaoIdentifyPic(String apiKey, String url) throws IOException {
+        JSONObject jsonObject = OkHttpUtils.getJson("https://saucenao.com/search.php?url=" + url + "&output_type=2&api_key=" + apiKey);
+        JSONObject headerJsonObject = jsonObject.getJSONObject("header");
+        if (headerJsonObject.getInteger("status") != 0) return headerJsonObject.getString("message");
         JSONArray jsonArray = jsonObject.getJSONArray("results");
         try {
             return jsonArray.getJSONObject(0).getJSONObject("data").getJSONArray("ext_urls").getString(0);
         }catch (NullPointerException e){
             return null;
         }
-    }
-
-    @Override
-    public String githubQuicken(String gitUrl) {
-        return "https://github.kuku.workers.dev/" + gitUrl;
     }
 
     @Override

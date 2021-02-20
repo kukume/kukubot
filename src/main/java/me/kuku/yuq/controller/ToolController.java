@@ -353,7 +353,9 @@ public class ToolController {
     @Action("搜图 {img}")
     @QMsg(at = true)
     public Message searchImage(Image img) throws IOException {
-        String url = toolLogic.identifyPic(img.getUrl());
+        ConfigEntity configEntity = configService.findByType(ConfigType.SauceNao.getType());
+        if (configEntity == null) return BotUtils.toMessage("机器人没有配置搜图（sauceNao）的apikey，无法搜图！！");
+        String url = toolLogic.sauceNaoIdentifyPic(configEntity.getContent(), img.getUrl());
         if (url != null) return FunKt.getMif().imageByUrl(img.getUrl()).plus(url);
         else return Message.Companion.toMessage("没有找到这张图片！！！");
     }
@@ -363,12 +365,6 @@ public class ToolController {
     @QMsg(at = true, atNewLine = true)
     public String ocr(Image img) throws IOException {
         return baiduAILogic.generalOCR(img.getUrl());
-    }
-
-    @Action("github加速 {url}")
-    @QMsg(at = true)
-    public String githubQuicken(ContextSession session, long qq, String url){
-        return BotUtils.shortUrl(toolLogic.githubQuicken(url));
     }
 
     @Action("traceroute {domain}")

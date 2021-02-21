@@ -59,6 +59,7 @@ public class GroupEntity {
     private Boolean autoReview;
     private Boolean onTimeAlarm;
     private String colorPicType;
+    private String chatAiType;
     private Integer maxViolationCount;
     private Integer maxCommandCountOnTime;
     private Boolean locMonitor;

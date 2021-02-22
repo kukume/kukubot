@@ -11,6 +11,7 @@ import com.icecreamqaq.yuq.annotation.GroupController;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.service.GroupService;
+import me.kuku.yuq.utils.BotUtils;
 import net.mamoe.mirai.contact.BotIsBeingMutedException;
 
 import javax.inject.Inject;
@@ -68,8 +69,8 @@ public class BeforeController {
 
     @Global
     @Catch(error = IOException.class)
-    public void interIO(IOException e, long qq){
-        FunKt.getMif().at(qq).plus("出现io异常了，请重试！！");
+    public void interIO(IOException e, long qq, long group){
+        FunKt.getYuq().getGroups().get(group).get(qq).sendMessage(BotUtils.toMessage("出现io异常了，请重试！！"));
     }
 
     @Global

@@ -1,22 +1,32 @@
 package me.kuku.yuq.logic.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import me.kuku.yuq.entity.ConfigEntity;
 import me.kuku.yuq.logic.DCloudLogic;
+import me.kuku.yuq.logic.IdentifyCodeLogic;
+import me.kuku.yuq.pojo.ConfigType;
 import me.kuku.yuq.pojo.DCloudPojo;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.pojo.UA;
+import me.kuku.yuq.service.ConfigService;
 import me.kuku.yuq.utils.BotUtils;
 import me.kuku.yuq.utils.OkHttpUtils;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+import javax.inject.Inject;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
 public class DCloudLogicImpl implements DCloudLogic {
+
+	@Inject
+	private IdentifyCodeLogic identifyCodeLogic;
+	@Inject
+	private ConfigService configService;
 
 	@Override
 	public DCloudPojo getData() throws IOException {
@@ -34,12 +44,15 @@ public class DCloudLogicImpl implements DCloudLogic {
 				OkHttpUtils.addHeaders(dCloudPojo.getCookie(), "https://unicloud.dcloud.net.cn/login",
 						UA.PC));
 		JSONObject jsonObject = OkHttpUtils.getJson(response);
-		if (jsonObject.getInteger("ret") == 0){
+		Integer ret = jsonObject.getInteger("ret");
+		if (ret == 0){
 			String cookie = OkHttpUtils.getCookie(response);
 			String token = jsonObject.getString("token");
 			dCloudPojo.setCookie(cookie);
 			dCloudPojo.setToken(token);
 			return Result.success(dCloudPojo);
+		} else if (ret == 1002){
+			return Result.failure(501, "验证码错误，请重试！！");
 		}else return Result.failure(jsonObject.getString("desc"));
 	}
 
@@ -56,13 +69,13 @@ public class DCloudLogicImpl implements DCloudLogic {
 					spaceId + "&appid=&provider=aliyun&name=" + URLEncoder.encode(name, "utf-8") +"&size=" +
 					bytes.length, map);
 		} catch (Exception e) {
-			return Result.failure("cookie失效，上传失败！！");
+			return Result.failure(502, "cookie失效，上传失败！！");
 		}
 		if (jsonObject.getInteger("ret") == 0){
 			JSONObject dataJsonObject = jsonObject.getJSONObject("data");
 			String signUrl = dataJsonObject.getString("SignUrl");
 			String fileId = dataJsonObject.getString("Id");
-			Response response = null;
+			Response response;
 			try {
 				response = OkHttpUtils.put(signUrl, RequestBody.create(bytes, MediaType.parse("application/octet-stream")),
 						OkHttpUtils.addHeaders(null, "https://unicloud.dcloud.net.cn/", UA.PC));
@@ -82,5 +95,32 @@ public class DCloudLogicImpl implements DCloudLogic {
 				return Result.failure("上传失败，请稍后重试！！");
 			}
 		}else return Result.failure(jsonObject.getString("desc"));
+	}
+
+	@Override
+	public Result<DCloudPojo> reLogin() throws IOException {
+		return reLogin(0);
+	}
+
+	public Result<DCloudPojo> reLogin(int num) throws IOException {
+		if (num > 2) return Result.failure("验证码失败失败，请重试！！");
+		DCloudPojo dCloudPojo = getData();
+		Result<String> identifyResult = identifyCodeLogic.identify("3", dCloudPojo.getCaptchaImage());
+		if (identifyResult.isFailure()) return Result.failure(identifyResult.getMessage());
+		ConfigEntity configEntity = configService.findByType(ConfigType.DCloud.getType());
+		if (configEntity == null) return Result.failure("没有找到您的dcloud账号，无法重新登录！！");
+		JSONObject contentJsonObject = configEntity.getContentJsonObject();
+		Result<DCloudPojo> loginResult = login(dCloudPojo, contentJsonObject.getString("email"), contentJsonObject.getString("password"), identifyResult.getData());
+		if (loginResult.getCode() == 501){
+			return reLogin(++num);
+		}else if (loginResult.isSuccess()){
+			DCloudPojo pojo = loginResult.getData();
+			contentJsonObject.put("cookie", pojo.getCookie());
+			contentJsonObject.put("token", pojo.getToken());
+			configEntity.setContentJsonObject(contentJsonObject);
+			configService.save(configEntity);
+			return loginResult;
+		}
+		else return loginResult;
 	}
 }

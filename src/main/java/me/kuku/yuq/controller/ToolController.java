@@ -644,6 +644,7 @@ public class ToolController {
     }
 
     @Action("dcloud上传")
+    @QMsg(at = true, atNewLine = true)
     public String dCloudUpload(Group group, long qq, ContextSession session){
         ConfigEntity configEntity = configService.findByType(ConfigType.DCloud.getType());
         if (configEntity == null) return "机器人还没有配置dCloud，请联系机器人主人进行配置。";
@@ -662,6 +663,14 @@ public class ToolController {
                 sb.append(i++).append("、");
                 try {
                     Result<String> result = dCloudLogic.upload(dCloudPojo, spaceId, id, OkHttpUtils.getBytes(url));
+                    if (result.getCode() == 502){
+                        Result<DCloudPojo> reResult = dCloudLogic.reLogin();
+                        if (reResult.isFailure()) return "cookie失效，尝试重新登录，登录失败。" + reResult.getMessage();
+                        else {
+                            dCloudPojo = reResult.getData();
+                            result = dCloudLogic.upload(dCloudPojo, spaceId, id, OkHttpUtils.getBytes(url));
+                        }
+                    }
                     if (result.isFailure()) sb.append(result.getMessage()).append("\n");
                     else sb.append(result.getData()).append("\n");
                 } catch (IOException e) {

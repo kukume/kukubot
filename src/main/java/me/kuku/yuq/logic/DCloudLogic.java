@@ -11,4 +11,5 @@ public interface DCloudLogic {
 	DCloudPojo getData() throws IOException;
 	Result<DCloudPojo> login(DCloudPojo dCloudPojo, String email, String password, String code) throws IOException;
 	Result<String> upload(DCloudPojo dCloudPojo, String spaceId, String name, byte[] bytes);
+	Result<DCloudPojo> reLogin() throws IOException;
 }

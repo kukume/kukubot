@@ -51,6 +51,7 @@ public class ChatEvent {
             return;
         }
         String type = groupEntity.getChatAiType();
+        if (type == null) return;
         MessageItemFactory mif = FunKt.getMif();
         if (type.equals("QingYunKe")) {
             String key = "free";

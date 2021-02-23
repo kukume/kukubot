@@ -60,4 +60,5 @@ public interface ToolLogic {
     String executeCode(String code, CodeType codeType) throws IOException;
     String urlToPic(String url) throws IOException;
     String pasteUbuntu(String poster, String syntax, String content);
+    byte[] girlImageGaNk();
 }

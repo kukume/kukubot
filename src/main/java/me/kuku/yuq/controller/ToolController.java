@@ -680,4 +680,12 @@ public class ToolController {
         }
         return BotUtils.removeLastLine(sb);
     }
+
+    @Action("妹子图")
+    public Object girlImage(){
+        byte[] bytes = toolLogic.girlImageGaNk();
+        if (bytes != null){
+            return FunKt.getMif().imageByByteArray(bytes);
+        }else return BotUtils.toMessage("图片获取失败，请重试！！");
+    }
 }

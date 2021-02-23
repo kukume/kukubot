@@ -2,7 +2,7 @@ package me.kuku.yuq.logic.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import me.kuku.yuq.entity.ConfigEntity;
-import me.kuku.yuq.logic.IdentifyCodeLogic;
+import me.kuku.yuq.logic.CodeLogic;
 import me.kuku.yuq.pojo.ConfigType;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.ConfigService;
@@ -12,7 +12,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.util.Base64;
 
-public class TtIdentifyCodeLogicImpl implements IdentifyCodeLogic {
+public class TtCodeLogicImpl implements CodeLogic {
 
 	@Inject
 	private ConfigService configService;

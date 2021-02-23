@@ -4,7 +4,10 @@ import com.IceCreamQAQ.Yu.annotation.Action;
 import com.IceCreamQAQ.Yu.annotation.Synonym;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.annotation.GroupController;
+import com.icecreamqaq.yuq.annotation.PrivateController;
+import com.icecreamqaq.yuq.entity.Contact;
 import com.icecreamqaq.yuq.entity.Group;
+import com.icecreamqaq.yuq.entity.Member;
 import me.kuku.yuq.entity.BiliBiliEntity;
 import me.kuku.yuq.logic.BiliBiliLogic;
 import me.kuku.yuq.logic.ToolLogic;
@@ -19,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @GroupController
+@PrivateController
 @SuppressWarnings("unused")
 public class BiliBiliLoginController {
     @Inject
@@ -70,5 +74,25 @@ public class BiliBiliLoginController {
                 }
             }
         });
+    }
+
+    @Action("bilibililogin pwd {username} {password}")
+    public String loginByPassword(String username, String password, Contact qq) throws IOException {
+        Long group = null;
+        if (qq instanceof Member){
+            group = ((Member) qq).getGroup().getId();
+        }
+        Result<BiliBiliEntity> result = biliBiliLogic.loginByPassword(username, password);
+        if (result.isFailure()) return result.getMessage();
+        else {
+            BiliBiliEntity biliBiliEntity = biliBiliService.findByQQ(qq.getId());
+            if (biliBiliEntity == null) biliBiliEntity = new BiliBiliEntity(qq.getId(), group);
+            BiliBiliEntity newBiliBiliEntity = result.getData();
+            biliBiliEntity.setCookie(newBiliBiliEntity.getCookie());
+            biliBiliEntity.setToken(newBiliBiliEntity.getToken());
+            biliBiliEntity.setUserId(newBiliBiliEntity.getUserId());
+            biliBiliService.save(biliBiliEntity);
+            return "绑定或者更新哔哩哔哩成功！！";
+        }
     }
 }

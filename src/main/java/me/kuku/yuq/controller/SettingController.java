@@ -21,7 +21,7 @@ import me.kuku.yuq.entity.ConfigEntity;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.logic.DCloudLogic;
-import me.kuku.yuq.logic.IdentifyCodeLogic;
+import me.kuku.yuq.logic.CodeLogic;
 import me.kuku.yuq.logic.QQLoginLogic;
 import me.kuku.yuq.logic.TeambitionLogic;
 import me.kuku.yuq.pojo.ConfigType;
@@ -34,6 +34,7 @@ import me.kuku.yuq.utils.BotUtils;
 import me.kuku.yuq.utils.OkHttpUtils;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -60,7 +61,10 @@ public class SettingController extends QQController {
     @Inject
     private DCloudLogic dCloudLogic;
     @Inject
-    private IdentifyCodeLogic identifyCodeLogic;
+    private CodeLogic codeLogic;
+    @Inject
+    @Named("fateAdm")
+    private CodeLogic fateAdmCodeLogic;
 
     @Before
     public void before(long qq, BotActionContext actionContext){
@@ -276,7 +280,7 @@ public class SettingController extends QQController {
         Message idMessage = session.waitNextMessage();
         String spaceId = BotUtils.firstString(idMessage);
         DCloudPojo dCloudPojo = dCloudLogic.getData();
-        Result<String> identifyResult = identifyCodeLogic.identify("3", dCloudPojo.getCaptchaImage());
+        Result<String> identifyResult = codeLogic.identify("3", dCloudPojo.getCaptchaImage());
         if (identifyResult.isFailure()) return identifyResult.getMessage();
         Result<DCloudPojo> loginResult = dCloudLogic.login(dCloudPojo, email, password, identifyResult.getData() );
         if (loginResult.isFailure()) return loginResult.getMessage();
@@ -308,11 +312,35 @@ public class SettingController extends QQController {
 
     @Action("saucenao {apiKey}")
     public String sauceNao(String apiKey){
-        ConfigEntity configEntity = configService.findByType(ConfigType.SauceNao.getType());
-        if (configEntity == null) configEntity = new ConfigEntity(ConfigType.SauceNao.getType());
+        ConfigEntity configEntity = getEntity(ConfigType.SauceNao);
         configEntity.setContent(apiKey);
         configService.save(configEntity);
         return "绑定sauceNao成功！！";
+    }
+
+    @Action("fateadm {pdId} {pdKey}")
+    public String bindFateAdm(String pdId, String pdKey){
+        ConfigEntity configEntity = getEntity(ConfigType.FateAdmCode);
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("pdId", pdId);
+        jsonObject.put("pdKey", pdKey);
+        configEntity.setContentJsonObject(jsonObject);
+        configService.save(configEntity);
+        return "绑定fateadm打码成功！！";
+    }
+
+    @Action("ddocr {apiKey}")
+    public String bindDdOcr(String apiKey){
+        ConfigEntity configEntity = getEntity(ConfigType.DdOcrCode);
+        configEntity.setContent(apiKey);
+        configService.save(configEntity);
+        return "绑定ddOcr成功！！";
+    }
+
+    private ConfigEntity getEntity(ConfigType configType){
+        ConfigEntity configEntity = configService.findByType(configType.getType());
+        if (configEntity == null) configEntity = new ConfigEntity(configType.getType());
+        return configEntity;
     }
 
 }

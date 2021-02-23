@@ -3,7 +3,7 @@ package me.kuku.yuq.logic.impl;
 import com.alibaba.fastjson.JSONObject;
 import me.kuku.yuq.entity.ConfigEntity;
 import me.kuku.yuq.logic.DCloudLogic;
-import me.kuku.yuq.logic.IdentifyCodeLogic;
+import me.kuku.yuq.logic.CodeLogic;
 import me.kuku.yuq.pojo.ConfigType;
 import me.kuku.yuq.pojo.DCloudPojo;
 import me.kuku.yuq.pojo.Result;
@@ -24,7 +24,7 @@ import java.util.Map;
 public class DCloudLogicImpl implements DCloudLogic {
 
 	@Inject
-	private IdentifyCodeLogic identifyCodeLogic;
+	private CodeLogic codeLogic;
 	@Inject
 	private ConfigService configService;
 
@@ -105,7 +105,7 @@ public class DCloudLogicImpl implements DCloudLogic {
 	public Result<DCloudPojo> reLogin(int num) throws IOException {
 		if (num > 2) return Result.failure("验证码失败失败，请重试！！");
 		DCloudPojo dCloudPojo = getData();
-		Result<String> identifyResult = identifyCodeLogic.identify("3", dCloudPojo.getCaptchaImage());
+		Result<String> identifyResult = codeLogic.identify("1003", dCloudPojo.getCaptchaImage());
 		if (identifyResult.isFailure()) return Result.failure(identifyResult.getMessage());
 		ConfigEntity configEntity = configService.findByType(ConfigType.DCloud.getType());
 		if (configEntity == null) return Result.failure("没有找到您的dcloud账号，无法重新登录！！");

@@ -101,7 +101,7 @@ public class RSAUtils {
      * @return
      */
     public static String encrypt(String data, PublicKey publicKey) throws Exception {
-        Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWITHSHA-256ANDMGF1PADDING");
+        Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.ENCRYPT_MODE, publicKey);
         int inputLen = data.getBytes().length;
         ByteArrayOutputStream out = new ByteArrayOutputStream();

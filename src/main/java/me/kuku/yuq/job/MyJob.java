@@ -33,10 +33,6 @@ public class MyJob {
     public String master;
     @Inject
     private GroupService groupService;
-    @Config("YuQ.Mirai.bot.versionNo")
-    private String versionNo;
-
-    private int lastVersion = -1;
 
     @Cron("1h")
     public void backUp(){
@@ -51,43 +47,6 @@ public class MyJob {
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
-            }
-        }
-    }
-
-    @Cron("1h")
-    public void checkUpdate() throws IOException {
-        if (lastVersion == -1) lastVersion = Integer.parseInt(versionNo);
-        JSONObject jsonObject = OkHttpUtils.getJson("https://api.kuku.me/bot/version/" + lastVersion);
-        JSONArray jsonArray = jsonObject.getJSONObject("data").getJSONArray("data");
-        if (jsonArray.size() != 0){
-            lastVersion = jsonArray.getJSONObject(0).getInteger("version");
-            StringBuilder log = new StringBuilder();
-            for (int i = 0; i < jsonArray.size(); i++){
-                JSONObject singleJsonObject = jsonArray.getJSONObject(i);
-                String version = singleJsonObject.getString("version");
-                String ll = singleJsonObject.getString("log");
-                log.append("版本号：").append(version).append("，更新日志：\n")
-                        .append(ll).append("\n");
-            }
-            String logStr = BotUtils.removeLastLine(log);
-            List<GroupEntity> list = groupService.findAll();
-            long group = list.get((int) (Math.random() * list.size())).getGroup();
-            Map<Long, Member> members = FunKt.getYuq().getGroups().get(group).getMembers();
-            Message message = BotUtils.toMessage(
-                    "程序有更新啦。日志如下：\n" + logStr
-            );
-            Message updateMessage = BotUtils.toMessage("更新方法：如果您使用的是docker版，请参考 https://www.kuku.me/archives/8/ 的更新教程，" +
-                    "如果不是，那么请手动替换最新jar包并重启：https://file.kuku.me" );
-            long qq = Long.parseLong(master);
-            if (members.containsKey(qq)){
-                Member member = members.get(qq);
-                member.sendMessage(message);
-                member.sendMessage(updateMessage);
-            }else{
-                Friend friend = FunKt.getYuq().getFriends().get(qq);
-                friend.sendMessage(message);
-                friend.sendMessage(updateMessage);
             }
         }
     }

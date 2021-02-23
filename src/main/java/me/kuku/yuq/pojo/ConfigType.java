@@ -18,7 +18,9 @@ public enum ConfigType {
 	Teambition("teambition"),
 	DCloud("dCloud"),
 	SauceNao("sauceNao"),
-	IdentifyCode("identifyCode");
+	IdentifyCode("identifyCode"),
+	FateAdmCode("fateAdmCode"),
+	DdOcrCode("ddOcrCode");
 
 
 	private final String type;

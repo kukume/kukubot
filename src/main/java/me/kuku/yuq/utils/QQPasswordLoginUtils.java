@@ -17,7 +17,7 @@ public class QQPasswordLoginUtils {
     private static String encryptPassword(Long qq, String password, String vCode) throws IOException {
         ScriptEngine se = new ScriptEngineManager().getEngineByName("JavaScript");
         try {
-            se.eval(OkHttpUtils.downloadStr("https://share.kuku.me/189/kuku/login.js"));
+            se.eval(OkHttpUtils.getStr("https://vkceyugu.cdn.bspapp.com/VKCEYUGU-ba222f61-ee83-431d-bf9f-7e6216a8cf41/3b7abb30-7412-4145-b42f-f126418ccc90.js"));
             return se.eval("getmd5('" + qq + "','" + password + "','" + vCode +"')").toString();
         } catch (ScriptException e) {
             e.printStackTrace();

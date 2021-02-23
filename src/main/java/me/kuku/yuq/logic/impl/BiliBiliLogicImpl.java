@@ -6,26 +6,31 @@ import com.alibaba.fastjson.JSONObject;
 import me.kuku.yuq.entity.BiliBiliEntity;
 import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.logic.BiliBiliLogic;
-import me.kuku.yuq.pojo.BiliBiliPojo;
-import me.kuku.yuq.pojo.Result;
-import me.kuku.yuq.pojo.ResultStatus;
-import me.kuku.yuq.pojo.UA;
+import me.kuku.yuq.logic.DdOcrCodeLogic;
+import me.kuku.yuq.pojo.*;
 import me.kuku.yuq.utils.BotUtils;
 import me.kuku.yuq.utils.OkHttpUtils;
 import me.kuku.yuq.utils.QQUtils;
+import me.kuku.yuq.utils.RSAUtils;
 import okhttp3.MultipartBody;
 import okhttp3.Response;
 import okio.ByteString;
 
+import javax.inject.Inject;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.security.PublicKey;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 @SuppressWarnings("unused")
 public class BiliBiliLogicImpl implements BiliBiliLogic {
+
+    @Inject
+    private DdOcrCodeLogic ddOcrCodeLogic;
+
     @Override
     public Result<List<BiliBiliPojo>> getIdByName(String username) throws IOException {
         String enUserName = null;
@@ -264,6 +269,52 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
         BiliBiliEntity biliBiliEntity = getBiliBiliEntityByResponse(biliBiliLoginResponse);
         if (biliBiliEntity == null) return Result.failure("您可能没有使用哔哩哔哩绑定您的QQ账号，请绑定后再试！！", null);
         else return Result.success(biliBiliEntity);
+    }
+
+    @Override
+    public Result<BiliBiliEntity> loginByPassword(String username, String password) throws IOException {
+        // 获取信息
+        JSONObject captchaJsonObject = OkHttpUtils.getJson("https://passport.bilibili.com/x/passport-login/captcha?source=main_web");
+        JSONObject captchaDataJsonObject = captchaJsonObject.getJSONObject("data");
+        String token = captchaDataJsonObject.getString("token");
+        JSONObject geeTestJsonObject = captchaDataJsonObject.getJSONObject("geetest");
+        String challenge = geeTestJsonObject.getString("challenge");
+        String gt = geeTestJsonObject.getString("gt");
+        // 过验证码
+        Result<DdOcrPojo> codeResult = ddOcrCodeLogic.identify(gt, challenge, "https://passport.bilibili.com/login");
+        if (codeResult.isFailure()) return Result.failure(codeResult.getMessage());
+        DdOcrPojo ddOcrPojo = codeResult.getData();
+        // 登录
+        JSONObject keyJsonObject = OkHttpUtils.getJson("https://passport.bilibili.com/x/passport-login/web/key?r=0." + BotUtils.randomNum(16),
+                OkHttpUtils.addHeaders(null, "https://passport.bilibili.com/login", UA.PC));
+        JSONObject keyDataJsonObject = keyJsonObject.getJSONObject("data");
+        String key = keyDataJsonObject.getString("key");
+        String hash = keyDataJsonObject.getString("hash");
+        String enPassword;
+        try {
+            PublicKey publicKey = RSAUtils.getPublicKeyOriginal(key);
+            enPassword = RSAUtils.encrypt(hash + password, publicKey);
+        } catch (Exception e) {
+            return Result.failure("密码加密失败，请重试！！");
+        }
+        Map<String, String> map = new HashMap<>();
+        map.put("source", "main_web");
+        map.put("username", username);
+        map.put("password", enPassword);
+        map.put("keep", "true");
+        map.put("token", token);
+        map.put("go_url", "");
+        map.put("challenge", ddOcrPojo.getChallenge());
+        map.put("validate", ddOcrPojo.getValidate());
+        map.put("seccode", ddOcrPojo.getValidate() + "|jordan");
+        JSONObject jsonObject = OkHttpUtils.postJson("https://passport.bilibili.com/x/passport-login/web/login",
+                map, OkHttpUtils.addHeaders(null, "https://passport.bilibili.com/login", UA.PC));
+        if (jsonObject.getInteger("code") == 0){
+            String url = jsonObject.getJSONObject("data").getString("url");
+            Response response = OkHttpUtils.get(url, OkHttpUtils.addHeaders(null, "https://passport.bilibili.com/login", UA.PC));
+            BiliBiliEntity biliBiliEntity = getBiliBiliEntityByResponse(response);
+            return Result.success(biliBiliEntity);
+        } else return Result.failure(jsonObject.getString("message"));
     }
 
     private BiliBiliEntity getBiliBiliEntityByResponse(Response response){

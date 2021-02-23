@@ -789,4 +789,19 @@ public class ToolLogicImpl implements ToolLogic {
         JSONObject jsonObject = OkHttpUtils.postJson("https://api1h.ilovepdf.com/v1/preview", previewBody, headers);
         return "https://api1h.ilovepdf.com/thumbnails/" + jsonObject.getString("thumbnail");
     }
+
+    @Override
+    public String pasteUbuntu(String poster, String syntax, String content) {
+        Map<String, String> map = new HashMap<>();
+        map.put("poster", poster);
+        map.put("syntax", syntax);
+        map.put("content", content);
+        try {
+            Response response = OkHttpUtils.post("https://paste.ubuntu.com/", map, OkHttpUtils.addUA(UA.PC));
+            response.close();
+            return "https://paste.ubuntu.com/" + response.header("location");
+        } catch (IOException e) {
+            return "生成失败！！";
+        }
+    }
 }

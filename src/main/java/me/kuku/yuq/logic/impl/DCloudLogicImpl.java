@@ -103,7 +103,7 @@ public class DCloudLogicImpl implements DCloudLogic {
 	}
 
 	public Result<DCloudPojo> reLogin(int num) throws IOException {
-		if (num > 2) return Result.failure("验证码失败失败，请重试！！");
+		if (num > 2) return Result.failure("验证码验证失败，请重试！！");
 		DCloudPojo dCloudPojo = getData();
 		Result<String> identifyResult = codeLogic.identify("1003", dCloudPojo.getCaptchaImage());
 		if (identifyResult.isFailure()) return Result.failure(identifyResult.getMessage());

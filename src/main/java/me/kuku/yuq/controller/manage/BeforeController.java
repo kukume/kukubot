@@ -10,13 +10,17 @@ import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.annotation.GroupController;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.GroupEntity;
+import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.service.GroupService;
 import me.kuku.yuq.utils.BotUtils;
 import net.mamoe.mirai.contact.BotIsBeingMutedException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.List;
 
 @GroupController
@@ -27,6 +31,8 @@ public class BeforeController {
     private EhcacheHelp<Integer> eh;
     @Inject
     private GroupService groupService;
+    @Inject
+    private ToolLogic toolLogic;
 
     @Global
     @Before
@@ -68,9 +74,23 @@ public class BeforeController {
     }
 
     @Global
+    @Catch(error = Exception.class)
+    public void recording(Exception exception, long group){
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        exception.printStackTrace(pw);
+        try {
+            String url = toolLogic.pasteUbuntu("exception", "java", sw.toString());
+            FunKt.getYuq().getGroups().get(group).sendMessage(BotUtils.toMessage("程序出现异常了，异常如下：" + url +
+                    "，如果不是网络IO异常和mirai的异常，请反馈给开发者"));
+        }catch (Exception ignore){
+        }
+    }
+
+    @Global
     @Catch(error = IOException.class)
-    public void interIO(IOException e, long qq, long group){
-        FunKt.getYuq().getGroups().get(group).get(qq).sendMessage(BotUtils.toMessage("出现io异常了，请重试！！"));
+    public void interIO(IOException iOException, long qq, long group){
+        FunKt.getYuq().getGroups().get(group).get(qq).sendMessage(FunKt.getMif().at(qq).plus("出现io异常了，请重试！！"));
     }
 
     @Global

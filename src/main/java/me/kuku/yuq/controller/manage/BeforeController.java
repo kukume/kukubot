@@ -9,6 +9,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.annotation.GroupController;
 import com.icecreamqaq.yuq.message.Message;
+import kotlinx.coroutines.TimeoutCancellationException;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.service.GroupService;
@@ -75,13 +76,17 @@ public class BeforeController {
 
     @Global
     @Catch(error = Exception.class)
-    public void recording(Exception exception, long group){
+    public void recording(Exception exception, long group, long qq){
+        if (exception instanceof TimeoutCancellationException
+                || exception instanceof IOException || exception instanceof BotIsBeingMutedException){
+            return;
+        }
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         exception.printStackTrace(pw);
         try {
             String url = toolLogic.pasteUbuntu("exception", "java", sw.toString());
-            FunKt.getYuq().getGroups().get(group).sendMessage(BotUtils.toMessage("程序出现异常了，异常如下：" + url +
+            FunKt.getYuq().getGroups().get(group).sendMessage(FunKt.getMif().at(qq).plus("程序出现异常了，异常如下：" + url +
                     "，如果不是网络IO异常和mirai的异常，请反馈给开发者"));
         }catch (Exception ignore){
         }
@@ -90,7 +95,7 @@ public class BeforeController {
     @Global
     @Catch(error = IOException.class)
     public void interIO(IOException iOException, long qq, long group){
-        FunKt.getYuq().getGroups().get(group).get(qq).sendMessage(FunKt.getMif().at(qq).plus("出现io异常了，请重试！！"));
+        FunKt.getYuq().getGroups().get(group).sendMessage(FunKt.getMif().at(qq).plus("出现io异常了，请重试！！"));
     }
 
     @Global

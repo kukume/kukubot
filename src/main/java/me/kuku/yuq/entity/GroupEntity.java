@@ -50,6 +50,9 @@ public class GroupEntity {
     @Lob
     @Column(columnDefinition = "text")
     private String commandLimitList;
+    @Lob
+    @Column(columnDefinition = "text")
+    private String shellCommandList;
     private Boolean colorPic;
     private Boolean status;
     private Boolean recall;
@@ -175,6 +178,15 @@ public class GroupEntity {
 
     public void setCommandLimitJsonObject(JSONObject jsonObject){
         this.commandLimitList = jsonObject.toString();
+    }
+
+    public JSONArray getShellCommandJsonArray(){
+        if (shellCommandList == null) return new JSONArray();
+        else return JSON.parseArray(shellCommandList);
+    }
+
+    public void setShellCommandJsonArray(JSONArray jsonArray){
+        this.shellCommandList = jsonArray.toString();
     }
 
     public boolean isSuperAdmin(long qq){

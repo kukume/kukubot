@@ -1,7 +1,10 @@
 package me.kuku.yuq.utils;
 
+import com.alibaba.fastjson.JSONObject;
+
 import javax.crypto.Cipher;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
@@ -10,6 +13,8 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 public class RSAUtils {
@@ -37,6 +42,21 @@ public class RSAUtils {
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
         generator.initialize(1024);
         return generator.generateKeyPair();
+    }
+
+    public static String[] getRsaKey() {
+        Map<String, String> map = new HashMap<>();
+        map.put("rsaLength", "2048");
+        map.put("rsaFormat", "PKCS#1");
+        map.put("rsaPass", "");
+        try {
+            JSONObject jsonObject = OkHttpUtils.postJson("https://api.bejson.com/Bejson/Api/Rsa/getRsaKey",
+                    map);
+            JSONObject dataJsonObject = jsonObject.getJSONObject("data");
+            return new String[]{dataJsonObject.getString("public"), dataJsonObject.getString("private")};
+        } catch (IOException e) {
+            return null;
+        }
     }
 
     /**

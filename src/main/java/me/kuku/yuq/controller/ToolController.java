@@ -3,6 +3,7 @@ package me.kuku.yuq.controller;
 import com.IceCreamQAQ.Yu.annotation.Action;
 import com.IceCreamQAQ.Yu.annotation.Config;
 import com.IceCreamQAQ.Yu.annotation.Synonym;
+import com.IceCreamQAQ.Yu.util.IO;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
@@ -32,6 +33,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -72,6 +74,8 @@ public class ToolController {
     private TeambitionLogic teambitionLogic;
     @Inject
     private DCloudLogic dCloudLogic;
+    @Config("YuQ.Mirai.bot.master")
+    private String master;
 
     private final LocalDateTime startTime;
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(4);
@@ -682,10 +686,54 @@ public class ToolController {
     }
 
     @Action("妹子图")
-    public Object girlImage(){
+    public Object girlImage(long qq){
         byte[] bytes = toolLogic.girlImageGaNk();
         if (bytes != null){
             return FunKt.getMif().imageByByteArray(bytes);
-        }else return BotUtils.toMessage("图片获取失败，请重试！！");
+        }else return FunKt.getMif().at(qq).plus("图片获取失败，请重试！！");
+    }
+
+    @Action("shell {command}")
+    @QMsg(at = true)
+    public String shellCommand(String command, Group group, long qq){
+        GroupEntity groupEntity = groupService.findByGroup(group.getId());
+        String errorMsg = "没有找到这个命令，请重试！！";
+        if (groupEntity == null) return errorMsg;
+        JSONArray jsonArray = groupEntity.getShellCommandJsonArray();
+        for (int i = 0; i < jsonArray.size(); i++){
+            JSONObject jsonObject = jsonArray.getJSONObject(i);
+            if (jsonObject.getString("command").equals(command)){
+                //0为主人，1为超管，2为普管，3为用户
+                Integer auth = jsonObject.getInteger("auth");
+                boolean b;
+                if (auth == 0){
+                    b = qq == Long.parseLong(master);
+                }else if (auth == 1){
+                    b = groupEntity.isSuperAdmin(qq);
+                }else if (auth == 2){
+                    b = groupEntity.isAdmin(qq);
+                }else b = true;
+                if (b){
+                    String shell = jsonObject.getString("shell");
+                    ExecutorUtils.execute(() -> {
+                        Runtime runtime = Runtime.getRuntime();
+                        try {
+                            String os = System.getProperty("os.name");
+                            Process process = runtime.exec(shell);
+                            byte[] bytes = IO.read(process.getInputStream(), true);
+                            String result;
+                            if (os.contains("Windows")) result = new String(bytes, "gbk");
+                            else result = new String(bytes, StandardCharsets.UTF_8);
+                            group.sendMessage(FunKt.getMif().at(qq).plus("脚本执行成功，信息如下：\n").plus(result));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            group.sendMessage(FunKt.getMif().at(qq).plus("脚本执行失败！！"));
+                        }
+                    });
+                    return "shell命令正在执行中，请稍后！！";
+                }else return "您的权限不足，无法执行这个命令";
+            }
+        }
+        return errorMsg;
     }
 }

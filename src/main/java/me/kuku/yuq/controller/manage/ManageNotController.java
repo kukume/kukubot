@@ -42,7 +42,7 @@ public class ManageNotController {
     }
 
     @Action("查管")
-    @Synonym({"查黑名单", "查白名单", "查违规词", "查拦截", "查微博监控", "查哔哩哔哩监控", "查问答", "查超管", "查指令限制"})
+    @Synonym({"查黑名单", "查白名单", "查违规词", "查拦截", "查微博监控", "查哔哩哔哩监控", "查问答", "查超管", "查指令限制", "查shell"})
     @QMsg(at = true, atNewLine = true)
     public String query(GroupEntity groupEntity, @PathVar(0) String type){
         StringBuilder sb = new StringBuilder();
@@ -98,6 +98,15 @@ public class ManageNotController {
                 sb.append("本群的指令限制列表如下：").append("\n");
                 groupEntity.getCommandLimitJsonObject().forEach((k, v) -> {
                     sb.append(k).append("->").append(v).append("次").append("\n");
+                });
+                break;
+            case "查shell":
+                sb.append("本群的shell命令存储如下").append("\n");
+                groupEntity.getShellCommandJsonArray().forEach(obj -> {
+                    JSONObject shellCommandJsonObject = (JSONObject) obj;
+                    sb.append(shellCommandJsonObject.getInteger("auth")).append("->")
+                            .append(shellCommandJsonObject.getString("command")).append("->")
+                            .append(shellCommandJsonObject.getString("shell"));
                 });
                 break;
             default: return null;

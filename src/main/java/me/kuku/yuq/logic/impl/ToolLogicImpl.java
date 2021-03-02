@@ -1,5 +1,6 @@
 package me.kuku.yuq.logic.impl;
 
+import com.IceCreamQAQ.Yu.annotation.Config;
 import com.IceCreamQAQ.Yu.util.IO;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -35,7 +36,8 @@ public class ToolLogicImpl implements ToolLogic {
     private final String appId = "ghpgtsokjvkjdmlk";
     private final String appSecret = "N2hNMC93empxb0twUW1jd1FRbVVtQT09";
     private final String params = "&app_id=" + appId + "&app_secret=" + appSecret;
-    private final String myApi = "https://api.kuku.me";
+    @Config("YuQ.Mirai.bot.api")
+    private String api;
     @Override
     public String dogLicking() throws IOException {
         // https://api.oick.cn/dog/api.php
@@ -111,7 +113,7 @@ public class ToolLogicImpl implements ToolLogic {
 
     @Override
     public String queryIp(String ip) throws IOException {
-        return OkHttpUtils.getStr("https://api.kuku.me/tool/ip?ip=" + ip);
+        return OkHttpUtils.getJson(api + "/tool/ip?ip=" + ip).getString("result");
     }
 
     @Override
@@ -371,7 +373,7 @@ public class ToolLogicImpl implements ToolLogic {
 
     @Override
     public byte[] piXivPicProxy(String url) throws IOException {
-        return OkHttpUtils.getBytes(myApi + "/pixiv/picbyurl?url=" + URLEncoder.encode(url, "utf-8"));
+        return OkHttpUtils.getBytes(api + "/pixiv/picbyurl?url=" + URLEncoder.encode(url, "utf-8"));
     }
 
     @Override
@@ -686,7 +688,7 @@ public class ToolLogicImpl implements ToolLogic {
                 .addFormDataPart("file", "kukuapi",
                         RequestBody.create(bytes, MediaType.parse("image/*"))).build();
         try {
-            JSONObject jsonObject = OkHttpUtils.postJson("https://api.kuku.me/tool/upload", body);
+            JSONObject jsonObject = OkHttpUtils.postJson(api + "/tool/upload", body);
             return jsonObject.getJSONObject("image").getString("url");
         } catch (IOException e) {
             e.printStackTrace();

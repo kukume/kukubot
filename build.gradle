@@ -28,7 +28,6 @@ dependencies {
         exclude group: 'org.slf4j', module: 'slf4j-simple'
     }
     implementation 'net.mamoe:mirai-core-jvm:2.4.0'
-    implementation 'io.socket:socket.io-client:1.0.0'
 //    implementation 'net.mamoe:mirai-login-solver-selenium:1.0-dev-10'
 }
 

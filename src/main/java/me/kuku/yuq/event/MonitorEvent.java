@@ -1,5 +1,6 @@
 package me.kuku.yuq.event;
 
+import com.IceCreamQAQ.Yu.annotation.Config;
 import com.IceCreamQAQ.Yu.annotation.Event;
 import com.IceCreamQAQ.Yu.annotation.EventListener;
 import com.alibaba.fastjson.JSONArray;
@@ -55,6 +56,8 @@ public class MonitorEvent {
     private ConfigService configService;
     @Inject
     private ToolLogic toolLogic;
+    @Config("YuQ.Mirai.bot.api")
+    private String api;
 
     @Event
     public void saveMessageGroup(GroupMessageEvent e){
@@ -88,10 +91,10 @@ public class MonitorEvent {
                 }
             }
             try {
-                String url = "https://api.kuku.me/tool/word?word=" + URLEncoder.encode(sb.toString(), "utf-8");
+                String url = api + "/tool/word?word=" + URLEncoder.encode(sb.toString(), "utf-8");
 //                String picUrl = toolLogic.urlToPic(url);
 //                e.getSendTo().sendMessage(FunKt.getMif().imageByUrl(picUrl).toMessage());
-                byte[] bytes = OkHttpUtils.getBytes("https://api.kuku.me/tool/urlToPic?url=" + URLEncoder.encode(url, "utf-8"));
+                byte[] bytes = OkHttpUtils.getBytes(api + "/tool/urlToPic?url=" + URLEncoder.encode(url, "utf-8"));
                 e.getSendTo().sendMessage(FunKt.getMif().imageByByteArray(bytes).toMessage());
             } catch (Exception iex) {
                 e.getSendTo().sendMessage(BotUtils.toMessage("转换图片失败，完蛋！！"));
@@ -236,11 +239,10 @@ public class MonitorEvent {
                     if (result.isSuccess()){
                         String path = "qqpic/" + year + "/" + month + "/" + day + "/" + id;
                         if (groupEntity.getUploadPicNotice() != null && groupEntity.getUploadPicNotice()){
-                            String resultUrl = "https://api.kuku.me/teambition/" +
-                                    jsonObject.getString("name") + "/" +
-                                    URLEncoder.encode(Base64.getEncoder().encodeToString((path).getBytes(StandardCharsets.UTF_8)), "utf-8");
+                            String resultUrl = api + "/teambition/" +
+                                    jsonObject.getString("name") + "/" + path;
                             Message sendMessage = FunKt.getMif().imageById(id).plus(
-                                    "\n发现图片，Teambition链接：\n" + BotUtils.shortUrl(resultUrl));
+                                    "\n发现图片，Teambition链接：\n" + resultUrl);
                             group.sendMessage(sendMessage);
                         }
                     }

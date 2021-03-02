@@ -33,7 +33,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -76,6 +75,8 @@ public class ToolController {
     private DCloudLogic dCloudLogic;
     @Config("YuQ.Mirai.bot.master")
     private String master;
+    @Config("YuQ.Mirai.bot.api")
+    private String api;
 
     private final LocalDateTime startTime;
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(4);
@@ -261,8 +262,8 @@ public class ToolController {
                         String danType = null;
                         if (arr.length > 1) danType = arr[1];
                         String url;
-                        if (danType == null) url = "https://api.kuku.me/danbooru";
-                        else url = "https://api.kuku.me/danbooru?type=" + danType;
+                        if (danType == null) url = api + "/danbooru";
+                        else url = api + "/danbooru?type=" + danType;
                         Response response = OkHttpUtils.get(url);
                         if (response.header("content-type") != null) {
                             group.sendMessage(FunKt.getMif().at(qq).plus("danbooru的tags类型不匹配，请重新设置tags类型，具体tag类型可前往https://danbooru.donmai.us/" +
@@ -567,11 +568,11 @@ public class ToolController {
     @Action("窥屏检测")
     public void checkPeeping(Group group){
         String random = BotUtils.randomNum(4);
-        group.sendMessage(FunKt.getMif().jsonEx("{\"app\":\"com.tencent.miniapp\",\"desc\":\"\",\"view\":\"notification\",\"ver\":\"1.0.0.11\",\"prompt\":\"QQ程序\",\"appID\":\"\",\"sourceName\":\"\",\"actionData\":\"\",\"actionData_A\":\"\",\"sourceUrl\":\"\",\"meta\":{\"notification\":{\"appInfo\":{\"appName\":\"三楼有只猫\",\"appType\":4,\"appid\":1109659848,\"iconUrl\":\"https:\\/\\/api.kuku.me\\/tool\\/peeping\\/check\\/" + random + "\"},\"button\":[],\"data\":[],\"emphasis_keyword\":\"\",\"title\":\"请等待15s\"}},\"text\":\"\",\"extraApps\":[],\"sourceAd\":\"\",\"extra\":\"\"}").toMessage());
+        group.sendMessage(FunKt.getMif().jsonEx("{\"app\":\"com.tencent.miniapp\",\"desc\":\"\",\"view\":\"notification\",\"ver\":\"1.0.0.11\",\"prompt\":\"QQ程序\",\"appID\":\"\",\"sourceName\":\"\",\"actionData\":\"\",\"actionData_A\":\"\",\"sourceUrl\":\"\",\"meta\":{\"notification\":{\"appInfo\":{\"appName\":\"三楼有只猫\",\"appType\":4,\"appid\":1109659848,\"iconUrl\":\"" + api + "\\/tool\\/peeping\\/check\\/" + random + "\"},\"button\":[],\"data\":[],\"emphasis_keyword\":\"\",\"title\":\"请等待15s\"}},\"text\":\"\",\"extraApps\":[],\"sourceAd\":\"\",\"extra\":\"\"}").toMessage());
         executorService.schedule(() -> {
             String msg;
             try {
-                JSONObject jsonObject = OkHttpUtils.getJson("https://api.kuku.me/tool/peeping/result/" + random);
+                JSONObject jsonObject = OkHttpUtils.getJson(api + "/tool/peeping/result/" + random);
                 if (jsonObject.getInteger("code") == 200){
                     StringBuilder sb = new StringBuilder();
                     JSONArray jsonArray = jsonObject.getJSONObject("data").getJSONArray("list");
@@ -632,10 +633,9 @@ public class ToolController {
                     );
                     if (result.isSuccess()){
                         String path = "pic/" + year + "/" + month + "/" + day + "/" + id;
-                        String resultUrl = "https://api.kuku.me/teambition/" +
-                                jsonObject.getString("name") + "/" +
-                                URLEncoder.encode(Base64.getEncoder().encodeToString((path).getBytes(StandardCharsets.UTF_8)), "utf-8");
-                        sb.append(BotUtils.shortUrl(resultUrl)).append("\n");
+                        String resultUrl = api + "/teambition/" +
+                                jsonObject.getString("name") + "/" + path;
+                        sb.append(resultUrl).append("\n");
                     }else {
                         sb.append("上传失败！！").append("\n");
                     }

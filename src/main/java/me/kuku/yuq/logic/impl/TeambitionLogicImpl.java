@@ -62,7 +62,7 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 		Response response = OkHttpUtils.get("https://www.teambition.com/todo", OkHttpUtils.addHeaders(teambitionPojo.getCookie(), "", UA.PC));
 		if (response.code() != 200){
 			response.close();
-			return Result.failure("cookie已失效，请重新登录！！");
+			return Result.failure(501, "cookie已失效，请重新登录！！");
 		}
 		String hh = OkHttpUtils.getStr(response);
 		hh = Jsoup.parse(hh).getElementById("teambition-config").text();
@@ -140,7 +140,7 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 				OkHttpUtils.addHeaders(map));
 		if (jsonObject.containsKey("error")){
 			// token/ auth失效
-			return Result.failure(502, jsonObject.getString("message"));
+			return Result.failure(501, jsonObject.getString("message"));
 		}
 		JSONObject params = new JSONObject();
 		JSONArray works = new JSONArray();
@@ -210,7 +210,15 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 			String str = OkHttpUtils.getStr("https://www.teambition.com/api/works?_parentId=" + finallyParentId +
 							"&_projectId=" + projectId + "&order=updatedDesc&count=50&page=" + page++ + "&_=" + System.currentTimeMillis(),
 					OkHttpUtils.addHeaders(teambitionPojo.getCookie(), "", UA.PC));
-			JSONArray jsonArray = JSON.parseArray(str);
+			JSONArray jsonArray;
+			try {
+				jsonArray = JSON.parseArray(str);
+			}catch (Exception e){
+				JSONObject jsonObject = JSON.parseObject(str);
+				String name = jsonObject.getString("name");
+				if ("InvalidCookie".equals(name)) return Result.failure(501, "cookie已失效");
+				else return Result.failure(jsonObject.getString("message"));
+			}
 			String fileName = path[path.length - 1];
 			for (int i = 0; i < jsonArray.size(); i++) {
 				JSONObject jsonObject = jsonArray.getJSONObject(i);

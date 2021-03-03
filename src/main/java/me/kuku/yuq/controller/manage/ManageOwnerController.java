@@ -119,4 +119,13 @@ public class ManageOwnerController {
 		return "没有找到这个shell指令！！";
 	}
 
+	@Action("群管理权限 {status}")
+	@QMsg(at = true)
+	public String groupAdminAuth(GroupEntity groupEntity, boolean status){
+		groupEntity.setGroupAdminAuth(status);
+		groupService.save(groupEntity);
+		if (status) return "群管理权限开启成功！！";
+		else return "群管理权限关闭成功！！";
+	}
+
 }

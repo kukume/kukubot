@@ -31,7 +31,7 @@ public interface ToolLogic {
     String restoreShortUrl(String url) throws IOException;
     Result<String> weather(String local, String cookie) throws IOException;
     String ping(String domain) throws IOException;
-    Result<Map<String, String>> colorPicByLoLiCon(String apiKey, boolean isR18) throws IOException;
+    Result<Map<String, String>> colorPicByLoLiCon(String apiKey, boolean isR18, boolean isProxy) throws IOException;
     byte[] piXivPicProxy(String url) throws IOException;
     Map<String, String> hiToKoTo() throws IOException;
     byte[] creatQr(String content) throws IOException;

@@ -20,9 +20,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-@SuppressWarnings({"SpellCheckingInspection", "DuplicatedCode", "unused"})
+@SuppressWarnings({"unused", "SpellCheckingInspection"})
 public class TeambitionLogicImpl implements TeambitionLogic {
-
 	//https://www.teambition.com/project/60112787ada80cf27620e452/works/60112787ada80cf27620e453
 	//                                       projectId                   parentId
 	@Override
@@ -73,21 +72,28 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 		return Result.success(teambitionPojo);
 	}
 
-	private String getFolderId(TeambitionPojo teambitionPojo, String parentId, String name, boolean isCreate) throws IOException {
+	private Result<String> getFolderId(TeambitionPojo teambitionPojo, String parentId, String name, boolean isCreate) throws IOException {
 		String projectId = teambitionPojo.getProjectId();
 		String str = OkHttpUtils.getStr("https://www.teambition.com/api/collections?_parentId=" + parentId
-				+ "&_projectId=" + projectId + "&order=updatedDesc&count=50&page=1&_=" + System.currentTimeMillis(),
+						+ "&_projectId=" + projectId + "&order=updatedDesc&count=50&page=1&_=" + System.currentTimeMillis(),
 				OkHttpUtils.addHeaders(teambitionPojo.getCookie(), "", UA.PC));
-		JSONArray jsonArray = JSON.parseArray(str);
-		for (int i = 0; i < jsonArray.size(); i++){
-			JSONObject jsonObject = jsonArray.getJSONObject(i);
-			if (jsonObject.getString("title").equals(name)){
-				return jsonObject.getString("_id");
+		try {
+			JSONArray jsonArray = JSON.parseArray(str);
+			for (int i = 0; i < jsonArray.size(); i++){
+				JSONObject jsonObject = jsonArray.getJSONObject(i);
+				if (jsonObject.getString("title").equals(name)){
+					return Result.success(jsonObject.getString("_id"));
+				}
 			}
+		} catch (Exception e) {
+			JSONObject jsonObject = JSON.parseObject(str);
+			String message = jsonObject.getString("message");
+			if (message.contains("无权限操作资源")) return Result.failure(501, "cookie已失效，请重新登录！！");
+			else return Result.failure(message);
 		}
 		if (isCreate)
-			return creatFolder(teambitionPojo, parentId, name);
-		else return null;
+			return Result.success(creatFolder(teambitionPojo, parentId, name));
+		else return Result.failure("文件夹不存在！！");
 	}
 
 	@Override
@@ -116,7 +122,9 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 	@Override
 	public Result<String> uploadToProject(TeambitionPojo teambitionPojo, byte[] bytes, String...path) throws IOException {
 		if (path.length == 0) return Result.failure("参数不正确！！");
-		String parentId = getFinallyParentId(teambitionPojo, true, path);
+		Result<String> parentIdResult = getFinallyParentId(teambitionPojo, true, path);
+		if (parentIdResult.isFailure()) return parentIdResult;
+		String parentId = parentIdResult.getData();
 		String fileType = FileUtils.getFileTypeByStream(bytes);
 		String fileName = path[path.length - 1];
 		if (!fileName.contains(".")) fileName += "." + fileType;
@@ -157,15 +165,17 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 		return Result.success(uploadJsonArray.getJSONObject(0).getString("downloadUrl"));
 	}
 
-	private String getFinallyParentId(TeambitionPojo teambitionPojo, boolean isCreate, String...path) throws IOException {
+	private Result<String> getFinallyParentId(TeambitionPojo teambitionPojo, boolean isCreate, String...path) throws IOException {
 		String finallyParentId = teambitionPojo.getRootId();
 		if (path.length != 1) {
 			for (int i = 0; i < path.length - 1; i++) {
 				String name = path[i];
-				finallyParentId = getFolderId(teambitionPojo, finallyParentId, name, isCreate);
+				Result<String> result = getFolderId(teambitionPojo, finallyParentId, name, isCreate);
+				if (result.isFailure()) return result;
+				finallyParentId = result.getData();
 			}
 		}
-		return finallyParentId;
+		return Result.success(finallyParentId);
 	}
 
 	private String creatFolder(TeambitionPojo teambitionPojo, String parentId, String name) throws IOException {
@@ -191,9 +201,10 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 	@Override
 	public Result<String> fileDownloadUrl(TeambitionPojo teambitionPojo, String...path) throws IOException {
 		if (path.length == 0) return Result.failure("参数不正确！！");
-		String parentId = teambitionPojo.getRootId();
 		String projectId = teambitionPojo.getProjectId();
-		String finallyParentId = getFinallyParentId(teambitionPojo,false, path);
+		Result<String> finallyParentIdResult = getFinallyParentId(teambitionPojo,false, path);
+		if (finallyParentIdResult.isFailure()) return Result.failure(finallyParentIdResult.getMessage());
+		String finallyParentId = finallyParentIdResult.getData();
 		int page = 1;
 		while (true) {
 			String str = OkHttpUtils.getStr("https://www.teambition.com/api/works?_parentId=" + finallyParentId +

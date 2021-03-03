@@ -70,6 +70,7 @@ public class GroupEntity {
     private Boolean repeat;
     private Boolean voiceIdentify;
     private Boolean uploadPicNotice;
+    private Boolean groupAdminAuth;
 
     public GroupEntity(Long group){
         this.group = group;
@@ -88,6 +89,7 @@ public class GroupEntity {
         this.repeat = true;
         this.voiceIdentify = false;
         this.uploadPicNotice = false;
+        this.groupAdminAuth = false;
     }
 
     public JSONArray getBlackJsonArray(){

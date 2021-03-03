@@ -113,7 +113,7 @@ public class ToolLogicImpl implements ToolLogic {
 
     @Override
     public String queryIp(String ip) throws IOException {
-        return OkHttpUtils.getJson(api + "/tool/ip?ip=" + ip).getString("result");
+        return OkHttpUtils.getStr(api + "/tool/ip?ip=" + ip);
     }
 
     @Override
@@ -349,11 +349,12 @@ public class ToolLogicImpl implements ToolLogic {
     }
 
     @Override
-    public Result<Map<String, String>> colorPicByLoLiCon(String apiKey, boolean isR18) throws IOException {
+    public Result<Map<String, String>> colorPicByLoLiCon(String apiKey, boolean isR18, boolean isProxy) throws IOException {
         int r18 = 0;
         if (isR18) r18 = 1;
-        JSONObject jsonObject = OkHttpUtils.getJson("https://api.lolicon.app/setu/?apikey=" + apiKey + "&r18=" + r18);
-//        JSONObject jsonObject = OkHttpUtils.getJson("https://api.kuku.me/lolicon/?apikey=" + apiKey + "&r18=" + r18);
+        JSONObject jsonObject;
+        if (isProxy) jsonObject = OkHttpUtils.getJson("https://api.kuku.me/lolicon/?apikey=" + apiKey + "&r18=" + r18);
+        else jsonObject = OkHttpUtils.getJson("https://api.lolicon.app/setu/?apikey=" + apiKey + "&r18=" + r18);
         switch (jsonObject.getInteger("code")){
             case 0:
                 JSONObject dataJsonObject = jsonObject.getJSONArray("data").getJSONObject(0);

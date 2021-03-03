@@ -242,14 +242,14 @@ public class ToolController {
         for (int i = 0; i < num; i++) {
             ExecutorUtils.execute(() -> {
                 try {
-                    if ("lolicon".equals(type) || "loliconR18".equals(type)) {
+                    if (type.contains("lolicon")) {
                         ConfigEntity configEntity = configService.findByType("loLiCon");
                         if (configEntity == null) {
                             group.sendMessage(FunKt.getMif().at(qq).plus("机器人还没有配置lolicon的apiKey，无法获取色图！！"));
                             return;
                         }
                         String apiKey = configEntity.getContent();
-                        Result<Map<String, String>> result = toolLogic.colorPicByLoLiCon(apiKey, type.equals("loliconR18"));
+                        Result<Map<String, String>> result = toolLogic.colorPicByLoLiCon(apiKey, type.contains("loliconR18"), type.contains("proxy"));
                         Map<String, String> map = result.getData();
                         if (map == null) {
                             group.sendMessage(FunKt.getMif().at(qq).plus(result.getMessage()));

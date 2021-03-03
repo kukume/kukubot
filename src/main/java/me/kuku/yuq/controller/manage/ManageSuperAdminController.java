@@ -53,7 +53,8 @@ public class ManageSuperAdminController {
     @Before
     public GroupEntity before(long group, Member qq){
         GroupEntity groupEntity = groupService.findByGroup(group);
-        if (String.valueOf(qq.getId()).equals(master) || groupEntity.isSuperAdmin(qq.getId()) || qq.isAdmin()) return groupEntity;
+        if (String.valueOf(qq.getId()).equals(master) || groupEntity.isSuperAdmin(qq.getId()) ||
+                (qq.isAdmin() && Boolean.valueOf(true).equals(groupEntity.getGroupAdminAuth()))) return groupEntity;
         else throw FunKt.getMif().at(qq).plus("您的权限不足，无法执行！！").toThrowable();
     }
 
@@ -189,7 +190,8 @@ public class ManageSuperAdminController {
     @QMsg(at = true)
     public String colorPicType(GroupEntity groupEntity, String type){
         String colorPicType;
-        if ("lolicon".equals(type) || "loliconR18".equals(type) || type.contains("danbooru")){
+        if ("lolicon".equals(type) || "loliconR18".equals(type) || type.contains("danbooru") ||
+                "loliconproxy".equals(type) || "loliconR18proxy".equals(type)){
             colorPicType = type;
         }else return "没有该类型，请重试！！";
         groupEntity.setColorPicType(colorPicType);

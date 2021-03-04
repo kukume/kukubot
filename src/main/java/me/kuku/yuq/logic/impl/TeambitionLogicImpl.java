@@ -41,18 +41,18 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 		params.put("phone", phone);
 		params.put("response_type", "session");
 		params.put("token", token);
-		Response loginReponse = OkHttpUtils.post("https://account.teambition.com/api/login/phone",
+		Response loginResponse = OkHttpUtils.post("https://account.teambition.com/api/login/phone",
 				OkHttpUtils.addJson(JSON.toJSONString(params)),
 				OkHttpUtils.addHeaders(cookie, url, UA.PC));
-		if (loginReponse.code() == 200){
-			loginReponse.close();
-			cookie += OkHttpUtils.getCookie(loginReponse);
+		if (loginResponse.code() == 200){
+			loginResponse.close();
+			cookie += OkHttpUtils.getCookie(loginResponse);
 			TeambitionPojo teambitionPojo = new TeambitionPojo();
 			teambitionPojo.setCookie(cookie);
 			teambitionPojo = getAuth(teambitionPojo).getData();
 			return Result.success(teambitionPojo);
 		}else {
-			JSONObject jsonObject = OkHttpUtils.getJson(response);
+			JSONObject jsonObject = OkHttpUtils.getJson(loginResponse);
 			return Result.failure(jsonObject.getString("message"));
 		}
 	}

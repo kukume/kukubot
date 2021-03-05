@@ -255,7 +255,9 @@ public class ToolController {
                             group.sendMessage(FunKt.getMif().at(qq).plus(result.getMessage()));
                             return;
                         }
-                        byte[] by = toolLogic.piXivPicProxy(map.get("url"));
+                        byte[] by;
+                        if (type.contains("proxy")) by = toolLogic.piXivPicProxy(map.get("url"));
+                        else by = OkHttpUtils.getBytes(map.get("url"));
                         group.sendMessage(FunKt.getMif().imageByInputStream(new ByteArrayInputStream(by)).toMessage());
                     } else if (type.contains("danbooru")) {
                         String[] arr = type.split("-");
@@ -625,20 +627,35 @@ public class ToolController {
                 String id = image.getId();
                 sb.append(i++).append("、");
                 try {
-                    Result<String> result = teambitionLogic.uploadToProject(
-                            new TeambitionPojo(jsonObject.getString("cookie"), jsonObject.getString("auth"),
-                                    jsonObject.getString("projectId"), jsonObject.getString("rootId")),
-                            OkHttpUtils.getBytes(url),
+                    TeambitionPojo teambitionPojo = TeambitionPojo.fromConfig(jsonObject);
+                    byte[] bytes = OkHttpUtils.getBytes(url);
+                    Result<String> result = teambitionLogic.uploadToProject(teambitionPojo,
+                            bytes,
                             "pic", year, month, day, id
                     );
-                    if (result.isSuccess()){
+                    if (result.isSuccess()) {
                         String path = "pic/" + year + "/" + month + "/" + day + "/" + id;
-                        String resultUrl = api + "/teambition/" +
+                        String resultUrl = api + "/teambition/project/" +
                                 jsonObject.getString("name") + "/" + path;
-                        sb.append(resultUrl).append("\n");
-                    }else {
-                        sb.append("上传失败！！").append("\n");
+                        sb.append(resultUrl).append(" | ");
+                    } else {
+                        sb.append("上传失败！！").append(" | ");
                     }
+                    if (teambitionPojo.getPanRootId() != null){
+                        Result<Boolean> panResult = teambitionLogic.panUploadFile(teambitionPojo,
+                                bytes,
+                                "pic", year, month, day, id
+                        );
+                        if (panResult.isSuccess()) {
+                            String path = "pic/" + year + "/" + month + "/" + day + "/" + id;
+                            String resultUrl = api + "/teambition/pan/" +
+                                    jsonObject.getString("name") + "/" + path;
+                            sb.append(resultUrl).append(" | ");
+                        } else {
+                            sb.append("上传失败！！").append(" | ");
+                        }
+                    }
+                    sb.append("\n");
                 } catch (IOException e) {
                     sb.append("网络出现异常，上传失败").append("\n");
                 }

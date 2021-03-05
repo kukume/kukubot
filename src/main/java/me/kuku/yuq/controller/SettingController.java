@@ -219,7 +219,7 @@ public class SettingController extends QQController {
         reply("请输入需要绑定的项目名称");
         Message projectMessage = session.waitNextMessage();
         String project = BotUtils.firstString(projectMessage);
-        reply("请输入api中添加的名称");
+        reply("请输入api中添加的名称（由于teambition的下载链接只能动态获取，所以需要使用api来解析下载链接，名称为api中的唯一标识）");
         Message nameMessage = session.waitNextMessage();
         String name = BotUtils.firstString(nameMessage);
         Result<TeambitionPojo> loginResult = teambitionLogic.login(phone, password);
@@ -237,10 +237,21 @@ public class SettingController extends QQController {
         jsonObject.put("password", password);
         jsonObject.put("cookie", teambitionPojo.getCookie());
         jsonObject.put("auth", teambitionPojo.getStrikerAuth());
+        jsonObject.put("name", name);
         jsonObject.put("project", project);
         jsonObject.put("projectId", teambitionPojo.getProjectId());
         jsonObject.put("rootId", teambitionPojo.getRootId());
-        jsonObject.put("name", name);
+        Result<TeambitionPojo> panResult = teambitionLogic.getPanInfo(teambitionPojo);
+        if (panResult.isFailure()){
+            reply("尝试获取teambition网盘信息失败，原因：" + panResult.getMessage());
+        }else {
+            TeambitionPojo pojo = panResult.getData();
+            jsonObject.put("panOrgId", pojo.getPanOrgId());
+            jsonObject.put("panSpaceId", pojo.getPanSpaceId());
+            jsonObject.put("panRootId", pojo.getPanRootId());
+            jsonObject.put("panDriveId", pojo.getPanDriveId());
+            jsonObject.put("userId", pojo.getUserId());
+        }
         configEntity.setContentJsonObject(jsonObject);
         configService.save(configEntity);
         return "绑定Teambition成功！！";

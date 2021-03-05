@@ -196,15 +196,15 @@ public class MonitorEvent {
                 String url = image.getUrl();
                 String id = image.getId();
                 JSONObject jsonObject = configEntity.getContentJsonObject();
-                String cookie = jsonObject.getString("cookie");
-                String auth = jsonObject.getString("auth");
                 String projectName = jsonObject.getString("project");
-                TeambitionPojo teambitionPojo = new TeambitionPojo(cookie, auth,
-                        jsonObject.getString("projectId"), jsonObject.getString("rootId"));
+                TeambitionPojo teambitionPojo = TeambitionPojo.fromConfig(jsonObject);
                 try {
                     byte[] bytes = OkHttpUtils.getBytes(url);
                     Result<String> result = teambitionLogic.uploadToProject(teambitionPojo, bytes,
                             "qqpic", year, month, day, id);
+                    if (teambitionPojo.getPanRootId() != null)
+                        teambitionLogic.panUploadFile(teambitionPojo, bytes,
+                                "qqpic", year, month, day, id);
                     if (result.isFailure()){
                         boolean b = true;
                         if (result.getCode() == 501){
@@ -213,8 +213,8 @@ public class MonitorEvent {
                             if (loginResult.isFailure()) b = false;
                             else {
                                 TeambitionPojo pojo = loginResult.getData();
-                                cookie = pojo.getCookie();
-                                auth = pojo.getStrikerAuth();
+                                String cookie = pojo.getCookie();
+                                String auth = pojo.getStrikerAuth();
                                 jsonObject.put("cookie", cookie);
                                 jsonObject.put("auth", auth);
                                 configEntity.setContentJsonObject(jsonObject);
@@ -225,7 +225,7 @@ public class MonitorEvent {
                             if (loginResult.isFailure()) b = false;
                             else {
                                 TeambitionPojo pojo = loginResult.getData();
-                                auth = pojo.getStrikerAuth();
+                                String auth = pojo.getStrikerAuth();
                                 jsonObject.put("auth", auth);
                                 configEntity.setContentJsonObject(jsonObject);
                                 configService.save(configEntity);
@@ -234,15 +234,23 @@ public class MonitorEvent {
                         if (b){
                             result = teambitionLogic.uploadToProject(teambitionPojo, bytes,
                                     "qqpic", year, month, day, id);
+                            if (teambitionPojo.getPanRootId() != null)
+                                teambitionLogic.panUploadFile(teambitionPojo, bytes,
+                                        "qqpic", year, month, day, id);
                         }else return;
                     }
                     if (result.isSuccess()){
                         String path = "qqpic/" + year + "/" + month + "/" + day + "/" + id;
                         if (groupEntity.getUploadPicNotice() != null && groupEntity.getUploadPicNotice()){
-                            String resultUrl = api + "/teambition/" +
+                            String resultUrl = api + "/teambition/project/" +
                                     jsonObject.getString("name") + "/" + path;
                             Message sendMessage = FunKt.getMif().imageById(id).plus(
-                                    "\n发现图片，Teambition链接：\n" + resultUrl);
+                                    "\nTeambition的project链接：\n" + resultUrl);
+                            if (teambitionPojo.getPanRootId() != null) {
+                                String resultPanUrl = api + "/teambition/pan/" +
+                                        jsonObject.getString("name") + "/" + path;
+                                sendMessage = sendMessage.plus("\nTeambition的pan链接：\n" + resultPanUrl);
+                            }
                             group.sendMessage(sendMessage);
                         }
                     }

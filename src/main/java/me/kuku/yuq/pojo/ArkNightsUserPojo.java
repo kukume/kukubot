@@ -1,10 +1,10 @@
-package me.kuku.yuq.entity;
+package me.kuku.yuq.pojo;
 
 import com.alibaba.fastjson.annotation.JSONField;
 
 import java.util.List;
 
-public class ArkNightsUserEntity {
+public class ArkNightsUserPojo {
     //{ "name": "桃金娘", "type": "先锋", "level": 4, "sex": "女", "tags": [ "近战位", "治疗", "费用回复" ], "hidden": false, "name-en": "MyrtleF" }
     private String name;
     private String type;

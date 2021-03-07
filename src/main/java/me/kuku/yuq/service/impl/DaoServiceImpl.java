@@ -19,6 +19,10 @@ public class DaoServiceImpl implements DaoService {
     private NeTeaseDao neTeaseDao;
     @Inject
     private WeiboDao weiboDao;
+    @Inject
+    private ArkNightsDao arkNightsDao;
+    @Inject
+    private MiHoYoDao miHoYoDao;
 
     @Override
     @Transactional
@@ -29,5 +33,7 @@ public class DaoServiceImpl implements DaoService {
         biliBiliDao.delByQQ(qq);
         neTeaseDao.delByQQ(qq);
         weiboDao.delByQQ(qq);
+        arkNightsDao.delByQQ(qq);
+        miHoYoDao.delByQQ(qq);
     }
 }

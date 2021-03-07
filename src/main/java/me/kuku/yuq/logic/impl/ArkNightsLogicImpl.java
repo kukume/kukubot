@@ -3,12 +3,18 @@ package me.kuku.yuq.logic.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import me.kuku.yuq.entity.ArkNightsEntity;
 import me.kuku.yuq.logic.ArkNightsLogic;
+import me.kuku.yuq.logic.DdOcrCodeLogic;
+import me.kuku.yuq.pojo.DdOcrPojo;
 import me.kuku.yuq.pojo.Result;
+import me.kuku.yuq.pojo.UA;
 import me.kuku.yuq.utils.BotUtils;
 import me.kuku.yuq.utils.OkHttpUtils;
+import okhttp3.Headers;
 import okhttp3.Response;
 
+import javax.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,6 +24,55 @@ import java.util.Map;
 public class ArkNightsLogicImpl implements ArkNightsLogic {
 
 	private final String url = "https://ak.hypergryph.com";
+
+	@Inject
+	private DdOcrCodeLogic ddOcrCodeLogic;
+
+	@Override
+	public Result<ArkNightsEntity> login(String account, String password) throws IOException {
+		String referer = "https://ak.hypergryph.com/user/login";
+		Response response = OkHttpUtils.get(referer);
+		response.close();
+		String allCookie = OkHttpUtils.getCookie(response);
+		String csrfToken = OkHttpUtils.getCookie(allCookie, "csrf_token");
+		Map<String, String> headerMap = new HashMap<>();
+		headerMap.put("x-csrf-token", csrfToken);
+		headerMap.put("referer", referer);
+		headerMap.put("user-agent", UA.PC.getValue());
+		headerMap.put("cookie", allCookie);
+		Headers headers = OkHttpUtils.addHeaders(headerMap);
+		JSONObject jsonObject = new JSONObject();
+		jsonObject.put("account", account);
+		jsonObject.put("password", password);
+		Response beforeLoginResponse = OkHttpUtils.post("https://ak.hypergryph.com/user/api/user/login",
+				OkHttpUtils.addJson(jsonObject.toString()), headers);
+		JSONObject beforeLoginJsonObject = OkHttpUtils.getJson(beforeLoginResponse);
+		Integer code = beforeLoginJsonObject.getInteger("code");
+		if (code == 1100){
+			// 验证码
+			JSONObject dataJsonObject = beforeLoginJsonObject.getJSONObject("data");
+			String gt = dataJsonObject.getString("gt");
+			String challenge = dataJsonObject.getString("challenge");
+			Result<DdOcrPojo> identifyResult = ddOcrCodeLogic.identify(gt, challenge, "https://ak.hypergryph.com/user/api/user/login");
+			if (identifyResult.isFailure()) return Result.failure(identifyResult.getMessage());
+			DdOcrPojo pojo = identifyResult.getData();
+			jsonObject.put("geetest_challenge", pojo.getChallenge());
+			jsonObject.put("geetest_seccode", pojo.getSecCode());
+			jsonObject.put("geetest_validate", pojo.getValidate());
+			Response loginResponse = OkHttpUtils.post("https://ak.hypergryph.com/user/api/user/login",
+					OkHttpUtils.addJson(jsonObject.toString()), headers);
+			JSONObject loginJsonObject = OkHttpUtils.getJson(loginResponse);
+			if (loginJsonObject.getInteger("code") == 0){
+				String cookie = OkHttpUtils.getCookie(loginResponse);
+				ArkNightsEntity arkNightsEntity = new ArkNightsEntity(cookie);
+				return Result.success(arkNightsEntity);
+			}else return Result.failure(loginJsonObject.getString("msg"));
+		}else if (code == 0){
+			String cookie = OkHttpUtils.getCookie(beforeLoginResponse);
+			ArkNightsEntity arkNightsEntity = new ArkNightsEntity(cookie);
+			return Result.success(arkNightsEntity);
+		}else return Result.failure(beforeLoginJsonObject.getString("msg"));
+	}
 
 	@Override
 	public Result<List<Map<String, String>>> rechargeRecord(String cookie) throws IOException {

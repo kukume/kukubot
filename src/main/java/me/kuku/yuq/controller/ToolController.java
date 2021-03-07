@@ -513,11 +513,6 @@ public class ToolController {
         return new DecimalFormat("#.##TB").format(tbNumber);
     }
 
-    @Action("genshin {id}")
-    public String queryGenShinUserInfo(long id) throws IOException {
-        return toolLogic.genShinUserInfo(id);
-    }
-
     @Action("ins {username}")
     @QMsg(at = true)
     public Message ins(String username, @PathVar(value = 2, type = PathVar.Type.Integer) Integer page) throws IOException {

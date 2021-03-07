@@ -1,4 +1,4 @@
-package me.kuku.yuq.controller;
+package me.kuku.yuq.controller.arknights;
 
 import com.IceCreamQAQ.Yu.annotation.Action;
 import com.icecreamqaq.yuq.annotation.GroupController;

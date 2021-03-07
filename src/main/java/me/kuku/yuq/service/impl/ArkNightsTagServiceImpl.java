@@ -1,7 +1,7 @@
 package me.kuku.yuq.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import me.kuku.yuq.entity.ArkNightsUserEntity;
+import me.kuku.yuq.pojo.ArkNightsUserPojo;
 import me.kuku.yuq.service.ArkNightsTagService;
 import me.kuku.yuq.utils.OkHttpUtils;
 
@@ -11,12 +11,12 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ArkNightsTagServiceImpl implements ArkNightsTagService {
-    private static List<ArkNightsUserEntity> arkNightsUserEntities = null;
+    private static List<ArkNightsUserPojo> arkNightsUserEntities = null;
 
     public static void getInstance() {
         if (arkNightsUserEntities == null) {
             try {
-                arkNightsUserEntities = JSONObject.parseArray(OkHttpUtils.getStr("https://www.bigfun.cn/static/aktools/1611029120/data/akhr.json"), ArkNightsUserEntity.class);
+                arkNightsUserEntities = JSONObject.parseArray(OkHttpUtils.getStr("https://www.bigfun.cn/static/aktools/1611029120/data/akhr.json"), ArkNightsUserPojo.class);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -28,17 +28,17 @@ public class ArkNightsTagServiceImpl implements ArkNightsTagService {
         getInstance();
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("检测到可选tag\n");
-        HashMap<List<String>, List<ArkNightsUserEntity>> map = new HashMap<>();
+        HashMap<List<String>, List<ArkNightsUserPojo>> map = new HashMap<>();
         LinkedList<String> mapTagList = new LinkedList<>();
         swap(tags, map, 3, 0, 0, mapTagList); // 从这个数组5个数中选择三个
-        for (Map.Entry<List<String>, List<ArkNightsUserEntity>> listListEntry : map.entrySet()) {
-            List<ArkNightsUserEntity> value = listListEntry.getValue();
+        for (Map.Entry<List<String>, List<ArkNightsUserPojo>> listListEntry : map.entrySet()) {
+            List<ArkNightsUserPojo> value = listListEntry.getValue();
             List<String> entryKey = listListEntry.getKey();
             if (value.isEmpty()) {
                 continue;
             }
-            if (value.stream().allMatch(ArkNightsUserEntity -> ArkNightsUserEntity.getLevel() > 3 || ArkNightsUserEntity.getLevel() == 1)) {
-                stringBuilder.append(entryKey).append(value.stream().map(ArkNightsUserEntity::getName).collect(Collectors.toList())).append("\n");
+            if (value.stream().allMatch(ArkNightsUserPojo -> ArkNightsUserPojo.getLevel() > 3 || ArkNightsUserPojo.getLevel() == 1)) {
+                stringBuilder.append(entryKey).append(value.stream().map(ArkNightsUserPojo::getName).collect(Collectors.toList())).append("\n");
             }
         }
         return stringBuilder.toString();
@@ -52,10 +52,10 @@ public class ArkNightsTagServiceImpl implements ArkNightsTagService {
      * @param cur        当前索引
      * @param mapTagList 标签组合 相当于map的key
      */
-    public static void swap(List<String> tags, HashMap<List<String>, List<ArkNightsUserEntity>> map, int target, int has, int cur, LinkedList<String> mapTagList) {
+    public static void swap(List<String> tags, HashMap<List<String>, List<ArkNightsUserPojo>> map, int target, int has, int cur, LinkedList<String> mapTagList) {
         ArrayList<String> arrayList = new ArrayList<>(mapTagList);
         if (!arrayList.isEmpty()) {
-            map.put(arrayList, arkNightsUserEntities.stream().filter(ArkNightsUserEntity -> Stream.concat(Arrays.stream(ArkNightsUserEntity.getTags().toArray()), Stream.of(ArkNightsUserEntity.getType())).collect(Collectors.toList()).containsAll(arrayList)).collect(Collectors.toList()));
+            map.put(arrayList, arkNightsUserEntities.stream().filter(ArkNightsUserPojo -> Stream.concat(Arrays.stream(ArkNightsUserPojo.getTags().toArray()), Stream.of(ArkNightsUserPojo.getType())).collect(Collectors.toList()).containsAll(arrayList)).collect(Collectors.toList()));
             if (has == target) {
                 return;
             }

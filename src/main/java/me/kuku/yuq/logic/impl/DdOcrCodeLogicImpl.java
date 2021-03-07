@@ -34,7 +34,8 @@ public class DdOcrCodeLogicImpl implements DdOcrCodeLogic {
 		if (jsonObject.getInteger("status") == 0){
 			JSONObject data = jsonObject.getJSONObject("data");
 			return Result.success(new DdOcrPojo(data.getString("challenge"),
-					data.getString("validate"), data.getString("type")));
+					data.getString("validate"), data.getString("type"),
+					data.getString("validate") + "|jordan"));
 		}else return Result.failure(jsonObject.getString("msg"));
 	}
 }

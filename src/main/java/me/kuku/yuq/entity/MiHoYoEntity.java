@@ -10,19 +10,23 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "qqBind", indexes = {@Index(name = "idx_qq", columnList = "qq")})
-public class QQBindEntity {
+@Table(name = "mihoyo")
+public class MiHoYoEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
 	@Column(unique = true)
 	private Long qq;
+	private String account;
+	private String password;
 	@Lob
-	@Column(columnDefinition="text")
-	private String arkNightsCookie;
+	@Column(columnDefinition = "text")
+	private String cookie;
+	private String accountId;
+	private String ticket;
+	private String cookieToken;
 
-
-	public QQBindEntity(long qq){
+	public MiHoYoEntity(Long qq) {
 		this.qq = qq;
 	}
 }

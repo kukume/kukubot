@@ -19,17 +19,16 @@ import com.icecreamqaq.yuq.message.Message;
 import com.icecreamqaq.yuq.mirai.MiraiBot;
 import me.kuku.yuq.entity.ConfigEntity;
 import me.kuku.yuq.entity.GroupEntity;
+import me.kuku.yuq.entity.MiHoYoEntity;
 import me.kuku.yuq.entity.QQLoginEntity;
-import me.kuku.yuq.logic.DCloudLogic;
-import me.kuku.yuq.logic.CodeLogic;
-import me.kuku.yuq.logic.QQLoginLogic;
-import me.kuku.yuq.logic.TeambitionLogic;
+import me.kuku.yuq.logic.*;
 import me.kuku.yuq.pojo.ConfigType;
 import me.kuku.yuq.pojo.DCloudPojo;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.pojo.TeambitionPojo;
 import me.kuku.yuq.service.ConfigService;
 import me.kuku.yuq.service.GroupService;
+import me.kuku.yuq.service.MiHoYoService;
 import me.kuku.yuq.utils.BotUtils;
 import me.kuku.yuq.utils.OkHttpUtils;
 
@@ -42,7 +41,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 @PrivateController
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "SpellCheckingInspection"})
 public class SettingController extends QQController {
     @Inject
     private GroupService groupService;

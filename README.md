@@ -9,8 +9,7 @@
 
 ## 功能
 * 自动签到（QQ、哔哩哔哩、原神、HostLoc、网易云）
-* 推送最新微博、哔哩哔哩动态到群聊（指定用户名）、私聊（我的关注）
-* twitter推送、instagram推送、HostLoc推送
+* 新帖推送（微博、哔哩哔哩、Twitter、Instagram、HostLoc）
 * 修改步数
 * 图床（图片取直链）（qq、teambition、dCloud）
 * 群管功能
@@ -20,13 +19,13 @@
 
 安装教程、注意事项：[https://www.kuku.me/archives/6/](https://www.kuku.me/archives/6/)
 
-## docker
+## Docker
 
 ```shell
 # 拉取镜像
 docker pull kukume/kukubot
 # 创建文件夹
-mkdir kukubot/conf
+mkdir -p kukubot/conf
 # 把device.json放到kukubot目录下
 # 把配置文件YuQ.properties（https://file.kuku.me/kuku-bot/YuQ.properties）设置好账号和密码等信息放到conf目录下
 # 运行容器

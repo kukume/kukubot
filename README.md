@@ -1,4 +1,4 @@
-**基于`YuQ-Mirai`的不好用的机器人**
+**基于`YuQ-Mirai`的机器人**
 * [YuQ-Mirai](https://github.com/YuQWorks/YuQ-Mirai)
 * [YuQ-Mirai-SuperDemo](https://github.com/YuQWorks/YuQ-SuperDemo)
 * [Mirai](https://github.com/mamoe/mirai)
@@ -8,19 +8,34 @@
 **最新版本已支持过滑块验证码（版本过低，环境异常等都是不能过滑块验证码的原因），但是需要gui环境，如果是把挂在无ui环境的，可以在有ui环境（比如：windows系统）的机器上登录成功后，把`device.json`复制到程序根目录或者`conf`文件夹下**
 
 ## 功能
-* QQ自动签到、哔哩哔哩自动签到、原神自动签到、HostLoc自动签到、网易云自动签到+300首听歌量
+* 自动签到（QQ、哔哩哔哩、原神、HostLoc、网易云）
 * 推送最新微博、哔哩哔哩动态到群聊（指定用户名）、私聊（我的关注）
 * twitter推送、instagram推送、HostLoc推送
-* 修改步数（wx and alipay and qq）
+* 修改步数
 * 图床（图片取直链）（qq、teambition、dCloud）
 * 群管功能
 * 一些小工具
 
 ## 教程文章
 
-Docker版：[https://www.kuku.me/archives/8/](https://www.kuku.me/archives/8/)
-
 安装教程、注意事项：[https://www.kuku.me/archives/6/](https://www.kuku.me/archives/6/)
+
+## docker
+
+```shell
+# 拉取镜像
+docker pull kukume/kukubot
+# 创建文件夹
+mkdir kukubot/conf
+# 把device.json放到kukubot目录下
+# 把配置文件YuQ.properties（https://file.kuku.me/kuku-bot/YuQ.properties）设置好账号和密码等信息放到conf目录下
+# 运行容器
+docker run -it --name kukubot -d  \
+-p 8081:8081 \
+-v $(pwd)/kukubot/conf:/kukubot/conf \
+-v $(pwd)/kukubot/db:/kukubot/db \
+kukume/kukubot
+```
 
 ## 鸣谢
 

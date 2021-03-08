@@ -41,7 +41,6 @@ public interface ToolLogic {
     byte[] queryTime() throws IOException;
     String queryVersion() throws IOException;
     String music163cloud() throws IOException;
-    String searchQuestion(String question) throws IOException;
     Result<Map<String, String>> bvToAv(String bv) throws IOException;
     String wordSegmentation(String text) throws IOException;
     String acgPic() throws IOException;

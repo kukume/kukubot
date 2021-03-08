@@ -9,14 +9,10 @@ import com.icecreamqaq.yuq.annotation.QMsg;
 import com.icecreamqaq.yuq.controller.BotActionContext;
 import com.icecreamqaq.yuq.controller.ContextSession;
 import com.icecreamqaq.yuq.entity.Group;
-import com.icecreamqaq.yuq.message.Image;
 import com.icecreamqaq.yuq.message.Message;
-import com.icecreamqaq.yuq.message.MessageItem;
 import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.logic.QQLoginLogic;
-import me.kuku.yuq.logic.QQMailLogic;
 import me.kuku.yuq.logic.QQZoneLogic;
-import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.GroupService;
 import me.kuku.yuq.service.QQLoginService;
 
@@ -24,13 +20,10 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("unused")
 @GroupController
 public class QQLoginController{
-    @Inject
-    private QQMailLogic qqMailLogic;
     @Inject
     private QQLoginLogic qqLoginLogic;
     @Inject
@@ -49,39 +42,16 @@ public class QQLoginController{
         else throw FunKt.getMif().at(qq).plus("您的QQ已失效，请更新QQ！！").toThrowable();
     }
 
-    @Action("气泡")
+    @Action("气泡 {text}")
     @QMsg(at = true)
-    public String bubble(@PathVar(1) String text, @PathVar(2) String name, QQLoginEntity qqLoginEntity) throws IOException {
-        if (text != null) return qqLoginLogic.diyBubble(qqLoginEntity, text, name);
-        else return "缺少参数：diy气泡文本内容！";
+    public String bubble(String text, @PathVar(2) String name, QQLoginEntity qqLoginEntity) throws IOException {
+        return qqLoginLogic.diyBubble(qqLoginEntity, text, name);
     }
 
     @Action("业务")
     @QMsg(at = true, atNewLine = true)
     public String queryVip(QQLoginEntity qqLoginEntity) throws IOException {
         return qqLoginLogic.queryVip(qqLoginEntity);
-    }
-
-    @Action("昵称")
-    @QMsg(at = true)
-    public String modifyNickname(@PathVar(1) String str, QQLoginEntity qqLoginEntity) throws IOException {
-        if (str != null) return qqLoginLogic.modifyNickname(qqLoginEntity, str);
-        else return qqLoginLogic.modifyNickname(qqLoginEntity, " ");
-    }
-
-    @Action("头像")
-    @QMsg(at = true)
-    public String modifyAvatar(QQLoginEntity qqLoginEntity, Message message) throws IOException {
-        String url;
-        try {
-            MessageItem singleBody = message.getBody().get(1);
-            if (singleBody instanceof Image){
-                url = ((Image) singleBody).getUrl();
-            }else return "请携带一张头像";
-        }catch (IndexOutOfBoundsException e){
-            url = "http://qqpublic.qpic.cn/qq_public/0/0-3083588061-157B50D7A4036953784514241D7DDC19/0";
-        }
-        return qqLoginLogic.modifyAvatar(qqLoginEntity, url);
     }
 
     @Action("送花 {qqNo}")
@@ -103,50 +73,46 @@ public class QQLoginController{
                 if (qqLoginLogic.vipSign(qqLoginEntity).contains("失败"))
                     str2 = "签到失败";
                 else str2 = "签到成功";
-                String str3 = qqLoginLogic.phoneGameSign(qqLoginEntity);
-                String str4 = qqLoginLogic.yellowSign(qqLoginEntity);
-                String str5 = qqLoginLogic.qqVideoSign1(qqLoginEntity);
-                String str6 = qqLoginLogic.qqVideoSign2(qqLoginEntity);
-                String str7 = qqLoginLogic.bigVipSign(qqLoginEntity);
-                String str8;
+                String str3 = qqLoginLogic.yellowSign(qqLoginEntity);
+                String str4 = qqLoginLogic.qqVideoSign1(qqLoginEntity);
+                String str5 = qqLoginLogic.qqVideoSign2(qqLoginEntity);
+                String str6 = qqLoginLogic.bigVipSign(qqLoginEntity);
+                String str7;
                 if (qqLoginLogic.qqMusicSign(qqLoginEntity).contains("失败"))
-                    str8 = "签到失败";
-                else str8 = "签到成功";
-                String str9;
+                    str7 = "签到失败";
+                else str7 = "签到成功";
+                String str8;
                 if (qqLoginLogic.qPetSign(qqLoginEntity).contains("失败"))
-                    str9 = "领取失败";
-                else str9 = "领取成功";
-                String str10;
+                    str8 = "领取失败";
+                else str8 = "领取成功";
+                String str9;
                 if (qqLoginLogic.tribeSign(qqLoginEntity).contains("成功"))
-                    str10 = "领取成功";
-                else str10 = "领取失败";
-                String str11 = qqLoginLogic.motionSign(qqLoginEntity);
-                String str12;
+                    str9 = "领取成功";
+                else str9 = "领取失败";
+                String str10 = qqLoginLogic.motionSign(qqLoginEntity);
+                String str11;
                 if (qqLoginLogic.blueSign(qqLoginEntity).contains("成功"))
-                    str12 = "签到成功";
-                else str12 = "签到失败";
-                String str13 = qqLoginLogic.sVipMornSign(qqLoginEntity);
-                String str14 = qqLoginLogic.weiYunSign(qqLoginEntity);
-                String str15 = qqLoginLogic.weiShiSign(qqLoginEntity);
-                String str16 = qqLoginLogic.growthLike(qqLoginEntity);
+                    str11 = "签到成功";
+                else str11 = "签到失败";
+                String str12 = qqLoginLogic.sVipMornSign(qqLoginEntity);
+                String str13 = qqLoginLogic.weiYunSign(qqLoginEntity);
+                String str14 = qqLoginLogic.growthLike(qqLoginEntity);
                 sb.append("手机打卡：").append(str1).append("\n")
                         .append("会员签到：").append(str2).append("\n")
-                        .append("手游加速：").append(str3).append("\n")
-                        .append("黄钻签到：").append(str4).append("\n")
-                        .append("腾讯视频签到1：").append(str5).append("\n")
-                        .append("腾讯视频签到2：").append(str6).append("\n")
-                        .append("大会员签到；").append(str7).append("\n")
-                        .append("音乐签到：").append(str8).append("\n")
-                        .append("大乐斗签到：").append(str9).append("\n")
-                        .append("兴趣部落：").append(str10).append("\n")
-                        .append("运动签到：").append(str11).append("\n")
-                        .append("蓝钻签到：").append(str12).append("\n")
-                        .append("svip打卡报名：").append(str13).append("\n")
-                        .append("微云签到：").append(str14).append("\n")
-                        .append("微视签到：").append(str15).append("\n")
-                        .append("排行榜点赞：").append(str16);
-//                return sb.toString();
-                return "超级签到成功！！";
+                        .append("黄钻签到：").append(str3).append("\n")
+                        .append("腾讯视频签到1：").append(str4).append("\n")
+                        .append("腾讯视频签到2：").append(str5).append("\n")
+                        .append("大会员签到；").append(str6).append("\n")
+                        .append("音乐签到：").append(str7).append("\n")
+                        .append("大乐斗签到：").append(str8).append("\n")
+                        .append("兴趣部落：").append(str9).append("\n")
+                        .append("运动签到：").append(str10).append("\n")
+                        .append("蓝钻签到：").append(str11).append("\n")
+                        .append("svip打卡报名：").append(str12).append("\n")
+                        .append("微云签到：").append(str13).append("\n")
+                        .append("排行榜点赞：").append(str14);
+                return sb.toString();
+//                return "超级签到成功！！";
             }catch (Exception e){
                 return "超级签到失败！！";
             }
@@ -175,21 +141,6 @@ public class QQLoginController{
     @QMsg(at = true, atNewLine = true)
     public String growth(QQLoginEntity qqLoginEntity) throws IOException {
         return qqLoginLogic.vipGrowthAdd(qqLoginEntity);
-    }
-
-    @Action("续期")
-    @QMsg(at = true)
-    public String renew(QQLoginEntity qqLoginEntity, long qq, Group group) throws IOException {
-        if (qqLoginEntity.getPassword() == null) return "续期QQ邮箱中转站文件失败！！，需要使用密码登录QQ！";
-        group.sendMessage(FunKt.getMif().at(qq).plus("正在续期中，请稍后~~~~~"));
-        return qqMailLogic.fileRenew(qqLoginEntity);
-    }
-
-    @Action("复制头像 {qqNo}")
-    @QMsg(at = true)
-    public String copyAvatar(String qqNo, QQLoginEntity qqLoginEntity) throws IOException {
-        String url = "https://q.qlogo.cn/g?b=qq&nk=" + qqNo + "&s=640";
-        return qqLoginLogic.modifyAvatar(qqLoginEntity, url);
     }
 
     @Action("删除qq")

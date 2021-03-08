@@ -50,6 +50,7 @@ public class BindQQController {
             }
             group.sendMessage(FunKt.getMif().at(qq).plus(msg));
         });
+        group.sendMessage(FunKt.getMif().at(qq).plus("QQ8.4.8版本以上的不支持直接图片或者相册识别，\n解决方法：用tim或QQhd扫码或使用旧版本QQ（https://wwx.lanzoux.com/igkqMhpj5gh）"));
         return FunKt.getMif().imageByInputStream(new ByteArrayInputStream(bytes)).plus("qzone.qq.com的扫码登录");
     }
 

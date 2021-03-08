@@ -32,10 +32,8 @@ import me.kuku.yuq.utils.OkHttpUtils;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 

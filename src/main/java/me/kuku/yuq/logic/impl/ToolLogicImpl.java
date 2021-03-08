@@ -406,7 +406,7 @@ public class ToolLogicImpl implements ToolLogic {
         for (Object obj: jsonArray){
             JSONObject singleJsonObject = (JSONObject) obj;
             if (singleJsonObject.getInteger("isWeekFree") == 1)
-                sb.append(jsonObject.getString("name")).append("-").append(jsonObject.getString("title")).append("\n");
+                sb.append(singleJsonObject.getString("name")).append("-").append(singleJsonObject.getString("title")).append("\n");
         }
         return sb.deleteCharAt(sb.length() - 1).toString();
     }
@@ -450,13 +450,6 @@ public class ToolLogicImpl implements ToolLogic {
     public String music163cloud() throws IOException {
         JSONObject jsonObject = OkHttpUtils.getJson("http://api.heerdev.top/nemusic/random");
         return jsonObject.getString("text");
-    }
-
-    @Override
-    public String searchQuestion(String question) throws IOException {
-        JSONObject jsonObject = OkHttpUtils.getJson("http://api.xmlm8.com/tk.php?t=" + question);
-        return "问题：" + jsonObject.getString("tm") + "\n" +
-                "答案：" + jsonObject.getString("da");
     }
 
     @Override
@@ -665,7 +658,7 @@ public class ToolLogicImpl implements ToolLogic {
     public String abstractWords(String word) {
         ScriptEngine se = new ScriptEngineManager().getEngineByName("JavaScript");
         try {
-            String str = OkHttpUtils.downloadStr("https://share.kuku.me/189/kuku/chouxianghua.js");
+            String str = OkHttpUtils.downloadStr("https://vkceyugu.cdn.bspapp.com/VKCEYUGU-ba222f61-ee83-431d-bf9f-7e6216a8cf41/3a0a9684-c12e-4a6d-91e7-651f99877750.js");
             se.eval(str);
             Object o = se.eval("chouxiang(\"" + word + "\")");
             return o.toString();

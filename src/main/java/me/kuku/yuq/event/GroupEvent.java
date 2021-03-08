@@ -70,8 +70,8 @@ public class GroupEvent {
             blackJsonArray.add(String.valueOf(qq));
             groupEntity.setBlackJsonArray(blackJsonArray);
             groupService.save(groupEntity);
-            msg = "刚刚，" + e.getMember().getName() + "退群了，已加入本群黑名单！！";
-        }else msg = "刚刚，" + e.getMember().getName() + "离开了我们！！";
+            msg = "刚刚，" + e.getMember().getName() + "（" + e.getMember().getId() + "）退群了，已加入本群黑名单！！";
+        }else msg = "刚刚，" + e.getMember().getName() + "（" + e.getMember().getId() + "）离开了我们！！";
         List<MessageEntity> messageList = messageService.findLastMessage(qq, group);
         Message finallyMessage;
         if (messageList.size() == 0) {

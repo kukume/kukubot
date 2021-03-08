@@ -62,31 +62,13 @@ public class QQLoginLogicImpl implements QQLoginLogic {
             case 0: sb.append("会员电脑端签到成功！！\n"); break;
             case 10601: sb.append("会员电脑端今天已经签到！\n"); break;
             case 10002: sb.append("会员电脑端签到失败！请更新QQ！\n"); break;
-        }
-        jsonObject = OkHttpUtils.getJson(String.format("https://iyouxi3.vip.qq.com/ams3.0.php?actid=52002&rand=0.27489888%s&g_tk=%s", System.currentTimeMillis(), gtk2), cookie);
-        switch (jsonObject.getInteger("ret")){
-            case 0: sb.append("会员手机端签到成功！！\n"); break;
-            case 10601: sb.append("会员手机端今天已经签到！\n"); break;
-            case 10002: sb.append("会员手机端签到失败！请更新QQ！\n"); break;
-        }
-        jsonObject = OkHttpUtils.getJson(String.format("https://iyouxi4.vip.qq.com/ams3.0.php?_c=page&actid=239151&isLoadUserInfo=1&format=json&g_tk=%s", gtk2), cookie);
-        switch (jsonObject.getInteger("ret")){
-            case 0: sb.append("会员积分签到成功！！\n"); break;
-            case 10601: sb.append("会员积分今天已经签到！\n"); break;
-            case 10002: sb.append("会员积分签到失败！请更新QQ！\n"); break;
+            case 20101: sb.append("会员电脑端签到失败，不是QQ会员！\n"); break;
         }
         jsonObject = OkHttpUtils.getJson("https://iyouxi3.vip.qq.com/ams3.0.php?_c=page&actid=23074&format=json&g_tk=" + gtk2, cookie);
         switch (jsonObject.getInteger("ret")){
             case 0: sb.append("会员积分手机端签到成功！！\n"); break;
             case 10601: sb.append("会员积分手机端今天已经签到！\n"); break;
             case 10002: sb.append("会员积分手机端签到失败！请更新QQ！\n"); break;
-        }
-        jsonObject = OkHttpUtils.getJson("https://pay.qun.qq.com/cgi-bin/group_pay/good_feeds/gain_give_stock?gain=1&bkn=" + qqLoginEntity.getGtk(),
-                OkHttpUtils.addHeaders(qqLoginEntity.getCookie(), "https://m.vip.qq.com/act/qun/jindou.html"));
-        switch (jsonObject.getInteger("ec")){
-            case 0: sb.append("免费领金豆成功！！\n"); break;
-            case 1010: sb.append("今天已经领取过金豆了！\n"); break;
-            default: sb.append("领取金豆失败！！");
         }
         OkHttpUtils.get(String.format("https://iyouxi3.vip.qq.com/ams3.0.php?g_tk=%s&actid=27754&_=%d", gtk2, System.currentTimeMillis()), cookie).close();
         OkHttpUtils.get(String.format("https://iyouxi3.vip.qq.com/ams3.0.php?g_tk=%s&actid=27754&_=%d", gtk2, System.currentTimeMillis()), cookie).close();
@@ -118,14 +100,6 @@ public class QQLoginLogicImpl implements QQLoginLogic {
             });
             return sb.deleteCharAt(sb.length() - 1).toString();
         }else return "业务查询失败，请更新QQ！";
-    }
-
-    @Override
-    public String phoneGameSign(QQLoginEntity qqLoginEntity) throws IOException {
-        JSONObject jsonObject = OkHttpUtils.getJson("http://reader.sh.vip.qq.com/cgi-bin/common_async_cgi?g_tk=" + qqLoginEntity.getGtkP() + "&plat=1&version=6.6.6&param=%7B%22key0%22%3A%7B%22param%22%3A%7B%22bid%22%3A13792605%7D%2C%22module%22%3A%22reader_comment_read_svr%22%2C%22method%22%3A%22GetReadAllEndPageMsg%22%7D%7D",
-                OkHttpUtils.addCookie(qqLoginEntity.getCookieWithQQZone()));
-        if (jsonObject.getInteger("ecode").equals(0)) return "手游加速0.2天成功！";
-        else return "手游加速失败，请更新QQ！";
     }
 
     @Override
@@ -245,67 +219,6 @@ public class QQLoginLogicImpl implements QQLoginLogic {
         if (jsonObject1.getInteger("ret") == 0 && jsonObject2.getInteger("code") == 0) return "大会员签到成功！！";
         else if (jsonObject1.getInteger("ret") == -3000 && jsonObject2.getInteger("code") == -3000) return "大会员签到失败！请更新QQ！";
         else return "大会员签到失败！！";
-    }
-
-    @Override
-    public String modifyNickname(QQLoginEntity qqLoginEntity, String nickname) throws IOException {
-        Map<String, String> map = new HashMap<>();
-        map.put("qzreferrer", "http%3A%2F%2Fctc.qzs.qq.com%2Fqzone%2Fv6%2Fsetting%2Fprofile%2Fprofile.html%3Ftab%3Dbase");
-        map.put("nickname", nickname);
-        map.put("emoji", "");
-        map.put("sex", "");
-        map.put("birthday", "");
-        map.put("province", "0");
-        map.put("city", "0");
-        map.put("country", "");
-        map.put("marriage", "6");
-        map.put("bloodtype", "5");
-        map.put("hp", "0");
-        map.put("hc", "");
-        map.put("hco", "");
-        map.put("career", "");
-        map.put("company", "");
-        map.put("cp", "0");
-        map.put("cc", "0");
-        map.put("cb", "0");
-        map.put("cco", "0");
-        map.put("lover", "");
-        map.put("islunar", "0");
-        map.put("mb", "1");
-        map.put("uin", qqLoginEntity.getQq().toString());
-        map.put("pageindex", "1");
-        map.put("nofeeds", "1");
-        map.put("fupdate", "1");
-        map.put("format", "json");
-        JSONObject jsonObject = OkHttpUtils.postJson("https://w.qzone.qq.com/cgi-bin/user/cgi_apply_updateuserinfo_new?g_tk=" + qqLoginEntity.getGtkP(), map,
-                OkHttpUtils.addCookie(qqLoginEntity.getCookieWithQQZone()));
-        if (jsonObject.getInteger("code") == 0) return "\"修改昵称成功！当前昵称：" + nickname;
-        else return "修改昵称失败！" + jsonObject.getString("msg");
-    }
-
-    @Override
-    public String modifyAvatar(QQLoginEntity qqLoginEntity, String url) throws IOException {
-        MultipartBody multipartBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
-                .addFormDataPart("is_set", "1")
-                .addFormDataPart("is_share", "0")
-                .addFormDataPart("format", "png")
-                .addFormDataPart("name", "")
-                .addFormDataPart("vip_level", "0")
-                .addFormDataPart("isHD", "false")
-                .addFormDataPart("catId", "0")
-                .addFormDataPart("cmd", "set_and_share_face")
-                .addFormDataPart("Filename", "image100*100")
-                .addFormDataPart("Upload", "Submit Query")
-                .addFormDataPart("Filedata[]", "image100*100", OkHttpUtils.addStream(OkHttpUtils.getByteStr(url)))
-                .build();
-        JSONObject jsonObject = OkHttpUtils.postJson("https://face.qq.com/client/uploadflash.php", multipartBody, OkHttpUtils.addCookie(qqLoginEntity.getCookieWithQQZone()));
-        switch (jsonObject.getInteger("result")){
-            case 0: return "QQ头像设置成功！";
-            case 1001: return "头像设置失败，请更新QQ！";
-            case 1002: return "非QQ会员，无法设置头像！";
-            case 2004: return "图片不规范，换个图片吧！";
-            default: return "头像设置失败！！";
-        }
     }
 
     @Override
@@ -805,62 +718,6 @@ public class QQLoginLogicImpl implements QQLoginLogic {
                 return sb.deleteCharAt(sb.length() - 1).toString();
             }else return "群活跃数据获取失败！可能没有活跃信息！";
         }else return "群活跃数据获取失败，请更新QQ！";
-    }
-
-    @Override
-    public String weiShiSign(QQLoginEntity qqLoginEntity) throws IOException {
-        Response response = OkHttpUtils.get("https://h5.qzone.qq.com/weishi/jifen/main?_proxy=1&_wv=3&navstyle=2&titleh=55.0&statush=20.0",
-                OkHttpUtils.addHeaders(qqLoginEntity.getCookie(), null, UA.MOBILE));
-        String str = OkHttpUtils.getStr(response);
-        if (!"错误提示".equals(Jsoup.parse(str).getElementsByTag("title").first().text())){
-            String gtk = qqLoginEntity.getGtk();
-            StringBuilder sb = new StringBuilder();
-            String cookie = OkHttpUtils.getCookie(response);
-            cookie += qqLoginEntity.getCookie();
-            Map<String, String> map = new HashMap<>();
-            map.put("task_appid", "weishi");
-            map.put("task_id", "SignIn");
-            map.put("qua", "_placeholder");
-            map.put("format", "json");
-            map.put("uin", qqLoginEntity.getQq().toString());
-            map.put("inCharset", "utf-8");
-            map.put("outCharset", "utf-8");
-            JSONObject jsonObject = OkHttpUtils.postJson(String.format("https://h5.qzone.qq.com/proxy/domain/activity.qzone.qq.com/fcg-bin/fcg_weishi_task_report_login?t=0%s030444&g_tk=%s",
-                    System.currentTimeMillis(), gtk), map, OkHttpUtils.addCookie(cookie));
-            if (jsonObject.getInteger("code") == 0) sb.append("微视签到成功！！");
-            else sb.append("微视签到失败，").append(jsonObject.getString("message"));
-            Map<String, String> headerMap = new HashMap<>();
-            headerMap.put("wesee_fe_map_ext", "{\"deviceInfoHeader\":\"i=undefined\",\"qimei\":\"7e8454fad0148911\",\"imei\":\"\"}");
-            headerMap.put("referer", "https://isee.weishi.qq.com/ws/app-pages/task_center/index.html?h5from=center&offlineMode=1&h5_data_report={%22navstyle%22:%222%22,%22needlogin%22:%221%22,%22_wv%22:%224096%22}&titleh=55.0&statush=27.272728");
-            headerMap.put("cookie", cookie);
-            headerMap.put("user-agent", "V1_AND_WEISHI_6.8.0_590_435013001_D/Mozilla/5.0 (Linux; Android 10; MI 9 Build/QKQ1.190825.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/77.0.3865.92 Mobile Safari/537.36 QQJSSDK/1.3");
-            jsonObject = OkHttpUtils.postJson("https://api.weishi.qq.com/trpc.weishi.weishi_h5_proxy.weishi_h5_proxy/GetUserTaskList?g_tk=" + gtk,
-                    OkHttpUtils.addJson("{\"msg\":\"{\\\"sceneId\\\":1003,\\\"extInfo\\\":{}}\"}"),
-                    OkHttpUtils.addHeaders(headerMap));
-            if (jsonObject.getInteger("ret") == 0){
-                jsonObject = JSON.parseObject(jsonObject.getString("msg"));
-                JSONObject taskJsonObject = jsonObject.getJSONObject("taskInfoMp");
-                int id = 0;
-                for (Map.Entry<String, Object> entry: taskJsonObject.entrySet()){
-                    JSONObject singleJsonObject = (JSONObject) entry.getValue();
-                    JSONObject taskInfoJsonObject = singleJsonObject.getJSONObject("taskInfoCfg");
-                    if ("QQ等级加速".equals(taskInfoJsonObject.getString("taskName"))){
-                        id = taskInfoJsonObject.getInteger("taskId");
-                        break;
-                    }
-                }
-                JSONObject resultJsonObject = OkHttpUtils.postJson("https://api.weishi.qq.com/trpc.weishi.weishi_h5_proxy.weishi_h5_proxy/ObtainTaskReward?g_tk=" + gtk,
-                        OkHttpUtils.addJson("{\"msg\":\"{\\\"taskId\\\":" + id + "}\"}"), OkHttpUtils.addHeaders(headerMap));
-                switch (resultJsonObject.getInteger("ret")){
-                    case 0: sb.append("微视服务加速成功！成长值+0.5天"); break;
-                    case 2007: sb.append("微视服务今天已完成加速！"); break;
-                    default: sb.append("微视领取任务奖励失败！").append(resultJsonObject.getString("err_msg"));
-                }
-            }else {
-                sb.append("QQ微视获取任务详情失败！").append(jsonObject.getString("err_msg"));
-            }
-            return sb.toString();
-        }else return "微视签到失败，请更新QQ！";
     }
 
 

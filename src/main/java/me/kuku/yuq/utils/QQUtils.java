@@ -95,7 +95,7 @@ public class QQUtils {
                     msg = "superKey已失效，请更新QQ！";
                     break;
                 case 23003:
-                    msg = "当前上网环境异常，请更换网络环境或在常用设备上登录或稍后再试。";
+                    msg = "当前上网环境异常，请更换网络环境或在常用设备上登录或稍后再试。请尝试扫码登录。";
                     break;
                 default:
                     msg = str;

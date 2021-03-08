@@ -41,7 +41,6 @@ public class QQSwitchJob {
                 if (!str.contains("更新QQ")){
                     qqLoginLogic.anotherSign(qqLoginEntity);
                     qqLoginLogic.vipSign(qqLoginEntity);
-                    qqLoginLogic.phoneGameSign(qqLoginEntity);
                     qqLoginLogic.yellowSign(qqLoginEntity);
                     qqLoginLogic.qqVideoSign1(qqLoginEntity);
                     qqLoginLogic.qqVideoSign2(qqLoginEntity);
@@ -54,7 +53,6 @@ public class QQSwitchJob {
                     qqLoginLogic.blueSign(qqLoginEntity);
                     qqLoginLogic.sVipMornSign(qqLoginEntity);
                     qqLoginLogic.weiYunSign(qqLoginEntity);
-                    qqLoginLogic.weiShiSign(qqLoginEntity);
                     qqLoginLogic.growthLike(qqLoginEntity);
                 }
             } catch (IOException e) {

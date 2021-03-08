@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id "com.github.johnrengelman.shadow" version "6.1.0"
-    id 'org.jetbrains.kotlin.jvm' version '1.4.21'
+    id 'org.jetbrains.kotlin.jvm' version '1.4.30'
 }
 
 group 'me.kuku'
@@ -16,19 +16,24 @@ repositories {
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
+    // lombok
     implementation 'org.projectlombok:lombok:1.18.16'
     annotationProcessor 'org.projectlombok:lombok:1.18.16'
+    // lombok
+    // YuQ
     implementation 'com.IceCreamQAQ.YuQ:YuQ-Mirai:0.1.0.0-DEV14'
     implementation 'com.IceCreamQAQ.Yu:Yu-DB:0.0.2.0-DEV8'
     implementation 'com.IceCreamQAQ.Yu:WebCore:0.0.2.0-DEV5'
+    // YuQ
+    // my
     implementation 'org.jsoup:jsoup:1.13.1'
     implementation 'com.h2database:h2:1.4.200'
     implementation 'com.github.oshi:oshi-core:5.3.5'
     implementation ('com.baidu.aip:java-sdk:4.15.3'){
         exclude group: 'org.slf4j', module: 'slf4j-simple'
     }
-    implementation 'net.mamoe:mirai-core-jvm:2.4.0'
-//    implementation 'net.mamoe:mirai-login-solver-selenium:1.0-dev-10'
+    // my
+    implementation 'net.mamoe:mirai-core-jvm:2.5-M1'
 }
 
 tasks.withType(JavaCompile) {

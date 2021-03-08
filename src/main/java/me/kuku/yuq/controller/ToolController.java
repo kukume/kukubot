@@ -218,12 +218,6 @@ public class ToolController {
         return toolLogic.ping(domain);
     }
 
-    @Action("搜 {question}")
-    @QMsg(at = true)
-    public String search(String question) throws IOException {
-        return toolLogic.searchQuestion(question);
-    }
-
     @Action("色图")
     @Synonym({"色图十连"})
     public void colorPic(Group group, long qq, @PathVar(0) String command) {

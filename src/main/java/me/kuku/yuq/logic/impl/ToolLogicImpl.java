@@ -742,4 +742,15 @@ public class ToolLogicImpl implements ToolLogic {
             return null;
         }
     }
+
+    private JSONArray luckJson = null;
+    @Override
+    public JSONObject luckjson(int index){
+        if(luckJson == null){
+            //            val fileContent = JrrpServiceImpl::class.java.getResource("/db/luck.json").readText()
+            String json = this.getClass().getResource("/db/luck.json").toString();
+            luckJson = JSON.parseArray(fileContent);
+        }
+        return luckJson.getJSONObject(index-1);
+    }
 }

@@ -11,7 +11,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 
 @PrivateController
-public class ArkNightsNotController {
+public class ArkNightsLoginController {
 	@Inject
 	private ArkNightsLogic arkNightsLogic;
 	@Inject

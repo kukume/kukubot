@@ -16,10 +16,9 @@ import okhttp3.Response;
 
 import javax.inject.Inject;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
+@SuppressWarnings("FieldCanBeLocal")
 public class MiHoYoLogicImpl implements MiHoYoLogic {
 	@Inject
 	private DdOcrCodeLogic ddOcrCodeLogic;
@@ -75,13 +74,17 @@ public class MiHoYoLogicImpl implements MiHoYoLogic {
 		return Result.success(miHoYoEntity);
 	}
 
-	private String ds(){
-		String n = "h8w582wxwgqvahcdkpvdhbh2w9casgfl";
+	private String ds(String n){
+//		String n = "h8w582wxwgqvahcdkpvdhbh2w9casgfl";
 //		String n = "pbcfcvnfsm5s2w4x3lsq8caor7v8nlqm";
 		String i = String.valueOf(System.currentTimeMillis() / 1000);
 		String r = BotUtils.randomStrLetter(6);
 		String c = MD5Utils.toMD5("salt=" + n + "&t=" + i + "&r=" + r);
 		return i + "," + r + "," + c;
+	}
+
+	private String ds(){
+		return ds("h8w582wxwgqvahcdkpvdhbh2w9casgfl");
 	}
 
 	private Map<String, String> headerMap(MiHoYoEntity miHoYoEntity){
@@ -94,6 +97,21 @@ public class MiHoYoLogicImpl implements MiHoYoLogic {
 		headerMap.put("Referer", "https://webstatic.mihoyo.com/bbs/event/signin-ys/index.html?bbs_auth_required=true&act_id=e202009291139501&utm_source=bbs&utm_medium=mys&utm_campaign=icon");
 		headerMap.put("cookie", miHoYoEntity.getCookie());
 		return headerMap;
+	}
+
+	private Result<List<Long>> genShinRoleId(MiHoYoEntity miHoYoEntity) throws IOException {
+		JSONObject ssJsonObject = OkHttpUtils.getJson("https://api-takumi.mihoyo.com/binding/api/getUserGameRolesByCookie?game_biz=hk4e_cn",
+				OkHttpUtils.addCookie(miHoYoEntity.getCookie()));
+		if (ssJsonObject.getInteger("retcode") != 0) return Result.failure(ssJsonObject.getString("message"));
+		JSONArray jsonArray = ssJsonObject.getJSONObject("data").getJSONArray("list");
+		if (jsonArray.size() == 0) return Result.failure("您还没有原神角色！！");
+		List<Long> list = new ArrayList<>();
+		for (int i = 0; i < jsonArray.size(); i++) {
+			JSONObject singleJsonObject = jsonArray.getJSONObject(i);
+			String uid = singleJsonObject.getString("game_uid");
+			list.add(Long.parseLong(uid));
+		}
+		return Result.success(list);
 	}
 
 	@Override
@@ -155,16 +173,24 @@ public class MiHoYoLogicImpl implements MiHoYoLogic {
 	}*/
 
 	@Override
-	public String genShinUserInfo(long id) throws IOException {
+	public String genShinUserInfo(MiHoYoEntity miHoYoEntity, Long id) throws IOException {
+		if (id == null){
+			Result<List<Long>> roleResult = genShinRoleId(miHoYoEntity);
+			if (roleResult.isFailure()) return roleResult.getMessage();
+			id = roleResult.getData().get(0);
+		}
 		Map<String, String> map = new HashMap<>();
-		map.put("DS", ds());
-		map.put("x-rpc-app_version", version);
+		map.put("DS", ds("pbcfcvnfsm5s2w4x3lsq8caor7v8nlqm"));
+		map.put("x-rpc-app_version", "2.4.0");
 		map.put("User-Agent", "Mozilla/5.0 (Linux; Android 9; Unspecified Device) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/39.0.0.0 Mobile Safari/537.36 miHoYoBBS/2.2.");
-		map.put("x-rpc-client_type", "4");
+		map.put("x-rpc-client_type", "5");
 		map.put("Referer", "https://webstatic.mihoyo.com/app/community-game-records/index.html?v=6");
 		map.put("X-Requested-With", "com.mihoyo.hyperion");
+		map.put("cookie", miHoYoEntity.getCookie());
+		// cn_gf01 官服  cn_qd01 B服
 		JSONObject jsonObject = OkHttpUtils.getJson("https://api-takumi.mihoyo.com/game_record/genshin/api/index?server=cn_gf01&role_id=" + id,
 				map);
+		if (jsonObject.getInteger("retcode") != 0) return jsonObject.getString("message");
 		StringBuilder sb = new StringBuilder(id + " Genshin Info:\nRoles:\n");
 		JSONArray jsonArray = jsonObject.getJSONObject("data").getJSONArray("avatars");
 		for (Object obj: jsonArray){

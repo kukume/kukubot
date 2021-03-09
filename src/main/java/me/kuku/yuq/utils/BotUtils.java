@@ -12,7 +12,7 @@ import com.icecreamqaq.yuq.mirai.MiraiBot;
 import com.icecreamqaq.yuq.mirai.message.ImageReceive;
 import me.kuku.yuq.controller.*;
 import me.kuku.yuq.controller.arknights.ArkNightsController;
-import me.kuku.yuq.controller.arknights.ArkNightsNotController;
+import me.kuku.yuq.controller.arknights.ArkNightsLoginController;
 import me.kuku.yuq.controller.bilibili.BiliBiliController;
 import me.kuku.yuq.controller.bilibili.BiliBiliLoginController;
 import me.kuku.yuq.controller.hostloc.HostLocController;
@@ -276,7 +276,7 @@ public class BotUtils {
                 BindStepController.class, MotionController.class, BindNeTeaseController.class, NeTeaseController.class,
                 BindQQController.class, QQJobController.class, QQLoginController.class, QQQuickLoginController.class,
                 WarframeController.class, ArkNightsController.class, BotController.class, MenuController.class,
-                MyQQController.class, ArkNightsNotController.class, SettingController.class, ToolController.class, ToolController.class);
+                MyQQController.class, ArkNightsLoginController.class, SettingController.class, ToolController.class, ToolController.class);
         for (int i = 0; i < list.size(); i++){
             String str = list.get(i);
             String command = str.split(" ")[0];

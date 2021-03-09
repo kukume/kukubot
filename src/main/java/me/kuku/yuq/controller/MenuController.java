@@ -3,6 +3,8 @@ package me.kuku.yuq.controller;
 import com.IceCreamQAQ.Yu.annotation.Action;
 import com.icecreamqaq.yuq.annotation.GroupController;
 import me.kuku.yuq.controller.arknights.ArkNightsController;
+import me.kuku.yuq.controller.arknights.ArkNightsLoginController;
+import me.kuku.yuq.controller.arknights.ArkNightsTagController;
 import me.kuku.yuq.controller.bilibili.BiliBiliController;
 import me.kuku.yuq.controller.bilibili.BiliBiliLoginController;
 import me.kuku.yuq.controller.manage.ManageAdminController;
@@ -77,7 +79,7 @@ public class MenuController {
 
     @Action("ark")
     public String ark(){
-        return parse("ark", ArkNightsController.class);
+        return parse("ark", ArkNightsController.class, ArkNightsLoginController.class, ArkNightsTagController.class);
     }
 
     @Action("菜单")
@@ -100,6 +102,5 @@ public class MenuController {
         }
         return sb.append("╰┅━━━━━━━━━━━━━★═┅╯").toString();
     }
-
 
 }

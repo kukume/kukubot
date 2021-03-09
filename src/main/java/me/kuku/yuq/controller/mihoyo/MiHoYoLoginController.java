@@ -1,9 +1,11 @@
 package me.kuku.yuq.controller.mihoyo;
 
 import com.IceCreamQAQ.Yu.annotation.Action;
+import com.IceCreamQAQ.Yu.annotation.Config;
 import com.IceCreamQAQ.Yu.annotation.Synonym;
 import com.icecreamqaq.yuq.annotation.GroupController;
 import com.icecreamqaq.yuq.annotation.PrivateController;
+import com.icecreamqaq.yuq.annotation.QMsg;
 import me.kuku.yuq.entity.MiHoYoEntity;
 import me.kuku.yuq.logic.MiHoYoLogic;
 import me.kuku.yuq.pojo.Result;
@@ -14,11 +16,13 @@ import java.io.IOException;
 
 @PrivateController
 @GroupController
-public class MiHoYoNotController {
+public class MiHoYoLoginController {
 	@Inject
 	private MiHoYoLogic miHoYoLogic;
 	@Inject
 	private MiHoYoService miHoYoService;
+	@Config("YuQ.Mirai.bot.master")
+	private String master;
 
 	@Action("mihoyo {account} {password}")
 	@Synonym({"米忽悠 {account} {password}", "米哈游 {account} {password}"})
@@ -40,7 +44,10 @@ public class MiHoYoNotController {
 
 
 	@Action("genshin {id}")
+	@QMsg(at = true, atNewLine = true)
 	public String queryGenShinUserInfo(long id) throws IOException {
-		return miHoYoLogic.genShinUserInfo(id);
+		MiHoYoEntity miHoYoEntity = miHoYoService.findByQQ(Long.parseLong(master));
+		if (miHoYoEntity == null) return "无法查询，请联系机器人主人绑定原神账号（查询信息需要cookie）";
+		return miHoYoLogic.genShinUserInfo(miHoYoEntity, id);
 	}
 }

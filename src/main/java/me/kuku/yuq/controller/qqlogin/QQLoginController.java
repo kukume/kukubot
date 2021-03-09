@@ -85,18 +85,14 @@ public class QQLoginController{
                 if (qqLoginLogic.qPetSign(qqLoginEntity).contains("失败"))
                     str8 = "领取失败";
                 else str8 = "领取成功";
-                String str9;
-                if (qqLoginLogic.tribeSign(qqLoginEntity).contains("成功"))
-                    str9 = "领取成功";
-                else str9 = "领取失败";
-                String str10 = qqLoginLogic.motionSign(qqLoginEntity);
-                String str11;
+                String str9 = qqLoginLogic.motionSign(qqLoginEntity);
+                String str10;
                 if (qqLoginLogic.blueSign(qqLoginEntity).contains("成功"))
-                    str11 = "签到成功";
-                else str11 = "签到失败";
-                String str12 = qqLoginLogic.sVipMornSign(qqLoginEntity);
-                String str13 = qqLoginLogic.weiYunSign(qqLoginEntity);
-                String str14 = qqLoginLogic.growthLike(qqLoginEntity);
+                    str10 = "签到成功";
+                else str10 = "签到失败";
+                String str11 = qqLoginLogic.sVipMornSign(qqLoginEntity);
+                String str12 = qqLoginLogic.weiYunSign(qqLoginEntity);
+                String str13 = qqLoginLogic.growthLike(qqLoginEntity);
                 sb.append("手机打卡：").append(str1).append("\n")
                         .append("会员签到：").append(str2).append("\n")
                         .append("黄钻签到：").append(str3).append("\n")
@@ -105,16 +101,15 @@ public class QQLoginController{
                         .append("大会员签到；").append(str6).append("\n")
                         .append("音乐签到：").append(str7).append("\n")
                         .append("大乐斗签到：").append(str8).append("\n")
-                        .append("兴趣部落：").append(str9).append("\n")
-                        .append("运动签到：").append(str10).append("\n")
-                        .append("蓝钻签到：").append(str11).append("\n")
-                        .append("svip打卡报名：").append(str12).append("\n")
-                        .append("微云签到：").append(str13).append("\n")
-                        .append("排行榜点赞：").append(str14);
+                        .append("运动签到：").append(str9).append("\n")
+                        .append("蓝钻签到：").append(str10).append("\n")
+                        .append("svip打卡报名：").append(str11).append("\n")
+                        .append("微云签到：").append(str12).append("\n")
+                        .append("排行榜点赞：").append(str13);
                 return sb.toString();
 //                return "超级签到成功！！";
             }catch (Exception e){
-                return "超级签到失败！！";
+                return "超级签到失败！！异常信息为：" + e.getMessage();
             }
         }else return "超级签到失败，请更新QQ！！";
     }

@@ -4,7 +4,7 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.4.30'
 }
 
-group 'me.kuku'
+group 'me.kuku.yuq'
 version '1.0-SNAPSHOT'
 
 repositories {
@@ -33,7 +33,9 @@ dependencies {
         exclude group: 'org.slf4j', module: 'slf4j-simple'
     }
     // my
+    // mirai
     implementation 'net.mamoe:mirai-core-jvm:2.5-M2'
+    // mirai
 }
 
 tasks.withType(JavaCompile) {

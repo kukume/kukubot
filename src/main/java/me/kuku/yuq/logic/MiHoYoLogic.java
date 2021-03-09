@@ -15,5 +15,5 @@ public interface MiHoYoLogic {
 //	String bbsPost(MiHoYoEntity miHoYoEntity, String id) throws IOException;
 //	String bbsLike(MiHoYoEntity miHoYoEntity, String id) throws IOException;
 //	String bbsShare(MiHoYoEntity miHoYoEntity, String id) throws IOException;
-	String genShinUserInfo(long id) throws IOException;
+	String genShinUserInfo(MiHoYoEntity miHoYoEntity, Long id) throws IOException;
 }

@@ -8,6 +8,8 @@ import com.icecreamqaq.yuq.entity.Group;
 import com.icecreamqaq.yuq.entity.Member;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.controller.arknights.ArkNightsController;
+import me.kuku.yuq.controller.arknights.ArkNightsLoginController;
+import me.kuku.yuq.controller.arknights.ArkNightsTagController;
 import me.kuku.yuq.controller.bilibili.BiliBiliController;
 import me.kuku.yuq.controller.bilibili.BiliBiliLoginController;
 import me.kuku.yuq.controller.manage.ManageAdminController;
@@ -65,7 +67,7 @@ public class WebController {
         jsonObject.put("setting", BotUtils.menu(SettingController.class));
         jsonObject.put("wb", BotUtils.menu(WeiboNotController.class, WeiboController.class));
         jsonObject.put("wf", BotUtils.menu(WarframeController.class));
-        jsonObject.put("ark", BotUtils.menu(ArkNightsController.class));
+        jsonObject.put("ark", BotUtils.menu(ArkNightsController.class, ArkNightsTagController.class, ArkNightsLoginController.class));
         return jsonObject.toString();
     }
 }

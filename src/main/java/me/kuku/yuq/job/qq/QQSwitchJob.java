@@ -48,7 +48,6 @@ public class QQSwitchJob {
                     qqLoginLogic.qqMusicSign(qqLoginEntity);
                     qqLoginLogic.gameSign(qqLoginEntity);
                     qqLoginLogic.qPetSign(qqLoginEntity);
-                    qqLoginLogic.tribeSign(qqLoginEntity);
                     qqLoginLogic.motionSign(qqLoginEntity);
                     qqLoginLogic.blueSign(qqLoginEntity);
                     qqLoginLogic.sVipMornSign(qqLoginEntity);

@@ -385,58 +385,6 @@ public class QQLoginLogicImpl implements QQLoginLogic {
     }
 
     @Override
-    public String tribeSign(QQLoginEntity qqLoginEntity) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        String gtk = qqLoginEntity.getGtk();
-        Map<String, String> map = new HashMap<>();
-        map.put("bkn", gtk);
-        JSONObject jsonObject = OkHttpUtils.postJson("https://buluo.qq.com/cgi-bin/bar/login_present_heart", map,
-                OkHttpUtils.addHeaders(qqLoginEntity.getCookie(), "https://buluo.qq.com/mobile/my_heart.html"));
-        switch (jsonObject.getInteger("retcode")){
-            case 0: {
-                if (jsonObject.getJSONObject("result").getInteger("add_hearts") == 0)
-                    sb.append("今日已领取爱心");
-                else sb.append("成功领取爱心 + ").append(jsonObject.getJSONObject("result").getInteger("add_hearts")).append("，");
-                break;
-            }
-            case 100000: sb.append("领取爱心失败，请更新QQ！");
-            default: sb.append("领取爱心失败！");
-        }
-        Response response = OkHttpUtils.get("https://buluo.qq.com/cgi-bin/bar/card/bar_list_by_page?uin=" + qqLoginEntity.getQq() + "&neednum=30&startnum=0&r=0.98389" + System.currentTimeMillis(),
-                OkHttpUtils.addHeaders(qqLoginEntity.getCookie(), "https://buluo.qq.com/mobile/personal.html"));
-        if (response.code() != 200){
-            response.close();
-            return "获取兴趣部落列表失败！";
-        }
-        JSONObject tribeJsonObject = OkHttpUtils.getJson(response);
-        Integer code = tribeJsonObject.getInteger("retcode");
-        if (code == 0){
-            JSONArray jsonArray = tribeJsonObject.getJSONObject("result").getJSONArray("followbars");
-            jsonArray.forEach(obj -> {
-                JSONObject singleJsonObject = (JSONObject) obj;
-                map.clear();
-                map.put("bid", singleJsonObject.getString("bid"));
-                map.put("bkn", gtk);
-                map.put("r", "0.84746" + System.currentTimeMillis());
-                try {
-                    JSONObject resultJsonObject = OkHttpUtils.postJson("https://buluo.qq.com/cgi-bin/bar/user/sign", map,
-                            OkHttpUtils.addHeaders(qqLoginEntity.getCookie(), "https://buluo.qq.com/mobile/personal.html"));
-                    sb.append(singleJsonObject.getString("name"));
-                    switch (resultJsonObject.getInteger("retcode")){
-                        case 0: sb.append("部落签到成功！"); break;
-                        case 100000: sb.append("部落签到失败！请更新QQ！"); break;
-                        default: sb.append("部落签到失败！");
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
-        } else if (code == 100000) sb.append("兴趣部落签到失败！请更新QQ！");
-        else sb.append("兴趣部落签到失败！");
-        return sb.toString();
-    }
-
-    @Override
     public String refuseAdd(QQLoginEntity qqLoginEntity) throws IOException {
         HashMap<String, String> map = new HashMap<>();
         map.put("req", "{\"at\":2,\"q\":\"\",\"a\":\"\",\"l\":[],\"viaphone\":0}");
@@ -968,7 +916,7 @@ public class QQLoginLogicImpl implements QQLoginLogic {
         String html = OkHttpUtils.getStr("https://h5.vip.qq.com/p/mc/privilegelist/other?friend=" + qq,
                 OkHttpUtils.addCookie(qqLoginEntity.getCookie(psKey)));
         Elements elements = Jsoup.parse(html).select(".guest .grade .icon-level span");
-        StringBuilder sb = new StringBuilder().append("qq（").append(qq).append("）的开通业务如下：");
+        StringBuilder sb = new StringBuilder().append("qq（").append(qq).append("）的开通业务如下：").append("\n");
         for (Element ele: elements){
             sb.append(ele.text()).append("\n");
         }

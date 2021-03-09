@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings("UnusedReturnValue")
 @AutoBind
 public interface QQLoginLogic {
     Result<Map<String, String>> groupUploadImage(QQLoginEntity qqLoginEntity, String url) throws IOException;
@@ -24,7 +25,6 @@ public interface QQLoginLogic {
     String qqMusicSign(QQLoginEntity qqLoginEntity) throws IOException;
     String gameSign(QQLoginEntity qqLoginEntity) throws IOException;
     String qPetSign(QQLoginEntity qqLoginEntity) throws IOException;
-    String tribeSign(QQLoginEntity qqLoginEntity) throws IOException;
     String refuseAdd(QQLoginEntity qqLoginEntity) throws IOException;
     String motionSign(QQLoginEntity qqLoginEntity) throws IOException;
     String blueSign(QQLoginEntity qqLoginEntity) throws IOException;

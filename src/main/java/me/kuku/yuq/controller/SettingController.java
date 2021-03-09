@@ -88,15 +88,15 @@ public class SettingController extends QQController {
     @Action("同意入群 {groupNo}")
     public String agreeAddGroup(QQLoginEntity qqLoginEntity, long groupNo) throws IOException {
         List<Map<String, String>> groupMsgList = qqLoginLogic.getGroupMsgList(qqLoginEntity);
-        AtomicReference<Map<String, String>> mm = new AtomicReference<>();
+        Map<String, String> resultMap = null;
         for (Map<String, String> map: groupMsgList){
             if (String.valueOf(groupNo).equals(map.get("group"))){
-                mm.set(map);
+                resultMap = map;
                 break;
             }
         }
-        if (mm.get() == null) return "没有找到这个群号";
-        return qqLoginLogic.operatingGroupMsg(qqLoginEntity, "agree", mm.get(), null);
+        if (resultMap == null) return "没有找到这个群号";
+        return qqLoginLogic.operatingGroupMsg(qqLoginEntity, "agree", resultMap, null);
     }
 
     @Action("退群 {groupNo}")

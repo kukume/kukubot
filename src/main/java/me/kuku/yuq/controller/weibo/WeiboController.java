@@ -11,7 +11,6 @@ import com.icecreamqaq.yuq.controller.ContextSession;
 import com.icecreamqaq.yuq.entity.Group;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.WeiboEntity;
-import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.logic.WeiboLogic;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.pojo.WeiboPojo;

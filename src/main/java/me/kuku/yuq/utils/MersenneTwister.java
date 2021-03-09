@@ -1,5 +1,7 @@
 package me.kuku.yuq.utils;
 
+import java.io.*;
+
 /**
  * <h3>MersenneTwister and MersenneTwisterFast</h3>
  * <p><b>Version 22</b>, based on version MT199937(99/10/29)

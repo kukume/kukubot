@@ -33,7 +33,7 @@ dependencies {
         exclude group: 'org.slf4j', module: 'slf4j-simple'
     }
     // my
-    implementation 'net.mamoe:mirai-core-jvm:2.5-M1'
+    implementation 'net.mamoe:mirai-core-jvm:2.5-M2'
 }
 
 tasks.withType(JavaCompile) {

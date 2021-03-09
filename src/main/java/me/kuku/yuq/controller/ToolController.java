@@ -744,31 +744,17 @@ public class ToolController {
         return errorMsg;
     }
 
-
-    private HashMap<Long,Integer> jrrpMap = new HashMap<>();
-
     @Action("抽签")
-    public String random(Member qq){
-        long num = Jrrp.get(qq.id);
-        JsonObject json = toolLogic.luckjson(num);
-        if(jrrpMap[qq.id] != num){
-            return "今日运势：\n"+${json.getJSONObject("fields").getString("texk_key")}+"\n发送解签查看详解";
-        }else{
-            return "今天已经抽过签了。";
-        }
-    }
-
-
-    @Action("解签")
-    public String random2(Member qq){
-        int num = Jrrp.get(qq.id);
-        var json = toolLogic.luckjson(num);
-        if(jrrpMap.get(qq.id) != num){
-            jrrpMap.put(qq.id,num);
-            return ${json!!.getJSONObject("fields").getString("text")}+"\n一天只能一次，功能可以使用私聊。\n凶签也不必气馁。人生势必起伏。";
-        }else{
-            return "今天已经抽过签了。";
-        }
+    @QMsg(at = true)
+    public String random(long qq, Group group, ContextSession session) throws IOException {
+        int num = Jrrp.get(qq);
+        JSONObject jsonObject = toolLogic.luckJson(num);
+        group.sendMessage(FunKt.getMif().at(qq).plus("今日运势：\n"+ jsonObject.getJSONObject("fields").getString("texk_key") +"\n发送解签查看详解"));
+        Message nextMessage = session.waitNextMessage();
+        String ss = BotUtils.firstString(nextMessage);
+        if (ss.equals("解签")){
+            return jsonObject.getJSONObject("fields").getString("text") + "\n凶签也不必气馁。人生势必起伏。";
+        }else return "您错过解签了！！";
     }
 
 }

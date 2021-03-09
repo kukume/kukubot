@@ -1,6 +1,7 @@
 package me.kuku.yuq.logic;
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind;
+import com.alibaba.fastjson.JSONObject;
 import me.kuku.yuq.pojo.CodeType;
 import me.kuku.yuq.pojo.Result;
 
@@ -59,5 +60,5 @@ public interface ToolLogic {
     String urlToPic(String url) throws IOException;
     String pasteUbuntu(String poster, String syntax, String content);
     byte[] girlImageGaNk();
-    JSONObject luckjson(int index) throws IOException;
+    JSONObject luckJson(int index) throws IOException;
 }

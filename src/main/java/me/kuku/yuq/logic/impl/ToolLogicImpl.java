@@ -25,6 +25,7 @@ import javax.script.ScriptException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -737,12 +738,13 @@ public class ToolLogicImpl implements ToolLogic {
     }
 
     private JSONArray luckJson = null;
+
     @Override
-    public JSONObject luckjson(int index){
+    public JSONObject luckJson(int index){
         if(luckJson == null){
-            //            val fileContent = JrrpServiceImpl::class.java.getResource("/db/luck.json").readText()
-            String json = this.getClass().getResource("/db/luck.json").toString();
-            luckJson = JSON.parseArray(fileContent);
+            InputStream is = this.getClass().getResourceAsStream("/db/luck.json");
+            byte[] bytes = IO.read(is, true);
+            luckJson = JSON.parseArray(new String(bytes, StandardCharsets.UTF_8));
         }
         return luckJson.getJSONObject(index-1);
     }

@@ -152,7 +152,7 @@ public class WeiboLogicImpl implements WeiboLogic {
                 JSONObject singleJsonObject = (JSONObject) o;
                 JSONObject blogJsonObject = singleJsonObject.getJSONObject("mblog");
                 if (blogJsonObject == null) continue;
-                if (1 == blogJsonObject.getInteger("isTop")) continue;
+                if (Integer.valueOf(1).equals(blogJsonObject.getInteger("isTop"))) continue;
                 WeiboPojo weiboPojo = convert(blogJsonObject);
                 list.add(weiboPojo);
             }

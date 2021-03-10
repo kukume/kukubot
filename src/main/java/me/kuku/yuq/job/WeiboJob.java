@@ -35,7 +35,7 @@ public class WeiboJob {
     private final Map<Long, Map<Long, Long>> groupMap = new HashMap<>();
     private final Map<Long, Long> userMap = new HashMap<>();
 
-    @Cron("2m")
+    @Cron("1m")
     public void groupWeibo(){
         for (GroupEntity groupEntity: groupService.findAll()){
             Long group = groupEntity.getGroup();

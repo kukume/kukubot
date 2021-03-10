@@ -147,6 +147,7 @@ public class BiliBiliJob {
                     Boolean b = biliBiliLogic.isLiveOnline(id.toString());
                     if (map.containsKey(id)){
                         if (map.get(id) != b){
+                            map.put(id, b);
                             String msg;
                             if (b) msg = "直播啦！！";
                             else msg = "下播了！！";

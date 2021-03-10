@@ -342,7 +342,8 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
 
     @Override
     public Boolean isLiveOnline(String id) throws IOException {
-        JSONObject jsonObject = OkHttpUtils.getJson("https://api.live.bilibili.com/room/v1/Room/getRoomInfoOld?mid=" + id);
+        JSONObject jsonObject = OkHttpUtils.getJson("https://api.live.bilibili.com/room/v1/Room/getRoomInfoOld?mid=" + id,
+                OkHttpUtils.addReferer("https://api.live.bilibili.com"));
         int status = jsonObject.getJSONObject("data").getInteger("liveStatus");
         return status == 1;
     }

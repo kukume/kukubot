@@ -2,6 +2,7 @@ package me.kuku.yuq.controller.bilibili;
 
 import com.IceCreamQAQ.Yu.annotation.Action;
 import com.IceCreamQAQ.Yu.annotation.Before;
+import com.IceCreamQAQ.Yu.annotation.Synonym;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
@@ -41,8 +42,12 @@ public class BiliBiliController {
         actionContext.set("biliBiliEntity", biliEntity);
     }
 
-    @Action("哔哩哔哩/add/{type}/{username}")
-    public void biliBiliAdd(BiliBiliEntity biliBiliEntity, String type, String username, ContextSession session, Long qq, Group group) throws IOException {
+//    @Action("哔哩哔哩/add/{type}/{username}")
+    @Action("加哔哩哔哩开播提醒 {username}")
+    @Synonym({"加哔哩哔哩赞 {username}", "加哔哩哔哩评论 {username}", "加哔哩哔哩转发 {username}",
+            "加哔哩哔哩投硬币 {username}", "加哔哩哔哩收藏 {username}"})
+    public void biliBiliAdd(BiliBiliEntity biliBiliEntity, @PathVar(0) String type, String username, ContextSession session, Long qq, Group group) throws IOException {
+        type = type.substring(5);
         Result<List<BiliBiliPojo>> result = biliBiliLogic.getIdByName(username);
         List<BiliBiliPojo> list = result.getData();
         if (list == null){
@@ -112,9 +117,13 @@ public class BiliBiliController {
         return list;
     }
 
-    @Action("哔哩哔哩/del/{type}/{username}")
+//    @Action("哔哩哔哩/del/{type}/{username}")
+    @Action("删哔哩哔哩开播提醒 {username}")
+    @Synonym({"删哔哩哔哩赞 {username}", "删哔哩哔哩评论 {username}",
+            "删哔哩哔哩转发 {username}", "删哔哩哔哩投硬币 {username}", "删哔哩哔哩收藏 {username}"})
     @QMsg(at = true)
-    public String biliBiliDel(BiliBiliEntity biliBiliEntity, String type, String username){
+    public String biliBiliDel(BiliBiliEntity biliBiliEntity, @PathVar(0) String type, String username){
+        type = type.substring(5);
         switch (type){
             case "开播提醒":
                 JSONArray liveJsonArray = biliBiliEntity.getLiveJsonArray();
@@ -150,9 +159,12 @@ public class BiliBiliController {
         return "删除成功！！";
     }
 
-    @Action("哔哩哔哩/list/{type}")
+//    @Action("哔哩哔哩/list/{type}")
+    @Action("查哔哩哔哩开播提醒")
+    @Synonym({"查哔哩哔哩赞", "查哔哩哔哩评论", "查哔哩哔哩转发", "查哔哩哔哩投硬币", "查哔哩哔哩收藏"})
     @QMsg(at = true, atNewLine = true)
-    public String biliBiliList(BiliBiliEntity biliBiliEntity, String type){
+    public String biliBiliList(BiliBiliEntity biliBiliEntity, @PathVar(0) String type){
+        type = type.substring(5);
         StringBuilder sb = new StringBuilder();
         JSONArray jsonArray;
         switch (type){

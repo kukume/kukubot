@@ -35,7 +35,7 @@ public class WeiboJob {
     private final Map<Long, Map<Long, Long>> groupMap = new HashMap<>();
     private final Map<Long, Long> userMap = new HashMap<>();
 
-    @Cron("1m")
+    @Cron("2m")
     public void groupWeibo(){
         for (GroupEntity groupEntity: groupService.findAll()){
             Long group = groupEntity.getGroup();
@@ -56,7 +56,7 @@ public class WeiboJob {
                     continue;
                 }
                 List<WeiboPojo> list = result.getData();
-                if (list == null) continue;
+                if (list == null || list.size() == 0) continue;
                 if (wbMap.containsKey(userId)){
                     List<WeiboPojo> newList = new ArrayList<>();
                     for (WeiboPojo weiboPojo: list){
@@ -86,9 +86,15 @@ public class WeiboJob {
         List<WeiboEntity> weiboList = weiboService.findByMonitor(true);
         for (WeiboEntity weiboEntity : weiboList) {
             Long qq = weiboEntity.getQq();
-            Result<List<WeiboPojo>> result = weiboLogic.getFriendWeibo(weiboEntity);
+            Result<List<WeiboPojo>> result = null;
+            try {
+                result = weiboLogic.getFriendWeibo(weiboEntity);
+            } catch (IOException e) {
+                e.printStackTrace();
+                continue;
+            }
             List<WeiboPojo> list = result.getData();
-            if (list == null) continue;
+            if (list == null || list.size() == 0) continue;
             List<WeiboPojo> newList = new ArrayList<>();
             if (userMap.containsKey(qq)) {
                 for (WeiboPojo weiboPojo : list) {

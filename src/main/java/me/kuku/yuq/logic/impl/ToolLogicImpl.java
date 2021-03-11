@@ -356,9 +356,25 @@ public class ToolLogicImpl implements ToolLogic {
         JSONObject jsonObject;
         if (isProxy) jsonObject = OkHttpUtils.getJson("https://api.kuku.me/lolicon/?apikey=" + apiKey + "&r18=" + r18);
         else jsonObject = OkHttpUtils.getJson("https://api.lolicon.app/setu/?apikey=" + apiKey + "&r18=" + r18);
+        JSONObject dataJsonObject = jsonObject.getJSONArray("data").getJSONObject(0);
+        Map<String, String> paramMap = new HashMap<>();
+        paramMap.put("pid", dataJsonObject.getString("pid"));
+        paramMap.put("p", dataJsonObject.getString("p"));
+        paramMap.put("uid", dataJsonObject.getString("uid"));
+        paramMap.put("title", dataJsonObject.getString("title"));
+        paramMap.put("author", dataJsonObject.getString("author"));
+        paramMap.put("url", dataJsonObject.getString("url"));
+        JSONArray tagsJsonArray = dataJsonObject.getJSONArray("tags");
+        StringBuilder tags = new StringBuilder();
+        for (int i = 0; i < tagsJsonArray.size(); i++){
+            String tag = tagsJsonArray.getString(i);
+            tags.append(tag).append("|");
+        }
+        paramMap.put("tags", tags.deleteCharAt(tags.length() - 1).toString());
+        OkHttpUtils.post("https://api.kuku.me/lolicon", paramMap,
+                OkHttpUtils.addUA(UA.PC)).close();
         switch (jsonObject.getInteger("code")){
             case 0:
-                JSONObject dataJsonObject = jsonObject.getJSONArray("data").getJSONObject(0);
                 Map<String, String> map = new HashMap<>();
                 map.put("count", jsonObject.getString("quota"));
                 map.put("time", jsonObject.getString("quota_min_ttl"));

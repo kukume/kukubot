@@ -128,7 +128,7 @@ public class ManageSuperAdminController {
                 break;
             case "删微博监控":
                 JSONArray weiboJsonArray = groupEntity.getWeiboJsonArray();
-                BotUtils.delManager(weiboJsonArray, content);
+                BotUtils.delMonitorList(weiboJsonArray, content);
                 groupEntity.setWeiboJsonArray(weiboJsonArray);
                 break;
             case "删哔哩哔哩监控":

@@ -144,7 +144,8 @@ public class BiliBiliJob {
                 JSONObject jsonObject = (JSONObject) obj;
                 Long id = jsonObject.getLong("id");
                 try {
-                    Boolean b = biliBiliLogic.isLiveOnline(id.toString());
+                    JSONObject liveJsonObject = biliBiliLogic.live(id.toString());
+                    Boolean b = liveJsonObject.getBoolean("status");
                     if (map.containsKey(id)){
                         if (map.get(id) != b){
                             map.put(id, b);
@@ -154,7 +155,9 @@ public class BiliBiliJob {
                             FunKt.getYuq().getGroups().get(biliBiliEntity.getGroup())
                                     .get(qq).sendMessage(
                                             BotUtils.toMessage("哔哩哔哩开播提醒：\n" +
-                                                    jsonObject.getString("name") + msg
+                                                    jsonObject.getString("name") + msg + "\n" +
+                                                    "标题：" + liveJsonObject.getString("title") + "\n" +
+                                                    "链接：" + liveJsonObject.getString("url")
                             ));
                         }
                     }else map.put(id, b);

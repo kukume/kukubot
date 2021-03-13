@@ -1,6 +1,7 @@
 package me.kuku.yuq.logic;
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind;
+import com.alibaba.fastjson.JSONObject;
 import me.kuku.yuq.entity.BiliBiliEntity;
 import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.pojo.BiliBiliPojo;
@@ -23,7 +24,7 @@ public interface BiliBiliLogic {
     Result<BiliBiliEntity> loginByQQ(QQLoginEntity qqLoginEntity) throws IOException;
     Result<BiliBiliEntity> loginByPassword(String username, String password) throws IOException;
     Result<List<BiliBiliPojo>> getFriendDynamic(BiliBiliEntity biliBiliEntity) throws IOException;
-    Boolean isLiveOnline(String id) throws IOException;
+    JSONObject live(String id) throws IOException;
     String liveSign(BiliBiliEntity biliBiliEntity) throws IOException;
     String like(BiliBiliEntity biliBiliEntity, String id, Boolean isLike) throws IOException;
     String comment(BiliBiliEntity biliBiliEntity, String rid, String type, String content) throws IOException;

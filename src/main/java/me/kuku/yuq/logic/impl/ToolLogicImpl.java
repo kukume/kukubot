@@ -19,17 +19,19 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import javax.imageio.ImageIO;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.awt.*;
+import java.awt.geom.Ellipse2D;
+import java.awt.image.BufferedImage;
+import java.io.*;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.List;
 
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
 public class ToolLogicImpl implements ToolLogic {
@@ -763,5 +765,36 @@ public class ToolLogicImpl implements ToolLogic {
             luckJson = JSON.parseArray(new String(bytes, StandardCharsets.UTF_8));
         }
         return luckJson.getJSONObject(index-1);
+    }
+
+    @SuppressWarnings({"IntegerDivisionInFloatingPointContext", "ConstantConditions"})
+    @Override
+    public byte[] diu(String url) throws IOException {
+        int hdW = 146;
+
+        BufferedImage headImage = ImageIO.read(new ByteArrayInputStream(OkHttpUtils.getBytes(url)));
+        BufferedImage bgImage = ImageIO.read(getClass().getClassLoader().getResource("images/diu.png"));
+
+        //处理头像
+        BufferedImage formatAvatarImage = new BufferedImage(hdW, hdW, BufferedImage.TYPE_4BYTE_ABGR);
+        Graphics2D graphics = formatAvatarImage.createGraphics();
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);//抗锯齿
+        //图片是一个圆型
+        Ellipse2D.Double shape = new Ellipse2D.Double(0, 0, hdW, hdW);
+        //需要保留的区域
+        graphics.setClip(shape);
+        graphics.rotate(Math.toRadians(-50),hdW / 2,hdW / 2);
+        graphics.drawImage(headImage.getScaledInstance(hdW,hdW,Image.SCALE_SMOOTH), 0, 0, hdW, hdW, null);
+        graphics.dispose();
+
+        //重合图片
+        Graphics2D graphics2D = bgImage.createGraphics();
+        graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);//抗锯齿
+        graphics2D.drawImage(formatAvatarImage,110 - hdW / 2,275 - hdW / 2,hdW,hdW,null);//头画背景上
+        graphics2D.dispose();
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ImageIO.write(bgImage, "PNG", bos);
+        return bos.toByteArray();
     }
 }

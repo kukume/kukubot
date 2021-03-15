@@ -35,7 +35,7 @@ public class OkHttpUtils {
     }
 
     private static Headers emptyHeaders(){
-        return new Headers.Builder().build();
+        return new Headers.Builder().add("User-Agent", UA.PC.getValue()).build();
     }
 
     public static Response get(String url, Headers headers) throws IOException {

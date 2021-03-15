@@ -28,17 +28,17 @@ public class HostLocLogicImpl implements HostLocLogic {
         map.put("password", password);
         map.put("quickforward", "yes");
         map.put("handlekey", "ls");
-        Response response = OkHttpUtils.post("https://www.hostloc.com/member.php?mod=logging&action=login&loginsubmit=yes&infloat=yes&lssubmit=yes&inajax=1",
-                map, OkHttpUtils.addHeaders(null, "https://www.hostloc.com/forum.php", UA.PC));
+        Response response = OkHttpUtils.post("https://hostloc.com/member.php?mod=logging&action=login&loginsubmit=yes&infloat=yes&lssubmit=yes&inajax=1",
+                map, OkHttpUtils.addHeaders(null, "https://hostloc.com/forum.php", UA.PC));
         String str = OkHttpUtils.getStr(response);
-        if (str.contains("https://www.hostloc.com/forum.php")){
+        if (str.contains("https://hostloc.com/forum.php")){
             return Result.success(OkHttpUtils.getCookie(response));
         }else return Result.failure("账号或密码错误！", null);
     }
 
     @Override
     public boolean isLogin(String cookie) throws IOException {
-        String html = OkHttpUtils.getStr("https://www.hostloc.com/home.php?mod=spacecp",
+        String html = OkHttpUtils.getStr("https://hostloc.com/home.php?mod=spacecp",
                 OkHttpUtils.addHeaders(cookie, null, UA.PC));
         String text = Jsoup.parse(html).getElementsByTag("title").first().text();
         return text.contains("个人资料");
@@ -49,7 +49,7 @@ public class HostLocLogicImpl implements HostLocLogic {
         List<String> urlList = new ArrayList<>();
         for (int i = 0; i < 12; i++){
             int num = BotUtils.randomInt(10000, 50000);
-            urlList.add("https://www.hostloc.com/space-uid-" + num + ".html");
+            urlList.add("https://hostloc.com/space-uid-" + num + ".html");
         }
         for (String url: urlList){
             try {
@@ -57,7 +57,7 @@ public class HostLocLogicImpl implements HostLocLogic {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            OkHttpUtils.get(url, OkHttpUtils.addHeaders(cookie, "https://www.hostloc.com/forum.php", UA.PC))
+            OkHttpUtils.get(url, OkHttpUtils.addHeaders(cookie, "https://hostloc.com/forum.php", UA.PC))
                     .close();
         }
     }
@@ -67,7 +67,7 @@ public class HostLocLogicImpl implements HostLocLogic {
         List<Map<String, String>> list = new ArrayList<>();
         String html;
         try {
-            html = OkHttpUtils.getStr("https://www.hostloc.com/forum.php?mod=forumdisplay&fid=45&filter=author&orderby=dateline",
+            html = OkHttpUtils.getStr("https://hostloc.com/forum.php?mod=forumdisplay&fid=45&filter=author&orderby=dateline",
                     OkHttpUtils.addUA(UA.PC));
         } catch (IOException e) {
 //            e.printStackTrace();
@@ -78,7 +78,7 @@ public class HostLocLogicImpl implements HostLocLogic {
             if (!ele.attr("id").startsWith("normalth")) continue;
             Element s = ele.getElementsByClass("s").first();
             String title = s.text();
-            String url = "https://www.hostloc.com/" + s.attr("href");
+            String url = "https://hostloc.com/" + s.attr("href");
             String name = ele.select("cite a").first().text();
             String time = null;
             try {

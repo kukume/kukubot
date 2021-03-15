@@ -1,14 +1,21 @@
 package me.kuku.yuq.utils;
 
+import com.alibaba.fastjson.JSONObject;
+
 import javax.crypto.Cipher;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 public class RSAUtils {
     /**
@@ -21,6 +28,11 @@ public class RSAUtils {
      */
     private static final int MAX_DECRYPT_BLOCK = 128;
 
+
+    private static final String PUBLIC_KEY_HEADER = "-----BEGIN PUBLIC KEY-----";
+
+    private static final String PUBLIC_KEY_FOOTER = "-----END PUBLIC KEY-----";
+
     /**
      * 获取密钥对
      *
@@ -30,6 +42,21 @@ public class RSAUtils {
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
         generator.initialize(1024);
         return generator.generateKeyPair();
+    }
+
+    public static String[] getRsaKey() {
+        Map<String, String> map = new HashMap<>();
+        map.put("rsaLength", "2048");
+        map.put("rsaFormat", "PKCS#1");
+        map.put("rsaPass", "");
+        try {
+            JSONObject jsonObject = OkHttpUtils.postJson("https://api.bejson.com/Bejson/Api/Rsa/getRsaKey",
+                    map);
+            JSONObject dataJsonObject = jsonObject.getJSONObject("data");
+            return new String[]{dataJsonObject.getString("public"), dataJsonObject.getString("private")};
+        } catch (IOException e) {
+            return null;
+        }
     }
 
     /**
@@ -56,6 +83,18 @@ public class RSAUtils {
         byte[] decodedKey = Base64.getDecoder().decode(publicKey.getBytes());
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(decodedKey);
         return keyFactory.generatePublic(keySpec);
+    }
+
+
+    // 解析PublicKey
+    public static PublicKey getPublicKeyOriginal(String keyString) throws Exception {
+        String content = keyString
+                .replace(PUBLIC_KEY_HEADER, "")
+                .replace(PUBLIC_KEY_FOOTER, "")
+                .replaceAll("\n", "");
+        byte[] contentBytes = Base64.getDecoder().decode(content.getBytes(StandardCharsets.UTF_8));
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        return keyFactory.generatePublic(new X509EncodedKeySpec(contentBytes));
     }
 
     public static PublicKey getPublicKey(String modulus, String publicExponent)

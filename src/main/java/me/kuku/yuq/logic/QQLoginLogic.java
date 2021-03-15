@@ -9,26 +9,22 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings("UnusedReturnValue")
 @AutoBind
-public interface QQLogic {
+public interface QQLoginLogic {
     Result<Map<String, String>> groupUploadImage(QQLoginEntity qqLoginEntity, String url) throws IOException;
-    String groupLottery(QQLoginEntity qqLoginEntity, Long group) throws IOException;
     String vipSign(QQLoginEntity qqLoginEntity) throws IOException;
     String queryVip(QQLoginEntity qqLoginEntity) throws IOException;
-    String phoneGameSign(QQLoginEntity qqLoginEntity) throws IOException;
     String yellowSign(QQLoginEntity qqLoginEntity) throws IOException;
     String qqVideoSign1(QQLoginEntity qqLoginEntity) throws IOException;
     String qqVideoSign2(QQLoginEntity qqLoginEntity) throws IOException;
     String sVipMornSign(QQLoginEntity qqLoginEntity) throws IOException;
     String sVipMornClock(QQLoginEntity qqLoginEntity) throws IOException;
     String bigVipSign(QQLoginEntity qqLoginEntity) throws IOException;
-    String modifyNickname(QQLoginEntity qqLoginEntity, String nickname) throws IOException;
-    String modifyAvatar(QQLoginEntity qqLoginEntity, String url) throws IOException;
     String weiYunSign(QQLoginEntity qqLoginEntity) throws IOException;
     String qqMusicSign(QQLoginEntity qqLoginEntity) throws IOException;
     String gameSign(QQLoginEntity qqLoginEntity) throws IOException;
     String qPetSign(QQLoginEntity qqLoginEntity) throws IOException;
-    String tribeSign(QQLoginEntity qqLoginEntity) throws IOException;
     String refuseAdd(QQLoginEntity qqLoginEntity) throws IOException;
     String motionSign(QQLoginEntity qqLoginEntity) throws IOException;
     String blueSign(QQLoginEntity qqLoginEntity) throws IOException;
@@ -40,7 +36,6 @@ public interface QQLogic {
     String publishNotice(QQLoginEntity qqLoginEntity, Long group, String text) throws IOException;
     String getGroupLink(QQLoginEntity qqLoginEntity, Long group) throws IOException;
     String groupActive(QQLoginEntity qqLoginEntity, Long group, Integer page) throws IOException;
-    String weiShiSign(QQLoginEntity qqLoginEntity) throws IOException;
     String groupFileUrl(QQLoginEntity qqLoginEntity, Long group, String folderName) throws IOException;
     String allShutUp(QQLoginEntity qqLoginEntity, Long group, Boolean isShutUp) throws IOException;
     String changeName(QQLoginEntity qqLoginEntity, Long qq, Long group, String name) throws IOException;

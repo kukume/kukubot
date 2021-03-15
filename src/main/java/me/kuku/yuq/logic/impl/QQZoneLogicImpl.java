@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings("unused")
 public class QQZoneLogicImpl implements QQZoneLogic {
     @Override
     public List<Map<String, String>> friendTalk(QQLoginEntity qqLoginEntity) throws IOException {

@@ -4,7 +4,6 @@ import com.IceCreamQAQ.Yu.annotation.Action;
 import com.IceCreamQAQ.Yu.annotation.Before;
 import com.IceCreamQAQ.Yu.annotation.Config;
 import com.IceCreamQAQ.Yu.annotation.Synonym;
-import com.alibaba.fastjson.JSONArray;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.annotation.GroupController;
 import com.icecreamqaq.yuq.annotation.PathVar;
@@ -16,6 +15,7 @@ import me.kuku.yuq.service.GroupService;
 import javax.inject.Inject;
 
 @GroupController
+@SuppressWarnings("unused")
 public class ManageAdminController {
     @Config("YuQ.Mirai.bot.master")
     private String master;
@@ -23,11 +23,11 @@ public class ManageAdminController {
     private GroupService groupService;
 
     @Before
-    public GroupEntity before(long qq, long group){
+    public GroupEntity before(Member qq, long group){
         GroupEntity groupEntity = groupService.findByGroup(group);
         if (groupEntity == null) groupEntity = new GroupEntity(group);
-        JSONArray adminJsonArray = groupEntity.getAdminJsonArray();
-        if (adminJsonArray.contains(String.valueOf(qq)) || qq == Long.parseLong(master)){
+        if (groupEntity.isAdmin(qq.getId()) || groupEntity.isSuperAdmin(qq.getId())
+                || qq.getId() == Long.parseLong(master) || (qq.isAdmin() && Boolean.valueOf(true).equals(groupEntity.getGroupAdminAuth()))){
             return groupEntity;
         }else throw FunKt.getMif().at(qq).plus("您的权限不足，无法执行！！").toThrowable();
     }
@@ -37,13 +37,6 @@ public class ManageAdminController {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < 1000; i++) sb.append("\n");
         return sb.toString();
-    }
-
-    @Action("t {qqNo}")
-    @QMsg(at = true)
-    public String kick(Member qqNo){
-        qqNo.kick("");
-        return "踢出成功！！";
     }
 
     @Action("禁言 {qqNo}")
@@ -66,14 +59,15 @@ public class ManageAdminController {
         return "禁言成功！！";
     }
 
-    @Action("机器人 {status}")
+    @Action("kukubot {status}")
     @Synonym({"loc监控 {status}", "整点报时 {status}", "自动审核 {status}",
             "欢迎语 {status}", "退群拉黑 {status}", "鉴黄 {status}", "色图 {status}",
-            "撤回通知 {status}", "闪照通知 {status}"})
+            "撤回通知 {status}", "闪照通知 {status}", "复读 {status}", "语音识别 {status}",
+            "上传通知 {status}"})
     @QMsg(at = true)
     public String onOrOff(GroupEntity groupEntity, boolean status, @PathVar(0) String op){
         switch (op){
-            case "机器人": groupEntity.setStatus(status); break;
+            case "kukubot": groupEntity.setStatus(status); break;
             case "loc监控": groupEntity.setLocMonitor(status); break;
             case "整点报时": groupEntity.setOnTimeAlarm(status); break;
             case "自动审核": groupEntity.setAutoReview(status); break;
@@ -83,6 +77,9 @@ public class ManageAdminController {
             case "色图": groupEntity.setColorPic(status); break;
             case "撤回通知": groupEntity.setRecall(status); break;
             case "闪照通知": groupEntity.setFlashNotify(status); break;
+            case "复读": groupEntity.setRepeat(status); break;
+            case "语音识别": groupEntity.setVoiceIdentify(status); break;
+            case "上传通知": groupEntity.setUploadPicNotice(status); break;
             default: return null;
         }
         groupService.save(groupEntity);

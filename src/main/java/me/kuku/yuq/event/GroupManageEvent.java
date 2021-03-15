@@ -6,30 +6,114 @@ import com.IceCreamQAQ.Yu.cache.EhcacheHelp;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
-import com.icecreamqaq.yuq.event.GroupMessageEvent;
+import com.icecreamqaq.yuq.event.*;
 import com.icecreamqaq.yuq.message.*;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.entity.QQEntity;
-import me.kuku.yuq.logic.QQAILogic;
+import me.kuku.yuq.logic.AILogic;
+import me.kuku.yuq.service.ConfigService;
 import me.kuku.yuq.service.GroupService;
+import me.kuku.yuq.service.MessageService;
 import me.kuku.yuq.service.QQService;
 import me.kuku.yuq.utils.BotUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @EventListener
+@SuppressWarnings("unused")
 public class GroupManageEvent {
     @Inject
     private GroupService groupService;
     @Inject
     private QQService qqService;
     @Inject
-    private QQAILogic qqaiLogic;
+    private AILogic qqAILogic;
+    @Inject
+    private MessageService messageService;
+    @Inject
+    private ConfigService configService;
+    @Inject
+    @Named("baiduAILogic")
+    private AILogic baiduAILogic;
     @Inject
     @Named("CommandCountOnTime")
     public EhcacheHelp<Integer> eh;
+
+    private final Map<Long, JSONArray> lastMessage = new ConcurrentHashMap<>();
+    private final Map<Long, Long> lastQQ = new ConcurrentHashMap<>();
+    private final Map<Long, JSONArray> lastRepeatMessage = new ConcurrentHashMap<>();
+
+    @Event(weight = Event.Weight.high)
+    public void status(com.IceCreamQAQ.Yu.event.events.Event e){
+        Long group = null;
+        Message message = null;
+        if (e instanceof GroupMemberEvent){
+            group = ((GroupMemberEvent) e).getGroup().getId();
+        }else if (e instanceof GroupMemberRequestEvent){
+            group = ((GroupMemberRequestEvent) e).getGroup().getId();
+        }else if (e instanceof GroupRecallEvent){
+            group = ((GroupRecallEvent) e).getGroup().getId();
+        }else if (e instanceof GroupMessageEvent){
+            GroupMessageEvent groupMessageEvent = (GroupMessageEvent) e;
+            group = groupMessageEvent.getGroup().getId();
+            message = groupMessageEvent.getMessage();
+        }
+        if (group == null) return;
+        GroupEntity groupEntity = groupService.findByGroup(group);
+        boolean status = true;
+        if (message != null) {
+            List<String> list = message.toPath();
+            if (list.size() == 2) {
+                String pa = list.get(1);
+                if ("kukubot".equals(list.get(0)) && pa.equals("开") || pa.equals("关")) {
+                    status = false;
+                }
+            }
+        }
+        if (groupEntity != null && groupEntity.getStatus()){
+            status = false;
+        }
+        if (status){
+            e.setCancel(true);
+        }
+    }
+
+    @Event(weight = Event.Weight.low)
+    public void repeat(GroupMessageEvent e){
+        long group = e.getGroup().getId();
+        GroupEntity groupEntity = groupService.findByGroup(group);
+        Boolean repeat;
+        if (groupEntity == null) repeat = true;
+        else repeat = groupEntity.getRepeat();
+        if (repeat == null) {
+            repeat = true;
+            groupEntity.setRepeat(true);
+            groupService.save(groupEntity);
+        }
+        if (repeat) {
+            long qq = e.getSender().getId();
+            JSONArray nowJsonArray = BotUtils.messageToJsonArray(e.getMessage());
+            if (lastMessage.containsKey(group)) {
+//            synchronized (this) {
+                JSONArray oldJsonArray = lastMessage.get(group);
+                if (BotUtils.equalsMessageJsonArray(nowJsonArray, oldJsonArray) &&
+                        !BotUtils.equalsMessageJsonArray(nowJsonArray, lastRepeatMessage.get(group))
+                        && lastQQ.get(group) != qq) {
+                    lastRepeatMessage.put(group, nowJsonArray);
+                    e.getGroup().sendMessage(e.getMessage());
+                }
+//            }
+            }
+            lastMessage.put(group, nowJsonArray);
+            lastQQ.put(group, qq);
+        }
+    }
 
     @Event
     public void inter(GroupMessageEvent e) throws IOException {
@@ -59,6 +143,7 @@ public class GroupManageEvent {
         JSONArray violationJsonArray = groupEntity.getViolationJsonArray();
         int code = 0;
         String vio = null;
+        List<Image> images = new ArrayList<>();
         out:for (int i = 0; i < violationJsonArray.size(); i++){
             String violation = violationJsonArray.getString(i);
             String nameCard = e.getSender().getNameCard();
@@ -73,10 +158,9 @@ public class GroupManageEvent {
                     if (text.getText().contains(violation)) code = 1;
                 }else if (item instanceof Image){
                     Image image = (Image) item;
-                    String result = qqaiLogic.generalOCR(image.getUrl());
+                    images.add(image);
+                    String result = baiduAILogic.generalOCR(image.getUrl());
                     if (result.contains(violation)) code = 1;
-                    boolean b = qqaiLogic.pornIdentification(image.getUrl());
-                    if (b) code = 2;
                 }else if (item instanceof XmlEx){
                     XmlEx xmlEx = (XmlEx) item;
                     if (xmlEx.getValue().contains(violation)) code = 1;
@@ -90,22 +174,56 @@ public class GroupManageEvent {
                 }
             }
         }
+        if (groupEntity.getPic()) {
+            for (Image image : images) {
+                if (groupEntity.getPic()) {
+                    boolean b = baiduAILogic.pornIdentification(image.getUrl());
+                    if (b) code = 2;
+                }
+            }
+        }
         if (code != 0){
-            qqEntity.setViolationCount(qqEntity.getViolationCount() + 1);
-            if (qqEntity.getViolationCount() < groupEntity.getMaxViolationCount()){
+            Integer violationCount = qqEntity.getViolationCount();
+            if (violationCount == null) violationCount = 0;
+            qqEntity.setViolationCount(++violationCount);
+            Integer maxViolationCount = groupEntity.getMaxViolationCount();
+            if (maxViolationCount == null) maxViolationCount = 5;
+            if (violationCount < maxViolationCount){
+                qqService.save(qqEntity);
                 StringBuilder sb = new StringBuilder();
                 if (code == 2) sb.append("检测到色情图片。").append("\n");
                 else if (code == 1) sb.append("检测到违规词\"").append(vio).append("\"。").append("\n");
                 else sb.append("检测到违规去群名片\"").append(vio).append("\"。").append("\n");
-                sb.append("您当前的违规次数为").append(qqEntity.getViolationCount())
-                        .append("次，累计违规").append(groupEntity.getMaxViolationCount())
+                sb.append("您当前的违规次数为").append(violationCount)
+                        .append("次，累计违规").append(maxViolationCount)
                         .append("次会被移除本群哦！！");
+                e.getSender().ban(60 * 30);
                 e.getGroup().sendMessage(FunKt.getMif().at(qqEntity.getQq()).plus(sb.toString()));
             }else {
                 e.getSender().kick("违规次数已上限！！");
                 e.getGroup().sendMessage(Message.Companion.toMessage(
                         qqEntity.getQq() + "违规次数已达上限，送飞机票一张！！"
                 ));
+            }
+        }
+    }
+
+    @Event
+    public void voiceIdentify(GroupMessageEvent e){
+        GroupEntity groupEntity = groupService.findByGroup(e.getGroup().getId());
+        if (groupEntity == null || groupEntity.getVoiceIdentify() == null || !groupEntity.getVoiceIdentify()) return;
+        Message message = e.getMessage();
+        for (MessageItem item : message.getBody()) {
+            if (item instanceof Voice){
+                String url = ((Voice) item).getUrl();
+                try {
+                    String ss = baiduAILogic.voiceIdentify(url);
+                    Message sendMessage = BotUtils.toMessage("语言识别如下：\n" + ss);
+                    sendMessage.setReply(message.getSource());
+                    e.getGroup().sendMessage(sendMessage);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
             }
         }
     }
@@ -136,7 +254,7 @@ public class GroupManageEvent {
                 Integer maxCount = groupEntity.getMaxCommandCountOnTime();
                 if (maxCount == null) maxCount = -1;
                 if (maxCount > 0){
-                    String key = e.getSender().getId() + q;
+                    String key = "qq" + e.getSender().getId() + q;
                     Integer num = eh.get(key);
                     if (num == null) num = 0;
                     if (num >= maxCount) return;

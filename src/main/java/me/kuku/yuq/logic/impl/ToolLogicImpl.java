@@ -1,42 +1,50 @@
 package me.kuku.yuq.logic.impl;
 
+import com.IceCreamQAQ.Yu.annotation.Config;
 import com.IceCreamQAQ.Yu.util.IO;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import lombok.val;
 import me.kuku.yuq.logic.ToolLogic;
+import me.kuku.yuq.pojo.CodeType;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.pojo.UA;
 import me.kuku.yuq.utils.BotUtils;
+import me.kuku.yuq.utils.DateTimeFormatterUtils;
 import me.kuku.yuq.utils.MD5Utils;
 import me.kuku.yuq.utils.OkHttpUtils;
-import okhttp3.Response;
+import okhttp3.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.File;
-import java.io.IOException;
+import javax.imageio.ImageIO;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
+import java.awt.*;
+import java.awt.geom.Ellipse2D;
+import java.awt.image.BufferedImage;
+import java.io.*;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.List;
 
+@SuppressWarnings({"unused", "FieldCanBeLocal"})
 public class ToolLogicImpl implements ToolLogic {
     private final String url = "https://www.mxnzp.com/api";
     private final String appId = "ghpgtsokjvkjdmlk";
     private final String appSecret = "N2hNMC93empxb0twUW1jd1FRbVVtQT09";
     private final String params = "&app_id=" + appId + "&app_secret=" + appSecret;
-    private final String myApi = "https://api.kuku.me";
+    @Config("YuQ.Mirai.bot.api")
+    private String api;
     @Override
     public String dogLicking() throws IOException {
-        JSONObject jsonObject = OkHttpUtils.getJson("http://api.yyhy.me/tg.php?type=api");
-        if (jsonObject.getInteger("code") == 1)
-            return jsonObject.getString("date") + "\n" + jsonObject.getString("content");
-        else return "获取失败！！";
+        // https://api.oick.cn/dog/api.php
+        return OkHttpUtils.getStr("https://v1.alapi.cn/api/dog?format=text");
     }
 
     private Result<String> baiKeByUrl(String url) throws IOException {
@@ -108,11 +116,7 @@ public class ToolLogicImpl implements ToolLogic {
 
     @Override
     public String queryIp(String ip) throws IOException {
-        String str = OkHttpUtils.getStr("http://ipaddr.cz88.net/data.php?ip=" + ip,
-                OkHttpUtils.addUA(UA.PC));
-        String[] split = str.split("'");
-        // 1-ip  3 - addr 5 - ua
-        return split[3];
+        return OkHttpUtils.getStr(api + "/tool/ip?ip=" + ip);
     }
 
     @Override
@@ -142,8 +146,7 @@ public class ToolLogicImpl implements ToolLogic {
                     "主办单位性质：" + data.getString("organizer_nature") + "\n" +
                     "网站备案/许可证号：" + data.getString("recording_license_number") + "\n" +
                     "网站名称：" + data.getString("site_name") + "\n" +
-                    "网站首页网址：" + data.getString("site_index_url") + "\n" +
-                    "审核时间：" + data.getString("review_time");
+                    "网站首页网址：" + data.getString("site_index_url");
         }
     }
 
@@ -312,7 +315,7 @@ public class ToolLogicImpl implements ToolLogic {
             }
             String xmlStr = String.format("<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID=\"146\" templateID=\"1\" action=\"web\" brief=\"[分享] %s %s\" sourcePublicUin=\"2658655094\" sourceMsgId=\"0\" url=\"https://weather.mp.qq.com/pages/aio?_wv=1090533159&amp;_wwv=196612&amp;scene=1&amp;adcode=%s&amp;timeStamp=%s\" flag=\"0\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"2\" advertiser_id=\"0\" aid=\"0\"><picture cover=\"https://imgcache.qq.com/ac/qqweather/image/share_icon/%s.png\" w=\"0\" h=\"0\" /><title>%s %s</title><summary>%s\n" +
                     "空气质量:%s</summary></item><source name=\"QQ天气\" icon=\"https://url.cn/JS8oE7\" action=\"plugin\" a_actionData=\"mqqapi://app/action?pkg=com.tencent.mobileqq&amp;cmp=com.tencent.biz.pubaccount.AccountDetailActivity&amp;uin=2658655094\" i_actionData=\"mqqapi://card/show_pslcard?src_type=internal&amp;card_type=public_account&amp;uin=2658655094&amp;version=1\" appid=\"-1\" /></msg>",
-                    city, weather, code, new Date().getTime(), wPic, city, weather, temperature, air);
+                    city, weather, code, System.currentTimeMillis(), wPic, city, weather, temperature, air);
             return Result.success(xmlStr);
         }else return Result.failure("没有找到这个城市", null);
     }
@@ -343,19 +346,37 @@ public class ToolLogicImpl implements ToolLogic {
             String ipInfo = queryIp(ip);
             return "====查询结果====\n" + "域名/IP：" + domain + "\n" +
                     "IP：" + ip + "\n" +
-                    "延迟：" + time + "msg" + "\n" +
+                    "延迟：" + time + "ms" + "\n" +
                     "位置：" + ipInfo;
         }else return "ping失败，请稍后再试！！";
     }
 
     @Override
-    public Result<Map<String, String>> colorPicByLoLiCon(String apiKey, boolean isR18) throws IOException {
+    public Result<Map<String, String>> colorPicByLoLiCon(String apiKey, boolean isR18, boolean isProxy) throws IOException {
         int r18 = 0;
         if (isR18) r18 = 1;
-        JSONObject jsonObject = OkHttpUtils.getJson("https://api.lolicon.app/setu/?apikey" + apiKey + "&r18=" + r18);
+        JSONObject jsonObject;
+        if (isProxy) jsonObject = OkHttpUtils.getJson("https://api.kuku.me/lolicon/?apikey=" + apiKey + "&r18=" + r18);
+        else jsonObject = OkHttpUtils.getJson("https://api.lolicon.app/setu/?apikey=" + apiKey + "&r18=" + r18);
+        JSONObject dataJsonObject = jsonObject.getJSONArray("data").getJSONObject(0);
+        Map<String, String> paramMap = new HashMap<>();
+        paramMap.put("pid", dataJsonObject.getString("pid"));
+        paramMap.put("p", dataJsonObject.getString("p"));
+        paramMap.put("uid", dataJsonObject.getString("uid"));
+        paramMap.put("title", dataJsonObject.getString("title"));
+        paramMap.put("author", dataJsonObject.getString("author"));
+        paramMap.put("url", dataJsonObject.getString("url"));
+        JSONArray tagsJsonArray = dataJsonObject.getJSONArray("tags");
+        StringBuilder tags = new StringBuilder();
+        for (int i = 0; i < tagsJsonArray.size(); i++){
+            String tag = tagsJsonArray.getString(i);
+            tags.append(tag).append("|");
+        }
+        paramMap.put("tags", tags.deleteCharAt(tags.length() - 1).toString());
+        OkHttpUtils.post("https://api.kuku.me/lolicon", paramMap,
+                OkHttpUtils.addUA(UA.PC)).close();
         switch (jsonObject.getInteger("code")){
             case 0:
-                JSONObject dataJsonObject = jsonObject.getJSONArray("data").getJSONObject(0);
                 Map<String, String> map = new HashMap<>();
                 map.put("count", jsonObject.getString("quota"));
                 map.put("time", jsonObject.getString("quota_min_ttl"));
@@ -372,7 +393,7 @@ public class ToolLogicImpl implements ToolLogic {
 
     @Override
     public byte[] piXivPicProxy(String url) throws IOException {
-        return OkHttpUtils.getBytes(myApi + "/pixiv/picbyurl?url=" + URLEncoder.encode(url, "utf-8"));
+        return OkHttpUtils.getBytes(api + "/pixiv/picbyurl?url=" + URLEncoder.encode(url, "utf-8"));
     }
 
     @Override
@@ -404,7 +425,7 @@ public class ToolLogicImpl implements ToolLogic {
         for (Object obj: jsonArray){
             JSONObject singleJsonObject = (JSONObject) obj;
             if (singleJsonObject.getInteger("isWeekFree") == 1)
-                sb.append(jsonObject.getString("name")).append("-").append(jsonObject.getString("title")).append("\n");
+                sb.append(singleJsonObject.getString("name")).append("-").append(singleJsonObject.getString("title")).append("\n");
         }
         return sb.deleteCharAt(sb.length() - 1).toString();
     }
@@ -427,8 +448,14 @@ public class ToolLogicImpl implements ToolLogic {
 
     @Override
     public byte[] queryTime() throws IOException {
-        SimpleDateFormat sdf = new SimpleDateFormat("HH-mm");
-        return OkHttpUtils.downloadBytes("https://ty.kuku.me/images/time/" + sdf.format(new Date()) + ".jpg");
+        String name = DateTimeFormatterUtils.formatNow("HH-mm") + ".jpg";
+        String hour = name.split("-")[0];
+        File file = new File("time" + File.separator + hour + File.separator + name);
+        if (file.exists()){
+            return IO.read(new FileInputStream(file), true);
+        }else {
+            return OkHttpUtils.downloadBytes("https://file.kuku.me/time/time/" + hour + "/" + name);
+        }
     }
 
     @Override
@@ -442,13 +469,6 @@ public class ToolLogicImpl implements ToolLogic {
     public String music163cloud() throws IOException {
         JSONObject jsonObject = OkHttpUtils.getJson("http://api.heerdev.top/nemusic/random");
         return jsonObject.getString("text");
-    }
-
-    @Override
-    public String searchQuestion(String question) throws IOException {
-        JSONObject jsonObject = OkHttpUtils.getJson("http://api.xmlm8.com/tk.php?t=" + question);
-        return "问题：" + jsonObject.getString("tm") + "\n" +
-                "答案：" + jsonObject.getString("da");
     }
 
     @Override
@@ -468,36 +488,6 @@ public class ToolLogicImpl implements ToolLogic {
             return Result.success(map);
         }else if (code == -404) return Result.failure("没有找到该BV号！！", null);
         else return Result.failure(jsonObject.getString("message"), null);
-    }
-
-    @Override
-    public List<Map<String, String>> zhiHuHot() {
-        return null;
-    }
-
-    @Override
-    public List<Map<String, String>> hostLocPost() throws IOException {
-        String html = OkHttpUtils.getStr("https://www.hostloc.com/forum.php?mod=forumdisplay&fid=45&filter=author&orderby=dateline",
-                OkHttpUtils.addUA(UA.PC));
-        Elements elements = Jsoup.parse(html).getElementsByTag("tbody");
-        List<Map<String, String>> list = new ArrayList<>();
-        for (Element ele: elements){
-            if (!ele.attr("id").startsWith("normalth")) continue;
-            Element s = ele.getElementsByClass("s").first();
-            String title = s.text();
-            String url = "https://www.hostloc.com/" + s.attr("href");
-            String name = ele.select("cite a").first().text();
-            String time = ele.select("em a span").first().text();
-            String id = BotUtils.regex("tid=", "&", url);
-            Map<String, String> map = new HashMap<>();
-            map.put("title", title);
-            map.put("url", url);
-            map.put("name", name);
-            map.put("time", time);
-            map.put("id", id);
-            list.add(map);
-        }
-        return list;
     }
 
     @Override
@@ -554,19 +544,16 @@ public class ToolLogicImpl implements ToolLogic {
     }
 
     @Override
-    public String identifyPic(String url) throws IOException {
-        JSONObject jsonObject = OkHttpUtils.getJson("https://saucenao.com/search.php?url=" + url + "&output_type=2");
+    public String sauceNaoIdentifyPic(String apiKey, String url) throws IOException {
+        JSONObject jsonObject = OkHttpUtils.getJson("https://saucenao.com/search.php?url=" + url + "&output_type=2&api_key=" + apiKey);
+        JSONObject headerJsonObject = jsonObject.getJSONObject("header");
+        if (headerJsonObject.getInteger("status") != 0) return headerJsonObject.getString("message");
         JSONArray jsonArray = jsonObject.getJSONArray("results");
         try {
             return jsonArray.getJSONObject(0).getJSONObject("data").getJSONArray("ext_urls").getString(0);
         }catch (NullPointerException e){
             return null;
         }
-    }
-
-    @Override
-    public String githubQuicken(String gitUrl) {
-        return "https://github.kuku.workers.dev/" + gitUrl;
     }
 
     @Override
@@ -589,23 +576,23 @@ public class ToolLogicImpl implements ToolLogic {
     public String teachYou(String content, String type) throws IOException {
         String msg;
         String url;
-        String suffix = URLEncoder.encode(Base64.getEncoder().encodeToString(content.getBytes()), "utf-8");
+        String suffix = URLEncoder.encode(Base64.getEncoder().encodeToString(content.getBytes(StandardCharsets.UTF_8)), "utf-8");
         switch (type){
             case "baidu":
                 msg = "百度";
-                url = "https://u.iheit.com/teachsearch/baidu/index.html?q=" + suffix;
+                url = "https://static.kukuqaq.com/teachsearch/baidu/index.html?q=" + suffix;
                 break;
             case "google":
                 msg = "谷歌";
-                url = "https://u.iheit.com/teachsearch/google/index.html?q=" + suffix;
+                url = "https://static.kukuqaq.com/teachsearch/google/index.html?q=" + suffix;
                 break;
             case "bing":
                 msg = "必应";
-                url = "https://u.iheit.com/teachsearch/bing/index.html?q=" + suffix;
+                url = "https://static.kukuqaq.com/teachsearch/bing/index.html?q=" + suffix;
                 break;
             case "sougou":
                 msg = "搜狗";
-                url = "https://u.iheit.com/teachsearch/sougou/index.html?q=" + suffix;
+                url = "https://static.kukuqaq.com/teachsearch/sougou/index.html?q=" + suffix;
                 break;
             default: return null;
         }
@@ -614,163 +601,200 @@ public class ToolLogicImpl implements ToolLogic {
 
     @Override
     public String preventQQRed(String url) throws IOException {
-        Map<String, String> map = new HashMap<>();
-        map.put("url", url);
-        map.put("type", "2");
-        map.put("dwz", "2");
-        JSONObject jsonObject = OkHttpUtils.postJson("https://www.91she.cn/ajax.php?act=creat", map,
+        String b64Url = Base64.getEncoder().encodeToString(url.getBytes(StandardCharsets.UTF_8));
+        JSONObject jsonObject = OkHttpUtils.getJson("https://www.fanghong.net/cbfh.php?cb=1&sturl=1&longurl="
+                + URLEncoder.encode(b64Url, "utf-8"),
                 OkHttpUtils.addUA(UA.PC));
-        if (jsonObject.getInteger("code") == 0) return jsonObject.getString("dwz1");
+        if (jsonObject.getInteger("result") == 1) return jsonObject.getString("dwz_url");
         else return jsonObject.getString("msg");
     }
 
     @Override
-    public String preventQQWechatRed(String url) throws IOException {
-        JSONObject jsonObject = OkHttpUtils.getJson(String.format("http://fh.dw81.cn:81/dwz.php?type=ty&longurl=%s&dwzapi=500", url),
-                OkHttpUtils.addUA(UA.PC));
-        if (jsonObject.getInteger("code") == 1) return jsonObject.getString("ae_url");
-        else return jsonObject.getString("msg");
+    public byte[] cosplay() throws IOException {
+        return OkHttpUtils.getBytes("https://api.ixxcc.com/cosplay.php?return=img");
+    }
+
+    @Override
+    public byte[] photo() throws IOException {
+        return OkHttpUtils.getBytes("https://api.pixivweb.com/api.php?return=img");
+    }
+
+    @Override
+    public String uploadImage(byte[] bytes) {
+        MultipartBody body = new MultipartBody.Builder().setType(MultipartBody.FORM)
+                .addFormDataPart("file", "kukuapi",
+                        RequestBody.create(bytes, MediaType.parse("image/*"))).build();
+        try {
+            JSONObject jsonObject = OkHttpUtils.postJson(api + "/tool/upload", body);
+            return jsonObject.getJSONObject("image").getString("url");
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "图片上传失败，请稍后再试！！";
+        }
     }
 
     @Override
     public String songByQQ(String name) throws IOException {
-        Response firstResponse = OkHttpUtils.get("https://c.y.qq.com/soso/fcgi-bin/client_search_cp?w="+URLEncoder.encode(name, "utf-8")+"&format=json");
-        JSONObject jsonObject = OkHttpUtils.getJson(firstResponse);
+        JSONObject jsonObject = OkHttpUtils.getJson("https://c.y.qq.com/soso/fcgi-bin/client_search_cp?w=" + URLEncoder.encode(name, "utf-8") + "&format=json");
         JSONObject songJsonObject = jsonObject.getJSONObject("data").getJSONObject("song").getJSONArray("list").getJSONObject(0);
         String songName = songJsonObject.getString("songname");
+        String author = songJsonObject.getJSONArray("singer").getJSONObject(0).getString("name");
         String mid = songJsonObject.getString("songmid");
-        Response secondResponse = OkHttpUtils.get("https://u.y.qq.com/cgi-bin/musicu.fcg?format=json&data=%7B%22req_0%22%3A%7B%22module%22%3A%22vkey.GetVkeyServer%22%2C%22method%22%3A%22CgiGetVkey%22%2C%22param%22%3A%7B%22guid%22%3A%22358840384%22%2C%22songmid%22%3A%5B%22"+mid+"%22%5D%2C%22songtype%22%3A%5B0%5D%2C%22uin%22%3A%220%22%2C%22loginflag%22%3A1%2C%22platform%22%3A%2220%22%7D%7D%2C%22comm%22%3A%7B%22uin%22%3A%220%22%2C%22format%22%3A%22json%22%2C%22ct%22%3A24%2C%22cv%22%3A0%7D%7D");
-        JSONObject secondJsonObject = OkHttpUtils.getJson(secondResponse);
+        JSONObject secondJsonObject = OkHttpUtils.getJson("https://u.y.qq.com/cgi-bin/musicu.fcg?format=json&data=%7B%22req_0%22%3A%7B%22module%22%3A%22vkey.GetVkeyServer%22%2C%22method%22%3A%22CgiGetVkey%22%2C%22param%22%3A%7B%22guid%22%3A%22358840384%22%2C%22songmid%22%3A%5B%22" + mid + "%22%5D%2C%22songtype%22%3A%5B0%5D%2C%22uin%22%3A%220%22%2C%22loginflag%22%3A1%2C%22platform%22%3A%2220%22%7D%7D%2C%22comm%22%3A%7B%22uin%22%3A%220%22%2C%22format%22%3A%22json%22%2C%22ct%22%3A24%2C%22cv%22%3A0%7D%7D");
         JSONObject dataJsonObject = secondJsonObject.getJSONObject("req_0").getJSONObject("data");
         JSONObject urlJsonObject = dataJsonObject.getJSONArray("midurlinfo").getJSONObject(0);
-        String musicUrl = dataJsonObject.getJSONArray("sip").getString(0) + urlJsonObject.getString("purl");
-//        String jumpUrl = "https://y.qq.com/n/yqq/song/"+mid+".html";
-//        Response thirdResponse = OkHttpUtils.get(jumpUrl, OkHttpUtils.addUA(UA.MOBILE));
-//        String html = OkHttpUtils.getStr(thirdResponse);
-        String songid = songJsonObject.getString("songid");
-        String albumId = songJsonObject.getString("albumid");
-        String singer = songJsonObject.getJSONArray("singer").getJSONObject(0).getString("name");
-        return "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>" +
-                "<msg serviceID=\"2\" templateID=\"1\" action=\"web\" brief=\"[分享] "+songName+"\" sourceMsgId=\"0\" " +
-                "url=\"https://i.y.qq.com/v8/playsong.html?_wv=1&amp;songid="+songid+"&amp;souce=qqshare&amp;source=qqshare&amp;ADTAG=qqshare\" " +
-                "flag=\"0\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"2\">" +
-                "<audio cover=\"http://imgcache.qq.com/music/photo/album_500/"+albumId.substring(albumId.length() - 2)+"/500_albumpic_"+albumId+"_0.jpg\" " +
-                "src=\""+musicUrl+"\" /><title>"+songName+"</title><summary>"+singer+"</summary></item><source name=\"QQ音乐\" " +
-                "icon=\"https://i.gtimg.cn/open/app_icon/01/07/98/56/1101079856_100_m.png\" " +
-                "url=\"http://web.p.qq.com/qqmpmobile/aio/app.html?id=1101079856\" action=\"app\" " +
-                "a_actionData=\"com.tencent.qqmusic\" i_actionData=\"tencent1101079856://\" appid=\"1101079856\" /></msg>";
+        String suffixUrl = urlJsonObject.getString("purl");
+        if ("".equals(suffixUrl)) suffixUrl = dataJsonObject.getString("testfile2g");
+        String musicUrl = dataJsonObject.getJSONArray("sip").getString(0) + suffixUrl;
+        String jumpUrl = "https://y.qq.com/n/yqq/song/" + mid + ".html";
+        String html = OkHttpUtils.getStr(jumpUrl, OkHttpUtils.addUA(UA.PC));
+        String imageUrl = Jsoup.parse(html).select(".main .mod_data .data__cover img").first().attr("src");
+        return "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID=\"2\" templateID=\"12345\" action=\"web\" brief=\"音乐分享[" + songName + "]\" sourceMsgId=\"0\" url=\"" + jumpUrl + "\" flag=\"0\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"2\"><audio cover=\"http:" + imageUrl +"\" src=\"" + musicUrl + "\" /><title>" + songName + "</title><summary>" + author + "</summary></item><source name=\"\" icon=\"\" action=\"\" appid=\"-1\" /></msg>";
     }
-
 
     @Override
     public Result<String> songBy163(String name) throws IOException {
-        String neTeaseUrl = "https://netease.kuku.me";
-        Response response = OkHttpUtils.get(neTeaseUrl +"/search?keywords="+URLEncoder.encode(name, "utf-8"));
-        JSONObject jsonObject = OkHttpUtils.getJson(response);
+        String url = "https://netease.kuku.me";
+        JSONObject jsonObject = OkHttpUtils.getJson(url + "/search?keywords=" + URLEncoder.encode(name, "utf-8"));
         JSONObject resultJsonObject = jsonObject.getJSONObject("result");
         if (resultJsonObject.getInteger("songCount") != 0){
             JSONObject songJsonObject = resultJsonObject.getJSONArray("songs").getJSONObject(0);
             Integer id = songJsonObject.getInteger("id");
-            Response secondResponse = OkHttpUtils.get(neTeaseUrl +"/song/url?id="+id);
-            JSONObject secondJsonObject = OkHttpUtils.getJson(secondResponse);
-            String url = secondJsonObject.getJSONArray("data").getJSONObject(0).getString("url");
-            if (url != null){
+            JSONObject secondJsonObject = OkHttpUtils.getJson(url + "/song/url?id=" + id);
+            String songUrl = secondJsonObject.getJSONArray("data").getJSONObject(0).getString("url");
+            if (songUrl != null){
                 String songName = songJsonObject.getString("name");
                 String author = songJsonObject.getJSONArray("artists").getJSONObject(0).getString("name");
-                Response thirdResponse = OkHttpUtils.get("https://y.music.163.com/m/song?id="+id, OkHttpUtils.addUA(UA.MOBILE));
-                String html = OkHttpUtils.getStr(thirdResponse);
+                String html = OkHttpUtils.getStr("https://y.music.163.com/m/song?id=" + id, OkHttpUtils.addUA(UA.MOBILE));
                 String imageUrl = Jsoup.parse(html).select("meta[property=og:image]").first().attr("content");
-                 return Result.success("成功","<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>" +
-                                "<msg serviceID=\"2\" templateID=\"1\" action=\"web\" brief=\"[分享] "+songName+"\" sourceMsgId=\"0\" " +
-                                "url=\"http://music.163.com/m/song/"+id+"\" " +
-                                "flag=\"0\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"2\">" +
-                                "<audio cover=\""+imageUrl+"?param=90y90\" " +
-                                "src=\"https://music.163.com/song/media/outer/url?id="+id+".mp3\" /><title>"+songName+"</title><summary>"+author+"</summary></item><source name=\"网易云音乐\" " +
-                                "icon=\"https://pic.rmb.bdstatic.com/911423bee2bef937975b29b265d737b3.png\" " +
-                                "url=\"http://web.p.qq.com/qqmpmobile/aio/app.html?id=100495085\" action=\"app\" " +
-                                "a_actionData=\"com.netease.cloudmusic\" i_actionData=\"tencent100495085://\" appid=\"100495085\" /></msg>"
-                        );
-            }else {
-                return Result.failure(500, "可能该歌曲没有版权或者无法下载！");
-            }
-        }else {
-            return Result.failure(500, "未找到该歌曲！！");
+                String jumpUrl = "https://music.163.com/song?id=" + id;
+                return Result.success("<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID=\"2\" templateID=\"12345\" action=\"web\" brief=\"音乐分享[" + songName + "]\" sourceMsgId=\"0\" url=\"" + jumpUrl + "\" flag=\"0\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"2\"><audio cover=\"http:" + imageUrl +"\" src=\"" + songUrl + "\" /><title>" + songName + "</title><summary>" + author + "</summary></item><source name=\"\" icon=\"\" action=\"\" appid=\"-1\" /></msg>");
+            }else return Result.failure("可能该歌曲没有版权或者无法下载！", null);
+        }else return Result.failure("未找到该歌曲！！", null);
+    }
+
+    @Override
+    public String abstractWords(String word) {
+        ScriptEngine se = new ScriptEngineManager().getEngineByName("JavaScript");
+        try {
+            String str = OkHttpUtils.downloadStr("https://vkceyugu.cdn.bspapp.com/VKCEYUGU-ba222f61-ee83-431d-bf9f-7e6216a8cf41/3a0a9684-c12e-4a6d-91e7-651f99877750.js");
+            se.eval(str);
+            Object o = se.eval("chouxiang(\"" + word + "\")");
+            return o.toString();
+        } catch (ScriptException | IOException e) {
+            e.printStackTrace();
+            return "生成失败，请重试！！";
         }
     }
 
     @Override
-    public String genShinUserInfo(long id) throws IOException {
+    public String executeCode(String code, CodeType codeType) throws IOException {
+        String type = codeType.getType();
+        String html = OkHttpUtils.getStr("http://www.dooccn.com/" + type + "/", OkHttpUtils.addUA(UA.PC));
+        String id = BotUtils.regex("langid = ", ";", html);
         Map<String, String> map = new HashMap<>();
-        String mhyVersion = "2.1.0";
-        String n = MD5Utils.toMD5(mhyVersion);
-        String i = String.valueOf(new Date().getTime()).substring(0, 10);
-        String r = BotUtils.randomStr(6);
-        String c = MD5Utils.toMD5("salt=" + n + "&t=" + i + "&r=" + r);
-        String ds = i + "," + r + "," + c;
-        map.put("DS", ds);
-        map.put("x-rpc-app_version", "2.1.0");
-        map.put("User-Agent", "Mozilla/5.0 (Linux; Android 9; Unspecified Device) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/39.0.0.0 Mobile Safari/537.36 miHoYoBBS/2.2.");
-        map.put("x-rpc-client_type", "4");
-        map.put("Referer", "https://webstatic.mihoyo.com/app/community-game-records/index.html?v=6");
-        map.put("X-Requested-With", "com.mihoyo.hyperion");
-        JSONObject jsonObject = OkHttpUtils.getJson("https://api-takumi.mihoyo.com/game_record/genshin/api/index?server=cn_gf01&role_id=" + id,
-                map);
-        StringBuilder sb = new StringBuilder(id + " Genshin Info:\nRoles:\n");
-        JSONArray jsonArray = jsonObject.getJSONObject("data").getJSONArray("avatars");
-        for (Object obj: jsonArray){
-            JSONObject singleJsonObject = (JSONObject) obj;
-            String element = singleJsonObject.getString("element");
-            String type;
-            switch (element){
-                case "None": type = "无属性"; break;
-                case "Anemo": type = "风属性"; break;
-                case "Pyro": type = "火属性"; break;
-                case "Geo": type = "岩属性"; break;
-                case "Electro": type = "雷属性"; break;
-                case "Cryo": type = "冰属性"; break;
-                case "Hydro": type = "水属性"; break;
-                default: type = "草属性";
-            }
-            String name = singleJsonObject.getString("name");
-            String text = "";
-            if ("旅行者".equals(name)){
-                String image = singleJsonObject.getString("image");
-                text += "* " + name + "：\n";
-                if (image.contains("UI_AvatarIcon_PlayerGirl")){
-                    text += "  - [萤——妹妹] " + singleJsonObject.getString("level") + "级 " + type + "\n";
-                }else if (image.contains("UI_AvatarIcon_PlayerBoy")){
-                    text += "  - [空——哥哥] " + singleJsonObject.getString("level") + "级 " + type + "\n";
-                }else{
-                    text += "  - [性别判断失败] " + singleJsonObject.getString("level") + "级 " + type + "\n";
-                }
-            }else{
-                text += "* " + singleJsonObject.getString("name") + " " + singleJsonObject.getString("rarity") +
-                        "★角色:\n";
-                text += "  - " + singleJsonObject.getString("level") + "级 好感度(" + singleJsonObject.getString("fetter") +
-                        ")级 " + type + "\n";
-            }
-            sb.append(text);
+        map.put("language", id);
+        map.put("code", Base64.getEncoder().encodeToString(code.getBytes(StandardCharsets.UTF_8)));
+        map.put("stdin", "123\nhaha2\n");
+        JSONObject jsonObject = OkHttpUtils.postJson("http://runcode-api2-ng.dooccn.com/compile2", map,
+                OkHttpUtils.addHeaders(null, "http://www.dooccn.com/", UA.PC));
+        return jsonObject.getString("output");
+    }
+
+    @Override
+    public String urlToPic(String url) throws IOException {
+        Response response = OkHttpUtils.get("https://www.iloveimg.com/zh-cn/html-to-image", OkHttpUtils.addUA(UA.PC));
+        String cookie = OkHttpUtils.getCookie(response);
+        String str = OkHttpUtils.getStr(response);
+        String token = "Bearer " + BotUtils.regex("\"token\":\"", "\"", str);
+        String taskId = BotUtils.regex("ilovepdfConfig.taskId = '", "';", str);
+        MultipartBody uploadBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
+                .addFormDataPart("task", taskId)
+                .addFormDataPart("cloud_file", url).build();
+        Map<String, String> headersMap = new HashMap<>();
+        headersMap.put("Authorization", token);
+        headersMap.put("user-agent", UA.PC.getValue());
+        Headers headers = OkHttpUtils.addHeaders(headersMap);
+        JSONObject uploadJsonObject = OkHttpUtils.postJson("https://api1h.ilovepdf.com/v1/upload", uploadBody, headers);
+        String serverFileName = uploadJsonObject.getString("server_filename");
+        MultipartBody previewBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
+                .addFormDataPart("server_filename", serverFileName)
+                .addFormDataPart("task", taskId)
+                .addFormDataPart("url", url)
+                .addFormDataPart("view_width", "320")
+                .addFormDataPart("to_format", "jpg")
+                .addFormDataPart("block_ads", "false")
+                .addFormDataPart("remove_popups", "false").build();
+        JSONObject jsonObject = OkHttpUtils.postJson("https://api1h.ilovepdf.com/v1/preview", previewBody, headers);
+        return "https://api1h.ilovepdf.com/thumbnails/" + jsonObject.getString("thumbnail");
+    }
+
+    @Override
+    public String pasteUbuntu(String poster, String syntax, String content) {
+        Map<String, String> map = new HashMap<>();
+        map.put("poster", poster);
+        map.put("syntax", syntax);
+        map.put("content", content);
+        try {
+            Response response = OkHttpUtils.post("https://paste.ubuntu.com/", map, OkHttpUtils.addUA(UA.PC));
+            response.close();
+            return "https://paste.ubuntu.com" + response.header("location");
+        } catch (IOException e) {
+            return "生成失败！！";
         }
-        JSONObject statsJsonObject = jsonObject.getJSONObject("data").getJSONObject("stats");
-        sb.append("\nAccount Info:\n");
-        sb.append("- 活跃天数：").append(statsJsonObject.getString("active_day_number")).append(" 天\n");
-        sb.append("- 达成成就：").append(statsJsonObject.getString("achievement_number")).append(" 个\n");
-        sb.append("- 获得角色：").append(statsJsonObject.getString("avatar_number")).append(" 个\n");
-        sb.append("- 深渊螺旋：");
-        if ("-".equals(statsJsonObject.getString("spiral_abyss"))){
-            sb.append("没打");
-        }else sb.append("打到了").append(statsJsonObject.getString("spiral_abyss"));
-        sb.append("\n").append("* 收集：\n");
-        sb.append("  - 风神瞳").append(statsJsonObject.getString("anemoculus_number")).append(" 个 岩神瞳")
-                .append(statsJsonObject.getString("geoculus_number")).append("个\n");
-        sb.append("* 解锁：\n");
-        sb.append("  - 传送点").append(statsJsonObject.getString("way_point_number")).append("个 秘境")
-                .append(statsJsonObject.getString("domain_number")).append("个\n");
-        sb.append("* 共开启宝箱：\n");
-        sb.append("  - 普通：").append(statsJsonObject.getString("common_chest_number")).append("个 精致：")
-                .append(statsJsonObject.getString("exquisite_chest_number")).append("个\n")
-                .append("  - 珍贵：").append(statsJsonObject.getString("luxurious_chest_number")).append("个 华丽：")
-                .append(statsJsonObject.getString("precious_chest_number")).append("个");
-        return sb.toString();
+    }
+
+    @Override
+    public byte[] girlImageGaNk() {
+        try {
+            JSONObject jsonObject = OkHttpUtils.getJson("https://gank.io/api/v2/random/category/Girl/type/Girl/count/1");
+            String url = jsonObject.getJSONArray("data").getJSONObject(0).getString("url");
+            return OkHttpUtils.downloadBytes(url);
+        } catch (IOException ioException) {
+            return null;
+        }
+    }
+
+    private JSONArray luckJson = null;
+
+    @Override
+    public JSONObject luckJson(int index){
+        if(luckJson == null){
+            InputStream is = this.getClass().getResourceAsStream("/db/luck.json");
+            byte[] bytes = IO.read(is, true);
+            luckJson = JSON.parseArray(new String(bytes, StandardCharsets.UTF_8));
+        }
+        return luckJson.getJSONObject(index-1);
+    }
+
+    @SuppressWarnings({"IntegerDivisionInFloatingPointContext", "ConstantConditions"})
+    @Override
+    public byte[] diu(String url) throws IOException {
+        int hdW = 146;
+
+        BufferedImage headImage = ImageIO.read(new ByteArrayInputStream(OkHttpUtils.getBytes(url)));
+        BufferedImage bgImage = ImageIO.read(getClass().getClassLoader().getResource("images/diu.png"));
+
+        //处理头像
+        BufferedImage formatAvatarImage = new BufferedImage(hdW, hdW, BufferedImage.TYPE_4BYTE_ABGR);
+        Graphics2D graphics = formatAvatarImage.createGraphics();
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);//抗锯齿
+        //图片是一个圆型
+        Ellipse2D.Double shape = new Ellipse2D.Double(0, 0, hdW, hdW);
+        //需要保留的区域
+        graphics.setClip(shape);
+        graphics.rotate(Math.toRadians(-50),hdW / 2,hdW / 2);
+        graphics.drawImage(headImage.getScaledInstance(hdW,hdW,Image.SCALE_SMOOTH), 0, 0, hdW, hdW, null);
+        graphics.dispose();
+
+        //重合图片
+        Graphics2D graphics2D = bgImage.createGraphics();
+        graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);//抗锯齿
+        graphics2D.drawImage(formatAvatarImage,110 - hdW / 2,275 - hdW / 2,hdW,hdW,null);//头画背景上
+        graphics2D.dispose();
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ImageIO.write(bgImage, "PNG", bos);
+        return bos.toByteArray();
     }
 }

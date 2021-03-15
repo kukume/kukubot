@@ -4,25 +4,33 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import me.kuku.yuq.entity.BiliBiliEntity;
+import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.logic.BiliBiliLogic;
-import me.kuku.yuq.pojo.BiliBiliPojo;
-import me.kuku.yuq.pojo.Result;
-import me.kuku.yuq.pojo.ResultStatus;
-import me.kuku.yuq.pojo.UA;
+import me.kuku.yuq.logic.DdOcrCodeLogic;
+import me.kuku.yuq.pojo.*;
 import me.kuku.yuq.utils.BotUtils;
 import me.kuku.yuq.utils.OkHttpUtils;
+import me.kuku.yuq.utils.QQUtils;
+import me.kuku.yuq.utils.RSAUtils;
 import okhttp3.MultipartBody;
 import okhttp3.Response;
 import okio.ByteString;
 
+import javax.inject.Inject;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.security.PublicKey;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
+@SuppressWarnings("unused")
 public class BiliBiliLogicImpl implements BiliBiliLogic {
+
+    @Inject
+    private DdOcrCodeLogic ddOcrCodeLogic;
+
     @Override
     public Result<List<BiliBiliPojo>> getIdByName(String username) throws IOException {
         String enUserName = null;
@@ -88,10 +96,9 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
                 }
             }
             if (text == null) {
-                try {
-                    text = cardJsonObject.getJSONObject("vest").getString("content");
-                }catch (NullPointerException e){
-                    e.printStackTrace();
+                JSONObject vestJsonObject = cardJsonObject.getJSONObject("vest");
+                if (vestJsonObject != null){
+                    text = vestJsonObject.getString("content");
                 }
             }
             if (text == null && cardJsonObject.containsKey("title")){
@@ -236,6 +243,80 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
         }
     }
 
+    @Override
+    public Result<BiliBiliEntity> loginByQQ(QQLoginEntity qqLoginEntity) throws IOException {
+        Response dfcResponse = OkHttpUtils.post("https://passport.bilibili.com/captcha/dfc");
+        String dfcToken = OkHttpUtils.getJson(dfcResponse).getJSONObject("data").getString("dfc");
+        String dfcCookie = OkHttpUtils.getCookie(dfcResponse);
+        Map<String, String> loginUrlMap = new HashMap<>();
+        loginUrlMap.put("gourl", "");
+        loginUrlMap.put("csrf", dfcToken);
+        Response loginUrlResponse = OkHttpUtils.post("https://passport.bilibili.com/login/qq",
+                loginUrlMap, OkHttpUtils.addCookie(dfcCookie));
+        JSONObject loginUrlJsonObject = OkHttpUtils.getJson(loginUrlResponse);
+        String loginUrl = loginUrlJsonObject.getString("data");
+        String state = BotUtils.regex("state%3D", "&", loginUrl);
+        if (state == null) return Result.failure("登录失败，请稍后再试！！", null);
+        Response loginFirstResponse = OkHttpUtils.get("https://xui.ptlogin2.qq.com/cgi-bin/xlogin?appid=716027609&pt_3rd_aid=101135748&daid=383&pt_skey_valid=1&style=35&s_url=http%3A%2F%2Fconnect.qq.com&refer_cgi=authorize&which=&response_type=code&state=authorize&client_id=101135748&redirect_uri=https%3A%2F%2Fpassport.bilibili.com%2Flogin%2Fsnsback%3Fsns%3Dqq%26%26state%3D" + state + "&scope=do_like,get_user_info,get_simple_userinfo,get_vip_info,get_vip_rich_info,add_one_blog,list_album,upload_pic,add_album,list_photo,get_info,add_t,del_t,add_pic_t,get_repost_list,get_other_info,get_fanslist,get_idollist,add_idol,del_idol,get_tenpay_addr");
+        loginFirstResponse.close();
+        String qqLoginCookie = OkHttpUtils.getCookie(loginFirstResponse);
+        String superLoginUrl = "https://ssl.ptlogin2.qq.com/pt_open_login?openlogin_data=which%3D%26refer_cgi%3Dauthorize%26response_type%3Dcode%26client_id%3D101135748%26state%3Dauthorize%26display%3D%26openapi%3D%2523%26switch%3D0%26src%3D1%26sdkv%3D%26sdkp%3Da%26tid%3D1598024545%26pf%3D%26need_pay%3D0%26browser%3D0%26browser_error%3D%26serial%3D%26token_key%3D%26redirect_uri%3Dhttps%253A%252F%252Fpassport.bilibili.com%252Flogin%252Fsnsback%253Fsns%253Dqq%2526%2526state%253D" + state + "%26sign%3D%26time%3D%26status_version%3D%26status_os%3D%26status_machine%3D%26page_type%3D1%26has_auth%3D0%26update_auth%3D0%26auth_time%3D" + System.currentTimeMillis() + "&auth_token=" + QQUtils.getToken2(qqLoginEntity.getSuperToken()) + "&pt_vcode_v1=0&pt_verifysession_v1=&verifycode=&u=" + qqLoginEntity.getQq() + "&pt_randsalt=0&ptlang=2052&low_login_enable=0&u1=http%3A%2F%2Fconnect.qq.com&from_ui=1&fp=loginerroralert&device=2&aid=716027609&daid=383&pt_3rd_aid=101135748&ptredirect=1&h=1&g=1&pt_uistyle=35&regmaster=&";
+        String str = OkHttpUtils.getStr(superLoginUrl, OkHttpUtils.addCookie(qqLoginEntity.getCookieWithSuper() + qqLoginCookie));
+        Result<String> result = QQUtils.getResultUrl(str);
+        String url = result.getData();
+        if (url == null) return Result.failure(result.getMessage(), null);
+        Response biliBiliLoginResponse = OkHttpUtils.get(url, OkHttpUtils.addHeaders(dfcCookie, superLoginUrl));
+        BiliBiliEntity biliBiliEntity = getBiliBiliEntityByResponse(biliBiliLoginResponse);
+        if (biliBiliEntity == null) return Result.failure("您可能没有使用哔哩哔哩绑定您的QQ账号，请绑定后再试！！", null);
+        else return Result.success(biliBiliEntity);
+    }
+
+    @Override
+    public Result<BiliBiliEntity> loginByPassword(String username, String password) throws IOException {
+        // 获取信息
+        JSONObject captchaJsonObject = OkHttpUtils.getJson("https://passport.bilibili.com/x/passport-login/captcha?source=main_web");
+        JSONObject captchaDataJsonObject = captchaJsonObject.getJSONObject("data");
+        String token = captchaDataJsonObject.getString("token");
+        JSONObject geeTestJsonObject = captchaDataJsonObject.getJSONObject("geetest");
+        String challenge = geeTestJsonObject.getString("challenge");
+        String gt = geeTestJsonObject.getString("gt");
+        // 过验证码
+        Result<DdOcrPojo> codeResult = ddOcrCodeLogic.identify(gt, challenge, "https://passport.bilibili.com/login");
+        if (codeResult.isFailure()) return Result.failure(codeResult.getMessage());
+        DdOcrPojo ddOcrPojo = codeResult.getData();
+        // 登录
+        JSONObject keyJsonObject = OkHttpUtils.getJson("https://passport.bilibili.com/x/passport-login/web/key?r=0." + BotUtils.randomNum(16),
+                OkHttpUtils.addHeaders(null, "https://passport.bilibili.com/login", UA.PC));
+        JSONObject keyDataJsonObject = keyJsonObject.getJSONObject("data");
+        String key = keyDataJsonObject.getString("key");
+        String hash = keyDataJsonObject.getString("hash");
+        String enPassword;
+        try {
+            PublicKey publicKey = RSAUtils.getPublicKeyOriginal(key);
+            enPassword = RSAUtils.encrypt(hash + password, publicKey);
+        } catch (Exception e) {
+            return Result.failure("密码加密失败，请重试！！");
+        }
+        Map<String, String> map = new HashMap<>();
+        map.put("source", "main_web");
+        map.put("username", username);
+        map.put("password", enPassword);
+        map.put("keep", "true");
+        map.put("token", token);
+        map.put("go_url", "");
+        map.put("challenge", ddOcrPojo.getChallenge());
+        map.put("validate", ddOcrPojo.getValidate());
+        map.put("seccode", ddOcrPojo.getValidate() + "|jordan");
+        JSONObject jsonObject = OkHttpUtils.postJson("https://passport.bilibili.com/x/passport-login/web/login",
+                map, OkHttpUtils.addHeaders(null, "https://passport.bilibili.com/login", UA.PC));
+        if (jsonObject.getInteger("code") == 0){
+            String url = jsonObject.getJSONObject("data").getString("url");
+            Response response = OkHttpUtils.get(url, OkHttpUtils.addHeaders(null, "https://passport.bilibili.com/login", UA.PC));
+            BiliBiliEntity biliBiliEntity = getBiliBiliEntityByResponse(response);
+            return Result.success(biliBiliEntity);
+        } else return Result.failure(jsonObject.getString("message"));
+    }
+
     private BiliBiliEntity getBiliBiliEntityByResponse(Response response){
         response.close();
         String cookie = OkHttpUtils.getCookie(response);
@@ -260,10 +341,16 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
     }
 
     @Override
-    public Boolean isLiveOnline(String id) throws IOException {
-        JSONObject jsonObject = OkHttpUtils.getJson("https://api.live.bilibili.com/room/v1/Room/getRoomInfoOld?mid=" + id);
-        int status = jsonObject.getJSONObject("data").getInteger("liveStatus");
-        return status == 1;
+    public JSONObject live(String id) throws IOException {
+        JSONObject jsonObject = OkHttpUtils.getJson("https://api.live.bilibili.com/room/v1/Room/getRoomInfoOld?mid=" + id,
+                OkHttpUtils.addReferer("https://api.live.bilibili.com"));
+        JSONObject dataJsonObject = jsonObject.getJSONObject("data");
+        int status = dataJsonObject.getInteger("liveStatus");
+        JSONObject resultJsonObject = new JSONObject();
+        resultJsonObject.put("status", status == 1);
+        resultJsonObject.put("title", dataJsonObject.getString("title"));
+        resultJsonObject.put("url", dataJsonObject.getString("url"));
+        return resultJsonObject;
     }
 
     @Override
@@ -328,10 +415,10 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
         map.put("cross_domain", "true");
         map.put("csrf", biliBiliEntity.getToken());
         JSONObject jsonObject = OkHttpUtils.postJson("https://api.bilibili.com/x/web-interface/coin/add", map,
-                OkHttpUtils.addHeader().add("cookie", biliBiliEntity.getCommentList())
+                OkHttpUtils.addHeader().add("cookie", biliBiliEntity.getCookie())
                         .add("referer", "https://www.bilibili.com/video/").build());
         if (jsonObject.getInteger("code").equals(0)) return "对该动态（视频）投硬币成功！！";
-        else return "对该动态（视频）投硬币成功！！，" + jsonObject.getString("message");
+        else return "对该动态（视频）投硬币失败！！，" + jsonObject.getString("message");
     }
 
     @Override
@@ -460,7 +547,7 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
 
     @Override
     public List<Map<String, String>> getReplay(BiliBiliEntity biliBiliEntity, String oid, int page) throws IOException {
-        JSONObject jsonObject = OkHttpUtils.getJsonp("https://api.bilibili.com/x/v2/reply?callback=jQuery17207366906764958399_" + new Date().getTime() + "&jsonp=jsonp&pn=" + page + "&type=1&oid=" + oid + "&sort=2&_=" + new Date().getTime(),
+        JSONObject jsonObject = OkHttpUtils.getJsonp("https://api.bilibili.com/x/v2/reply?callback=jQuery17207366906764958399_" + System.currentTimeMillis() + "&jsonp=jsonp&pn=" + page + "&type=1&oid=" + oid + "&sort=2&_=" + System.currentTimeMillis(),
                 OkHttpUtils.addHeaders(biliBiliEntity.getCookie(), "https://www.bilibili.com/"));
         if (jsonObject.getInteger("code") == 0){
             JSONArray jsonArray = jsonObject.getJSONObject("data").getJSONArray("replies");

@@ -2,6 +2,7 @@ package me.kuku.yuq.controller.manage;
 
 import com.IceCreamQAQ.Yu.annotation.Action;
 import com.IceCreamQAQ.Yu.annotation.Before;
+import com.IceCreamQAQ.Yu.annotation.Config;
 import com.IceCreamQAQ.Yu.annotation.Synonym;
 import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
@@ -10,11 +11,9 @@ import com.icecreamqaq.yuq.annotation.PathVar;
 import com.icecreamqaq.yuq.annotation.QMsg;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.GroupEntity;
-import me.kuku.yuq.entity.QQEntity;
 import me.kuku.yuq.entity.RecallEntity;
 import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.service.GroupService;
-import me.kuku.yuq.service.QQService;
 import me.kuku.yuq.service.RecallService;
 import me.kuku.yuq.utils.BotUtils;
 
@@ -24,6 +23,7 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 
 @GroupController
+@SuppressWarnings("unused")
 public class ManageNotController {
     @Inject
     private GroupService groupService;
@@ -31,8 +31,8 @@ public class ManageNotController {
     private RecallService recallService;
     @Inject
     private ToolLogic toolLogic;
-
-    private final String version = "v2.1.0";
+    @Config("YuQ.Mirai.bot.version")
+    private String version;
 
     @Before
     public GroupEntity before(Long group){
@@ -42,7 +42,7 @@ public class ManageNotController {
     }
 
     @Action("查管")
-    @Synonym({"查黑名单", "查白名单", "查违规词", "查拦截", "查微博监控", "查哔哩哔哩监控", "查问答"})
+    @Synonym({"查黑名单", "查白名单", "查违规词", "查拦截", "查微博监控", "查哔哩哔哩监控", "查问答", "查超管", "查指令限制", "查shell"})
     @QMsg(at = true, atNewLine = true)
     public String query(GroupEntity groupEntity, @PathVar(0) String type){
         StringBuilder sb = new StringBuilder();
@@ -50,6 +50,10 @@ public class ManageNotController {
             case "查管":
                 sb.append("本群管理员列表如下：").append("\n");
                 groupEntity.getAdminJsonArray().forEach(obj -> sb.append(obj).append("\n"));
+                break;
+            case "查超管":
+                sb.append("本群超级管理员列表如下").append("\n");
+                groupEntity.getSuperAdminJsonArray().forEach(obj -> sb.append(obj).append("\n"));
                 break;
             case "查黑名单":
                 sb.append("本群黑名单列表如下：").append("\n");
@@ -90,6 +94,21 @@ public class ManageNotController {
                     sb.append(jsonObject.getString("q")).append("\n");
                 });
                 break;
+            case "查指令限制":
+                sb.append("本群的指令限制列表如下：").append("\n");
+                groupEntity.getCommandLimitJsonObject().forEach((k, v) -> {
+                    sb.append(k).append("->").append(v).append("次").append("\n");
+                });
+                break;
+            case "查shell":
+                sb.append("本群的shell命令存储如下").append("\n");
+                groupEntity.getShellCommandJsonArray().forEach(obj -> {
+                    JSONObject shellCommandJsonObject = (JSONObject) obj;
+                    sb.append(shellCommandJsonObject.getInteger("auth")).append("->")
+                            .append(shellCommandJsonObject.getString("command")).append("->")
+                            .append(shellCommandJsonObject.getString("shell"));
+                });
+                break;
             default: return null;
         }
         return sb.deleteCharAt(sb.length() - 1).toString();
@@ -100,7 +119,7 @@ public class ManageNotController {
         List<RecallEntity> recallList = recallService.findByGroupAndQQ(group, qqNo);
         int all = recallList.size();
         if (num == null) num = 1;
-        if (num > all) return FunKt.getMif().at(qq).plus("您要查询的QQ只有" + all + "条撤回消息，超过范围了！！");
+        if (num > all || num < 0) return FunKt.getMif().at(qq).plus("您要查询的QQ只有" + all + "条撤回消息，超过范围了！！");
         RecallEntity recallEntity = recallList.get(num - 1);
         String timeStr = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(recallEntity.getDate());
         return FunKt.getMif().at(qq).plus("\n该消息撤回时间为" + timeStr + "\n消息内容为：\n")
@@ -110,7 +129,7 @@ public class ManageNotController {
     @Action("检查版本")
     public String checkUpdate() throws IOException {
         String gitVersion = toolLogic.queryVersion();
-        return "当前程序版本：" + version + "\n" +
+        return "当前程序版本：" + this.version + "\n" +
                 "最新程序版本：" + gitVersion;
     }
 

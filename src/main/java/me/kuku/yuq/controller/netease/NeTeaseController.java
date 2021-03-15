@@ -13,6 +13,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 
 @GroupController
+@SuppressWarnings("unused")
 public class NeTeaseController {
 
     @Inject

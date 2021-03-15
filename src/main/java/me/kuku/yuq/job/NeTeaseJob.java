@@ -11,13 +11,14 @@ import java.io.IOException;
 import java.util.List;
 
 @JobCenter
+@SuppressWarnings("unused")
 public class NeTeaseJob {
     @Inject
     private NeTeaseLogic neTeaseLogic;
     @Inject
     private NeTeaseService neTeaseService;
 
-    @Cron("At::d::09")
+    @Cron("At::d::09:00")
     public void ne(){
         List<NeTeaseEntity> list = neTeaseService.findAll();
         list.forEach(neTeaseEntity -> {

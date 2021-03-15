@@ -7,7 +7,6 @@ import com.icecreamqaq.yuq.annotation.PathVar;
 import com.icecreamqaq.yuq.annotation.PrivateController;
 import com.icecreamqaq.yuq.annotation.QMsg;
 import com.icecreamqaq.yuq.controller.ContextSession;
-import com.icecreamqaq.yuq.controller.QQController;
 import com.icecreamqaq.yuq.entity.Contact;
 import com.icecreamqaq.yuq.entity.Group;
 import com.icecreamqaq.yuq.entity.Member;
@@ -15,6 +14,7 @@ import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.QQLoginService;
+import me.kuku.yuq.utils.ExecutorUtils;
 import me.kuku.yuq.utils.QQPasswordLoginUtils;
 import me.kuku.yuq.utils.QQQrCodeLoginUtils;
 import me.kuku.yuq.utils.QQUtils;
@@ -26,7 +26,8 @@ import java.util.Map;
 
 @GroupController
 @PrivateController
-public class BindQQController extends QQController {
+@SuppressWarnings("unused")
+public class BindQQController {
     @Inject
     private QQLoginService qqLoginService;
 
@@ -35,20 +36,21 @@ public class BindQQController extends QQController {
     public Message bindQQ(Group group, long qq) throws IOException {
         Map<String, Object> map = QQQrCodeLoginUtils.getQrCode();
         byte[] bytes = (byte[]) map.get("qrCode");
-        new Thread(() -> {
+        ExecutorUtils.execute(() -> {
             String msg;
             try {
                 Result<Map<String, String>> result = QQUtils.qrCodeLoginVerify(map.get("sig").toString());
-                if (result.getCode() == 200){
+                if (result.getCode() == 200) {
                     QQUtils.saveOrUpdate(qqLoginService, result.getData(), qq, null, group.getId());
                     msg = "绑定或更新QQ成功！！";
-                }else msg = result.getMessage();
+                } else msg = result.getMessage();
             } catch (IOException e) {
                 e.printStackTrace();
                 msg = "";
             }
             group.sendMessage(FunKt.getMif().at(qq).plus(msg));
-        }).start();
+        });
+        group.sendMessage(FunKt.getMif().at(qq).plus("QQ8.4.8版本以上的不支持直接图片或者相册识别，\n解决方法：用tim或QQhd扫码或使用旧版本QQ（https://wwx.lanzoux.com/igkqMhpj5gh）"));
         return FunKt.getMif().imageByInputStream(new ByteArrayInputStream(bytes)).plus("qzone.qq.com的扫码登录");
     }
 
@@ -69,7 +71,7 @@ public class BindQQController extends QQController {
                 QQUtils.saveOrUpdate(qqLoginService, map, qq.getId(), pwd, group);
                 return "绑定或者更新QQ成功！！";
             case 10009:
-                reply(result.getMessage());
+                qq.sendMessage(Message.Companion.toMessage(result.getMessage()));
                 Map<String, String> smsMap = result.getData();
                 Message codeMessage = session.waitNextMessage(1000 * 60 * 2);
                 String code = Message.Companion.firstString(codeMessage);

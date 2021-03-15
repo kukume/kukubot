@@ -16,4 +16,5 @@ public interface QQDao extends YuDao<QQEntity, Integer> {
     int delByQQAndGroup(Long qq, Integer group);
     @Select("from QQEntity")
     List<QQEntity> findAll();
+    List<QQEntity> findByHostLocPush(boolean hostLocPush);
 }

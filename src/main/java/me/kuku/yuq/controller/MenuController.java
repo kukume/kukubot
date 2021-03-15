@@ -1,96 +1,106 @@
 package me.kuku.yuq.controller;
 
 import com.IceCreamQAQ.Yu.annotation.Action;
-import com.IceCreamQAQ.Yu.annotation.Synonym;
 import com.icecreamqaq.yuq.annotation.GroupController;
+import me.kuku.yuq.controller.arknights.ArkNightsController;
+import me.kuku.yuq.controller.arknights.ArkNightsLoginController;
+import me.kuku.yuq.controller.arknights.ArkNightsTagController;
 import me.kuku.yuq.controller.bilibili.BiliBiliController;
 import me.kuku.yuq.controller.bilibili.BiliBiliLoginController;
 import me.kuku.yuq.controller.manage.ManageAdminController;
 import me.kuku.yuq.controller.manage.ManageNotController;
-import me.kuku.yuq.controller.manage.ManageOwnerController;
+import me.kuku.yuq.controller.manage.ManageSuperAdminController;
 import me.kuku.yuq.controller.netease.BindNeTeaseController;
 import me.kuku.yuq.controller.netease.NeTeaseController;
 import me.kuku.yuq.controller.qqlogin.BindQQController;
 import me.kuku.yuq.controller.qqlogin.QQJobController;
 import me.kuku.yuq.controller.qqlogin.QQLoginController;
+import me.kuku.yuq.controller.qqlogin.QQQuickLoginController;
 import me.kuku.yuq.controller.warframe.WarframeController;
 import me.kuku.yuq.controller.weibo.WeiboController;
 import me.kuku.yuq.controller.weibo.WeiboNotController;
+import me.kuku.yuq.utils.BotUtils;
 
-import java.lang.reflect.Method;
+import java.util.List;
 
 @GroupController
+@SuppressWarnings("unused")
 public class MenuController {
 
     @Action("help")
     public String help(){
-        return menu(MenuController.class);
+        return parse("help", MenuController.class);
     }
 
     @Action("tool")
     public String tool(){
-        return menu(ToolController.class);
+        return parse("tool", ToolController.class);
     }
 
     @Action("bilibili")
     public String bl(){
-        return menu(BiliBiliLoginController.class) + "\n" + menu(BiliBiliController.class);
+        return parse("bilibili", BiliBiliLoginController.class, BiliBiliController.class);
     }
 
     @Action("bot")
     public String bot(){
-        return menu(BotController.class);
+        return parse("bot", BotController.class);
     }
 
     @Action("manage")
     public String manage(){
-        return menu(ManageNotController.class) + "\n" +
-                menu(ManageOwnerController.class) + "\n" +
-                menu(ManageAdminController.class);
+        return parse("manage", ManageNotController.class, ManageSuperAdminController.class, ManageAdminController.class);
     }
 
     @Action("wy")
     public String wy(){
-        return menu(NeTeaseController.class) + "\n" +
-                menu(BindNeTeaseController.class);
+        return parse("网易", NeTeaseController.class, BindNeTeaseController.class);
     }
 
     @Action("qq")
     public String qq(){
-        return menu(QQLoginController.class) + "\n" +
-                menu(BindQQController.class) + "\n" +
-                menu(QQJobController.class);
+        return parse("qq", QQLoginController.class, BindQQController.class, QQJobController.class, QQQuickLoginController.class);
     }
 
     @Action("setting")
     public String setting(){
-        return menu(SettingController.class);
+        return parse("设置", SettingController.class);
     }
 
     @Action("wb")
     public String wb(){
-        return menu(WeiboNotController.class) + "\n" + menu(WeiboController.class);
+        return parse("微博", WeiboNotController.class, WeiboController.class);
     }
 
     @Action("wf")
-    public String wf() { return menu(WarframeController.class);}
+    public String wf() {
+        return parse("wf",  WarframeController.class);
+    }
 
-    private String menu(Class<?> clazz){
-        StringBuilder sb = new StringBuilder();
-        Method[] methods = clazz.getMethods();
-        for (Method method: methods){
-            Action action = method.getAnnotation(Action.class);
-            if (action != null){
-                sb.append(action.value()).append("\n");
-            }
-            Synonym synonym = method.getAnnotation(Synonym.class);
-            if (synonym != null){
-                String[] arr = synonym.value();
-                for (String str: arr){
-                    sb.append(str).append("\n");
-                }
+    @Action("ark")
+    public String ark(){
+        return parse("ark", ArkNightsController.class, ArkNightsLoginController.class, ArkNightsTagController.class);
+    }
+
+    @Action("菜单")
+    public String menu(){
+        return "https://api.kuku.me/menu";
+    }
+
+
+    private String parse(String name, Class<?>...classes){
+        List<String> list = BotUtils.menu(classes);
+        StringBuilder sb = new StringBuilder().append("╭┅═☆━━━━━━━").append(name).append("━━━┅╮").append("\n");
+        for (int i = 0; i < list.size(); i+=2) {
+            sb.append("||").append(list.get(i));
+            if (i + 1 < list.size()){
+                sb.append("   ").append(list.get(i + 1)).append("||");
+            }else sb.append("||");
+            if (i + 1 < list.size()){
+                sb.append("\n");
             }
         }
-        return sb.deleteCharAt(sb.length() - 1).toString();
+        return sb.append("╰┅━━━━━━━━━━━━━★═┅╯").toString();
     }
+
 }

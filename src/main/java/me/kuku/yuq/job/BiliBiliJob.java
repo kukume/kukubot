@@ -13,6 +13,7 @@ import me.kuku.yuq.pojo.BiliBiliPojo;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.BiliBiliService;
 import me.kuku.yuq.service.GroupService;
+import me.kuku.yuq.utils.BotUtils;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 @JobCenter
+@SuppressWarnings("unused")
 public class BiliBiliJob {
     @Inject
     private GroupService groupService;
@@ -34,7 +36,7 @@ public class BiliBiliJob {
     private final Map<Long, Long> userMap = new HashMap<>();
     private final Map<Long, Map<Long, Boolean>> liveMap = new HashMap<>();
 
-    @Cron("30s")
+    @Cron("2m")
     public void biliBiliGroupMonitor() {
         List<GroupEntity> groupList = groupService.findAll();
         for (GroupEntity groupEntity: groupList){
@@ -82,7 +84,7 @@ public class BiliBiliJob {
         }
     }
 
-    @Cron("30s")
+    @Cron("2m")
     public void biliBiliQQMonitor() throws IOException {
         List<BiliBiliEntity> biliBiliList = biliBiliService.findByMonitor(true);
         for (BiliBiliEntity biliBiliEntity: biliBiliList){
@@ -105,17 +107,17 @@ public class BiliBiliJob {
                 }
                 for (BiliBiliPojo biliBiliPojo: newList){
                     String userId = biliBiliPojo.getUserId();
-                    List<JSONObject> likeList = match(biliBiliEntity.getLikeJsonArray(), userId);
+                    List<JSONObject> likeList = BotUtils.match(biliBiliEntity.getLikeJsonArray(), userId);
                     if (likeList.size() != 0) biliBiliLogic.like(biliBiliEntity, biliBiliPojo.getId(), true);
-                    List<JSONObject> commentList = match(biliBiliEntity.getCommentJsonArray(), userId);
+                    List<JSONObject> commentList = BotUtils.match(biliBiliEntity.getCommentJsonArray(), userId);
                     for (JSONObject jsonObject: commentList) biliBiliLogic.comment(biliBiliEntity, biliBiliPojo.getRid(), biliBiliPojo.getType().toString(), jsonObject.getString("content"));
-                    List<JSONObject> forwardList = match(biliBiliEntity.getForwardJsonArray(), userId);
+                    List<JSONObject> forwardList = BotUtils.match(biliBiliEntity.getForwardJsonArray(), userId);
                     for (JSONObject jsonObject: forwardList) biliBiliLogic.forward(biliBiliEntity, biliBiliPojo.getId(), jsonObject.getString("content"));
                     String bvId = biliBiliPojo.getBvId();
                     if (bvId != null){
-                        List<JSONObject> tossCoinList = match(biliBiliEntity.getTossCoinJsonArray(), userId);
+                        List<JSONObject> tossCoinList = BotUtils.match(biliBiliEntity.getTossCoinJsonArray(), userId);
                         if (tossCoinList.size() != 0) biliBiliLogic.tossCoin(biliBiliEntity, biliBiliPojo.getRid(), 2);
-                        List<JSONObject> favoritesList = match(biliBiliEntity.getFavoritesJsonArray(), userId);
+                        List<JSONObject> favoritesList = BotUtils.match(biliBiliEntity.getFavoritesJsonArray(), userId);
                         for (JSONObject jsonObject: favoritesList) biliBiliLogic.favorites(biliBiliEntity, biliBiliPojo.getRid(), jsonObject.getString("content"));
                     }
                     try {
@@ -130,16 +132,7 @@ public class BiliBiliJob {
         }
     }
 
-    private List<JSONObject> match(JSONArray jsonArray, String userId){
-        List<JSONObject> list = new ArrayList<>();
-        for (int i = 0; i < jsonArray.size(); i++){
-            JSONObject jsonObject = jsonArray.getJSONObject(i);
-            if (userId.equals(jsonObject.getString("id"))) list.add(jsonObject);
-        }
-        return list;
-    }
-
-    @Cron("30s")
+    @Cron("1m")
     public void liveMonitor(){
         List<BiliBiliEntity> list = biliBiliService.findAll();
         list.forEach( biliBiliEntity -> {
@@ -151,15 +144,20 @@ public class BiliBiliJob {
                 JSONObject jsonObject = (JSONObject) obj;
                 Long id = jsonObject.getLong("id");
                 try {
-                    Boolean b = biliBiliLogic.isLiveOnline(id.toString());
+                    JSONObject liveJsonObject = biliBiliLogic.live(id.toString());
+                    Boolean b = liveJsonObject.getBoolean("status");
                     if (map.containsKey(id)){
                         if (map.get(id) != b){
+                            map.put(id, b);
                             String msg;
                             if (b) msg = "直播啦！！";
                             else msg = "下播了！！";
                             FunKt.getYuq().getGroups().get(biliBiliEntity.getGroup())
-                                    .get(qq).sendMessage(Message.Companion.toMessage(
-                                            jsonObject.getString("name") + msg
+                                    .get(qq).sendMessage(
+                                            BotUtils.toMessage("哔哩哔哩开播提醒：\n" +
+                                                    jsonObject.getString("name") + msg + "\n" +
+                                                    "标题：" + liveJsonObject.getString("title") + "\n" +
+                                                    "链接：" + liveJsonObject.getString("url")
                             ));
                         }
                     }else map.put(id, b);
@@ -170,7 +168,7 @@ public class BiliBiliJob {
         });
     }
 
-    @Cron("At::d::08")
+    @Cron("At::d::08:00")
     public void biliBilliTask() throws IOException {
         List<BiliBiliEntity> list = biliBiliService.findByTask(true);
         for (BiliBiliEntity biliBiliEntity: list){
@@ -179,9 +177,10 @@ public class BiliBiliJob {
             biliBiliLogic.report(biliBiliEntity, firstRank.get("aid"), firstRank.get("cid"), 300);
             biliBiliLogic.share(biliBiliEntity, firstRank.get("aid"));
             biliBiliLogic.liveSign(biliBiliEntity);
-            for (int i = 0; i < 2; i++){
+            int[] arr = {2, 2, 1};
+            for (int i = 0; i < 3; i++){
                 Map<String, String> randomMap = ranking.get((int) (Math.random() * ranking.size()));
-                biliBiliLogic.tossCoin(biliBiliEntity, randomMap.get("aid"), 2);
+                biliBiliLogic.tossCoin(biliBiliEntity, randomMap.get("aid"), arr[i]);
             }
         }
     }

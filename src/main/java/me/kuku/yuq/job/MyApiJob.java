@@ -8,7 +8,7 @@ import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.QQEntity;
 import me.kuku.yuq.logic.ToolLogic;
-import me.kuku.yuq.logic.impl.MyApiLogic;
+import me.kuku.yuq.logic.MyApiLogic;
 import me.kuku.yuq.pojo.InstagramPojo;
 import me.kuku.yuq.pojo.TwitterPojo;
 import me.kuku.yuq.service.QQService;
@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 @JobCenter
+@SuppressWarnings("unused")
 public class MyApiJob {
 
     @Inject
@@ -34,7 +35,7 @@ public class MyApiJob {
     private final Map<Long, Map<Long, Long>> twitterMap = new HashMap<>();
     private final Map<Long, Map<Long, Long>> insMap = new HashMap<>();
 
-    @Cron("1m")
+    @Cron("2m")
     public void twitterJob(){
         List<QQEntity> qqList = qqService.findAll();
         for (QQEntity qqEntity: qqList){
@@ -76,7 +77,7 @@ public class MyApiJob {
         }
     }
 
-    @Cron("1m")
+    @Cron("2m")
     public void insJob(){
         List<QQEntity> qqList = qqService.findAll();
         for (QQEntity qqEntity: qqList){

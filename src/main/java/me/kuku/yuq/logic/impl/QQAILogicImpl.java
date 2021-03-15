@@ -3,7 +3,7 @@ package me.kuku.yuq.logic.impl;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import me.kuku.yuq.entity.ConfigEntity;
-import me.kuku.yuq.logic.QQAILogic;
+import me.kuku.yuq.logic.AILogic;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.ConfigService;
 import me.kuku.yuq.utils.BotUtils;
@@ -17,7 +17,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.*;
 
-public class QQAILogicImpl implements QQAILogic {
+@SuppressWarnings("unused")
+public class QQAILogicImpl implements AILogic {
     @Inject
     private ConfigService configService;
 
@@ -38,13 +39,18 @@ public class QQAILogicImpl implements QQAILogic {
     private FormBody addParams(Map<String, String> otherParams){
         ConfigEntity configEntity1 = configService.findByType("qqAIAppId");
         ConfigEntity configEntity2 = configService.findByType("qqAIAppKey");
-        String appId = configEntity1.getContent();
-        if (appId == null) appId = "";
-        String appKey = configEntity2.getContent();
-        if (appKey == null) appKey = "";
+        String appId;
+        String appKey;
+        if (configEntity1 == null || configEntity2 == null) {
+            appId = "";
+            appKey = "";
+        }else{
+            appId = configEntity1.getContent();
+            appKey = configEntity2.getContent();
+        }
         Map<String, String> map = new HashMap<>();
         map.put("app_id", appId);
-        map.put("time_stamp", String.valueOf(new Date().getTime() / 1000));
+        map.put("time_stamp", String.valueOf(System.currentTimeMillis() / 1000));
         map.put("nonce_str", BotUtils.randomStr(16));
         FormBody.Builder builder = new FormBody.Builder();
         map.putAll(otherParams);
@@ -79,22 +85,6 @@ public class QQAILogicImpl implements QQAILogic {
 
     @Override
     public String generalOCR(String imageUrl) throws IOException {
-        /*
-        val baseStr = this.urlToBase64(imageUrl)
-        val response = OkHttpClientUtils.post("https://api.ai.qq.com/fcgi-bin/ocr/ocr_generalocr",
-                addParams(mapOf("image" to baseStr)))
-        val jsonObject = OkHttpClientUtils.getJson(response)
-        return if (jsonObject.getInteger("ret") == 0){
-            val jsonArray = jsonObject.getJSONObject("data").getJSONArray("item_list")
-            if (jsonArray.isEmpty()) return "啥文字也没有识别到！！"
-            val sb = StringBuilder()
-            jsonArray.forEach {
-                val singleJsonObject = it as JSONObject
-                sb.appendLine(singleJsonObject.getString("itemstring"))
-            }
-            sb.removeSuffixLine().toString()
-        }else jsonObject.getString("msg")
-         */
         String baseStr = urlToBase64(imageUrl);
         Map<String, String> map = new HashMap<>();
         map.put("image", baseStr);
@@ -143,5 +133,10 @@ public class QQAILogicImpl implements QQAILogic {
             String base64 = jsonObject.getJSONObject("data").getString("speech");
             return Result.success(Base64.getDecoder().decode(base64));
         }else return Result.failure(jsonObject.getString("msg"), null);
+    }
+
+    @Override
+    public String voiceIdentify(String voiceUrl) throws IOException {
+        return null;
     }
 }

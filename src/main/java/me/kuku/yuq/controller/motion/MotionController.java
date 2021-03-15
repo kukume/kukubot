@@ -9,7 +9,7 @@ import com.icecreamqaq.yuq.annotation.QMsg;
 import me.kuku.yuq.entity.MotionEntity;
 import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.logic.LeXinMotionLogic;
-import me.kuku.yuq.logic.QQLogic;
+import me.kuku.yuq.logic.QQLoginLogic;
 import me.kuku.yuq.logic.XiaomiMotionLogic;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.MotionService;
@@ -19,6 +19,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 
 @GroupController
+@SuppressWarnings("unused")
 public class MotionController {
     @Inject
     private MotionService motionService;
@@ -29,7 +30,7 @@ public class MotionController {
     @Inject
     private QQLoginService qqLoginService;
     @Inject
-    private QQLogic qqLogic;
+    private QQLoginLogic qqLoginLogic;
 
     @Before
     public MotionEntity before(long qq){
@@ -47,7 +48,11 @@ public class MotionController {
         if (!result.contains("成功")){
             Result<MotionEntity> loginResult = leXinMotionLogic.loginByPassword(motionEntity.getLeXinPhone(), motionEntity.getLeXinPassword());
             MotionEntity loginMotionEntity = loginResult.getData();
-            if (loginMotionEntity == null) return loginResult.getMessage();
+            if (loginMotionEntity == null) {
+                motionEntity.setLeXinStatus(false);
+                motionService.save(motionEntity);
+                return loginResult.getMessage();
+            }
             motionEntity.setLeXinCookie(loginMotionEntity.getLeXinCookie());
             motionEntity.setLeXinAccessToken(loginMotionEntity.getLeXinAccessToken());
             motionService.save(motionEntity);
@@ -56,7 +61,7 @@ public class MotionController {
         if (result.contains("成功")){
             QQLoginEntity qqLoginEntity = qqLoginService.findByQQ(motionEntity.getQq());
             if (qqLoginEntity != null){
-                qqLogic.motionSign(qqLoginEntity);
+                qqLoginLogic.motionSign(qqLoginEntity);
             }
         }
         return result;
@@ -94,7 +99,11 @@ public class MotionController {
         if (result.contains("登录已失效")){
             Result<String> loginResult = xiaomiMotionLogic.login(motionEntity.getMiPhone(), motionEntity.getMiPassword());
             loginToken = loginResult.getData();
-            if (loginToken == null) return loginResult.getMessage();
+            if (loginToken == null) {
+                motionEntity.setMiStatus(false);
+                motionService.save(motionEntity);
+                return loginResult.getMessage();
+            }
             motionEntity.setMiLoginToken(loginToken);
             motionService.save(motionEntity);
             result = xiaomiMotionLogic.changeStep(loginToken, step);

@@ -1,40 +1,47 @@
-**基于`YuQ-Mirai`的不好用的机器人**
+**基于`YuQ-Mirai`的机器人**
 * [YuQ-Mirai](https://github.com/YuQWorks/YuQ-Mirai)
 * [YuQ-Mirai-SuperDemo](https://github.com/YuQWorks/YuQ-SuperDemo)
 * [Mirai](https://github.com/mamoe/mirai)
 
-**Jar包下载**：https://github.com/kukume/kuku-bot/actions
+**Jar包下载**：https://file.kuku.me
+
+**最新版本已支持过滑块验证码（版本过低，环境异常等都是不能过滑块验证码的原因），但是需要gui环境，如果是把挂在无ui环境的，可以在有ui环境（比如：windows系统）的机器上登录成功后，把`device.json`复制到程序根目录或者`conf`文件夹下**
 
 ## 功能
-* QQ签到
-* 推送最新微博到群聊（指定用户名）、私聊（我的关注），微博自动赞、评论、转发
-* 推送最新哔哩哔哩动态到群聊（指定用户名）、私聊（我的关注），开播提醒，哔哩哔哩自动赞、评论、转发、投硬币、收藏
-* twitter监控
-* instagram监控
-* 修改步数（wx and alipay and qq）
-* 网易云音乐打卡和每日300首听歌量
+* 自动签到（QQ、哔哩哔哩、原神、HostLoc、网易云）
+* 新帖推送（微博、哔哩哔哩、Twitter、Instagram、HostLoc）
+* 修改步数
+* 图床（图片取直链）（qq、teambition、dCloud）
 * 群管功能
 * 一些小工具
 
 ## 教程文章
 
-**Docker**版（将在提交代码后自动更新）：[https://www.kuku.me/archives/8/](https://www.kuku.me/archives/8/)
+安装教程、注意事项：[https://www.kuku.me/archives/6/](https://www.kuku.me/archives/6/)
 
-mirai-console版：[https://www.kuku.me/archives/7/](https://www.kuku.me/archives/7/)
+## Docker
 
-安装教程：[https://w.url.cn/s/AD764XH](https://w.url.cn/s/AD764XH)
-
-## 说明
-* 数据库使用h2，目录`db`下
-* 发送的图片保存在`tmp`目录下
-* 超级萌宠已删除，建议使用XP插件`XAutoDaily`
+```shell
+# 拉取镜像
+docker pull kukume/kukubot
+# 创建文件夹
+mkdir -p kukubot/conf
+# 把device.json放到kukubot目录下
+# 把配置文件YuQ.properties（https://file.kuku.me/kuku-bot/YuQ.properties）设置好账号和密码等信息放到conf目录下
+# 运行容器
+docker run -it --name kukubot -d  \
+-p 8081:8081 \
+-v $(pwd)/kukubot/conf:/kukubot/conf \
+-v $(pwd)/kukubot/db:/kukubot/db \
+kukume/kukubot
+```
 
 ## 鸣谢
 
 > [IntelliJ IDEA](https://zh.wikipedia.org/zh-hans/IntelliJ_IDEA) 是一个在各个方面都最大程度地提高开发人员的生产力的 IDE，适用于 JVM 平台语言。
 
 特别感谢 [JetBrains](https://www.jetbrains.com/?from=kuku-bot) 为开源项目提供免费的 [IntelliJ IDEA](https://www.jetbrains.com/idea/?from=kuku-bot) 等 IDE 的授权  
-[<img src="https://u.iheit.com/images/jetbrains-variant-3.png" width="200"/>](https://www.jetbrains.com/?from=kuku-bot)
+[<img src="https://img.kuku.me/images/2021/01/31/4I4aI.png" width="200"/>](https://www.jetbrains.com/?from=kuku-bot)
 
 ## 协议
 **一切开发旨在学习，请勿用于非法用途**

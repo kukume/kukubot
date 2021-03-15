@@ -15,7 +15,7 @@ import com.icecreamqaq.yuq.controller.QQController;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.entity.QQEntity;
-import me.kuku.yuq.logic.impl.MyApiLogic;
+import me.kuku.yuq.logic.MyApiLogic;
 import me.kuku.yuq.pojo.InstagramPojo;
 import me.kuku.yuq.pojo.TwitterPojo;
 import me.kuku.yuq.service.GroupService;
@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.List;
 
 @GroupController
+@SuppressWarnings("unused")
 public class MyQQController extends QQController {
 
     @Inject
@@ -44,17 +45,24 @@ public class MyQQController extends QQController {
             if (groupEntity == null) groupEntity = new GroupEntity(group);
             qqEntity = new QQEntity(qq, groupEntity);
         }
-        actionContext.set("qqEntity", qqEntity );
+        actionContext.set("qqEntity", qqEntity);
     }
 
     @Action("查询违规")
     @QMsg(at = true)
-    public String queryVio(long qq, long group){
-        QQEntity qqEntity = qqService.findByQQAndGroup(qq, group);
-        int num;
-        if (qqEntity == null || qqEntity.getViolationCount() == null) num = 0;
-        else num = qqEntity.getViolationCount();
+    public String queryVio(QQEntity qqEntity){
+        Integer num = qqEntity.getViolationCount();
+        if (num == null) num = 0;
         return "您在本群违规次数为" + num + "次";
+    }
+
+    @Action("loc推送 {status}")
+    @QMsg(at = true)
+    public String locPush(QQEntity qqEntity, boolean status){
+        qqEntity.setHostLocPush(status);
+        qqService.save(qqEntity);
+        if (status) return "hostLoc私聊推送已开启！！";
+        else return "hostLoc私聊推送已关闭！！";
     }
 
     @Action("加推特监控 {content}")

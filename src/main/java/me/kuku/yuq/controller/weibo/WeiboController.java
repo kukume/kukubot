@@ -2,16 +2,17 @@ package me.kuku.yuq.controller.weibo;
 
 import com.IceCreamQAQ.Yu.annotation.Action;
 import com.IceCreamQAQ.Yu.annotation.Before;
+import com.IceCreamQAQ.Yu.annotation.Synonym;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.annotation.GroupController;
+import com.icecreamqaq.yuq.annotation.PathVar;
 import com.icecreamqaq.yuq.annotation.QMsg;
 import com.icecreamqaq.yuq.controller.ContextSession;
-import com.icecreamqaq.yuq.controller.QQController;
+import com.icecreamqaq.yuq.entity.Group;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.WeiboEntity;
-import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.logic.WeiboLogic;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.pojo.WeiboPojo;
@@ -23,13 +24,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @GroupController
-public class WeiboController extends QQController {
+@SuppressWarnings("unused")
+public class WeiboController {
     @Inject
     private WeiboLogic weiboLogic;
     @Inject
     private WeiboService weiboService;
-    @Inject
-    private ToolLogic toolLogic;
 
     @Before
     public WeiboEntity before(long qq){
@@ -47,9 +47,12 @@ public class WeiboController extends QQController {
         else return "我的关注微博监控关闭成功！！";
     }
 
-    @Action("微博/add/{type}/{username}")
+//    @Action("微博/add/{type}/{username}")
+    @Action("加微博赞 {username}")
+    @Synonym({"加微博评论 {username}", "加微博转发 {username}"})
     @QMsg(at = true)
-    public String weiboAdd(WeiboEntity weiboEntity, String type, String username, ContextSession session, long qq) throws IOException {
+    public String weiboAdd(WeiboEntity weiboEntity, @PathVar(0) String type, String username, ContextSession session, long qq, Group group) throws IOException {
+        type = type.substring(3);
         Result<List<WeiboPojo>> result = weiboLogic.getIdByName(username);
         List<WeiboPojo> list = result.getData();
         if (list == null) return result.getMessage();
@@ -65,13 +68,13 @@ public class WeiboController extends QQController {
                 weiboEntity.setLikeJsonArray(weiboEntity.getLikeJsonArray().fluentAdd(jsonObject));
                 break;
             case "评论":
-                reply(FunKt.getMif().at(qq).plus("请输入需要评论的内容！！"));
+                group.sendMessage(FunKt.getMif().at(qq).plus("请输入需要评论的内容！！"));
                 String commentContent = messageCompanion.firstString(session.waitNextMessage());
                 jsonObject.put("content", commentContent);
                 weiboEntity.setCommentJsonArray(weiboEntity.getCommentJsonArray().fluentAdd(jsonObject));
                 break;
             case "转发":
-                reply(FunKt.getMif().at(qq).plus("请输入需要转发的内容！！"));
+                group.sendMessage(FunKt.getMif().at(qq).plus("请输入需要转发的内容！！"));
                 String forwardContent = messageCompanion.firstString(session.waitNextMessage());
                 jsonObject.put("content", forwardContent);
                 weiboEntity.setForwardJsonArray(weiboEntity.getForwardJsonArray().fluentAdd(jsonObject));
@@ -91,9 +94,12 @@ public class WeiboController extends QQController {
         return list;
     }
 
-    @Action("微博/del/{type}/{username}")
+//    @Action("微博/del/{type}/{username}")
+    @Action("删微博赞 {username}")
+    @Synonym({"删微博评论 {username}", "删微博转发 {username}"})
     @QMsg(at = true)
-    public String weiboDel(WeiboEntity weiboEntity, String type, String username){
+    public String weiboDel(WeiboEntity weiboEntity, @PathVar(0) String type, String username){
+        type = type.substring(3);
         switch (type){
             case "赞":
                 JSONArray likeJsonArray = weiboEntity.getLikeJsonArray();
@@ -113,9 +119,12 @@ public class WeiboController extends QQController {
         return "删除成功！！";
     }
 
-    @Action("微博/list/{type}")
+//    @Action("微博/list/{type}")
+    @Action("查微博赞}")
+    @Synonym({"查微博评论", "查微博转发"})
     @QMsg(at = true, atNewLine = true)
-    public String weiboList(WeiboEntity weiboEntity, String type){
+    public String weiboList(WeiboEntity weiboEntity, @PathVar(0) String type){
+        type = type.substring(3);
         StringBuilder sb = new StringBuilder();
         JSONArray jsonArray;
         switch (type){

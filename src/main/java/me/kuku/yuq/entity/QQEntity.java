@@ -28,12 +28,15 @@ public class QQEntity {
     @Lob
     @Column(columnDefinition="text")
     private String instagramList;
+    private boolean hostLocPush;
 
     public QQEntity(long qq, GroupEntity groupEntity){
         this.qq = qq;
         this.groupEntity = groupEntity;
         this.violationCount = 0;
+        this.hostLocPush = false;
     }
+
     public JSONArray getTwitterJsonArray(){
         if (twitterList == null) return new JSONArray();
         else return JSON.parseArray(twitterList);

@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import me.kuku.yuq.logic.XiaomiMotionLogic;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.utils.BotUtils;
+import me.kuku.yuq.utils.DateTimeFormatterUtils;
 import me.kuku.yuq.utils.OkHttpUtils;
 import okhttp3.Response;
 
@@ -14,6 +15,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+@SuppressWarnings("unused")
 public class XiaomiMotionLogicImpl implements XiaomiMotionLogic {
 
     private final String ua = "Dalvik/2.1.0 (Linux; U; Android 10; V1914A Build/QP1A.190711.020)";
@@ -70,10 +72,8 @@ public class XiaomiMotionLogicImpl implements XiaomiMotionLogic {
         Result<Map<String, String>> infoResult = getInfo(token);
         Map<String, String> map = infoResult.getData();
         if (map == null) return "步数修改失败，登录已失效！！";
-        Date date = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.CHINA);
-        String dateStr = sdf.format(date);
-        String tenDateStr = String.valueOf(date.getTime()).substring(0, 10);
+        String dateStr = DateTimeFormatterUtils.formatNow("yyyy-MM-dd");
+        String tenDateStr = String.valueOf(System.currentTimeMillis()).substring(0, 10);
         Map<String, String> paramsMap = new HashMap<>();
         paramsMap.put("userid", map.get("userId"));
         paramsMap.put("last_sync_data_time", tenDateStr);
@@ -83,7 +83,7 @@ public class XiaomiMotionLogicImpl implements XiaomiMotionLogic {
         Map<String, String> headersMap = new HashMap<>();
         headersMap.put("apptoken", map.get("appToken"));
         headersMap.put("user-agent", ua);
-        JSONObject jsonObject = OkHttpUtils.postJson("https://api-mifit-cn2.huami.com/v1/data/band_data.json?&t=" + date.getTime(),
+        JSONObject jsonObject = OkHttpUtils.postJson("https://api-mifit-cn2.huami.com/v1/data/band_data.json?&t=" + System.currentTimeMillis(),
                 paramsMap, OkHttpUtils.addHeaders(headersMap));
         switch (jsonObject.getInteger("code")){
             case 1: return "步数修改成功！！";

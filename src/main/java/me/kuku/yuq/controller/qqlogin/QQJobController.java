@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @GroupController
+@SuppressWarnings("unused")
 public class QQJobController {
     @Inject
     private QQJobService qqJobService;

@@ -22,7 +22,7 @@ public class TenCentCaptchaUtils {
 
     private static String getCaptchaPictureUrl(String appId, String qq, String imageId, String sig, String sess, String sid, int index){
         return String.format("https://t.captcha.qq.com/hycdn?index=%s&image=%s?aid=%s&captype=&curenv=inner&protocol=https&clientype=1&disturblevel=&apptype=2&noheader=0&color=&showtype=&fb=1&theme=&lang=2052&ua=%s&enableDarkMode=0&grayscale=1&subsid=3&sess=%s&fwidth=0&sid=%s&forcestyle=undefined&wxLang=&tcScale=1&uid=%s&cap_cd=%s&rnd=%s&TCapIframeLoadTime=60&prehandleLoadTime=135&createIframeStart=%s487&rand=%s&websig=&vsig=&img_index=%s",
-                index, imageId, appId, ua, sess, sid, qq, sig,  BotUtils.randomNum(6), new Date().getTime(), BotUtils.randomNum(6), index);
+                index, imageId, appId, ua, sess, sid, qq, sig,  BotUtils.randomNum(6), System.currentTimeMillis(), BotUtils.randomNum(6), index);
     }
 
     private static Map<String, String> getCollect(int width, String sid) throws IOException {
@@ -42,7 +42,7 @@ public class TenCentCaptchaUtils {
             res.append("[").append(x).append(",").append(y).append(",").append(time).append("],");
         }
         res.append("[0,0,").append(BotUtils.randomInt(10, 25)).append("]");
-        String js = OkHttpUtils.getStr("https://t.captcha.qq.com/tdc.js?app_data=" + sid + "&t=" + new Date().getTime());
+        String js = OkHttpUtils.getStr("https://t.captcha.qq.com/tdc.js?app_data=" + sid + "&t=" + System.currentTimeMillis());
         String base64Str = Base64.getEncoder().encodeToString(js.getBytes());
         Map<String, String> map = new HashMap<>();
         map.put("script", base64Str);
@@ -94,7 +94,7 @@ public class TenCentCaptchaUtils {
                 appId, ua, sig, qq));
         JSONObject jsonObject = JSON.parseObject(BotUtils.regex("\\{.*\\}", OkHttpUtils.getStr(response)));
         String url = String.format("https://t.captcha.qq.com/cap_union_new_show?aid=%s&captype=&curenv=inner&protocol=https&clientype=2&disturblevel=&apptype=2&noheader=&color=&showtype=embed&fb=1&theme=&lang=2052&ua=%s&enableDarkMode=0&grayscale=1&subsid=2&sess=%s&fwidth=0&sid=%s&forcestyle=undefined&wxLang=&tcScale=1&noBorder=noborder&uid=%s&cap_cd=%s&rnd=%s&TCapIframeLoadTime=14&prehandleLoadTime=74&createIframeStart=%s",
-                appId, ua, jsonObject.getString("sess"), jsonObject.getString("sid"), qq, sig, BotUtils.randomNum(6), new Date().getTime());
+                appId, ua, jsonObject.getString("sess"), jsonObject.getString("sid"), qq, sig, BotUtils.randomNum(6), System.currentTimeMillis());
         String html = OkHttpUtils.getStr(url);
         String height = BotUtils.regex("(?<=spt:\\\")(\\d+)(?=\\\")", html);
         String collectName = BotUtils.regex("(?<=collectdata:\\\")([0-9a-zA-Z]+)(?=\\\")", html);
@@ -154,7 +154,7 @@ public class TenCentCaptchaUtils {
         paramsMap.put("rnd", String.valueOf(BotUtils.randomInt(100000, 999999)));
         paramsMap.put("TCapIframeLoadTime", "426");
         paramsMap.put("prehandleLoadTime", "293");
-        paramsMap.put("createIframeStart", String.valueOf(new Date().getTime()));
+        paramsMap.put("createIframeStart", String.valueOf(System.currentTimeMillis()));
         paramsMap.put("cdata", "0");
         paramsMap.put("ans", map.get("ans"));
         paramsMap.put("vsig", "");

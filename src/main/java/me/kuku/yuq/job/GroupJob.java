@@ -5,63 +5,38 @@ import com.IceCreamQAQ.Yu.annotation.JobCenter;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.GroupEntity;
-import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.service.GroupService;
+import me.kuku.yuq.utils.DateTimeFormatterUtils;
 
 import javax.inject.Inject;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
+import java.io.File;
 import java.util.List;
-import java.util.Map;
 
 @JobCenter
+@SuppressWarnings("unused")
 public class GroupJob {
     @Inject
     private GroupService groupService;
-    @Inject
-    private ToolLogic toolLogic;
-
-    private int locId = 0;
 
     @Cron("At::h::00")
     public void onTimeAlarm(){
         List<GroupEntity> list = groupService.findByOnTimeAlarm(true);
-        SimpleDateFormat sdf = new SimpleDateFormat("HH");
-        int hour = Integer.parseInt(sdf.format(new Date()));
+        String hourStr = DateTimeFormatterUtils.formatNow("HH");
+        int hour = Integer.parseInt(hourStr);
         if (hour == 0) hour = 12;
-        if (hour < 12) hour -= 12;
-        String url = "https://ty.kuku.me/images/time/" + hour + ".jpg";
+        if (hour > 12) hour -= 12;
+        String name = hour + ".jpg";
+        File file = new File("hour" + File.separator + name);
+        Message message;
+        if (file.exists()){
+            message = FunKt.getMif().imageByFile(file).toMessage();
+        }else {
+            String url = "https://file.kuku.me/time/hour/" + name;
+            message = FunKt.getMif().imageByUrl(url).toMessage();
+        }
         list.forEach(groupEntity ->
                 FunKt.getYuq().getGroups().get(groupEntity.getGroup())
-                .sendMessage(FunKt.getMif().imageByUrl(url).toMessage())
+                .sendMessage(message)
         );
-    }
-
-    @Cron("1m")
-    public void locMonitor() throws IOException {
-        List<Map<String, String>> list = toolLogic.hostLocPost();
-        if (list.size() == 0) return;
-        List<Map<String, String>> newList = new ArrayList<>();
-        if (locId != 0){
-            for (Map<String, String> map: list){
-                if (Integer.parseInt(map.get("id")) <= locId) break;
-                newList.add(map);
-            }
-        }
-        locId = Integer.parseInt(list.get(0).get("id"));
-        List<GroupEntity> groupList = groupService.findByLocMonitor(true);
-        for (GroupEntity groupEntity: groupList){
-            newList.forEach( locMap -> {
-                String str = "Loc有新帖了！！" + "\n" +
-                        "标题：" + locMap.get("title") + "\n" +
-                        "昵称：" + locMap.get("name") + "\n" +
-                        "链接：" + locMap.get("url");
-                FunKt.getYuq().getGroups().get(groupEntity.getGroup()).sendMessage(
-                        Message.Companion.toMessage(str)
-                );
-            });
-        }
     }
 }

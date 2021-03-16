@@ -9,10 +9,7 @@ import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.pojo.CodeType;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.pojo.UA;
-import me.kuku.yuq.utils.BotUtils;
-import me.kuku.yuq.utils.DateTimeFormatterUtils;
-import me.kuku.yuq.utils.MD5Utils;
-import me.kuku.yuq.utils.OkHttpUtils;
+import me.kuku.yuq.utils.*;
 import okhttp3.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -352,39 +349,54 @@ public class ToolLogicImpl implements ToolLogic {
     }
 
     @Override
-    public Result<Map<String, String>> colorPicByLoLiCon(String apiKey, boolean isR18, boolean isProxy) throws IOException {
+    public Result<List<Map<String, String>>> colorPicByLoLiCon(String apiKey, boolean isR18, boolean isProxy) throws IOException {
         int r18 = 0;
         if (isR18) r18 = 1;
         JSONObject jsonObject;
         if (isProxy) jsonObject = OkHttpUtils.getJson("https://api.kuku.me/lolicon/?apikey=" + apiKey + "&r18=" + r18);
-        else jsonObject = OkHttpUtils.getJson("https://api.lolicon.app/setu/?apikey=" + apiKey + "&r18=" + r18);
-        JSONObject dataJsonObject = jsonObject.getJSONArray("data").getJSONObject(0);
-        Map<String, String> paramMap = new HashMap<>();
-        paramMap.put("pid", dataJsonObject.getString("pid"));
-        paramMap.put("p", dataJsonObject.getString("p"));
-        paramMap.put("uid", dataJsonObject.getString("uid"));
-        paramMap.put("title", dataJsonObject.getString("title"));
-        paramMap.put("author", dataJsonObject.getString("author"));
-        paramMap.put("url", dataJsonObject.getString("url"));
-        JSONArray tagsJsonArray = dataJsonObject.getJSONArray("tags");
-        StringBuilder tags = new StringBuilder();
-        for (int i = 0; i < tagsJsonArray.size(); i++){
-            String tag = tagsJsonArray.getString(i);
-            tags.append(tag).append("|");
-        }
-        paramMap.put("tags", tags.deleteCharAt(tags.length() - 1).toString());
-        OkHttpUtils.post("https://api.kuku.me/lolicon", paramMap,
-                OkHttpUtils.addUA(UA.PC)).close();
+        else jsonObject = OkHttpUtils.getJson("https://api.lolicon.app/setu/?apikey=" + apiKey + "&r18=" + r18 + "&num=10");
+        JSONArray dataJsonArray = jsonObject.getJSONArray("data");
+        ExecutorUtils.execute(() -> {
+            for (int i = 0; i < dataJsonArray.size(); i++) {
+                JSONObject singleJsonObject = dataJsonArray.getJSONObject(0);
+                Map<String, String> paramMap = new HashMap<>();
+                paramMap.put("pid", singleJsonObject.getString("pid"));
+                paramMap.put("p", singleJsonObject.getString("p"));
+                paramMap.put("uid", singleJsonObject.getString("uid"));
+                paramMap.put("title", singleJsonObject.getString("title"));
+                paramMap.put("author", singleJsonObject.getString("author"));
+                paramMap.put("url", singleJsonObject.getString("url"));
+                JSONArray tagsJsonArray = singleJsonObject.getJSONArray("tags");
+                StringBuilder tags = new StringBuilder();
+                for (int num = 0; num < tagsJsonArray.size(); num++) {
+                    String tag = tagsJsonArray.getString(num);
+                    tags.append(tag).append("|");
+                }
+                paramMap.put("tags", tags.deleteCharAt(tags.length() - 1).toString());
+                try {
+                    OkHttpUtils.post("https://api.kuku.me/lolicon", paramMap,
+                            OkHttpUtils.addUA(UA.PC)).close();
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
+            }
+        });
+
         switch (jsonObject.getInteger("code")){
             case 0:
-                Map<String, String> map = new HashMap<>();
-                map.put("count", jsonObject.getString("quota"));
-                map.put("time", jsonObject.getString("quota_min_ttl"));
-                map.put("url", dataJsonObject.getString("url"));
-                map.put("title", dataJsonObject.getString("title"));
-                map.put("pid", dataJsonObject.getString("pid"));
-                map.put("uid", dataJsonObject.getString("uid"));
-                return Result.success(map);
+                List<Map<String, String>> list = new ArrayList<>();
+                for (int i = 0; i < dataJsonArray.size(); i++) {
+                    JSONObject singleJsonObject = dataJsonArray.getJSONObject(i);
+                    Map<String, String> map = new HashMap<>();
+                    map.put("count", jsonObject.getString("quota"));
+                    map.put("time", jsonObject.getString("quota_min_ttl"));
+                    map.put("url", singleJsonObject.getString("url"));
+                    map.put("title", singleJsonObject.getString("title"));
+                    map.put("pid", singleJsonObject.getString("pid"));
+                    map.put("uid", singleJsonObject.getString("uid"));
+                    list.add(map);
+                }
+                return Result.success(list);
             case 401: return Result.failure("APIKEY 不存在或被封禁", null);
             case 429: return Result.failure("达到调用额度限制，距离下一次恢复额度时间：" + jsonObject.getLong("quota_min_ttl") + "秒", null);
             default: return Result.failure(jsonObject.getString("msg"), null);

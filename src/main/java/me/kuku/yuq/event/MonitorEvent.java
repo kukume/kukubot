@@ -75,6 +75,15 @@ public class MonitorEvent {
     public void saveMessageMy(SendMessageEvent.Post e){
         Message message = e.getMessage();
         try {
+            if (e.getSendTo() instanceof Group) {
+                Group group = (Group) e.getSendTo();
+                ExecutorUtils.execute(() -> {
+                    ConfigEntity configEntity = configService.findByType(ConfigType.Teambition.getType());
+                    if (configEntity != null) {
+                        uploadToTeam(e.getMessage(), configEntity, group);
+                    }
+                });
+            }
             int id = e.getMessageSource().getId();
             messageService.save(
                     new MessageEntity(null, id, e.getSendTo().getId(),

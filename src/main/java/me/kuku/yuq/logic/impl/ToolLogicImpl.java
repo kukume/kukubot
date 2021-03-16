@@ -774,7 +774,7 @@ public class ToolLogicImpl implements ToolLogic {
 
     @Override
     public byte[] pa(String url) throws IOException {
-        return drawImages(url, "images/pa.png");
+        return drawImages(url, "images/pa.jpg");
     }
 
     @SuppressWarnings({"IntegerDivisionInFloatingPointContext", "ConstantConditions"})
@@ -803,7 +803,7 @@ public class ToolLogicImpl implements ToolLogic {
         graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);//抗锯齿
         if ("images/diu.png".equals(resourceUrl)) {
             graphics2D.drawImage(formatAvatarImage, 110 - hdW / 2, 275 - hdW / 2, hdW, hdW, null);//头画背景上
-        } else if ("images/pa.png".equals(resourceUrl)) {
+        } else if ("images/pa.jpg".equals(resourceUrl)) {
             graphics2D.drawImage(formatAvatarImage, 2, 240, 56, 56, null);//头画背景上
         }
         graphics2D.dispose();

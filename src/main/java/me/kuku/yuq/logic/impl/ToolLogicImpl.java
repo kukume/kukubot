@@ -353,7 +353,7 @@ public class ToolLogicImpl implements ToolLogic {
         int r18 = 0;
         if (isR18) r18 = 1;
         JSONObject jsonObject;
-        if (isProxy) jsonObject = OkHttpUtils.getJson("https://api.kuku.me/lolicon/?apikey=" + apiKey + "&r18=" + r18);
+        if (isProxy) jsonObject = OkHttpUtils.getJson(api + "/lolicon/?apikey=" + apiKey + "&r18=" + r18);
         else jsonObject = OkHttpUtils.getJson("https://api.lolicon.app/setu/?apikey=" + apiKey + "&r18=" + r18 + "&num=10");
         JSONArray dataJsonArray = jsonObject.getJSONArray("data");
         ExecutorUtils.execute(() -> {

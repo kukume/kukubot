@@ -703,7 +703,7 @@ public class ToolController {
 
     @Action("shell {command}")
     @QMsg(at = true)
-    public String shellCommand(String command, Group group, long qq){
+    public String shellCommand(String command, Group group, long qq, @PathVar(2) String ss){
         GroupEntity groupEntity = groupService.findByGroup(group.getId());
         String errorMsg = "没有找到这个命令，请重试！！";
         if (groupEntity == null) return errorMsg;
@@ -728,11 +728,13 @@ public class ToolController {
                         try {
                             String os = System.getProperty("os.name");
                             Process process = runtime.exec(shell);
-                            byte[] bytes = IO.read(process.getInputStream(), true);
-                            String result;
-                            if (os.contains("Windows")) result = new String(bytes, "gbk");
-                            else result = new String(bytes, StandardCharsets.UTF_8);
-                            group.sendMessage(FunKt.getMif().at(qq).plus("脚本执行成功，信息如下：\n").plus(result));
+                            if (ss == null) {
+                                byte[] bytes = IO.read(process.getInputStream(), true);
+                                String result;
+                                if (os.contains("Windows")) result = new String(bytes, "gbk");
+                                else result = new String(bytes, StandardCharsets.UTF_8);
+                                group.sendMessage(FunKt.getMif().at(qq).plus("脚本执行成功，信息如下：\n").plus(result));
+                            }else group.sendMessage(FunKt.getMif().at(qq).plus("脚本正在后台执行中！！"));
                         } catch (IOException e) {
                             e.printStackTrace();
                             group.sendMessage(FunKt.getMif().at(qq).plus("脚本执行失败！！"));

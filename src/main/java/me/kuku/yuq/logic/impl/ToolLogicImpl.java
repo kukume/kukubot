@@ -767,13 +767,22 @@ public class ToolLogicImpl implements ToolLogic {
         return luckJson.getJSONObject(index-1);
     }
 
-    @SuppressWarnings({"IntegerDivisionInFloatingPointContext", "ConstantConditions"})
     @Override
     public byte[] diu(String url) throws IOException {
+        return drawImages(url, "images/diu.png");
+    }
+
+    @Override
+    public byte[] pa(String url) throws IOException {
+        return drawImages(url, "images/pa.png");
+    }
+
+    @SuppressWarnings({"IntegerDivisionInFloatingPointContext", "ConstantConditions"})
+    public byte[] drawImages(String url, String resourceUrl) throws IOException {
         int hdW = 146;
 
         BufferedImage headImage = ImageIO.read(new ByteArrayInputStream(OkHttpUtils.getBytes(url)));
-        BufferedImage bgImage = ImageIO.read(getClass().getClassLoader().getResource("images/diu.png"));
+        BufferedImage bgImage = ImageIO.read(getClass().getClassLoader().getResource(resourceUrl));
 
         //处理头像
         BufferedImage formatAvatarImage = new BufferedImage(hdW, hdW, BufferedImage.TYPE_4BYTE_ABGR);
@@ -783,14 +792,20 @@ public class ToolLogicImpl implements ToolLogic {
         Ellipse2D.Double shape = new Ellipse2D.Double(0, 0, hdW, hdW);
         //需要保留的区域
         graphics.setClip(shape);
-        graphics.rotate(Math.toRadians(-50),hdW / 2,hdW / 2);
-        graphics.drawImage(headImage.getScaledInstance(hdW,hdW,Image.SCALE_SMOOTH), 0, 0, hdW, hdW, null);
+        if ("images/diu.png".equals(resourceUrl)) {
+            graphics.rotate(Math.toRadians(-50), hdW / 2, hdW / 2);
+        }
+        graphics.drawImage(headImage.getScaledInstance(hdW, hdW, Image.SCALE_SMOOTH), 0, 0, hdW, hdW, null);
         graphics.dispose();
 
         //重合图片
         Graphics2D graphics2D = bgImage.createGraphics();
         graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);//抗锯齿
-        graphics2D.drawImage(formatAvatarImage,110 - hdW / 2,275 - hdW / 2,hdW,hdW,null);//头画背景上
+        if ("images/diu.png".equals(resourceUrl)) {
+            graphics2D.drawImage(formatAvatarImage, 110 - hdW / 2, 275 - hdW / 2, hdW, hdW, null);//头画背景上
+        } else if ("images/pa.png".equals(resourceUrl)) {
+            graphics2D.drawImage(formatAvatarImage, 2, 240, 56, 56, null);//头画背景上
+        }
         graphics2D.dispose();
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();

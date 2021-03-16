@@ -62,4 +62,5 @@ public interface ToolLogic {
     byte[] girlImageGaNk();
     JSONObject luckJson(int index) throws IOException;
     byte[] diu(String url) throws IOException;
+    byte[] pa(String url) throws IOException;
 }

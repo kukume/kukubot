@@ -4,6 +4,7 @@ import com.icecreamqaq.yudb.jpa.annotation.Transactional;
 import me.kuku.yuq.dao.MessageDao;
 import me.kuku.yuq.entity.MessageEntity;
 import me.kuku.yuq.service.MessageService;
+import me.kuku.yuq.utils.DateTimeFormatterUtils;
 import org.hibernate.Query;
 
 import javax.inject.Inject;
@@ -29,8 +30,7 @@ public class MessageServiceImpl implements MessageService {
     @Override
     @Transactional
     public Map<Long, Long> findCountQQByGroupAndToday(Long group) {
-        Date date = new Date();
-        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.CHINA).format(date);
+        String today = DateTimeFormatterUtils.format(System.currentTimeMillis(), "yyyy-MM-dd");
         Query<?> query = messageDao.query(
                 "select count(qq),qq from MessageEntity where group_ = ?0 and date > parsedatetime('" + today + "', 'yyyy-MM-dd') group by qq order by count(qq) desc",
                 group
@@ -53,5 +53,21 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public List<MessageEntity> findByGroupExcludeQQ(Long group, Long qq) {
         return messageDao.findByGroupExcludeQQ(group, qq);
+    }
+
+    @Override
+    public List<MessageEntity> findByQQAndGroup(Long qq, Long group) {
+        return messageDao.findByQQAndGroup(qq, group);
+    }
+
+    @Override
+    public int findCountByQQAndGroupAndToday(long qq, long group) {
+        String today = DateTimeFormatterUtils.format(System.currentTimeMillis(), "yyyy-MM-dd");
+        Query<?> query = messageDao.query(
+                "select count(*) from MessageEntity where qq = ?0 and group_ = ?1 and date > parsedatetime('" + today + "', 'yyyy-MM-dd')",
+                qq, group
+        );
+        Object o = query.getSingleResult();
+        return Integer.parseInt(o.toString());
     }
 }

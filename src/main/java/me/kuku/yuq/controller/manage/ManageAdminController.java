@@ -63,7 +63,7 @@ public class ManageAdminController {
     @Synonym({"loc监控 {status}", "整点报时 {status}", "自动审核 {status}",
             "欢迎语 {status}", "退群拉黑 {status}", "鉴黄 {status}", "色图 {status}",
             "撤回通知 {status}", "闪照通知 {status}", "复读 {status}", "语音识别 {status}",
-            "上传通知 {status}"})
+            "上传通知 {status}", "进群未发言踢出 {status}"})
     @QMsg(at = true)
     public String onOrOff(GroupEntity groupEntity, boolean status, @PathVar(0) String op){
         switch (op){
@@ -80,6 +80,7 @@ public class ManageAdminController {
             case "复读": groupEntity.setRepeat(status); break;
             case "语音识别": groupEntity.setVoiceIdentify(status); break;
             case "上传通知": groupEntity.setUploadPicNotice(status); break;
+            case "进群未发言踢出": groupEntity.setKickWithoutSpeaking(status); break;
             default: return null;
         }
         groupService.save(groupEntity);

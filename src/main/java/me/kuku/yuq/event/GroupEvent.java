@@ -16,12 +16,14 @@ import me.kuku.yuq.service.GroupService;
 import me.kuku.yuq.service.MessageService;
 import me.kuku.yuq.service.QQService;
 import me.kuku.yuq.utils.BotUtils;
+import me.kuku.yuq.utils.ExecutorUtils;
 
 import javax.inject.Inject;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 @EventListener
 @SuppressWarnings("unused")
@@ -117,6 +119,16 @@ public class GroupEvent {
                     ).plus(FunKt.getMif().imageByUrl(e.getMember().getAvatar()))
                     .plus("一言：" + toolLogic.hiToKoTo().get("text"))
             );
+        }
+        if (Boolean.valueOf(true).equals(groupEntity.getKickWithoutSpeaking())){
+            e.getGroup().sendMessage(FunKt.getMif().at(qq).plus("请尽快发言哦，进群5分钟未发言将会被移出本群。"));
+            ExecutorUtils.schedule(() -> {
+                int size = messageService.findCountByQQAndGroupAndToday(qq, group);
+                if (size == 0){
+                    e.getMember().kick("进群未发言踢出");
+                    e.getGroup().sendMessage(BotUtils.toMessage(qq + "未发送消息，已移出本群"));
+                }
+            }, 5, TimeUnit.MINUTES);
         }
     }
 }

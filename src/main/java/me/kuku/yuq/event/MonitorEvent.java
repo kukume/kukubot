@@ -105,6 +105,7 @@ public class MonitorEvent {
         Message message = e.getMessage();
         MessageSource reply = message.getReply();
         List<String> list = message.toPath();
+        if (list.size() == 0) return;
         String lastPath = list.get(list.size() - 1);
         if (reply != null && lastPath.endsWith("读消息")){
             MessageEntity messageEntity = messageService.findByMessageId(reply.getId());

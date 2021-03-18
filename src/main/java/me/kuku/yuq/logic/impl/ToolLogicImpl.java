@@ -824,4 +824,10 @@ public class ToolLogicImpl implements ToolLogic {
         ImageIO.write(bgImage, "PNG", bos);
         return bos.toByteArray();
     }
+
+    @Override
+    public String loLiConQuickly() throws IOException {
+        JSONObject jsonObject = OkHttpUtils.getJson("https://api.kuku.me/lolicon/random/quickUrl");
+        return jsonObject.getJSONObject("data").getString("quickUrl");
+    }
 }

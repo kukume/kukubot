@@ -273,7 +273,15 @@ public class ToolController {
                         }
                         if (!"色图十连".equals(command)) break;
                     }
-                } else group.sendMessage(Message.Companion.toMessage("色图类型不匹配！！"));
+                } else if ("quickly".equals(type)){
+                    for (int i = 0; i < 10; i++){
+                        String url = toolLogic.loLiConQuickly();
+                        byte[] bytes = OkHttpUtils.getBytes(url);
+                        group.sendMessage(FunKt.getMif().imageByByteArray(bytes).toMessage());
+                        if (!"色图十连".equals(command)) break;
+                    }
+                }
+                else group.sendMessage(Message.Companion.toMessage("色图类型不匹配！！"));
             } catch (Exception e) {
                 group.sendMessage(FunKt.getMif().at(qq).plus("色图获取失败，请重试！异常信息为：" + e.getMessage()));
             }

@@ -2,7 +2,6 @@ package me.kuku.yuq.logic.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import me.kuku.yuq.logic.MyApiLogic;
-import me.kuku.yuq.pojo.InstagramPojo;
 import me.kuku.yuq.pojo.TwitterPojo;
 import me.kuku.yuq.utils.OkHttpUtils;
 
@@ -28,23 +27,6 @@ public class MyApiLogicImpl implements MyApiLogic {
         JSONObject jsonObject = OkHttpUtils.getJson(api + "/twitter/tweets?id=" + id);
         if (jsonObject.getInteger("code") == 200){
             return jsonObject.getJSONArray("data").toJavaList(TwitterPojo.class);
-        }else return null;
-    }
-
-    @Override
-    public List<InstagramPojo> findInsIdByName(String name) throws IOException {
-        JSONObject jsonObject = OkHttpUtils.getJson(api + "/instagram/id?name=" + URLEncoder.encode(name, "utf-8"));
-        if (jsonObject.getInteger("code") == 200){
-            return jsonObject.getJSONArray("data").toJavaList(InstagramPojo.class);
-        }else return null;
-    }
-
-    @Override
-    public List<InstagramPojo> findInsPicById(String name, Long id, Integer page) throws IOException {
-        if (page == null) page = 1;
-        JSONObject jsonObject = OkHttpUtils.getJson(api + "/instagram/pic?id=" + id + "&name=" + name + "&page=" + page);
-        if (jsonObject.getInteger("code") == 200){
-            return jsonObject.getJSONArray("data").toJavaList(InstagramPojo.class);
         }else return null;
     }
 }

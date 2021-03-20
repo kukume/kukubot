@@ -25,9 +25,6 @@ public class QQEntity {
     @Lob
     @Column(columnDefinition="text")
     private String twitterList;
-    @Lob
-    @Column(columnDefinition="text")
-    private String instagramList;
     private boolean hostLocPush;
 
     public QQEntity(long qq, GroupEntity groupEntity){
@@ -44,14 +41,5 @@ public class QQEntity {
 
     public void setTwitterJsonArray(JSONArray jsonArray){
         this.twitterList = jsonArray.toString();
-    }
-
-    public JSONArray getInstagramJsonArray(){
-        if (instagramList == null) return new JSONArray();
-        else return JSON.parseArray(instagramList);
-    }
-
-    public void setInstagramJsonArray(JSONArray jsonArray){
-        this.instagramList = jsonArray.toString();
     }
 }

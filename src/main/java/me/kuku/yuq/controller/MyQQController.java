@@ -16,7 +16,6 @@ import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.entity.QQEntity;
 import me.kuku.yuq.logic.MyApiLogic;
-import me.kuku.yuq.pojo.InstagramPojo;
 import me.kuku.yuq.pojo.TwitterPojo;
 import me.kuku.yuq.service.GroupService;
 import me.kuku.yuq.service.QQService;
@@ -66,7 +65,6 @@ public class MyQQController extends QQController {
     }
 
     @Action("加推特监控 {content}")
-    @Synonym({"加ins监控 {content}"})
     @QMsg(at = true)
     public String add(QQEntity qqEntity, @PathVar(0) String type, String content, ContextSession session, long qq) throws IOException {
         switch (type){
@@ -92,16 +90,6 @@ public class MyQQController extends QQController {
                 twJsonObject.put("screenName", twitterPojo.getScreenName());
                 qqEntity.setTwitterJsonArray(qqEntity.getTwitterJsonArray().fluentAdd(twJsonObject));
                 break;
-            case "加ins监控":
-                List<InstagramPojo> list = myApiLogic.findInsIdByName(content);
-                if (list == null) return "没有找到该用户，请重试！！";
-                JSONObject insJsonObject = new JSONObject();
-                InstagramPojo instagramPojo = list.get(0);
-                insJsonObject.put("id", instagramPojo.getUserId());
-                insJsonObject.put("name", instagramPojo.getName());
-                insJsonObject.put("fullName", instagramPojo.getFullName());
-                qqEntity.setInstagramJsonArray(qqEntity.getInstagramJsonArray().fluentAdd(insJsonObject));
-                break;
             default: return null;
         }
         qqService.save(qqEntity);
@@ -117,11 +105,6 @@ public class MyQQController extends QQController {
                 BotUtils.delMonitorList(twitterJsonArray, content);
                 qqEntity.setTwitterJsonArray(twitterJsonArray);
                 break;
-            case "删ins监控":
-                JSONArray instagramJsonArray = qqEntity.getInstagramJsonArray();
-                BotUtils.delMonitorList(instagramJsonArray, content);
-                qqEntity.setInstagramJsonArray(instagramJsonArray);
-                break;
             default: return null;
         }
         qqService.save(qqEntity);
@@ -129,7 +112,6 @@ public class MyQQController extends QQController {
     }
 
     @Action("查推特监控")
-    @Synonym({"查ins监控"})
     @QMsg(at = true)
     public String query(QQEntity qqEntity, @PathVar(0) String type){
         StringBuilder sb = new StringBuilder();
@@ -141,15 +123,6 @@ public class MyQQController extends QQController {
                     sb.append(jsonObject.getString("id")).append("-")
                             .append(jsonObject.getString("name")).append("-")
                             .append(jsonObject.getString("screenName")).append("\n");
-                });
-                break;
-            case "查ins监控":
-                sb.append("您的ins监控列表如下：").append("\n");
-                qqEntity.getInstagramJsonArray().forEach(obj -> {
-                    JSONObject jsonObject = (JSONObject) obj;
-                    sb.append(jsonObject.getString("id")).append("-")
-                            .append(jsonObject.getString("name")).append("-")
-                            .append(jsonObject.getString("fullName")).append("\n");
                 });
                 break;
             default: return null;

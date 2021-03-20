@@ -1,21 +1,15 @@
 package me.kuku.yuq.controller.weibo;
 
 import com.IceCreamQAQ.Yu.annotation.Action;
-import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.annotation.GroupController;
 import com.icecreamqaq.yuq.annotation.QMsg;
-import com.icecreamqaq.yuq.entity.Group;
-import me.kuku.yuq.entity.WeiboEntity;
 import me.kuku.yuq.logic.WeiboLogic;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.pojo.WeiboPojo;
-import me.kuku.yuq.service.WeiboService;
 
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 @GroupController
 @SuppressWarnings("unused")

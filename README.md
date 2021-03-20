@@ -9,7 +9,7 @@
 
 ## 功能
 * 自动签到（QQ、哔哩哔哩、原神、HostLoc、网易云）
-* 新帖推送（微博、哔哩哔哩、Twitter、Instagram、HostLoc）
+* 新帖推送（微博、哔哩哔哩、Twitter、HostLoc）
 * 修改步数
 * 图床（图片取直链）（qq、teambition、dCloud）
 * 群管功能

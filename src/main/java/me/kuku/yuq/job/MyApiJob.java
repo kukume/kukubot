@@ -5,16 +5,13 @@ import com.IceCreamQAQ.Yu.annotation.JobCenter;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
-import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.QQEntity;
 import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.logic.MyApiLogic;
-import me.kuku.yuq.pojo.InstagramPojo;
 import me.kuku.yuq.pojo.TwitterPojo;
 import me.kuku.yuq.service.QQService;
 
 import javax.inject.Inject;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,7 +30,6 @@ public class MyApiJob {
     private ToolLogic toolLogic;
 
     private final Map<Long, Map<Long, Long>> twitterMap = new HashMap<>();
-    private final Map<Long, Map<Long, Long>> insMap = new HashMap<>();
 
     @Cron("2m")
     public void twitterJob(){
@@ -77,51 +73,4 @@ public class MyApiJob {
         }
     }
 
-    @Cron("2m")
-    public void insJob(){
-        List<QQEntity> qqList = qqService.findAll();
-        for (QQEntity qqEntity: qqList){
-            Long qq = qqEntity.getQq();
-            JSONArray instagramJsonArray = qqEntity.getInstagramJsonArray();
-            if (instagramJsonArray.size() == 0) continue;
-            if (!insMap.containsKey(qq)){
-                insMap.put(qq, new HashMap<>());
-            }
-            Map<Long, Long> map = insMap.get(qq);
-            for (Object obj: instagramJsonArray){
-                JSONObject jsonObject = (JSONObject) obj;
-                Long userId = jsonObject.getLong("id");
-                List<InstagramPojo> list;
-                try {
-                    list = myApiLogic.findInsPicById(jsonObject.getString("name"), userId, null);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    continue;
-                }
-                if (list == null) continue;
-                if (map.containsKey(userId)){
-                    List<InstagramPojo> newList = new ArrayList<>();
-                    for (InstagramPojo instagramPojo: list){
-                        if (instagramPojo.getId() <= map.get(userId)) break;
-                        newList.add(instagramPojo);
-                    }
-                    for (InstagramPojo instagramPojo : newList) {
-                        Message message = FunKt.getMif().text("ins有新图片了").toMessage();
-                        List<String> picList = instagramPojo.getPicList();
-                        picList.forEach(str -> {
-                            try {
-                                byte[] bytes = toolLogic.piXivPicProxy(str);
-                                message.plus(FunKt.getMif().imageByInputStream(new ByteArrayInputStream(bytes)));
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        });
-                        FunKt.getYuq().getGroups().get(qqEntity.getGroupEntity().getGroup()).get(qq)
-                                .sendMessage(message);
-                    }
-                }
-                map.put(userId, list.get(0).getId());
-            }
-        }
-    }
 }

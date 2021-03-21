@@ -1,6 +1,6 @@
-package me.kuku.yuq.logic.impl;
+package top.cubik65536.yuq.logic.impl;
 
-import me.kuku.yuq.logic.ChatLogic;
+import top.cubik65536.yuq.logic.ChatLogic;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

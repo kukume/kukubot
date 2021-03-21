@@ -1,4 +1,4 @@
-package me.kuku.yuq.logic;
+package top.cubik65536.yuq.logic;
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind;
 

@@ -1,4 +1,4 @@
-package me.kuku.yuq.event;
+package top.cubik65536.yuq.event;
 
 import com.IceCreamQAQ.Yu.annotation.Event;
 import com.IceCreamQAQ.Yu.annotation.EventListener;
@@ -9,7 +9,7 @@ import com.icecreamqaq.yuq.message.Message;
 import com.icecreamqaq.yuq.message.MessageItemFactory;
 import me.kuku.yuq.entity.ConfigEntity;
 import me.kuku.yuq.entity.GroupEntity;
-import me.kuku.yuq.logic.ChatLogic;
+import top.cubik65536.yuq.logic.ChatLogic;
 import me.kuku.yuq.service.ConfigService;
 import me.kuku.yuq.service.GroupService;
 

@@ -199,18 +199,6 @@ public class ManageSuperAdminController {
         return "色图切换成" + type + "成功！！";
     }
 
-    @Action("聊天AI切换 {type}")
-    @QMsg(at = true)
-    public String chatAiType(GroupEntity groupEntity, String type){
-        String chatAiType;
-        if ("QingYunKe".equals(type) || "HaiZhi".equals(type)){
-            chatAiType = type;
-        } else return "没有该类型，请重试！！";
-        groupEntity.setChatAiType(chatAiType);
-        groupService.save(groupEntity);
-        return "聊天AI切换成" + type + "成功！！";
-    }
-
     @Action("加指令限制 {command} {count}")
     @QMsg(at = true)
     public String addCommandLimit(GroupEntity groupEntity, String command, int count){

@@ -185,15 +185,6 @@ public class SettingController extends QQController {
         return "绑定loLiCon的apiKey成功！！";
     }
 
-    @Action("HaiZhiAi {apiKey}")
-    public String settingChatAi(String apiKey){
-        ConfigEntity configEntity = configService.findByType("ChatAi");
-        if (configEntity == null) configEntity = new ConfigEntity("ChatAi");
-        configEntity.setContent(apiKey);
-        configService.save(configEntity);
-        return "绑定海知智能机器人的apiKey成功！！";
-    }
-
     @Action("加超管 {groupNum} {qqNum}")
     @Synonym({"删超管 {groupNum} {qqNum}"})
     public String addSuperAdmin(long groupNum, Long qqNum, @PathVar(0) String str){

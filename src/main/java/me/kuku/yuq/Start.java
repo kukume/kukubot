@@ -88,18 +88,16 @@ class MyMethodAdapter extends MethodVisitor{
         String str = value.toString();
         if (str.startsWith("感谢您使用 YuQ 进行开发")){
             try {
-                String my = "\n" +
-                        "   ____      _     _ _      ____        _   \n" +
-                        "  / ___|   _| |__ (_) | __ | __ )  ___ | |_ \n" +
-                        " | |  | | | | '_ \\| | |/ / |  _ \\ / _ \\| __|\n" +
-                        " | |__| |_| | |_) | |   <  | |_) | (_) | |_ \n" +
-                        "  \\____\\__,_|_.__/|_|_|\\_\\ |____/ \\___/ \\__|\n" +
-                        "                           Powered by Cubik Network\n" +
-                        "                           Version: 3.0-Alpha     THIS IS AN INTERNAL TEST VERSION!\n";
+                String my =
+                        "    __         __               __          __ \n" +
+                                "   / /____  __/ /____  __      / /_  ____  / /_\n" +
+                                "  / //_/ / / / //_/ / / /_____/ __ \\/ __ \\/ __/\n" +
+                                " / ,< / /_/ / ,< / /_/ /_____/ /_/ / /_/ / /_  \n" +
+                                "/_/|_|\\__,_/_/|_|\\__,_/     /_.___/\\____/\\__/  \n";
                 String[] arr = RSAUtils.getRsaKey();
                 if (arr == null){
                     value = "感谢您使用 YuQ 进行开发，在您使用中如果遇到任何问题，可以到 Github，Gitee 提出 issue，您也可以添加 YuQ 的开发交流群（Njk2MTI5MTI4）进行交流。";
-                } else {
+                }else {
                     super.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
                     super.visitLdcInsn("如需加入YuQ开发群，请使用rsa解密群号（https://www.bejson.com/enc/rsa/），rsa秘钥如下：\n" + arr[1]);
                     super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/Object;)V", false);
@@ -109,9 +107,7 @@ class MyMethodAdapter extends MethodVisitor{
                             "（" + groupNumber + "）\n" +
                             "进行交流。\n" +
                             my + "\n" +
-                            "感谢您使用 CubikBot，在您使用中如果遇到任何问题，可以到 Github（https://github.com/Cubik-Inc/CubikBot/）提出 issue，您也可以添加 Cubik Inc. 官方群\n" +
-                            "（ 298513487 ）\n" +
-                            "进行交流。\n";
+                            "感谢您使用 kuku-bot，在您使用中如果遇到任何问题，可以到 Github（https://github.com/kukume/kuku-bot）提出 issue";
                 }
             } catch (Exception e) {
                 e.printStackTrace();

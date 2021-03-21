@@ -221,8 +221,8 @@ public class ToolController {
     }
 
     @Action("色图")
-    @Synonym({"色图十连"})
-    public void colorPic(Group group, long qq, @PathVar(0) String command) {
+    @Synonym({"色图十连", "色图{numStr}连"})
+    public void colorPic(Group group, long qq, @PathVar(0) String command, String numStr) {
         GroupEntity groupEntity = groupService.findByGroup(group.getId());
         if (groupEntity == null || groupEntity.getColorPic() == null || !groupEntity.getColorPic()) {
             group.sendMessage(FunKt.getMif().at(qq).plus("该功能已关闭！！"));
@@ -233,6 +233,15 @@ public class ToolController {
             group.sendMessage(FunKt.getMif().at(qq).plus("机器人没有配置色图类型，无法获取！！"));
             return;
         }
+        int num = 1;
+        if (numStr!= null) {
+            if (!numStr.matches("[0-9]+")) {
+                group.sendMessage(FunKt.getMif().at(qq).plus("色图数量不为数字，请重试！！"));
+            }
+            num = Integer.parseInt(numStr);
+            if (num > 20) group.sendMessage(FunKt.getMif().at(qq).plus("色图数量不能大于20，请重试！！"));
+        }else if ("色图十连".equals(command)) num = 10;
+        int finalNum = num;
         ExecutorUtils.execute(() -> {
             try {
                 if (type.contains("lolicon")) {
@@ -242,21 +251,24 @@ public class ToolController {
                         return;
                     }
                     String apiKey = configEntity.getContent();
-                    Result<List<Map<String, String>>> result = toolLogic.colorPicByLoLiCon(apiKey, type.contains("loliconR18"), type.contains("proxy"));
-                    List<Map<String, String>> list = result.getData();
-                    if (list == null) {
-                        group.sendMessage(FunKt.getMif().at(qq).plus(result.getMessage()));
-                        return;
-                    }
-                    for (Map<String, String> map : list) {
-                        byte[] by;
-                        if (type.contains("proxy")) by = toolLogic.piXivPicProxy(map.get("url"));
-                        else by = OkHttpUtils.getBytes(map.get("url"));
-                        group.sendMessage(FunKt.getMif().imageByInputStream(new ByteArrayInputStream(by)).toMessage());
-                        if (!"色图十连".equals(command)) break;
+                    int nowNum = 0;
+                    while (true) {
+                        Result<List<Map<String, String>>> result = toolLogic.colorPicByLoLiCon(apiKey, type.contains("loliconR18"), type.contains("proxy"));
+                        List<Map<String, String>> list = result.getData();
+                        if (list == null) {
+                            group.sendMessage(FunKt.getMif().at(qq).plus(result.getMessage()));
+                            return;
+                        }
+                        for (Map<String, String> map : list) {
+                            byte[] by;
+                            if (type.contains("proxy")) by = toolLogic.piXivPicProxy(map.get("url"));
+                            else by = OkHttpUtils.getBytes(map.get("url"));
+                            group.sendMessage(FunKt.getMif().imageByInputStream(new ByteArrayInputStream(by)).toMessage());
+                            if (++nowNum == finalNum) break;
+                        }
                     }
                 } else if (type.contains("danbooru")) {
-                    for (int i = 0; i < 10; i++) {
+                    for (int i = 0; i < finalNum; i++) {
                         String[] arr = type.split("-");
                         String danType = null;
                         if (arr.length > 1) danType = arr[1];
@@ -271,14 +283,19 @@ public class ToolController {
                             byte[] bytes = OkHttpUtils.getBytes(response);
                             group.sendMessage(FunKt.getMif().imageByInputStream(new ByteArrayInputStream(bytes)).toMessage());
                         }
-                        if (!"色图十连".equals(command)) break;
                     }
                 } else if ("quickly".equals(type)){
-                    for (int i = 0; i < 10; i++){
-                        String url = toolLogic.loLiConQuickly();
+                    for (int i = 0; i < finalNum; i++){
+                        JSONObject quickJsonObject = toolLogic.loLiConQuickly();
+                        String url = quickJsonObject.getString("quickUrl");
                         byte[] bytes = OkHttpUtils.getBytes(url);
-                        group.sendMessage(FunKt.getMif().imageByByteArray(bytes).toMessage());
-                        if (!"色图十连".equals(command)) break;
+                        try {
+                            group.sendMessage(FunKt.getMif().imageByByteArray(bytes).toMessage());
+                        } catch (Exception e) {
+                            Integer id = quickJsonObject.getInteger("id");
+                            group.sendMessage(FunKt.getMif().at(qq).plus("色图发送失败，id为" + id));
+                            OkHttpUtils.get("https://api.kuku.me/lolicon/reupload?id=" + id).close();
+                        }
                     }
                 }
                 else group.sendMessage(Message.Companion.toMessage("色图类型不匹配！！"));

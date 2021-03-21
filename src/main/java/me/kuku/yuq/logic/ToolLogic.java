@@ -64,5 +64,5 @@ public interface ToolLogic {
     JSONObject luckJson(int index) throws IOException;
     byte[] diu(String url) throws IOException;
     byte[] pa(String url) throws IOException;
-    String loLiConQuickly() throws IOException;
+    JSONObject loLiConQuickly() throws IOException;
 }

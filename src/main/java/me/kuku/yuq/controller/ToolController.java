@@ -237,9 +237,13 @@ public class ToolController {
         if (numStr!= null) {
             if (!numStr.matches("[0-9]+")) {
                 group.sendMessage(FunKt.getMif().at(qq).plus("色图数量不为数字，请重试！！"));
+                return;
             }
             num = Integer.parseInt(numStr);
-            if (num > 20) group.sendMessage(FunKt.getMif().at(qq).plus("色图数量不能大于20，请重试！！"));
+            if (num > 30) {
+                group.sendMessage(FunKt.getMif().at(qq).plus("色图数量不能大于20，请重试！！"));
+                return;
+            }
         }else if ("色图十连".equals(command)) num = 10;
         int finalNum = num;
         ExecutorUtils.execute(() -> {

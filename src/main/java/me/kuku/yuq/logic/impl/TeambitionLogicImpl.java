@@ -125,7 +125,7 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 		Result<String> parentIdResult = getFinallyParentId(teambitionPojo, true, path);
 		if (parentIdResult.isFailure()) return parentIdResult;
 		String parentId = parentIdResult.getData();
-		String fileType = FileUtils.getFileTypeByStream(is);
+		String fileType = FileUtils.getFileTypeByStream(is, false);
 		String fileName = path[path.length - 1];
 		if (!fileName.contains(".")) fileName += "." + fileType;
 		MultipartBody body = new MultipartBody.Builder().setType(MultipartBody.FORM)
@@ -372,7 +372,7 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 		innerJsonObject.put("chunkCount", 1);
 		innerJsonObject.put("name", path[path.length - 1]);
 		innerJsonObject.put("ccpParentId", parentId);
-		innerJsonObject.put("contentType", FileUtils.getFileTypeByStream(is));
+		innerJsonObject.put("contentType", FileUtils.getFileTypeByStream(is, false));
 		innerJsonObject.put("size", is.available());
 		innerJsonObject.put("type", "file");
 		jsonArray.add(innerJsonObject);

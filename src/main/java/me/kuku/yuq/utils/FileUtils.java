@@ -106,19 +106,23 @@ public class FileUtils {
 		return filetype;
 	}
 
-	public static String getFileTypeByStream(InputStream is){
+	public static String getFileTypeByStream(InputStream is, boolean isClose){
 		String filetype = null;
 		byte[] b = new byte[50];
 		try {
 			is.read(b);
 			filetype = getFileTypeByStream(b);
-			is.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
-			IOUtils.close(is);
+			if (isClose)
+				IOUtils.close(is);
 		}
 		return filetype;
+	}
+
+	public static String getFileTypeByStream(InputStream is){
+		return getFileTypeByStream(is, true);
 	}
 
 	/**

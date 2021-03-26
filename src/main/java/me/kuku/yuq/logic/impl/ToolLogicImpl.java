@@ -404,8 +404,8 @@ public class ToolLogicImpl implements ToolLogic {
     }
 
     @Override
-    public byte[] piXivPicProxy(String url) throws IOException {
-        return OkHttpUtils.getBytes(api + "/pixiv/picbyurl?url=" + URLEncoder.encode(url, "utf-8"));
+    public InputStream piXivPicProxy(String url) throws IOException {
+        return OkHttpUtils.getByteStream(api + "/pixiv/picbyurl?url=" + URLEncoder.encode(url, "utf-8"));
     }
 
     @Override
@@ -418,8 +418,8 @@ public class ToolLogicImpl implements ToolLogic {
     }
 
     @Override
-    public byte[] creatQr(String content) throws IOException {
-        return OkHttpUtils.getBytes("https://www.zhihu.com/qrcode?url=" + URLEncoder.encode(content, "utf-8"));
+    public InputStream creatQr(String content) throws IOException {
+        return OkHttpUtils.getByteStream("https://www.zhihu.com/qrcode?url=" + URLEncoder.encode(content, "utf-8"));
     }
 
     @Override
@@ -521,41 +521,6 @@ public class ToolLogicImpl implements ToolLogic {
     }
 
     @Override
-    public byte[] danBooRuPic(String type) throws IOException {
-        String tagHtml = OkHttpUtils.getStr("https://danbooru.donmai.us/", OkHttpUtils.addUA(UA.PC));
-        Elements elements = Jsoup.parse(tagHtml).select("#tag-box ul li");
-        List<Map<String, String>> tags = new ArrayList<>();
-        elements.forEach(element -> {
-            Map<String, String> map = new HashMap<>();
-            map.put("tag", element.attr("data-tag-name"));
-            map.put("num", element.getElementsByClass("post-count").first().attr("title"));
-            tags.add(map);
-        });
-        Map<String, String> tagMap = null;
-        if (type == null){
-            tagMap = tags.get((int) (Math.random() * tags.size()));
-        }else{
-            for (Map<String, String> map: tags){
-                if (type.equals(map.get("tag"))){
-                    tagMap = map;
-                    break;
-                }
-            }
-        }
-        if (tagMap == null) return null;
-        String tag = tagMap.get("tag");
-        int page = Integer.parseInt(tagMap.get("num")) / 20;
-        if (page > 1000) page = 1000;
-        int randomPage = (int) (Math.random() * page);
-        String picHtml = OkHttpUtils.getStr(String.format("https://danbooru.donmai.us/posts?tags=%s&page=%d", tag, randomPage), OkHttpUtils.addUA(UA.PC));
-        Elements picElements = Jsoup.parse(picHtml).select("#posts-container article");
-        List<String> urls = new ArrayList<>();
-        picElements.forEach(element -> urls.add(element.attr("data-file-url")));
-        String url = urls.get((int) (Math.random() * urls.size()));
-        return OkHttpUtils.getBytes(url);
-    }
-
-    @Override
     public String sauceNaoIdentifyPic(String apiKey, String url) throws IOException {
         JSONObject jsonObject = OkHttpUtils.getJson("https://saucenao.com/search.php?url=" + url + "&output_type=2&api_key=" + apiKey);
         JSONObject headerJsonObject = jsonObject.getJSONObject("header");
@@ -566,22 +531,6 @@ public class ToolLogicImpl implements ToolLogic {
         }catch (NullPointerException e){
             return null;
         }
-    }
-
-    @Override
-    public String traceRoute(String domain) throws IOException {
-        String osName = System.getProperty("os.name");
-        if (osName.contains("Windows")) return "不支持Windows系统！！";
-        File file = new File("besttrace");
-        Runtime runtime = Runtime.getRuntime();
-        if (!file.exists()){
-            byte[] bytes = OkHttpUtils.getBytes("https://u.iheit.com/kuku/bot/besttrace");
-            IO.writeFile(file, bytes);
-            runtime.exec("chmod +x besttrace");
-        }
-        Process process = runtime.exec("./besttrace " + domain);
-        byte[] readBytes = IO.read(process.getInputStream(), true);
-        return new String(readBytes, StandardCharsets.UTF_8);
     }
 
     @Override
@@ -622,20 +571,15 @@ public class ToolLogicImpl implements ToolLogic {
     }
 
     @Override
-    public byte[] cosplay() throws IOException {
-        return OkHttpUtils.getBytes("https://api.ixxcc.com/cosplay.php?return=img");
+    public InputStream photo() throws IOException {
+        return OkHttpUtils.getByteStream("https://api.pixivweb.com/api.php?return=img");
     }
 
     @Override
-    public byte[] photo() throws IOException {
-        return OkHttpUtils.getBytes("https://api.pixivweb.com/api.php?return=img");
-    }
-
-    @Override
-    public String uploadImage(byte[] bytes) {
+    public String uploadImage(InputStream is) {
         MultipartBody body = new MultipartBody.Builder().setType(MultipartBody.FORM)
                 .addFormDataPart("file", "kukuapi",
-                        RequestBody.create(bytes, MediaType.parse("image/*"))).build();
+                        OkHttpUtils.getStreamBody(is)).build();
         try {
             JSONObject jsonObject = OkHttpUtils.postJson(api + "/tool/upload", body);
             return jsonObject.getJSONObject("image").getString("url");
@@ -780,49 +724,57 @@ public class ToolLogicImpl implements ToolLogic {
     }
 
     @Override
-    public byte[] diu(String url) throws IOException {
+    public byte[] diu(String url){
         return drawImages(url, "images/diu.png");
     }
 
     @Override
-    public byte[] pa(String url) throws IOException {
+    public byte[] pa(String url){
         return drawImages(url, "images/pa.jpg");
     }
 
     @SuppressWarnings({"IntegerDivisionInFloatingPointContext", "ConstantConditions"})
-    public byte[] drawImages(String url, String resourceUrl) throws IOException {
+    public byte[] drawImages(String url, String resourceUrl) {
         int hdW = 146;
+        InputStream is = null;
+        try {
+            is = OkHttpUtils.getByteStream(url);
+            BufferedImage headImage = ImageIO.read(is);
+            BufferedImage bgImage = ImageIO.read(getClass().getClassLoader().getResource(resourceUrl));
 
-        BufferedImage headImage = ImageIO.read(new ByteArrayInputStream(OkHttpUtils.getBytes(url)));
-        BufferedImage bgImage = ImageIO.read(getClass().getClassLoader().getResource(resourceUrl));
+            //处理头像
+            BufferedImage formatAvatarImage = new BufferedImage(hdW, hdW, BufferedImage.TYPE_4BYTE_ABGR);
+            Graphics2D graphics = formatAvatarImage.createGraphics();
+            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);//抗锯齿
+            //图片是一个圆型
+            Ellipse2D.Double shape = new Ellipse2D.Double(0, 0, hdW, hdW);
+            //需要保留的区域
+            graphics.setClip(shape);
+            if ("images/diu.png".equals(resourceUrl)) {
+                graphics.rotate(Math.toRadians(-50), hdW / 2, hdW / 2);
+            }
+            graphics.drawImage(headImage.getScaledInstance(hdW, hdW, Image.SCALE_SMOOTH), 0, 0, hdW, hdW, null);
+            graphics.dispose();
 
-        //处理头像
-        BufferedImage formatAvatarImage = new BufferedImage(hdW, hdW, BufferedImage.TYPE_4BYTE_ABGR);
-        Graphics2D graphics = formatAvatarImage.createGraphics();
-        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);//抗锯齿
-        //图片是一个圆型
-        Ellipse2D.Double shape = new Ellipse2D.Double(0, 0, hdW, hdW);
-        //需要保留的区域
-        graphics.setClip(shape);
-        if ("images/diu.png".equals(resourceUrl)) {
-            graphics.rotate(Math.toRadians(-50), hdW / 2, hdW / 2);
+            //重合图片
+            Graphics2D graphics2D = bgImage.createGraphics();
+            graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);//抗锯齿
+            if ("images/diu.png".equals(resourceUrl)) {
+                graphics2D.drawImage(formatAvatarImage, 110 - hdW / 2, 275 - hdW / 2, hdW, hdW, null);//头画背景上
+            } else if ("images/pa.jpg".equals(resourceUrl)) {
+                graphics2D.drawImage(formatAvatarImage, 2, 240, 56, 56, null);//头画背景上
+            }
+            graphics2D.dispose();
+
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            ImageIO.write(bgImage, "PNG", bos);
+            return bos.toByteArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            IOUtils.close(is);
         }
-        graphics.drawImage(headImage.getScaledInstance(hdW, hdW, Image.SCALE_SMOOTH), 0, 0, hdW, hdW, null);
-        graphics.dispose();
-
-        //重合图片
-        Graphics2D graphics2D = bgImage.createGraphics();
-        graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);//抗锯齿
-        if ("images/diu.png".equals(resourceUrl)) {
-            graphics2D.drawImage(formatAvatarImage, 110 - hdW / 2, 275 - hdW / 2, hdW, hdW, null);//头画背景上
-        } else if ("images/pa.jpg".equals(resourceUrl)) {
-            graphics2D.drawImage(formatAvatarImage, 2, 240, 56, 56, null);//头画背景上
-        }
-        graphics2D.dispose();
-
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ImageIO.write(bgImage, "PNG", bos);
-        return bos.toByteArray();
     }
 
     @Override

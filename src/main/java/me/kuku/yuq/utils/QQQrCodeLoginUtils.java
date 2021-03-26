@@ -4,6 +4,7 @@ import me.kuku.yuq.pojo.Result;
 import okhttp3.Response;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,11 +14,11 @@ public class QQQrCodeLoginUtils {
     public static Map<String, Object> getQrCode(String appId, String daId) throws IOException {
         Response response = OkHttpUtils.get(String.format("https://ssl.ptlogin2.qq.com/ptqrshow?appid=%s&e=2&l=M&s=3&d=72&v=4&t=0.%s&daid=%s&pt_3rd_aid=0",
                 appId, BotUtils.randomStr(17), daId));
-        byte[] bytes = OkHttpUtils.getBytes(response);
+        InputStream is = OkHttpUtils.getByteStream(response);
         String cookie = OkHttpUtils.getCookie(response);
         String sig = OkHttpUtils.getCookie(cookie, "qrsig");
         Map<String, Object> map = new HashMap<>();
-        map.put("qrCode", bytes);
+        map.put("qrCode", is);
         map.put("sig", sig);
         return map;
     }

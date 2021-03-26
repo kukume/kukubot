@@ -27,10 +27,12 @@ import me.kuku.yuq.service.MessageService;
 import me.kuku.yuq.service.RecallService;
 import me.kuku.yuq.utils.BotUtils;
 import me.kuku.yuq.utils.ExecutorUtils;
+import me.kuku.yuq.utils.IOUtils;
 import me.kuku.yuq.utils.OkHttpUtils;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URLEncoder;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -92,8 +94,8 @@ public class MonitorEvent {
                 String url = api + "/tool/word?word=" + URLEncoder.encode(sb.toString(), "utf-8");
 //                String picUrl = toolLogic.urlToPic(url);
 //                e.getSendTo().sendMessage(FunKt.getMif().imageByUrl(picUrl).toMessage());
-                byte[] bytes = OkHttpUtils.getBytes(api + "/tool/urlToPic?url=" + URLEncoder.encode(url, "utf-8"));
-                e.getSendTo().sendMessage(FunKt.getMif().imageByByteArray(bytes).toMessage());
+                InputStream is = OkHttpUtils.getByteStream(api + "/tool/urlToPic?url=" + URLEncoder.encode(url, "utf-8"));
+                e.getSendTo().sendMessage(FunKt.getMif().imageByInputStream(is).toMessage());
             } catch (Exception iex) {
                 e.getSendTo().sendMessage(BotUtils.toMessage("转换图片失败，完蛋！！"));
             }
@@ -197,12 +199,13 @@ public class MonitorEvent {
                 JSONObject jsonObject = configEntity.getContentJsonObject();
                 String projectName = jsonObject.getString("project");
                 TeambitionPojo teambitionPojo = TeambitionPojo.fromConfig(jsonObject);
+                InputStream is = null;
                 try {
-                    byte[] bytes = OkHttpUtils.getBytes(url);
-                    Result<String> result = teambitionLogic.uploadToProject(teambitionPojo, bytes,
+                    is = OkHttpUtils.getByteStream(url);
+                    Result<String> result = teambitionLogic.uploadToProject(teambitionPojo, is,
                             "qqpic", year, month, day, id);
                     if (teambitionPojo.getPanRootId() != null)
-                        teambitionLogic.panUploadFile(teambitionPojo, bytes,
+                        teambitionLogic.panUploadFile(teambitionPojo, is,
                                 "qqpic", year, month, day, id);
                     if (result.isFailure()){
                         boolean b = true;
@@ -231,10 +234,10 @@ public class MonitorEvent {
                             }
                         }else b = false;
                         if (b){
-                            result = teambitionLogic.uploadToProject(teambitionPojo, bytes,
+                            result = teambitionLogic.uploadToProject(teambitionPojo, is,
                                     "qqpic", year, month, day, id);
                             if (teambitionPojo.getPanRootId() != null)
-                                teambitionLogic.panUploadFile(teambitionPojo, bytes,
+                                teambitionLogic.panUploadFile(teambitionPojo, is,
                                         "qqpic", year, month, day, id);
                         }else return;
                     }
@@ -255,6 +258,8 @@ public class MonitorEvent {
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
+                } finally {
+                    IOUtils.close(is);
                 }
             }
         }

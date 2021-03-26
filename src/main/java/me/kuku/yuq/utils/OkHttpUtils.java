@@ -6,12 +6,10 @@ import me.kuku.yuq.pojo.UA;
 import okhttp3.*;
 import okio.ByteString;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -117,6 +115,19 @@ public class OkHttpUtils {
 
     public static byte[] getBytes(Response response) throws IOException {
         return Objects.requireNonNull(response.body()).bytes();
+    }
+
+    public static InputStream getByteStream(Response response){
+        return Objects.requireNonNull(response.body()).byteStream();
+    }
+
+    public static InputStream getByteStream(String url, Headers headers) throws IOException {
+        Response response = get(url, headers);
+        return getByteStream(response);
+    }
+
+    public static InputStream getByteStream(String url) throws IOException {
+        return getByteStream(url, emptyHeaders());
     }
 
     private static ByteString getByteStr(Response response) throws IOException {
@@ -355,5 +366,40 @@ public class OkHttpUtils {
     public static byte[] downloadBytes(String url) throws IOException {
         Response response = download(url);
         return getBytes(response);
+    }
+
+    private static String fileNameByUrl(String url){
+        int index = url.lastIndexOf("/");
+        return url.substring(index + 1);
+    }
+
+    public static RequestBody getStreamBody(String url) throws IOException {
+        InputStream is = getByteStream(url);
+        return getStreamBody(fileNameByUrl(url), is);
+    }
+
+    public static RequestBody getStreamBody(String fileName, InputStream is){
+        try {
+            File file = IOUtils.writeTmpFile(fileName, is);
+            return RequestBody.create(file, MEDIA_STREAM);
+        } finally {
+            try {
+                is.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static RequestBody getStreamBody(InputStream is){
+        return getStreamBody(UUID.randomUUID().toString(), is);
+    }
+
+    public static RequestBody getStreamBody(String fileName, byte[] bytes){
+        return RequestBody.create(bytes, MEDIA_STREAM);
+    }
+
+    public static RequestBody getStreamBody(byte[] bytes){
+        return getStreamBody(UUID.randomUUID().toString(), bytes);
     }
 }

@@ -14,10 +14,11 @@ import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.BiliBiliService;
 import me.kuku.yuq.utils.ExecutorUtils;
+import me.kuku.yuq.utils.IOUtils;
 
 import javax.inject.Inject;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -34,12 +35,21 @@ public class BiliBiliLoginController {
 
     @Action("bllogin qr")
     @Synonym({"bilibililogin qr"})
-    public void biliBiliLoginByQr(Group group, Long qq) throws IOException {
-        String url = biliBiliLogic.loginByQr1();
-        byte[] qrUrl = toolLogic.creatQr(url);
-        group.sendMessage(FunKt.getMif().at(qq).plus("请使用哔哩哔哩APP扫码登录：")
-                .plus(FunKt.getMif().imageByInputStream(new ByteArrayInputStream(qrUrl))));
+    public void biliBiliLoginByQr(Group group, Long qq) {
+        InputStream is = null;
+        String url;
         AtomicInteger i = new AtomicInteger();
+        try {
+            url = biliBiliLogic.loginByQr1();
+            is = toolLogic.creatQr(url);
+            group.sendMessage(FunKt.getMif().at(qq).plus("请使用哔哩哔哩APP扫码登录：")
+                    .plus(FunKt.getMif().imageByInputStream(is)));
+        } catch (IOException e) {
+            group.sendMessage(FunKt.getMif().at(qq).plus("二维码获取失败，请重试！！"));
+            return;
+        } finally {
+            IOUtils.close(is);
+        }
         ExecutorUtils.execute(() -> {
             while (true) {
                 try {

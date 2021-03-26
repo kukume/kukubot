@@ -6,6 +6,7 @@ import me.kuku.yuq.pojo.CodeType;
 import me.kuku.yuq.pojo.Result;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -34,9 +35,9 @@ public interface ToolLogic {
     Result<String> weather(String local, String cookie) throws IOException;
     String ping(String domain) throws IOException;
     Result<List<Map<String, String>>> colorPicByLoLiCon(String apiKey, boolean isR18, boolean isProxy) throws IOException;
-    byte[] piXivPicProxy(String url) throws IOException;
+    InputStream piXivPicProxy(String url) throws IOException;
     Map<String, String> hiToKoTo() throws IOException;
-    byte[] creatQr(String content) throws IOException;
+    InputStream creatQr(String content) throws IOException;
     String girlImage() throws IOException;
     String lolFree() throws IOException;
     String abbreviation(String content) throws IOException;
@@ -46,23 +47,20 @@ public interface ToolLogic {
     Result<Map<String, String>> bvToAv(String bv) throws IOException;
     String wordSegmentation(String text) throws IOException;
     String acgPic() throws IOException;
-    byte[] danBooRuPic(String type) throws IOException;
     String sauceNaoIdentifyPic(String apiKey, String url) throws IOException;
-    String traceRoute(String domain) throws IOException;
     String teachYou(String content, String type) throws IOException;
     String preventQQRed(String url) throws IOException;
     String songByQQ(String name) throws IOException;
     Result<String> songBy163(String name) throws IOException;
-    byte[] cosplay() throws IOException;
-    byte[] photo() throws IOException;
-    String uploadImage(byte[] bytes);
+    InputStream photo() throws IOException;
+    String uploadImage(InputStream is);
     String abstractWords(String word);
     String executeCode(String code, CodeType codeType) throws IOException;
     String urlToPic(String url) throws IOException;
     String pasteUbuntu(String poster, String syntax, String content);
     byte[] girlImageGaNk();
     JSONObject luckJson(int index) throws IOException;
-    byte[] diu(String url) throws IOException;
-    byte[] pa(String url) throws IOException;
+    byte[] diu(String url);
+    byte[] pa(String url);
     JSONObject loLiConQuickly() throws IOException;
 }

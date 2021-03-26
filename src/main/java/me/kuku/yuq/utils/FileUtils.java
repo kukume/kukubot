@@ -106,6 +106,21 @@ public class FileUtils {
 		return filetype;
 	}
 
+	public static String getFileTypeByStream(InputStream is){
+		String filetype = null;
+		byte[] b = new byte[50];
+		try {
+			is.read(b);
+			filetype = getFileTypeByStream(b);
+			is.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			IOUtils.close(is);
+		}
+		return filetype;
+	}
+
 	/**
 	 * 通过字节流获得文件类型
 	 *

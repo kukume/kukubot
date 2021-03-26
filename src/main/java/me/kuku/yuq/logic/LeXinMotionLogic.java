@@ -6,10 +6,11 @@ import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.pojo.Result;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 @AutoBind
 public interface LeXinMotionLogic {
-    byte[] getCaptchaImage(String phone) throws IOException;
+    InputStream getCaptchaImage(String phone) throws IOException;
     Result<String> getCaptchaCode(String phone, String captchaImageCode) throws IOException;
     Result<MotionEntity> loginByPassword(String phone, String password) throws IOException;
     Result<MotionEntity> loginByQQ(QQLoginEntity qqLoginEntity) throws IOException;

@@ -14,14 +14,11 @@ import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.QQLoginService;
-import me.kuku.yuq.utils.ExecutorUtils;
-import me.kuku.yuq.utils.QQPasswordLoginUtils;
-import me.kuku.yuq.utils.QQQrCodeLoginUtils;
-import me.kuku.yuq.utils.QQUtils;
+import me.kuku.yuq.utils.*;
 
 import javax.inject.Inject;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 
 @GroupController
@@ -33,25 +30,33 @@ public class BindQQController {
 
     @Action("qqlogin qr")
     @QMsg(at = true)
-    public Message bindQQ(Group group, long qq) throws IOException {
-        Map<String, Object> map = QQQrCodeLoginUtils.getQrCode();
-        byte[] bytes = (byte[]) map.get("qrCode");
-        ExecutorUtils.execute(() -> {
-            String msg;
-            try {
-                Result<Map<String, String>> result = QQUtils.qrCodeLoginVerify(map.get("sig").toString());
-                if (result.getCode() == 200) {
-                    QQUtils.saveOrUpdate(qqLoginService, result.getData(), qq, null, group.getId());
-                    msg = "绑定或更新QQ成功！！";
-                } else msg = result.getMessage();
-            } catch (IOException e) {
-                e.printStackTrace();
-                msg = "";
-            }
-            group.sendMessage(FunKt.getMif().at(qq).plus(msg));
-        });
-        group.sendMessage(FunKt.getMif().at(qq).plus("QQ8.4.8版本以上的不支持直接图片或者相册识别，\n解决方法：用tim或QQhd扫码或使用旧版本QQ（https://wwx.lanzoux.com/igkqMhpj5gh）"));
-        return FunKt.getMif().imageByInputStream(new ByteArrayInputStream(bytes)).plus("qzone.qq.com的扫码登录");
+    public Message bindQQ(Group group, long qq){
+        InputStream is = null;
+        try {
+            Map<String, Object> map = QQQrCodeLoginUtils.getQrCode();
+            is = (InputStream) map.get("qrCode");
+            ExecutorUtils.execute(() -> {
+                String msg;
+                try {
+                    Result<Map<String, String>> result = QQUtils.qrCodeLoginVerify(map.get("sig").toString());
+                    if (result.getCode() == 200) {
+                        QQUtils.saveOrUpdate(qqLoginService, result.getData(), qq, null, group.getId());
+                        msg = "绑定或更新QQ成功！！";
+                    } else msg = result.getMessage();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    msg = "";
+                }
+                group.sendMessage(FunKt.getMif().at(qq).plus(msg));
+            });
+            group.sendMessage(FunKt.getMif().at(qq).plus("QQ8.4.8版本以上的不支持直接图片或者相册识别，\n解决方法：用tim或QQhd扫码或使用旧版本QQ（https://wwx.lanzoux.com/igkqMhpj5gh）"));
+            return FunKt.getMif().imageByInputStream(is).plus("qzone.qq.com的扫码登录");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return BotUtils.toMessage("出现异常了，请重试。");
+        } finally {
+            IOUtils.close(is);
+        }
     }
 
     @Action("qqlogin pwd")

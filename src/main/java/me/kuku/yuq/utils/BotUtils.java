@@ -35,6 +35,7 @@ import me.kuku.yuq.pojo.UA;
 import okhttp3.Cookie;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.net.URLEncoder;
 import java.util.*;
@@ -44,6 +45,8 @@ import java.util.regex.Pattern;
 
 @SuppressWarnings("UnusedReturnValue")
 public class BotUtils {
+
+    private static final Map<String, Pattern> patternMap = new HashMap<>();
 
     public static String shortUrl(String url){
         // http://www.uc4.cn/
@@ -60,7 +63,14 @@ public class BotUtils {
     }
 
     public static String regex(String regex, String text){
-        Matcher matcher = Pattern.compile(regex).matcher(text);
+        Pattern pattern;
+        if (patternMap.containsKey(regex))
+            pattern = patternMap.get(regex);
+        else {
+            pattern = Pattern.compile(regex);
+            patternMap.put(regex, pattern);
+        }
+        Matcher matcher = pattern.matcher(text);
         if (matcher.find()){
             return matcher.group();
         }
@@ -184,10 +194,14 @@ public class BotUtils {
                     msg.plus(mif.jsonEx(aJsonObject.getString("content")));
                     break;
                 case "voice":
+                    InputStream is = null;
                     try {
-                        msg.plus(mif.voiceByByteArray(OkHttpUtils.getBytes(aJsonObject.getString("content"))));
+                        is = OkHttpUtils.getByteStream(aJsonObject.getString("content"));
+                        msg.plus(mif.voiceByInputStream(is));
                     } catch (IOException e) {
                         e.printStackTrace();
+                    } finally {
+                        IOUtils.close(is);
                     }
                     break;
             }

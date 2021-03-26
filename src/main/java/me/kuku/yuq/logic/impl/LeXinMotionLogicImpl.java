@@ -12,6 +12,7 @@ import me.kuku.yuq.utils.QQUtils;
 import okhttp3.Response;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -20,8 +21,8 @@ import java.util.List;
 @SuppressWarnings("unused")
 public class LeXinMotionLogicImpl implements LeXinMotionLogic {
     @Override
-    public byte[] getCaptchaImage(String phone) throws IOException {
-        return OkHttpUtils.getBytes("https://sports.lifesense.com/sms_service/verify/getValidateCode?requestId=1000&sessionId=nosession&mobile=" + phone);
+    public InputStream getCaptchaImage(String phone) throws IOException {
+        return OkHttpUtils.getByteStream("https://sports.lifesense.com/sms_service/verify/getValidateCode?requestId=1000&sessionId=nosession&mobile=" + phone);
     }
 
     @Override

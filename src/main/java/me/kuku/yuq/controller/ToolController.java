@@ -22,10 +22,7 @@ import me.kuku.yuq.pojo.*;
 import me.kuku.yuq.service.ConfigService;
 import me.kuku.yuq.service.GroupService;
 import me.kuku.yuq.service.MessageService;
-import me.kuku.yuq.utils.BotUtils;
-import me.kuku.yuq.utils.ExecutorUtils;
-import me.kuku.yuq.utils.Jrrp;
-import me.kuku.yuq.utils.OkHttpUtils;
+import me.kuku.yuq.utils.*;
 import okhttp3.Response;
 import oshi.SystemInfo;
 import oshi.hardware.CentralProcessor;
@@ -35,6 +32,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -264,11 +262,15 @@ public class ToolController {
                             return;
                         }
                         for (Map<String, String> map : list) {
-                            byte[] by;
-                            if (type.contains("proxy")) by = toolLogic.piXivPicProxy(map.get("url"));
-                            else by = OkHttpUtils.getBytes(map.get("url"));
-                            group.sendMessage(FunKt.getMif().imageByInputStream(new ByteArrayInputStream(by)).toMessage());
-                            if (++nowNum == finalNum) break;
+                            InputStream is = null;
+                            try {
+                                if (type.contains("proxy")) is = toolLogic.piXivPicProxy(map.get("url"));
+                                else is = OkHttpUtils.getByteStream(map.get("url"));
+                                group.sendMessage(FunKt.getMif().imageByInputStream(is).toMessage());
+                                if (++nowNum == finalNum) break;
+                            } finally {
+                                IOUtils.close(is);
+                            }
                         }
                     }
                 } else if (type.contains("danbooru")) {
@@ -284,21 +286,31 @@ public class ToolController {
                             group.sendMessage(FunKt.getMif().at(qq).plus("danbooru的tags类型不匹配，请重新设置tags类型，具体tag类型可前往https://danbooru.donmai.us/" +
                                     "查看，如果tag中带空格，请用_替换"));
                         } else {
-                            byte[] bytes = OkHttpUtils.getBytes(response);
-                            group.sendMessage(FunKt.getMif().imageByInputStream(new ByteArrayInputStream(bytes)).toMessage());
+                            InputStream is = null;
+                            try {
+                                is = OkHttpUtils.getByteStream(response);
+                                group.sendMessage(FunKt.getMif().imageByInputStream(is).toMessage());
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            } finally {
+                                IOUtils.close(is);
+                            }
                         }
                     }
                 } else if ("quickly".equals(type)){
                     for (int i = 0; i < finalNum; i++){
                         JSONObject quickJsonObject = toolLogic.loLiConQuickly();
                         String url = quickJsonObject.getString("quickUrl");
-                        byte[] bytes = OkHttpUtils.getBytes(url);
+                        InputStream is = null;
                         try {
-                            group.sendMessage(FunKt.getMif().imageByByteArray(bytes).toMessage());
+                            is = OkHttpUtils.getByteStream(url);
+                            group.sendMessage(FunKt.getMif().imageByInputStream(is).toMessage());
                         } catch (Exception e) {
                             Integer id = quickJsonObject.getInteger("id");
                             group.sendMessage(FunKt.getMif().at(qq).plus("色图发送失败，id为" + id));
                             OkHttpUtils.get("https://api.kuku.me/lolicon/reupload?id=" + id).close();
+                        } finally {
+                            IOUtils.close(is);
                         }
                     }
                 }
@@ -311,9 +323,17 @@ public class ToolController {
 
     @Action("qr/{content}")
     @QMsg(at = true, atNewLine = true)
-    public Message creatQrCode(String content) throws IOException {
-        byte[] bytes = toolLogic.creatQr(content);
-        return FunKt.getMif().imageByInputStream(new ByteArrayInputStream(bytes)).toMessage();
+    public Message creatQrCode(String content) {
+        InputStream is = null;
+        try {
+            is = toolLogic.creatQr(content);
+            return FunKt.getMif().imageByInputStream(is).toMessage();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            IOUtils.close(is);
+        }
     }
 
     @Action("看美女")
@@ -404,12 +424,6 @@ public class ToolController {
     @QMsg(at = true, atNewLine = true)
     public String ocr(Image img) throws IOException {
         return baiduAILogic.generalOCR(img.getUrl());
-    }
-
-    @Action("traceroute {domain}")
-    @Synonym({"路由追踪 {domain}"})
-    public String traceRoute(String domain) throws IOException {
-        return toolLogic.traceRoute(domain);
     }
 
     @Action("查发言数")
@@ -541,8 +555,17 @@ public class ToolController {
     }
 
     @Action("写真")
-    public Image photo() throws IOException {
-        return FunKt.getMif().imageByByteArray(toolLogic.photo());
+    public Image photo() {
+        InputStream is = null;
+        try {
+            is = toolLogic.photo();
+            return FunKt.getMif().imageByInputStream(is);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            IOUtils.close(is);
+        }
     }
 
     @Action("kuku上传")
@@ -556,7 +579,7 @@ public class ToolController {
             if (item instanceof Image) {
                 sb.append(i++).append("、");
                 try {
-                    sb.append(toolLogic.uploadImage(OkHttpUtils.getBytes(((Image) item).getUrl())))
+                    sb.append(toolLogic.uploadImage(OkHttpUtils.getByteStream(((Image) item).getUrl())))
                         .append("\n");
                 } catch (IOException e) {
                     sb.append("图片上传失败，请稍后再试！！").append("\b");
@@ -631,11 +654,12 @@ public class ToolController {
                 String url = image.getUrl();
                 String id = image.getId();
                 sb.append(i++).append("、");
+                InputStream is = null;
                 try {
                     TeambitionPojo teambitionPojo = TeambitionPojo.fromConfig(jsonObject);
-                    byte[] bytes = OkHttpUtils.getBytes(url);
+                    is = OkHttpUtils.getByteStream(url);
                     Result<String> result = teambitionLogic.uploadToProject(teambitionPojo,
-                            bytes,
+                            is,
                             "pic", year, month, day, id
                     );
                     if (result.isSuccess()) {
@@ -648,7 +672,7 @@ public class ToolController {
                     }
                     if (teambitionPojo.getPanRootId() != null){
                         Result<Boolean> panResult = teambitionLogic.panUploadFile(teambitionPojo,
-                                bytes,
+                                is,
                                 "pic", year, month, day, id
                         );
                         if (panResult.isSuccess()) {
@@ -663,6 +687,8 @@ public class ToolController {
                     sb.append("\n");
                 } catch (IOException e) {
                     sb.append("网络出现异常，上传失败").append("\n");
+                } finally {
+                    IOUtils.close(is);
                 }
             }
         }
@@ -687,20 +713,24 @@ public class ToolController {
                 String url = image.getUrl();
                 String id = image.getId();
                 sb.append(i++).append("、");
+                InputStream is = null;
                 try {
-                    Result<String> result = dCloudLogic.upload(dCloudPojo, spaceId, id, OkHttpUtils.getBytes(url));
+                    is = OkHttpUtils.getByteStream(url);
+                    Result<String> result = dCloudLogic.upload(dCloudPojo, spaceId, id, is);
                     if (result.getCode() == 502){
                         Result<DCloudPojo> reResult = dCloudLogic.reLogin();
                         if (reResult.isFailure()) return "cookie失效，尝试重新登录，登录失败。" + reResult.getMessage();
                         else {
                             dCloudPojo = reResult.getData();
-                            result = dCloudLogic.upload(dCloudPojo, spaceId, id, OkHttpUtils.getBytes(url));
+                            result = dCloudLogic.upload(dCloudPojo, spaceId, id, is);
                         }
                     }
                     if (result.isFailure()) sb.append(result.getMessage()).append("\n");
                     else sb.append(result.getData()).append("\n");
                 } catch (IOException e) {
                     sb.append("网络出现异常，上传失败").append("\n");
+                }finally {
+                    IOUtils.close(is);
                 }
             }
         }
@@ -783,16 +813,12 @@ public class ToolController {
                 return FunKt.getMif().at(qq).plus("您输入的不为qq号，请重试！！");
             url = "http://q1.qlogo.cn/g?b=qq&nk=" + paramQQ + "&s=640";
         }
-        try {
-            byte[] bytes;
-            if ("丢".equals(type))
-                bytes = toolLogic.diu(url);
-            else bytes = toolLogic.pa(url);
-            return FunKt.getMif().imageByByteArray(bytes).toMessage();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return FunKt.getMif().at(qq).plus("图片生成失败，请重试！！");
-        }
+        byte[] bytes;
+        if ("丢".equals(type))
+            bytes = toolLogic.diu(url);
+        else bytes = toolLogic.pa(url);
+        if (bytes == null)  return FunKt.getMif().at(qq).plus("图片生成失败，请重试！！");
+        return FunKt.getMif().imageByByteArray(bytes).toMessage();
     }
 
 }

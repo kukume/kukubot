@@ -56,7 +56,7 @@ public class DCloudLogicImpl implements DCloudLogic {
 	}
 
 	@Override
-	public Result<String> upload(DCloudPojo dCloudPojo, String spaceId, String name, InputStream is) {
+	public Result<String> upload(DCloudPojo dCloudPojo, String spaceId, String name, InputStream is, Integer size) {
 		JSONObject jsonObject;
 		Map<String, String> map = new HashMap<>();
 		map.put("token", dCloudPojo.getToken());
@@ -64,9 +64,10 @@ public class DCloudLogicImpl implements DCloudLogic {
 		map.put("user-agent", UA.PC.getValue());
 		map.put("referer", "https://unicloud.dcloud.net.cn/cloud-storage?platform=aliyun&appid=");
 		try {
+			if (size == null) size = is.available();
 			jsonObject = OkHttpUtils.getJson("https://unicloud.dcloud.net.cn/unicloud/api/file/upload-info?spaceId=" +
 					spaceId + "&appid=&provider=aliyun&name=" + URLEncoder.encode(name, "utf-8") +"&size=" +
-					is.available(), map);
+					size, map);
 		} catch (Exception e) {
 			return Result.failure(502, "cookie失效，上传失败！！");
 		}

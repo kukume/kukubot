@@ -29,6 +29,7 @@ import me.kuku.yuq.utils.BotUtils;
 import me.kuku.yuq.utils.ExecutorUtils;
 import me.kuku.yuq.utils.IOUtils;
 import me.kuku.yuq.utils.OkHttpUtils;
+import okhttp3.Response;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -38,6 +39,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 @EventListener
 @SuppressWarnings("unused")
@@ -201,12 +203,11 @@ public class MonitorEvent {
                 TeambitionPojo teambitionPojo = TeambitionPojo.fromConfig(jsonObject);
                 InputStream is = null;
                 try {
-                    is = OkHttpUtils.getByteStream(url);
-                    Result<String> result = teambitionLogic.uploadToProject(teambitionPojo, is,
+                    Response response = OkHttpUtils.get(url);
+                    is = OkHttpUtils.getByteStream(response);
+                    int size = Math.toIntExact(Objects.requireNonNull(response.body()).contentLength());
+                    Result<String> result = teambitionLogic.uploadToProject(teambitionPojo, is, size,
                             "qqpic", year, month, day, id);
-                    if (teambitionPojo.getPanRootId() != null)
-                        teambitionLogic.panUploadFile(teambitionPojo, is,
-                                "qqpic", year, month, day, id);
                     if (result.isFailure()){
                         boolean b = true;
                         if (result.getCode() == 501){
@@ -234,11 +235,8 @@ public class MonitorEvent {
                             }
                         }else b = false;
                         if (b){
-                            result = teambitionLogic.uploadToProject(teambitionPojo, is,
+                            result = teambitionLogic.uploadToProject(teambitionPojo, is, size,
                                     "qqpic", year, month, day, id);
-                            if (teambitionPojo.getPanRootId() != null)
-                                teambitionLogic.panUploadFile(teambitionPojo, is,
-                                        "qqpic", year, month, day, id);
                         }else return;
                     }
                     if (result.isSuccess()){
@@ -248,11 +246,6 @@ public class MonitorEvent {
                                     jsonObject.getString("name") + "/" + path;
                             Message sendMessage = FunKt.getMif().imageById(id).plus(
                                     "\nTeambition的project链接：\n" + resultUrl);
-                            if (teambitionPojo.getPanRootId() != null) {
-                                String resultPanUrl = api + "/teambition/pan/" +
-                                        jsonObject.getString("name") + "/" + path;
-                                sendMessage = sendMessage.plus("\nTeambition的pan链接：\n" + resultPanUrl);
-                            }
                             group.sendMessage(sendMessage);
                         }
                     }

@@ -16,6 +16,7 @@ import okhttp3.Response;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -120,7 +121,7 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 	}
 
 	@Override
-	public Result<String> uploadToProject(TeambitionPojo teambitionPojo, InputStream is, String...path) throws IOException {
+	public Result<String> uploadToProject(TeambitionPojo teambitionPojo, InputStream is, Integer size, String...path) throws IOException {
 		if (path.length == 0) return Result.failure("参数不正确！！");
 		Result<String> parentIdResult = getFinallyParentId(teambitionPojo, true, path);
 		if (parentIdResult.isFailure()) return parentIdResult;
@@ -128,12 +129,13 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 		String fileType = FileUtils.getFileTypeByStream(is, false);
 		String fileName = path[path.length - 1];
 		if (!fileName.contains(".")) fileName += "." + fileType;
+		if (size == null) size = is.available();
 		MultipartBody body = new MultipartBody.Builder().setType(MultipartBody.FORM)
 				.addFormDataPart("name", fileName)
 				.addFormDataPart("type", fileType)
-				.addFormDataPart("size", String.valueOf(is.available()))
+				.addFormDataPart("size", String.valueOf(size))
 				.addFormDataPart("lastModifiedDate", "Mon Dec 28 2020 12:56:59 GMT+0800 (中国标准时间)")
-				.addFormDataPart("file", fileName, OkHttpUtils.getStreamBody(is)).build();
+				.addFormDataPart("file", fileName, OkHttpUtils.getStreamBody(is, false)).build();
 		Map<String, String> map = new HashMap<>();
 		map.put("Authorization", teambitionPojo.getStrikerAuth());
 		JSONObject jsonObject = OkHttpUtils.postJson("https://tcs.teambition.net/upload", body,
@@ -356,10 +358,11 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 	}
 
 	@Override
-	public Result<Boolean> panUploadFile(TeambitionPojo teambitionPojo, InputStream is, String... path) throws IOException {
+	public Result<Boolean> panUploadFile(TeambitionPojo teambitionPojo, InputStream is, Integer size, String... path) throws IOException {
 		if (path.length == 0) return Result.failure("参数不正确！！");
 		Result<String> result = panGetFinallyParentId(teambitionPojo, teambitionPojo.getPanRootId(), true, path);
 		if (result.isFailure()) return Result.failure(result.getCode(), result.getMessage());
+		if (size == null) size = is.available();
 		String parentId = result.getData();
 		JSONObject jsonObject = new JSONObject();
 		jsonObject.put("orgId", teambitionPojo.getPanOrgId());
@@ -373,7 +376,7 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 		innerJsonObject.put("name", path[path.length - 1]);
 		innerJsonObject.put("ccpParentId", parentId);
 		innerJsonObject.put("contentType", FileUtils.getFileTypeByStream(is, false));
-		innerJsonObject.put("size", is.available());
+		innerJsonObject.put("size", size);
 		innerJsonObject.put("type", "file");
 		jsonArray.add(innerJsonObject);
 		jsonObject.put("infos", jsonArray);
@@ -391,7 +394,7 @@ public class TeambitionLogicImpl implements TeambitionLogic {
 						fileJsonObject.getString("nodeId")+ "/uploadUrl",
 				OkHttpUtils.addJson(uploadUrlJsonObject.toString()), OkHttpUtils.addCookie(teambitionPojo.getCookie()));
 		String uploadUrl = uploadUrlResultJsonObject.getJSONArray("partInfoList").getJSONObject(0).getString("uploadUrl");
-		OkHttpUtils.put(uploadUrl, OkHttpUtils.getStreamBody(is)).close();
+		OkHttpUtils.put(uploadUrl, OkHttpUtils.getStreamBody(is, false)).close();
 		JSONObject completeJsonObject = new JSONObject();
 		completeJsonObject.put("ccpFileId", fileJsonObject.getString("ccpFileId"));
 		completeJsonObject.put("driveId", teambitionPojo.getPanDriveId());

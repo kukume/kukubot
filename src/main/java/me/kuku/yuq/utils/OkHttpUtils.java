@@ -378,21 +378,31 @@ public class OkHttpUtils {
         return getStreamBody(fileNameByUrl(url), is);
     }
 
-    public static RequestBody getStreamBody(String fileName, InputStream is){
+    public static RequestBody getStreamBody(String fileName, InputStream is, boolean isClose){
         try {
-            File file = IOUtils.writeTmpFile(fileName, is);
+            File file = IOUtils.writeTmpFile(fileName, is, isClose);
             return RequestBody.create(file, MEDIA_STREAM);
         } finally {
-            try {
-                is.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (isClose) {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
 
+    public static RequestBody getStreamBody(String fileName, InputStream is){
+        return getStreamBody(fileName, is, true);
+    }
+
+    public static RequestBody getStreamBody(InputStream is, boolean isClose){
+        return getStreamBody(UUID.randomUUID().toString(), is, isClose);
+    }
+
     public static RequestBody getStreamBody(InputStream is){
-        return getStreamBody(UUID.randomUUID().toString(), is);
+        return getStreamBody(is, true);
     }
 
     public static RequestBody getStreamBody(String fileName, byte[] bytes){

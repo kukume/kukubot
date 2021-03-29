@@ -657,32 +657,20 @@ public class ToolController {
                 InputStream is = null;
                 try {
                     TeambitionPojo teambitionPojo = TeambitionPojo.fromConfig(jsonObject);
-                    is = OkHttpUtils.getByteStream(url);
+                    Response response = OkHttpUtils.get(url);
+                    is = OkHttpUtils.getByteStream(response);
+                    int size = Math.toIntExact(Objects.requireNonNull(response.body()).contentLength());
                     Result<String> result = teambitionLogic.uploadToProject(teambitionPojo,
-                            is,
+                            is, size,
                             "pic", year, month, day, id
                     );
                     if (result.isSuccess()) {
                         String path = "pic/" + year + "/" + month + "/" + day + "/" + id;
                         String resultUrl = api + "/teambition/project/" +
                                 jsonObject.getString("name") + "/" + path;
-                        sb.append(resultUrl).append(" | ");
+                        sb.append(resultUrl);
                     } else {
-                        sb.append("上传失败！！").append(" | ");
-                    }
-                    if (teambitionPojo.getPanRootId() != null){
-                        Result<Boolean> panResult = teambitionLogic.panUploadFile(teambitionPojo,
-                                is,
-                                "pic", year, month, day, id
-                        );
-                        if (panResult.isSuccess()) {
-                            String path = "pic/" + year + "/" + month + "/" + day + "/" + id;
-                            String resultUrl = api + "/teambition/pan/" +
-                                    jsonObject.getString("name") + "/" + path;
-                            sb.append(resultUrl).append(" | ");
-                        } else {
-                            sb.append("上传失败！！").append(" | ");
-                        }
+                        sb.append("上传失败！！");
                     }
                     sb.append("\n");
                 } catch (IOException e) {
@@ -715,8 +703,10 @@ public class ToolController {
                 sb.append(i++).append("、");
                 InputStream is = null;
                 try {
-                    is = OkHttpUtils.getByteStream(url);
-                    Result<String> result = dCloudLogic.upload(dCloudPojo, spaceId, id, is);
+                    Response response = OkHttpUtils.get(url);
+                    is = OkHttpUtils.getByteStream(response);
+                    long size = Objects.requireNonNull(response.body()).contentLength();
+                    Result<String> result = dCloudLogic.upload(dCloudPojo, spaceId, id, is, Math.toIntExact(size));
                     if (result.getCode() == 502){
                         Result<DCloudPojo> reResult = dCloudLogic.reLogin();
                         if (reResult.isFailure()) return "cookie失效，尝试重新登录，登录失败。" + reResult.getMessage();

@@ -26,11 +26,16 @@ public class AESUtils {
     }
 
 
-    public static byte[] decryptLoc(byte[] aseKey, byte[] iv, byte[] data) throws Exception {
-        Cipher cipher= Cipher.getInstance("AES/CBC/NoPadding");
-        SecretKey secretKey= new SecretKeySpec(aseKey,"AES");
-        cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
-        return cipher.doFinal(data);
+    public static byte[] decryptLoc(byte[] aseKey, byte[] iv, byte[] data){
+        try {
+            Cipher cipher= Cipher.getInstance("AES/CBC/NoPadding");
+            SecretKey secretKey= new SecretKeySpec(aseKey,"AES");
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
+            return cipher.doFinal(data);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     private static final int AES_KEY_SIZE_128 = 128;

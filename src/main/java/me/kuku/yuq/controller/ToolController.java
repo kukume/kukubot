@@ -273,30 +273,6 @@ public class ToolController {
                             }
                         }
                     }
-                } else if (type.contains("danbooru")) {
-                    for (int i = 0; i < finalNum; i++) {
-                        String[] arr = type.split("-");
-                        String danType = null;
-                        if (arr.length > 1) danType = arr[1];
-                        String url;
-                        if (danType == null) url = api + "/danbooru";
-                        else url = api + "/danbooru?type=" + danType;
-                        Response response = OkHttpUtils.get(url);
-                        if (response.header("content-type") != null) {
-                            group.sendMessage(FunKt.getMif().at(qq).plus("danbooru的tags类型不匹配，请重新设置tags类型，具体tag类型可前往https://danbooru.donmai.us/" +
-                                    "查看，如果tag中带空格，请用_替换"));
-                        } else {
-                            InputStream is = null;
-                            try {
-                                is = OkHttpUtils.getByteStream(response);
-                                group.sendMessage(FunKt.getMif().imageByInputStream(is).toMessage());
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            } finally {
-                                IOUtils.close(is);
-                            }
-                        }
-                    }
                 } else if ("quickly".equals(type)){
                     for (int i = 0; i < finalNum; i++){
                         JSONObject quickJsonObject = toolLogic.loLiConQuickly();

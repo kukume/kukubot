@@ -1,6 +1,7 @@
 package me.kuku.yuq.logic;
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import me.kuku.yuq.pojo.CodeType;
 import me.kuku.yuq.pojo.Result;
@@ -14,8 +15,6 @@ import java.util.Map;
 public interface ToolLogic {
     String dogLicking() throws IOException;
     String baiKe(String text) throws IOException;
-    String mouthOdor() throws IOException;
-    String mouthSweet() throws IOException;
     String poisonousChickenSoup() throws IOException;
     String loveWords() throws IOException;
     String saying() throws IOException;
@@ -31,7 +30,6 @@ public interface ToolLogic {
     String convertZh(String content, Integer type) throws IOException;
     String convertTranslate(String content, String from, String to) throws IOException;
     String parseVideo(String url) throws IOException;
-    String restoreShortUrl(String url) throws IOException;
     Result<String> weather(String local, String cookie) throws IOException;
     String ping(String domain) throws IOException;
     Result<List<Map<String, String>>> colorPicByLoLiCon(String apiKey, boolean isR18, boolean isProxy) throws IOException;
@@ -43,13 +41,11 @@ public interface ToolLogic {
     String abbreviation(String content) throws IOException;
     byte[] queryTime() throws IOException;
     String queryVersion() throws IOException;
-    String music163cloud() throws IOException;
     Result<Map<String, String>> bvToAv(String bv) throws IOException;
     String wordSegmentation(String text) throws IOException;
     String acgPic() throws IOException;
     String sauceNaoIdentifyPic(String apiKey, String url) throws IOException;
     String teachYou(String content, String type) throws IOException;
-    String preventQQRed(String url) throws IOException;
     String songByQQ(String name) throws IOException;
     Result<String> songBy163(String name) throws IOException;
     InputStream photo() throws IOException;
@@ -62,5 +58,5 @@ public interface ToolLogic {
     JSONObject luckJson(int index) throws IOException;
     byte[] diu(String url);
     byte[] pa(String url);
-    JSONObject loLiConQuickly() throws IOException;
+    JSONArray loLiConQuickly() throws IOException;
 }

@@ -80,16 +80,6 @@ public class ToolLogicImpl implements ToolLogic {
     }
 
     @Override
-    public String mouthOdor() throws IOException {
-        return OkHttpUtils.getJson("https://s.nmsl8.club/getloveword?type=2").getString("content");
-    }
-
-    @Override
-    public String mouthSweet() throws IOException {
-        return OkHttpUtils.getJson("https://s.nmsl8.club/getloveword?type=1").getString("content");
-    }
-
-    @Override
     public String poisonousChickenSoup() throws IOException {
         Response response = OkHttpUtils.get("https://v1.alapi.cn/api/soul");
         if (response.code() == 200){
@@ -156,7 +146,7 @@ public class ToolLogicImpl implements ToolLogic {
             jsonArray.forEach(obj -> {
                 JSONObject json = (JSONObject) obj;
                 sb.append("标题：").append(json.getString("title")).append("\n")
-                        .append("链接：").append(jsonObject.getString("url")).append("\n")
+                        .append("链接：").append(json.getString("url")).append("\n")
                         .append(" -------------- ").append("\n");
             });
             return sb.toString();
@@ -263,16 +253,6 @@ public class ToolLogicImpl implements ToolLogic {
                     BotUtils.shortUrl(data.getString("video")) + "\n音乐：" +
                     BotUtils.shortUrl(data.getString("music"));
         else return "没有找到该视频";
-    }
-
-    @Override
-    public String restoreShortUrl(String url) throws IOException {
-        if (!url.startsWith("http")) url = "http://" + url;
-        Response response = OkHttpUtils.get(url);
-        response.close();
-        String location = response.header("Location");
-        if (location != null) return location;
-        else return "该链接不能再跳转了！";
     }
 
     @Override
@@ -478,12 +458,6 @@ public class ToolLogicImpl implements ToolLogic {
     }
 
     @Override
-    public String music163cloud() throws IOException {
-        JSONObject jsonObject = OkHttpUtils.getJson("http://api.heerdev.top/nemusic/random");
-        return jsonObject.getString("text");
-    }
-
-    @Override
     public Result<Map<String, String>> bvToAv(String bv) throws IOException {
         if (bv.length() != 12) return Result.failure("不合格的bv号", null);
         JSONObject jsonObject = OkHttpUtils.getJson("https://api.bilibili.com/x/web-interface/view?bvid=" + bv);
@@ -558,16 +532,6 @@ public class ToolLogicImpl implements ToolLogic {
             default: return null;
         }
         return "点击以下链接即可教您使用" + msg + "搜索“" + content + "“\n" + BotUtils.shortUrl(url);
-    }
-
-    @Override
-    public String preventQQRed(String url) throws IOException {
-        String b64Url = Base64.getEncoder().encodeToString(url.getBytes(StandardCharsets.UTF_8));
-        JSONObject jsonObject = OkHttpUtils.getJson("https://www.fanghong.net/cbfh.php?cb=1&sturl=1&longurl="
-                + URLEncoder.encode(b64Url, "utf-8"),
-                OkHttpUtils.addUA(UA.PC));
-        if (jsonObject.getInteger("result") == 1) return jsonObject.getString("dwz_url");
-        else return jsonObject.getString("msg");
     }
 
     @Override
@@ -778,8 +742,8 @@ public class ToolLogicImpl implements ToolLogic {
     }
 
     @Override
-    public JSONObject loLiConQuickly() throws IOException {
-        JSONObject jsonObject = OkHttpUtils.getJson("https://api.kuku.me/lolicon/random/quickUrl");
-        return jsonObject.getJSONObject("data");
+    public JSONArray loLiConQuickly() throws IOException {
+        JSONObject jsonObject = OkHttpUtils.getJson("https://api.kuku.me/lolicon/random/quickUrl?num=20");
+        return jsonObject.getJSONArray("data");
     }
 }

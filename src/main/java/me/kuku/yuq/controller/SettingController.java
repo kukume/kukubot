@@ -19,7 +19,6 @@ import com.icecreamqaq.yuq.message.Message;
 import com.icecreamqaq.yuq.mirai.MiraiBot;
 import me.kuku.yuq.entity.ConfigEntity;
 import me.kuku.yuq.entity.GroupEntity;
-import me.kuku.yuq.entity.MiHoYoEntity;
 import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.logic.*;
 import me.kuku.yuq.pojo.ConfigType;
@@ -28,7 +27,6 @@ import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.pojo.TeambitionPojo;
 import me.kuku.yuq.service.ConfigService;
 import me.kuku.yuq.service.GroupService;
-import me.kuku.yuq.service.MiHoYoService;
 import me.kuku.yuq.utils.BotUtils;
 import me.kuku.yuq.utils.OkHttpUtils;
 
@@ -38,7 +36,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 @PrivateController
 @SuppressWarnings({"unused", "SpellCheckingInspection"})

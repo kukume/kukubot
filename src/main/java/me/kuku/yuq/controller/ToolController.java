@@ -38,7 +38,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -121,13 +120,6 @@ public class ToolController {
         return toolLogic.baiKe(params);
     }
 
-    @QMsg(at = true, atNewLine = true)
-    @Action("嘴臭")
-    @Synonym({"祖安语录"})
-    public String mouthOdor() throws IOException {
-        return toolLogic.mouthOdor();
-    }
-
     @QMsg(at = true)
     @Action("毒鸡汤")
     public String poisonousChickenSoup() throws IOException {
@@ -206,12 +198,6 @@ public class ToolController {
         return toolLogic.parseVideo(url);
     }
 
-    @Action("还原/{url}")
-    @QMsg(at = true)
-    public String restoreShortUrl(String url) throws IOException {
-        return toolLogic.restoreShortUrl(url);
-    }
-
     @Action("ping/{domain}")
     @QMsg(at = true, atNewLine = true)
     public String ping(String domain) throws IOException {
@@ -238,7 +224,7 @@ public class ToolController {
                 return;
             }
             num = Integer.parseInt(numStr);
-            if (num > 30) {
+            if (num > 20) {
                 group.sendMessage(FunKt.getMif().at(qq).plus("色图数量不能大于20，请重试！！"));
                 return;
             }
@@ -254,7 +240,7 @@ public class ToolController {
                     }
                     String apiKey = configEntity.getContent();
                     int nowNum = 0;
-                    while (true) {
+                    outer: while (true) {
                         Result<List<Map<String, String>>> result = toolLogic.colorPicByLoLiCon(apiKey, type.contains("loliconR18"), type.contains("proxy"));
                         List<Map<String, String>> list = result.getData();
                         if (list == null) {
@@ -267,30 +253,34 @@ public class ToolController {
                                 if (type.contains("proxy")) is = toolLogic.piXivPicProxy(map.get("url"));
                                 else is = OkHttpUtils.getByteStream(map.get("url"));
                                 group.sendMessage(FunKt.getMif().imageByInputStream(is).toMessage());
-                                if (++nowNum == finalNum) break;
+                                if (++nowNum == finalNum) break outer;
                             } finally {
                                 IOUtils.close(is);
                             }
                         }
                     }
                 } else if ("quickly".equals(type)){
-                    for (int i = 0; i < finalNum; i++){
-                        JSONObject quickJsonObject = toolLogic.loLiConQuickly();
-                        String url = quickJsonObject.getString("quickUrl");
-                        InputStream is = null;
-                        try {
-                            is = OkHttpUtils.getByteStream(url);
-                            group.sendMessage(FunKt.getMif().imageByInputStream(is).toMessage());
-                        } catch (Exception e) {
-                            Integer id = quickJsonObject.getInteger("id");
-                            group.sendMessage(FunKt.getMif().at(qq).plus("色图发送失败，id为" + id));
-                            OkHttpUtils.get("https://api.kuku.me/lolicon/reupload?id=" + id).close();
-                        } finally {
-                            IOUtils.close(is);
+                    int nowNum = 0;
+                    outer:while (true) {
+                        JSONArray quickJsonArray = toolLogic.loLiConQuickly();
+                        for (Object obj : quickJsonArray) {
+                            JSONObject quickJsonObject = (JSONObject) obj;
+                            String url = quickJsonObject.getString("quickUrl");
+                            InputStream is = null;
+                            try {
+                                is = OkHttpUtils.getByteStream(url);
+                                group.sendMessage(FunKt.getMif().imageByInputStream(is).toMessage());
+                                if (++nowNum == finalNum) break outer;
+                            } catch (Exception e) {
+                                Integer id = quickJsonObject.getInteger("id");
+                                group.sendMessage(FunKt.getMif().at(qq).plus("色图发送失败，id为" + id));
+                                OkHttpUtils.get("https://api.kuku.me/lolicon/reupload?id=" + id).close();
+                            } finally {
+                                IOUtils.close(is);
+                            }
                         }
                     }
-                }
-                else group.sendMessage(Message.Companion.toMessage("色图类型不匹配！！"));
+                } else group.sendMessage(Message.Companion.toMessage("色图类型不匹配！！"));
             } catch (Exception e) {
                 group.sendMessage(FunKt.getMif().at(qq).plus("色图获取失败，请重试！异常信息为：" + e.getMessage()));
             }
@@ -342,17 +332,6 @@ public class ToolController {
     @Action("几点了")
     public Image time() throws IOException {
         return FunKt.getMif().imageByInputStream(new ByteArrayInputStream(toolLogic.queryTime()));
-    }
-
-    @Action("网抑")
-    public XmlEx wy(){
-        return FunKt.getMif().xmlEx(1, "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID=\"1\" templateID=\"-1\" action=\"app\" actionData=\"com.netease.cloudmusic\" brief=\"点击启动网抑\" sourceMsgId=\"0\" url=\"https://www.kuku.me/archives/6/\" flag=\"2\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"12\" advertiser_id=\"0\" aid=\"0\"><picture cover=\"https://imgurl.cloudimg.cc/2020/07/26/2a7410726090854.jpg\" w=\"0\" h=\"0\" /><title>启动网抑音乐</title></item><source name=\"今天你网抑了吗\" icon=\"\" action=\"\" appid=\"0\" /></msg>");
-    }
-
-    @QMsg(at = true)
-    @Action("网抑云")
-    public String wyy() throws IOException {
-        return toolLogic.music163cloud();
     }
 
     @Action("\\^BV.*\\")
@@ -420,12 +399,6 @@ public class ToolController {
         if (result.getCode() == 200){
             return FunKt.getMif().voiceByByteArray(result.getData()).toMessage();
         }else return FunKt.getMif().at(qq).plus(result.getMessage());
-    }
-
-    @QMsg(at = true)
-    @Action("防红 {url}")
-    public String preventRed(String url) throws IOException {
-        return toolLogic.preventQQRed(url);
     }
 
     @Action("点歌 {name}")
@@ -608,55 +581,6 @@ public class ToolController {
         Message message = session.waitNextMessage();
         String code = Message.Companion.firstString(message);
         return toolLogic.executeCode(code, codeType);
-    }
-
-    @Action("teambition上传")
-    @QMsg(at = true, atNewLine = true)
-    public String teambitionUpload(ContextSession session, Group group, long qq){
-        ConfigEntity configEntity = configService.findByType(ConfigType.Teambition.getType());
-        if (configEntity == null) return "机器人还没有配置Teambition，请联系机器人主人进行配置。";
-        JSONObject jsonObject = configEntity.getContentJsonObject();
-        group.sendMessage(FunKt.getMif().at(qq).plus("请发送需要上传的图片"));
-        Message imageMessage = session.waitNextMessage();
-        LocalDate localDate = LocalDate.now();
-        String year = String.valueOf(localDate.getYear());
-        String month = String.valueOf(localDate.getMonth().getValue());
-        String day = String.valueOf(localDate.getDayOfMonth());
-        StringBuilder sb = new StringBuilder().append("您上传的图片链接如下：").append("\n");
-        int i = 1;
-        for (MessageItem item : imageMessage.getBody()) {
-            if (item instanceof Image){
-                Image image = (Image) item;
-                String url = image.getUrl();
-                String id = image.getId();
-                sb.append(i++).append("、");
-                InputStream is = null;
-                try {
-                    TeambitionPojo teambitionPojo = TeambitionPojo.fromConfig(jsonObject);
-                    Response response = OkHttpUtils.get(url);
-                    is = OkHttpUtils.getByteStream(response);
-                    int size = Math.toIntExact(Objects.requireNonNull(response.body()).contentLength());
-                    Result<String> result = teambitionLogic.uploadToProject(teambitionPojo,
-                            is, size,
-                            "pic", year, month, day, id
-                    );
-                    if (result.isSuccess()) {
-                        String path = "pic/" + year + "/" + month + "/" + day + "/" + id;
-                        String resultUrl = api + "/teambition/project/" +
-                                jsonObject.getString("name") + "/" + path;
-                        sb.append(resultUrl);
-                    } else {
-                        sb.append("上传失败！！");
-                    }
-                    sb.append("\n");
-                } catch (IOException e) {
-                    sb.append("网络出现异常，上传失败").append("\n");
-                } finally {
-                    IOUtils.close(is);
-                }
-            }
-        }
-        return BotUtils.removeLastLine(sb);
     }
 
     @Action("dcloud上传")

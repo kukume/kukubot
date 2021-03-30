@@ -67,12 +67,6 @@ public class MotionController {
         return result;
     }
 
-    @Action("lexin绑定手环")
-    @QMsg(at = true)
-    public String bindBand(MotionEntity motionEntity) throws IOException {
-        return leXinMotionLogic.bindBand(motionEntity);
-    }
-
     @Action("步数任务")
     @QMsg(at = true)
     public String stepTask(MotionEntity motionEntity, @PathVar(value = 1, type = PathVar.Type.Integer) Integer step){

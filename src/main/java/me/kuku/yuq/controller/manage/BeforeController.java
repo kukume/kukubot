@@ -86,8 +86,7 @@ public class BeforeController {
         exception.printStackTrace(pw);
         try {
             String url = toolLogic.pasteUbuntu("exception", "java", sw.toString());
-            FunKt.getYuq().getGroups().get(group).sendMessage(FunKt.getMif().at(qq).plus("程序出现异常了，异常如下：" + url +
-                    "，如果不是网络IO异常和mirai的异常，请反馈给开发者"));
+            FunKt.getYuq().getGroups().get(group).sendMessage(FunKt.getMif().at(qq).plus("程序出现异常了，异常如下：" + url));
         }catch (Exception ignore){
         }
     }

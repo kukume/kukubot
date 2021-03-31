@@ -2,6 +2,7 @@ package me.kuku.yuq.asm;
 
 import me.kuku.yuq.utils.RSAUtils;
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
@@ -24,6 +25,9 @@ public class YuQStarterAdapter extends ClassVisitor {
 
 	@SuppressWarnings("InnerClassMayBeStatic")
 	class YuQStarterMethodAdapter extends MethodVisitor{
+
+		private boolean status = false;
+
 		public YuQStarterMethodAdapter(MethodVisitor mv){
 			super(Opcodes.ASM5, mv);
 		}
@@ -64,42 +68,53 @@ public class YuQStarterAdapter extends ClassVisitor {
 		@Override
 		public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
 			super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
-//			if (name.equals("<init>") && owner.equals("com/IceCreamQAQ/Yu/loader/AppClassloader")){
-//				super.visitTypeInsn(Opcodes.NEW, "org/objectweb/asm/ClassReader");
-//				super.visitInsn(Opcodes.DUP);
-//				super.visitLdcInsn("com.IceCreamQAQ.Yu.DefaultApp");
-//				super.visitMethodInsn(Opcodes.INVOKESPECIAL, "org/objectweb/asm/ClassReader", "<init>", "(Ljava/lang/String;)V", false);
-//				super.visitVarInsn(Opcodes.ASTORE, 5);
-//				super.visitTypeInsn(Opcodes.NEW, "org/objectweb/asm/ClassWriter");
-//				super.visitInsn(Opcodes.DUP);
-//				super.visitVarInsn(Opcodes.ALOAD, 5);
-//				super.visitInsn(Opcodes.ICONST_0);
-//				super.visitMethodInsn(Opcodes.INVOKESPECIAL, "org/objectweb/asm/ClassWriter", "<init>", "(Lorg/objectweb/asm/ClassReader;I)V", false);
-//				super.visitVarInsn(Opcodes.ASTORE, 6);
-//				super.visitTypeInsn(Opcodes.NEW, "me/kuku/yuq/asm/AddBeanAdapter");
-//				super.visitInsn(Opcodes.DUP);
-//				super.visitVarInsn(Opcodes.ALOAD, 6);
-//				super.visitMethodInsn(Opcodes.INVOKESPECIAL, "me/kuku/yuq/asm/AddBeanAdapter", "<init>", "(Lorg/objectweb/asm/ClassVisitor;)V", false);
-//				super.visitVarInsn(Opcodes.ASTORE, 7);
-//				super.visitVarInsn(Opcodes.ALOAD, 5);
-//				super.visitVarInsn(Opcodes.ALOAD, 7);
-//				super.visitInsn(Opcodes.ICONST_0);
-//				super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "org/objectweb/asm/ClassReader", "accept", "(Lorg/objectweb/asm/ClassVisitor;I)V", false);
-//				super.visitVarInsn(Opcodes.ALOAD, 6);
-//				super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "org/objectweb/asm/ClassWriter", "toByteArray", "()[B", false);
-//				super.visitVarInsn(Opcodes.ASTORE, 8);
-//				super.visitVarInsn(Opcodes.ALOAD, 4);
-//				super.visitLdcInsn("com.IceCreamQAQ.Yu.DefaultApp");
-//				super.visitVarInsn(Opcodes.ALOAD, 8);
-//				super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "com/IceCreamQAQ/Yu/loader/AppClassloader", "define",
-//						"(Ljava/lang/String;[B)Ljava/lang/Class;", false);
-////				super.visitInsn(Opcodes.POP);
-//			}
+			if (name.equals("<init>") && owner.equals("com/IceCreamQAQ/Yu/loader/AppClassloader")){
+				status = true;
+			}
+		}
+
+		@Override
+		public void visitVarInsn(int opcode, int var) {
+			super.visitVarInsn(opcode, var);
+			if (status){
+				super.visitLdcInsn("com.IceCreamQAQ.Yu.DefaultApp");
+				super.visitMethodInsn(Opcodes.INVOKESTATIC, "me/kuku/yuq/asm/AddBeanAdapter", "asm",
+						"(Ljava/lang/String;)[B", false);
+				super.visitVarInsn(Opcodes.ASTORE, 4);
+				super.visitVarInsn(Opcodes.ALOAD, 3);
+				super.visitLdcInsn("com.IceCreamQAQ.Yu.DefaultApp");
+				super.visitVarInsn(Opcodes.ALOAD, 4);
+				super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "com/IceCreamQAQ/Yu/loader/AppClassloader", "define",
+						"(Ljava/lang/String;[B)Ljava/lang/Class;", false);
+				super.visitInsn(Opcodes.POP);
+
+				super.visitLdcInsn("com.IceCreamQAQ.Yu.loader.AppLoader");
+				super.visitMethodInsn(Opcodes.INVOKESTATIC, "me/kuku/yuq/asm/AddControllerAdapter", "asm",
+						"(Ljava/lang/String;)[B", false);
+				super.visitVarInsn(Opcodes.ASTORE, 5);
+				super.visitVarInsn(Opcodes.ALOAD, 3);
+				super.visitLdcInsn("com.IceCreamQAQ.Yu.loader.AppLoader");
+				super.visitVarInsn(Opcodes.ALOAD, 5);
+				super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "com/IceCreamQAQ/Yu/loader/AppClassloader", "define",
+						"(Ljava/lang/String;[B)Ljava/lang/Class;", false);
+				super.visitInsn(Opcodes.POP);
+
+				super.visitMethodInsn(Opcodes.INVOKESTATIC, "me/kuku/yuq/asm/GenerateController", "test2",
+						"()[B", false);
+				super.visitVarInsn(Opcodes.ASTORE, 6);
+				super.visitVarInsn(Opcodes.ALOAD, 3);
+				super.visitLdcInsn("me.kuku.yuq.controller.ASMController");
+				super.visitVarInsn(Opcodes.ALOAD, 6);
+				super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "com/IceCreamQAQ/Yu/loader/AppClassloader", "define",
+						"(Ljava/lang/String;[B)Ljava/lang/Class;", false);
+				super.visitInsn(Opcodes.POP);
+				status = false;
+			}
 		}
 
 		@Override
 		public void visitMaxs(int maxStack, int maxLocals) {
-			super.visitMaxs(maxStack + 10, maxLocals + 10);
+			super.visitMaxs(maxStack + 3, maxLocals + 4);
 		}
 	}
 }

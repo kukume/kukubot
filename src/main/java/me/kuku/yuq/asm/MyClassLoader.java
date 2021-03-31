@@ -1,7 +1,5 @@
 package me.kuku.yuq.asm;
 
-import com.IceCreamQAQ.Yu.loader.AppClassloader;
-
 public class MyClassLoader extends ClassLoader {
 	private static MyClassLoader classLoader;
 

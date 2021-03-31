@@ -3,8 +3,6 @@ package me.kuku.yuq;
 import com.IceCreamQAQ.Yu.hook.YuHook;
 import com.IceCreamQAQ.Yu.loader.AppClassloader;
 import com.IceCreamQAQ.Yu.util.IO;
-import me.kuku.yuq.asm.AddBeanAdapter;
-import me.kuku.yuq.asm.GenerateController;
 import me.kuku.yuq.asm.MyClassLoader;
 import me.kuku.yuq.asm.YuQStarterAdapter;
 import me.kuku.yuq.utils.OkHttpUtils;
@@ -12,8 +10,6 @@ import org.objectweb.asm.*;
 
 import java.io.*;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Start {
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -53,11 +49,6 @@ public class Start {
             ClassWriter ccw = new ClassWriter(ccr, 0);
             YuQStarterAdapter ccc = new YuQStarterAdapter(ccw);
             ccr.accept(ccc, 0);
-
-            ClassReader appCr = new ClassReader("com.IceCreamQAQ.Yu.DefaultApp");
-            ClassWriter appCw = new ClassWriter(appCr, 0);
-            AddBeanAdapter addBeanAdapter = new AddBeanAdapter(appCw);
-            appCr.accept(addBeanAdapter, 0);
 
             MyClassLoader classLoader = MyClassLoader.getInstance();
             Class<?> clazz = classLoader.defineClass("com.icecreamqaq.yuq.YuQStarter", cw.toByteArray());

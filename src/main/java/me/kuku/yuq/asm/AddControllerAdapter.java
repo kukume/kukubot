@@ -7,7 +7,7 @@ import org.objectweb.asm.MethodVisitor;
 
 import java.io.IOException;
 
-import static jdk.internal.org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Opcodes.*;
 
 public class AddControllerAdapter extends ClassVisitor {
 	public AddControllerAdapter(ClassVisitor classVisitor) {

@@ -43,21 +43,10 @@ public class YuQStarterAdapter extends ClassVisitor {
 									"  / //_/ / / / //_/ / / /_____/ __ \\/ __ \\/ __/\n" +
 									" / ,< / /_/ / ,< / /_/ /_____/ /_/ / /_/ / /_  \n" +
 									"/_/|_|\\__,_/_/|_|\\__,_/     /_.___/\\____/\\__/  \n";
-					String[] arr = RSAUtils.getRsaKey();
-					if (arr == null){
-						value = "感谢您使用 YuQ 进行开发，在您使用中如果遇到任何问题，可以到 Github，Gitee 提出 issue，您也可以添加 YuQ 的开发交流群（Njk2MTI5MTI4）进行交流。";
-					}else {
-						super.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-						super.visitLdcInsn("如需加入YuQ开发群，请使用rsa解密群号（https://www.bejson.com/enc/rsa/），rsa秘钥如下：\n" + arr[1]);
-						super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/Object;)V", false);
-						String groupNumber = new String(Base64.getDecoder().decode("Njk2MTI5MTI4"), StandardCharsets.UTF_8);
-						groupNumber = RSAUtils.encrypt(groupNumber, RSAUtils.getPublicKeyOriginal(arr[0]));
-						value = "感谢您使用 YuQ 进行开发，在您使用中如果遇到任何问题，可以到 Github（https://github.com/IceCream-Open/Rain、https://github.com/YuQWorks/YuQ）提出 issue，您也可以添加 YuQ 的开发交流群\n" +
-								"（" + groupNumber + "）\n" +
-								"进行交流。\n" +
-								my + "\n" +
-								"感谢您使用 kuku-bot，在您使用中如果遇到任何问题，可以到 Github（https://github.com/kukume/kuku-bot）提出 issue";
-					}
+					value = "感谢您使用 YuQ 进行开发，在您使用中如果遇到任何问题，可以到 Github（ https://github.com/IceCream-Open/Rain 、 https://github.com/YuQWorks/YuQ ）提出 issue，您也可以添加 YuQ 的开发交流群\n" +
+							"（Njk2MTI5MTI4）（Base64解码网站：http://tools.bugscaner.com/base64/ ）进行交流。\n" +
+							my + "\n" +
+							"感谢您使用 kuku-bot，在您使用中如果遇到任何问题，可以到 Github（ https://github.com/kukume/kuku-bot ）提出 issue";
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -99,7 +88,7 @@ public class YuQStarterAdapter extends ClassVisitor {
 						"(Ljava/lang/String;[B)Ljava/lang/Class;", false);
 				super.visitInsn(Opcodes.POP);
 
-				super.visitMethodInsn(Opcodes.INVOKESTATIC, "me/kuku/yuq/asm/GenerateController", "test2",
+				super.visitMethodInsn(Opcodes.INVOKESTATIC, "me/kuku/yuq/asm/GenerateController", "generate",
 						"()[B", false);
 				super.visitVarInsn(Opcodes.ASTORE, 6);
 				super.visitVarInsn(Opcodes.ALOAD, 3);

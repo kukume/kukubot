@@ -16,7 +16,6 @@ import me.kuku.yuq.controller.qqlogin.BindQQController;
 import me.kuku.yuq.controller.qqlogin.QQJobController;
 import me.kuku.yuq.controller.qqlogin.QQLoginController;
 import me.kuku.yuq.controller.qqlogin.QQQuickLoginController;
-import me.kuku.yuq.controller.warframe.WarframeController;
 import me.kuku.yuq.controller.weibo.WeiboController;
 import me.kuku.yuq.controller.weibo.WeiboNotController;
 import me.kuku.yuq.utils.BotUtils;
@@ -72,11 +71,6 @@ public class MenuController {
         return parse("微博", WeiboNotController.class, WeiboController.class);
     }
 
-    @Action("wf")
-    public String wf() {
-        return parse("wf",  WarframeController.class);
-    }
-
     @Action("ark")
     public String ark(){
         return parse("ark", ArkNightsController.class, ArkNightsLoginController.class, ArkNightsTagController.class);
@@ -86,7 +80,6 @@ public class MenuController {
     public String menu(){
         return "https://api.kuku.me/menu";
     }
-
 
     private String parse(String name, Class<?>...classes){
         List<String> list = BotUtils.menu(classes);

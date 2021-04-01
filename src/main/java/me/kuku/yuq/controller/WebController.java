@@ -21,7 +21,6 @@ import me.kuku.yuq.controller.qqlogin.BindQQController;
 import me.kuku.yuq.controller.qqlogin.QQJobController;
 import me.kuku.yuq.controller.qqlogin.QQLoginController;
 import me.kuku.yuq.controller.qqlogin.QQQuickLoginController;
-import me.kuku.yuq.controller.warframe.WarframeController;
 import me.kuku.yuq.controller.weibo.WeiboController;
 import me.kuku.yuq.controller.weibo.WeiboNotController;
 import me.kuku.yuq.utils.BotUtils;
@@ -66,7 +65,6 @@ public class WebController {
         jsonObject.put("qq", BotUtils.menu(QQLoginController.class, BindQQController.class, QQJobController.class, QQQuickLoginController.class));
         jsonObject.put("setting", BotUtils.menu(SettingController.class));
         jsonObject.put("wb", BotUtils.menu(WeiboNotController.class, WeiboController.class));
-        jsonObject.put("wf", BotUtils.menu(WarframeController.class));
         jsonObject.put("ark", BotUtils.menu(ArkNightsController.class, ArkNightsTagController.class, ArkNightsLoginController.class));
         return jsonObject.toString();
     }

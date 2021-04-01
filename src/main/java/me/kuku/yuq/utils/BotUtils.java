@@ -29,7 +29,6 @@ import me.kuku.yuq.controller.qqlogin.BindQQController;
 import me.kuku.yuq.controller.qqlogin.QQJobController;
 import me.kuku.yuq.controller.qqlogin.QQLoginController;
 import me.kuku.yuq.controller.qqlogin.QQQuickLoginController;
-import me.kuku.yuq.controller.warframe.WarframeController;
 import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.pojo.UA;
 import okhttp3.Cookie;
@@ -289,7 +288,7 @@ public class BotUtils {
                 ManageAdminController.class, ManageNotController.class, ManageOwnerController.class, ManageSuperAdminController.class,
                 BindStepController.class, MotionController.class, BindNeTeaseController.class, NeTeaseController.class,
                 BindQQController.class, QQJobController.class, QQLoginController.class, QQQuickLoginController.class,
-                WarframeController.class, ArkNightsController.class, BotController.class, MenuController.class,
+                ArkNightsController.class, BotController.class, MenuController.class,
                 MyQQController.class, ArkNightsLoginController.class, SettingController.class, ToolController.class, ToolController.class);
         for (int i = 0; i < list.size(); i++){
             String str = list.get(i);

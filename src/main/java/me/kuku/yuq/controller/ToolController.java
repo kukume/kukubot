@@ -386,8 +386,11 @@ public class ToolController {
         Map<Long, Long> map = messageService.findCountQQByGroupAndToday(group.getId());
         StringBuilder sb = new StringBuilder().append("本群今日发言数统计如下：").append("\n");
         for (Map.Entry<Long, Long> entry: map.entrySet()){
-            sb.append("@").append(group.get(entry.getKey()).nameCardOrName())
-                    .append("（").append(entry.getKey()).append("）").append("：")
+            sb.append("@");
+            if (group.getOrNull(entry.getKey()) == null){
+                sb.append("未在本群");
+            }else sb.append(group.get(entry.getKey()).nameCardOrName());
+            sb.append("（").append(entry.getKey()).append("）").append("：")
                     .append(entry.getValue()).append("条").append("\n");
         }
         return sb.deleteCharAt(sb.length() - 1).toString();
@@ -501,20 +504,6 @@ public class ToolController {
         }
         double tbNumber = gbNumber/FORMAT;
         return new DecimalFormat("#.##TB").format(tbNumber);
-    }
-
-    @Action("写真")
-    public Image photo() {
-        InputStream is = null;
-        try {
-            is = toolLogic.photo();
-            return FunKt.getMif().imageByInputStream(is);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        } finally {
-            IOUtils.close(is);
-        }
     }
 
     @Action("kuku上传")

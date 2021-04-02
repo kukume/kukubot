@@ -48,7 +48,6 @@ public interface ToolLogic {
     String teachYou(String content, String type) throws IOException;
     String songByQQ(String name) throws IOException;
     Result<String> songBy163(String name) throws IOException;
-    InputStream photo() throws IOException;
     String uploadImage(InputStream is);
     String abstractWords(String word);
     String executeCode(String code, CodeType codeType) throws IOException;

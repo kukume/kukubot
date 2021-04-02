@@ -535,11 +535,6 @@ public class ToolLogicImpl implements ToolLogic {
     }
 
     @Override
-    public InputStream photo() throws IOException {
-        return OkHttpUtils.getByteStream("https://api.pixivweb.com/api.php?return=img");
-    }
-
-    @Override
     public String uploadImage(InputStream is) {
         MultipartBody body = new MultipartBody.Builder().setType(MultipartBody.FORM)
                 .addFormDataPart("file", "kukuapi",

@@ -190,8 +190,7 @@ public class ManageSuperAdminController {
     @QMsg(at = true)
     public String colorPicType(GroupEntity groupEntity, String type){
         String colorPicType;
-        if ("lolicon".equals(type) || "loliconR18".equals(type) ||
-                "loliconproxy".equals(type) || "loliconR18proxy".equals(type) || "quickly".equals(type)){
+        if ("lolicon".equals(type) || "loliconR18".equals(type) || "quickly".equals(type)){
             colorPicType = type;
         }else return "没有该类型，请重试！！";
         groupEntity.setColorPicType(colorPicType);

@@ -33,7 +33,7 @@ public class MessageServiceImpl implements MessageService {
                 "select count(qq),qq from MessageEntity where group_ = ?0 and date > parsedatetime('" + today + "', 'yyyy-MM-dd') group by qq order by count(qq) desc",
                 group
         ).list();
-        Map<Long, Long> map = new HashMap<>();
+        Map<Long, Long> map = new LinkedHashMap<>();
         for (Object o : result) {
             Object[] objArr = (Object[]) o;
             map.put(Long.parseLong(objArr[1].toString()),

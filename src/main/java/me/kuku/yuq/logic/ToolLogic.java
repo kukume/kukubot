@@ -32,8 +32,7 @@ public interface ToolLogic {
     String parseVideo(String url) throws IOException;
     Result<String> weather(String local, String cookie) throws IOException;
     String ping(String domain) throws IOException;
-    Result<List<Map<String, String>>> colorPicByLoLiCon(String apiKey, boolean isR18, boolean isProxy) throws IOException;
-    InputStream piXivPicProxy(String url) throws IOException;
+    Result<List<Map<String, String>>> colorPicByLoLiCon(String apiKey, boolean isR18) throws IOException;
     Map<String, String> hiToKoTo() throws IOException;
     InputStream creatQr(String content) throws IOException;
     String girlImage() throws IOException;
@@ -58,4 +57,5 @@ public interface ToolLogic {
     byte[] diu(String url);
     byte[] pa(String url);
     JSONArray loLiConQuickly() throws IOException;
+    InputStream readTheWorld() throws IOException;
 }

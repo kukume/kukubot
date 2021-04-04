@@ -241,7 +241,7 @@ public class ToolController {
                     String apiKey = configEntity.getContent();
                     int nowNum = 0;
                     outer: while (true) {
-                        Result<List<Map<String, String>>> result = toolLogic.colorPicByLoLiCon(apiKey, type.contains("loliconR18"), type.contains("proxy"));
+                        Result<List<Map<String, String>>> result = toolLogic.colorPicByLoLiCon(apiKey, type.contains("loliconR18"));
                         List<Map<String, String>> list = result.getData();
                         if (list == null) {
                             group.sendMessage(FunKt.getMif().at(qq).plus(result.getMessage()));
@@ -250,8 +250,7 @@ public class ToolController {
                         for (Map<String, String> map : list) {
                             InputStream is = null;
                             try {
-                                if (type.contains("proxy")) is = toolLogic.piXivPicProxy(map.get("url"));
-                                else is = OkHttpUtils.getByteStream(map.get("url"));
+                                is = OkHttpUtils.getByteStream(map.get("url"));
                                 group.sendMessage(FunKt.getMif().imageByInputStream(is).toMessage());
                                 if (++nowNum == finalNum) break outer;
                             } finally {
@@ -698,6 +697,18 @@ public class ToolController {
         else bytes = toolLogic.pa(url);
         if (bytes == null)  return FunKt.getMif().at(qq).plus("图片生成失败，请重试！！");
         return FunKt.getMif().imageByByteArray(bytes).toMessage();
+    }
+
+    @Action("读懂世界")
+    public Image readTheWorld(){
+        InputStream is;
+        try {
+            is = toolLogic.readTheWorld();
+            return FunKt.getMif().imageByInputStream(is);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
 }

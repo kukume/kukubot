@@ -329,12 +329,10 @@ public class ToolLogicImpl implements ToolLogic {
     }
 
     @Override
-    public Result<List<Map<String, String>>> colorPicByLoLiCon(String apiKey, boolean isR18, boolean isProxy) throws IOException {
+    public Result<List<Map<String, String>>> colorPicByLoLiCon(String apiKey, boolean isR18) throws IOException {
         int r18 = 0;
         if (isR18) r18 = 1;
-        JSONObject jsonObject;
-        if (isProxy) jsonObject = OkHttpUtils.getJson(api + "/lolicon/?apikey=" + apiKey + "&r18=" + r18);
-        else jsonObject = OkHttpUtils.getJson("https://api.lolicon.app/setu/?apikey=" + apiKey + "&r18=" + r18 + "&num=10");
+        JSONObject jsonObject = OkHttpUtils.getJson("https://api.lolicon.app/setu/?apikey=" + apiKey + "&r18=" + r18 + "&num=10");
         JSONArray dataJsonArray = jsonObject.getJSONArray("data");
         ExecutorUtils.execute(() -> {
             for (int i = 0; i < dataJsonArray.size(); i++) {
@@ -381,11 +379,6 @@ public class ToolLogicImpl implements ToolLogic {
             case 429: return Result.failure("达到调用额度限制，距离下一次恢复额度时间：" + jsonObject.getLong("quota_min_ttl") + "秒", null);
             default: return Result.failure(jsonObject.getString("msg"), null);
         }
-    }
-
-    @Override
-    public InputStream piXivPicProxy(String url) throws IOException {
-        return OkHttpUtils.getByteStream(api + "/pixiv/picbyurl?url=" + URLEncoder.encode(url, "utf-8"));
     }
 
     @Override
@@ -740,5 +733,10 @@ public class ToolLogicImpl implements ToolLogic {
     public JSONArray loLiConQuickly() throws IOException {
         JSONObject jsonObject = OkHttpUtils.getJson("https://api.kuku.me/lolicon/random/quickUrl?num=20");
         return jsonObject.getJSONArray("data");
+    }
+
+    @Override
+    public InputStream readTheWorld() throws IOException {
+        return OkHttpUtils.getByteStream("http://api.03c3.cn/zb/");
     }
 }

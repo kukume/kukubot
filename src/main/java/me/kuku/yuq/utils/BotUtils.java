@@ -51,12 +51,14 @@ public class BotUtils {
         // http://www.uc4.cn/
         try {
             if (!url.startsWith("http") && !url.startsWith("https")) url = "http://" + url;
-            JSONObject jsonObject = OkHttpUtils.getJson("http://uc4.cn/ajax.php?act=creat1&url=" +
-                    URLEncoder.encode(url, "utf-8") + "&pattern=1&type=a6bcn&id=", OkHttpUtils.addUA(UA.PC));
-            if (jsonObject.getInteger("code") == 0){
-                return jsonObject.getString("dwz");
+            Map<String, String> map = new HashMap<>();
+            map.put("i", "1");
+            map.put("url", url);
+            JSONObject jsonObject = OkHttpUtils.postJson("https://dwz.ng/api.php", map);
+            if (jsonObject.getInteger("code") == 1){
+                return jsonObject.getString("url");
             }else return url;
-        } catch (IOException e) {
+        } catch (Exception e) {
             return url;
         }
     }

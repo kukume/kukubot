@@ -206,7 +206,7 @@ public class ToolController {
 
     @Action("色图")
     @Synonym({"色图十连", "色图{numStr}连"})
-    public void colorPic(Group group, long qq, @PathVar(0) String command, String numStr) {
+    public void colorPic(Group group, long qq, @PathVar(0) String command, @PathVar(1) String tags, String numStr) {
         GroupEntity groupEntity = groupService.findByGroup(group.getId());
         if (groupEntity == null || groupEntity.getColorPic() == null || !groupEntity.getColorPic()) {
             group.sendMessage(FunKt.getMif().at(qq).plus("该功能已关闭！！"));
@@ -261,7 +261,7 @@ public class ToolController {
                 } else if ("quickly".equals(type)){
                     int nowNum = 0;
                     outer:while (true) {
-                        JSONArray quickJsonArray = toolLogic.loLiConQuickly();
+                        JSONArray quickJsonArray = toolLogic.loLiConQuickly(tags);
                         for (Object obj : quickJsonArray) {
                             JSONObject quickJsonObject = (JSONObject) obj;
                             String url = quickJsonObject.getString("quickUrl");
@@ -271,9 +271,15 @@ public class ToolController {
                                 group.sendMessage(FunKt.getMif().imageByInputStream(is).toMessage());
                                 if (++nowNum == finalNum) break outer;
                             } catch (Exception e) {
-                                Integer id = quickJsonObject.getInteger("id");
-                                group.sendMessage(FunKt.getMif().at(qq).plus("色图发送失败，id为" + id));
-                                OkHttpUtils.get("https://api.kuku.me/lolicon/reupload?id=" + id).close();
+                                ExecutorUtils.execute(() -> {
+                                    Integer id = quickJsonObject.getInteger("id");
+                                    group.sendMessage(FunKt.getMif().at(qq).plus("色图发送失败，id为" + id));
+                                    try {
+                                        OkHttpUtils.get("https://api.kuku.me/lolicon/reupload?id=" + id).close();
+                                    } catch (IOException ex) {
+                                        ex.printStackTrace();
+                                    }
+                                });
                             } finally {
                                 IOUtils.close(is);
                             }

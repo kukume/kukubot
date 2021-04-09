@@ -3,8 +3,6 @@
 * [YuQ-Mirai-SuperDemo](https://github.com/YuQWorks/YuQ-SuperDemo)
 * [Mirai](https://github.com/mamoe/mirai)
 
-**Jar包下载**：https://file.kuku.me
-
 **最新版本已支持过滑块验证码（版本过低，环境异常等都是不能过滑块验证码的原因），但是需要gui环境，如果是把挂在无ui环境的，可以在有ui环境（比如：windows系统）的机器上登录成功后，把`device.json`复制到程序根目录或者`conf`文件夹下**
 
 ## 功能

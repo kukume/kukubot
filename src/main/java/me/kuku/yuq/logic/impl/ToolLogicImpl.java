@@ -730,8 +730,11 @@ public class ToolLogicImpl implements ToolLogic {
     }
 
     @Override
-    public JSONArray loLiConQuickly() throws IOException {
-        JSONObject jsonObject = OkHttpUtils.getJson("https://api.kuku.me/lolicon/random/quickUrl?num=20");
+    public JSONArray loLiConQuickly(String tags) throws IOException {
+        String url = "https://api.kuku.me/lolicon/random?num=20";
+        if (tags != null) url += "&tags=" + tags;
+        JSONObject jsonObject = OkHttpUtils.getJson(url,
+                OkHttpUtils.addSingleHeader("Accept", "application/json"));
         return jsonObject.getJSONArray("data");
     }
 

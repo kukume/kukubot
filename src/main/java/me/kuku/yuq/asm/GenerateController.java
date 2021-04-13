@@ -43,13 +43,12 @@ public class GenerateController {
 			fis = new FileInputStream("conf/YuQ.properties");
 			properties.load(fis);
 			Object urlStr = properties.get("YuQ.Mirai.bot.command.url");
-			if (urlStr == null){
-				urlStr = "https://api.kuku.me/bot";
-			}
-			String[] arr = urlStr.toString().split("\\|");
-			for (String url: arr){
-				String str = OkHttpUtils.getStr(url);
-				list.addAll(JSON.parseArray(str, ActionPojo.class));
+			if (urlStr != null) {
+				String[] arr = urlStr.toString().split("\\|");
+				for (String url : arr) {
+					String str = OkHttpUtils.getStr(url);
+					list.addAll(JSON.parseArray(str, ActionPojo.class));
+				}
 			}
 		} catch (Exception ignore) {
 		} finally {

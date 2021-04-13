@@ -11,6 +11,7 @@ import org.objectweb.asm.*;
 import java.io.*;
 import java.lang.reflect.Method;
 
+@SuppressWarnings("ResultOfMethodCallIgnored")
 public class Start {
     public static void main(String[] args) {
         // 从conf文件夹拉设备信息到根目录
@@ -21,6 +22,18 @@ public class Start {
             try {
                 IO.writeFile(rootDeviceFile, IO.read(new FileInputStream(confDeviceFile), true));
             } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+        // 如果没有配置文件，下载配置文件
+        File confFile = new File("conf");
+        if (!confFile.exists()) confFile.mkdir();
+        File yuqFile = new File("conf/YuQ.properties");
+        if (!yuqFile.exists()){
+            try {
+                byte[] bytes = OkHttpUtils.downloadBytes("https://vkceyugu.cdn.bspapp.com/VKCEYUGU-ba222f61-ee83-431d-bf9f-7e6216a8cf41/070694de-cbfa-43da-b332-a6c13b52b387.properties");
+                IO.writeFile(yuqFile, bytes);
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }

@@ -174,14 +174,11 @@ public class BotUtils {
                     msg.plus(mif.jsonEx(aJsonObject.getString("content")));
                     break;
                 case "voice":
-                    InputStream is = null;
                     try {
-                        is = OkHttpUtils.getByteStream(aJsonObject.getString("content"));
-                        msg.plus(mif.voiceByInputStream(is));
+                        byte[] bytes = OkHttpUtils.getBytes(aJsonObject.getString("content"));
+                        msg.plus(mif.voiceByByteArray(bytes));
                     } catch (IOException e) {
                         e.printStackTrace();
-                    } finally {
-                        IOUtils.close(is);
                     }
                     break;
             }

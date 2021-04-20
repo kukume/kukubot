@@ -1,10 +1,9 @@
 package me.kuku.yuq.logic.impl;
 
-import com.IceCreamQAQ.Yu.util.OkHttpWebImpl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.icecreamqaq.yuq.mirai.MiraiBot;
+import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.logic.QQGroupLogic;
 import me.kuku.yuq.pojo.GroupMember;
 import me.kuku.yuq.pojo.Result;
@@ -12,7 +11,6 @@ import me.kuku.yuq.pojo.UA;
 import me.kuku.yuq.utils.BotUtils;
 import me.kuku.yuq.utils.OkHttpUtils;
 
-import javax.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,19 +19,15 @@ import java.util.Map;
 
 @SuppressWarnings("unused")
 public class QQGroupLogicImpl implements QQGroupLogic {
-    @Inject
-    private OkHttpWebImpl web;
-    @Inject
-    private MiraiBot miraiBot;
 
     @Override
-    public String addGroupMember(Long qq, Long group) {
+    public String addGroupMember(QQLoginEntity qqLoginEntity, Long qq, Long group) throws IOException {
         HashMap<String, String> map = new HashMap<>();
         map.put("gc", String.valueOf(group));
         map.put("ul", String.valueOf(qq));
-        map.put("bkn", String.valueOf(miraiBot.getGtk()));
-        String str = web.post("https://qun.qq.com/cgi-bin/qun_mgr/add_group_member", map);
-        JSONObject jsonObject = JSON.parseObject(str);
+        map.put("bkn", qqLoginEntity.getGtk());
+        JSONObject jsonObject = OkHttpUtils.postJson("https://qun.qq.com/cgi-bin/qun_mgr/add_group_member", map,
+                OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
         switch (jsonObject.getInteger("ec")){
             case 0: return "邀请" + qq + "成功";
             case 4: return "邀请失败，请更新QQ！！";
@@ -42,16 +36,16 @@ public class QQGroupLogicImpl implements QQGroupLogic {
     }
 
     @Override
-    public String setGroupAdmin(Long qq, Long group, boolean isAdmin) {
+    public String setGroupAdmin(QQLoginEntity qqLoginEntity, Long qq, Long group, boolean isAdmin) throws IOException {
         Map<String, String> map = new HashMap<>();
         map.put("gc", String.valueOf(group));
         map.put("ul", group.toString());
         int op = 0;
         if (isAdmin) op = 1;
         map.put("op", String.valueOf(op));
-        map.put("bkn", String.valueOf(miraiBot.getGtk()));
-        String str = web.post("https://qun.qq.com/cgi-bin/qun_mgr/set_group_admin", map);
-        JSONObject jsonObject = JSON.parseObject(str);
+        map.put("bkn", qqLoginEntity.getGtk());
+        JSONObject jsonObject = OkHttpUtils.postJson("https://qun.qq.com/cgi-bin/qun_mgr/set_group_admin", map,
+                OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
         switch (jsonObject.getInteger("ec")){
             case 0: return String.format("设置%d为管理员成功", qq);
             case 4: return "设置失败，请更新QQ！！";
@@ -62,14 +56,14 @@ public class QQGroupLogicImpl implements QQGroupLogic {
     }
 
     @Override
-    public String setGroupCard(Long qq, Long group, String name) {
+    public String setGroupCard(QQLoginEntity qqLoginEntity, Long qq, Long group, String name) throws IOException {
         Map<String, String> map = new HashMap<>();
         map.put("gc", group.toString());
         map.put("ul", qq.toString());
         map.put("name", name);
-        map.put("bkn", String.valueOf(miraiBot.getGtk()));
-        String str = web.post("https://qun.qq.com/cgi-bin/qun_mgr/set_group_card", map);
-        JSONObject jsonObject = JSON.parseObject(str);
+        map.put("bkn", qqLoginEntity.getGtk());
+        JSONObject jsonObject = OkHttpUtils.postJson("https://qun.qq.com/cgi-bin/qun_mgr/set_group_card", map,
+                OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
         switch (jsonObject.getInteger("ec")){
             case 0: return String.format("更改%d名片为%s成功", qq, name);
             case 4: return "更改名片失败，请更新qq";
@@ -80,16 +74,16 @@ public class QQGroupLogicImpl implements QQGroupLogic {
     }
 
     @Override
-    public String deleteGroupMember(Long qq, Long group, boolean isFlag) {
+    public String deleteGroupMember(QQLoginEntity qqLoginEntity, Long qq, Long group, boolean isFlag) throws IOException {
         Map<String, String> map = new HashMap<>();
         map.put("gc", group.toString());
         map.put("ul", qq.toString());
         int isFlagNum = 0;
         if (isFlag) isFlagNum = 1;
         map.put("name", String.valueOf(isFlagNum));
-        map.put("bkn", String.valueOf(miraiBot.getGtk()));
-        String str = web.post("https://qun.qq.com/cgi-bin/qun_mgr/delete_group_member", map);
-        JSONObject jsonObject = JSON.parseObject(str);
+        map.put("bkn", qqLoginEntity.getGtk());
+        JSONObject jsonObject = OkHttpUtils.postJson("https://qun.qq.com/cgi-bin/qun_mgr/delete_group_member", map,
+                OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
         switch (jsonObject.getInteger("ec")){
             case 0: return String.format("踢%d成功", qq);
             case 4: return "踢人失败，请更新QQ！！";
@@ -100,7 +94,7 @@ public class QQGroupLogicImpl implements QQGroupLogic {
     }
 
     @Override
-    public String addHomeWork(Long group, String courseName, String title, String content, boolean needFeedback) {
+    public String addHomeWork(QQLoginEntity qqLoginEntity, Long group, String courseName, String title, String content, boolean needFeedback) throws IOException {
         Map<String, String> map = new HashMap<>();
         map.put("homework_id", "");
         map.put("group_id", group.toString());
@@ -116,9 +110,9 @@ public class QQGroupLogicImpl implements QQGroupLogic {
         map.put("tsfeedback", "");
         map.put("syncgids", "");
         map.put("client_type", "1");
-        map.put("bkn", String.valueOf(miraiBot.getGtk()));
-        String str = web.post("https://qun.qq.com/cgi-bin/homework/hw/assign_hw.fcg", map);
-        JSONObject jsonObject = JSON.parseObject(str);
+        map.put("bkn", qqLoginEntity.getGtk());
+        JSONObject jsonObject = OkHttpUtils.postJson("https://qun.qq.com/cgi-bin/homework/hw/assign_hw.fcg", map,
+                OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
         switch (jsonObject.getInteger("retcode")){
             case 0: return "发布作业成功！！";
             case 110002: return "权限不足，无法发布作业！！";
@@ -128,15 +122,15 @@ public class QQGroupLogicImpl implements QQGroupLogic {
     }
 
     @Override
-    public String groupCharin(Long group, String content, Long time) {
+    public String groupCharin(QQLoginEntity qqLoginEntity, Long group, String content, Long time) throws IOException {
         Map<String, String> map = new HashMap<>();
         map.put("gc", group.toString());
         map.put("desc", content);
         map.put("type", "2");
         map.put("expired", time.toString());
-        map.put("bkn", String.valueOf(miraiBot.getGtk()));
-        String str = web.post("https://qun.qq.com/cgi-bin/group_chain/chain_new", map);
-        JSONObject jsonObject = JSON.parseObject(str);
+        map.put("bkn", qqLoginEntity.getGtk());
+        JSONObject jsonObject = OkHttpUtils.postJson("https://qun.qq.com/cgi-bin/group_chain/chain_new", map,
+                OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
         switch (jsonObject.getInteger("rt")){
             case 0: return "发布群接龙成功！！";
             case 11004: return "到期时间格式有误";
@@ -147,8 +141,9 @@ public class QQGroupLogicImpl implements QQGroupLogic {
     }
 
     @Override
-    public Result<List<Map<String, String>>> groupLevel(Long group) {
-        String str = web.get("https://qun.qq.com/interactive/levellist?gc=$group&type=7&_wv=3&_wwv=128");
+    public Result<List<Map<String, String>>> groupLevel(QQLoginEntity qqLoginEntity, Long group) throws IOException {
+        String str = OkHttpUtils.getStr("https://qun.qq.com/interactive/levellist?gc=$group&type=7&_wv=3&_wwv=128",
+                OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
         String jsonStr = BotUtils.regex("window.__INITIAL_STATE__=", "</script>", str);
         JSONObject jsonObject = JSON.parseObject(jsonStr);
         JSONArray jsonArray = jsonObject.getJSONArray("membersList");
@@ -167,16 +162,16 @@ public class QQGroupLogicImpl implements QQGroupLogic {
     }
 
     @Override
-    public Result<GroupMember> queryMemberInfo(Long group, Long qq) {
+    public Result<GroupMember> queryMemberInfo(QQLoginEntity qqLoginEntity, Long group, Long qq) throws IOException {
         Map<String, String> map = new HashMap<>();
         map.put("gc", group.toString());
         map.put("st", "0");
         map.put("end", "20");
         map.put("sort", "0");
         map.put("key", qq.toString());
-        map.put("bkn", String.valueOf(miraiBot.getGtk()));
-        String str = web.post("https://qun.qq.com/cgi-bin/qun_mgr/search_group_members", map);
-        JSONObject jsonObject = JSON.parseObject(str);
+        map.put("bkn", qqLoginEntity.getCookieWithGroup());
+        JSONObject jsonObject = OkHttpUtils.postJson("https://qun.qq.com/cgi-bin/qun_mgr/search_group_members", map,
+                OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
         switch (jsonObject.getInteger("ec")){
             case 0: {
                 JSONArray jsonArray = jsonObject.getJSONArray("mems");
@@ -200,34 +195,49 @@ public class QQGroupLogicImpl implements QQGroupLogic {
     }
 
     @Override
-    public Result<List<String>> essenceMessage(Long group) {
-        String html = web.get("https://qun.qq.com/essence/index?gc=$group&_wv=3&_wwv=128&_wvx=2&_wvxBclr=f5f6fa");
+    public Result<List<JSONArray>> essenceMessage(QQLoginEntity qqLoginEntity, Long group) throws IOException {
+        String html = OkHttpUtils.getStr("https://qun.qq.com/essence/index?gc=" + group + "&_wv=3&_wwv=128&_wvx=2&_wvxBclr=f5f6fa",
+                OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
         String jsonStr = BotUtils.regex("window.__INITIAL_STATE__=", "</", html);
         JSONObject jsonObject = JSON.parseObject(jsonStr);
         JSONArray jsonArray = jsonObject.getJSONArray("msgList");
         if (jsonArray.size() == 0) return Result.failure("当前群内没有精华消息！！或者cookie已失效！！", null);
-        List<String> list = new ArrayList<>();
+        List<JSONArray> list = new ArrayList<>();
         for (int i = 0; i < jsonArray.size(); i++){
             JSONObject msgJsonObject = jsonArray.getJSONObject(i);
             JSONArray contentJsonArray = msgJsonObject.getJSONArray("msg_content");
-            StringBuilder sb = new StringBuilder();
-            contentJsonArray.forEach(obj -> {
-                JSONObject singleJsonObject = (JSONObject) obj;
-                String text = singleJsonObject.getString("text");
-                if (text != null) sb.append(text);
-                else sb.append(singleJsonObject.getString("face_text"));
-            });
-            list.add(sb.toString());
+            if (contentJsonArray != null) {
+                JSONArray msgJsonArray = new JSONArray();
+                contentJsonArray.forEach(obj -> {
+                    JSONObject myMsgJsonObject = new JSONObject();
+                    JSONObject singleJsonObject = (JSONObject) obj;
+                    Integer type = singleJsonObject.getInteger("msg_type");
+                    if (type == 1) {
+                        String text = singleJsonObject.getString("text");
+                        if (text == null) text = singleJsonObject.getString("face_text");
+                        myMsgJsonObject.put("type", "text");
+                        myMsgJsonObject.put("content", text);
+                    } else if (type == 3) {
+                        String url = singleJsonObject.getString("image_url");
+                        myMsgJsonObject.put("type", "image");
+                        myMsgJsonObject.put("content", url);
+                    }
+                    if (myMsgJsonObject.size() != 0)
+                        msgJsonArray.add(myMsgJsonObject);
+                });
+                if (msgJsonArray.size() != 0)
+                    list.add(msgJsonArray);
+            }
         }
         return Result.success(list);
     }
 
     @Override
-    public Result<List<Long>> queryGroup() {
+    public Result<List<Long>> queryGroup(QQLoginEntity qqLoginEntity) throws IOException {
         Map<String, String> map = new HashMap<>();
-        map.put("bkn", String.valueOf(miraiBot.getGtk()));
-        String str = web.post("https://qun.qq.com/cgi-bin/qun_mgr/get_group_list", map);
-        JSONObject jsonObject = JSON.parseObject(str);
+        map.put("bkn", qqLoginEntity.getGtk());
+        JSONObject jsonObject = OkHttpUtils.postJson("https://qun.qq.com/cgi-bin/qun_mgr/get_group_list", map,
+                OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
         if (jsonObject.getInteger("ec").equals(0)){
             List<Long> list = new ArrayList<>();
             JSONArray manageJsonArray = jsonObject.getJSONArray("manage");
@@ -250,7 +260,7 @@ public class QQGroupLogicImpl implements QQGroupLogic {
     }
 
     @Override
-    public List<Map<String, String>> groupHonor(Long group, String type) {
+    public List<Map<String, String>> groupHonor(QQLoginEntity qqLoginEntity, Long group, String type) throws IOException {
         int typeNum;
         int wwv;
         String param;
@@ -294,7 +304,8 @@ public class QQGroupLogicImpl implements QQGroupLogic {
             }
             default: return list;
         }
-        String html = web.get(String.format("https://qun.qq.com/interactive/honorlist?gc=%d&type=%d&_wv=3&_wwv=%d", group, typeNum, wwv));
+        String html = OkHttpUtils.getStr(String.format("https://qun.qq.com/interactive/honorlist?gc=%d&type=%d&_wv=3&_wwv=%d", group, typeNum, wwv),
+                OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
         String jsonStr = BotUtils.regex("window.__INITIAL_STATE__=", "</script", html);
         JSONObject jsonObject = JSON.parseObject(jsonStr);
         JSONArray jsonArray = jsonObject.getJSONArray(param);
@@ -311,13 +322,13 @@ public class QQGroupLogicImpl implements QQGroupLogic {
     }
 
     @Override
-    public Result<String> groupSign(Long group, String place, String text, String name, String picId, String picUrl) {
-        String gtk = String.valueOf(miraiBot.getGtk());
-        String qq= miraiBot.qq;
+    public Result<String> groupSign(QQLoginEntity qqLoginEntity, Long group, String place, String text, String name, String picId, String picUrl) throws IOException {
+        String gtk = qqLoginEntity.getGtk();
+        String qq= qqLoginEntity.getQq().toString();
         String info = null;
         String templateId = null;
-        String templateStr = web.get(String.format("https://qun.qq.com/cgi-bin/qiandao/gallery_template?gc=%d&bkn=%s&time=1014", group, gtk));
-        JSONObject templateJsonObject = JSON.parseObject(templateStr);
+        JSONObject templateJsonObject = OkHttpUtils.getJson(String.format("https://qun.qq.com/cgi-bin/qiandao/gallery_template?gc=%d&bkn=%s&time=1014", group, gtk),
+                OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
         if (templateJsonObject.getInteger("retcode") != 0) return Result.failure("qq群签到失败，请更新QQ！！", null);
         out:for (Object obj: templateJsonObject.getJSONObject("data").getJSONArray("list")){
             JSONObject singleJsonObject = (JSONObject) obj;
@@ -333,17 +344,15 @@ public class QQGroupLogicImpl implements QQGroupLogic {
                 break;
             }
             if ("自定义".equals(singleJsonObject.getString("name"))) break;
-            String idStr = web.get(String.format("https://qun.qq.com/cgi-bin/qiandao/gallery_list/category?template_id=%s&bkn=%s&need_dynamic=1",
-                    singleJsonObject.getInteger("id"), gtk));
-            JSONObject idJsonObject = JSON.parseObject(idStr);
+            JSONObject idJsonObject = OkHttpUtils.getJson(String.format("https://qun.qq.com/cgi-bin/qiandao/gallery_list/category?template_id=%s&bkn=%s&need_dynamic=1",
+                    singleJsonObject.getInteger("id"), gtk), OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
             List<String> param = new ArrayList<>();
             for (Object id: idJsonObject.getJSONObject("data").getJSONArray("category_list")){
                 JSONObject singleIdJsonObject = (JSONObject) id;
                 param.add(singleIdJsonObject.getString("category_id"));
             }
-            String deepStr = web.get(String.format("https://qun.qq.com/cgi-bin/qiandao/gallery_list?bkn=%s&category_ids=%s&start=0&num=50",
-                    gtk, param));
-            JSONObject deepJsonObject = JSON.parseObject(deepStr);
+            JSONObject deepJsonObject = OkHttpUtils.getJson(String.format("https://qun.qq.com/cgi-bin/qiandao/gallery_list?bkn=%s&category_ids=%s&start=0&num=50",
+                    gtk, param), OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
             for (Object sin: deepJsonObject.getJSONObject("data").getJSONArray("picture_list")){
                 JSONObject jsonObject = (JSONObject) sin;
                 for (Object item: jsonObject.getJSONArray("picture_item")){
@@ -361,8 +370,8 @@ public class QQGroupLogicImpl implements QQGroupLogic {
             }
         }
         if (info == null || templateId == null){
-            String template2Str = web.get(String.format("https://qun.qq.com/cgi-bin/qiandao/gallery_list?bkn=%s&category_ids=[9]&start=0&num=50", gtk));
-            JSONObject template2JsonObject = JSON.parseObject(template2Str);
+            JSONObject template2JsonObject = OkHttpUtils.getJson(String.format("https://qun.qq.com/cgi-bin/qiandao/gallery_list?bkn=%s&category_ids=[9]&start=0&num=50", gtk),
+                    OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
             JSONObject picJsonObject = template2JsonObject.getJSONObject("data").getJSONArray("picture_list").getJSONObject(0);
             for (Object obj: picJsonObject.getJSONArray("picture_item")){
                 JSONObject singleJsonObject = (JSONObject) obj;
@@ -393,15 +402,15 @@ public class QQGroupLogicImpl implements QQGroupLogic {
         JSONObject jsonObject;
         try {
             jsonObject = OkHttpUtils.postJson("https://qun.qq.com/cgi-bin/qiandao/sign/publish", map,
-                    OkHttpUtils.addHeaders(BotUtils.toQQLoginEntity(web, miraiBot).getCookieWithGroup(), null, UA.QQ2));
+                    OkHttpUtils.addHeaders(qqLoginEntity.getCookieWithGroup(), null, UA.QQ2));
         } catch (IOException e) {
             e.printStackTrace();
             return Result.failure("出现异常了！！", null);
         }
         switch (jsonObject.getInteger("retcode")){
             case 0: {
-                String resultStr = web.get(String.format("https://qun.qq.com/cgi-bin/qiandao/list?gc=%s&uin=%s&type=0&num=10&sign_id=&bkn=%s", group, qq, gtk));
-                JSONObject resultJsonObject = JSON.parseObject(resultStr);
+                JSONObject resultJsonObject = OkHttpUtils.getJson(String.format("https://qun.qq.com/cgi-bin/qiandao/list?gc=%s&uin=%s&type=0&num=10&sign_id=&bkn=%s", group, qq, gtk),
+                        OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
                 String id = resultJsonObject.getJSONObject("data").getJSONArray("list").getJSONObject(0).getString("sign_id");
                 return Result.success("{\"app\":\"com.tencent.qq.checkin\",\"desc\":\"群签到\",\"view\":\"checkIn\",\"ver\":\"1.0.0.25\",\"prompt\":\"[群签到]群签到\",\"appID\":\"\",\"sourceName\":\"\",\"actionData\":\"\",\"actionData_A\":\"\",\"sourceUrl\":\"\",\"meta\":{\"checkInData\":{\"address\":\"" + place + "\",\"cover\":{\"height\":0,\"url\":\"" + picUrl + "\",\"width\":0},\"desc\":\"" + text + "\",\"hostuin\":" + qq + ",\"id\":\"" + id + "\",\"media_type\":0,\"qunid\":\"" + group + "\",\"rank\":1,\"skip_to\":1,\"time\":0,\"url\":\"mqqapi:\\/\\/microapp\\/open?appid=1108164955&path=pages%2Fchecklist%2Fchecklist&extraData=929630359%7C" + id + "\",\"vid\":\"\"}},\"config\":{\"forward\":0,\"showSender\":1},\"text\":\"\",\"sourceAd\":\"\",\"extra\":\"\"}");
             }

@@ -57,5 +57,5 @@ public interface ToolLogic {
     byte[] diu(String url);
     byte[] pa(String url);
     JSONArray loLiConQuickly(String tags) throws IOException;
-    InputStream readTheWorld() throws IOException;
+    String qinYunKeChat(String message) throws IOException;
 }

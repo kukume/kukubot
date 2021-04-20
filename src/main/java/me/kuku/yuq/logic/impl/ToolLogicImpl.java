@@ -739,7 +739,8 @@ public class ToolLogicImpl implements ToolLogic {
     }
 
     @Override
-    public InputStream readTheWorld() throws IOException {
-        return OkHttpUtils.getByteStream("http://api.03c3.cn/zb/");
+    public String qinYunKeChat(String message) throws IOException {
+        JSONObject jsonObject = OkHttpUtils.getJson("http://api.qingyunke.com/api.php?key=free&appid=0&msg=" + URLEncoder.encode(message, "utf-8"));
+        return jsonObject.getString("content");
     }
 }

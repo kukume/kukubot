@@ -1,16 +1,18 @@
-package me.kuku.yuq.controller.arknights;
+package me.kuku.yuq.controller;
 
 import com.IceCreamQAQ.Yu.annotation.Action;
 import com.IceCreamQAQ.Yu.annotation.Before;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.annotation.GroupController;
 import com.icecreamqaq.yuq.annotation.PathVar;
+import com.icecreamqaq.yuq.annotation.PrivateController;
 import com.icecreamqaq.yuq.annotation.QMsg;
-import com.icecreamqaq.yuq.controller.BotActionContext;
+import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.ArkNightsEntity;
 import me.kuku.yuq.logic.ArkNightsLogic;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.ArkNightsService;
+import me.kuku.yuq.logic.ArkNightsTagLogic;
 import me.kuku.yuq.utils.BotUtils;
 import me.kuku.yuq.utils.DateTimeFormatterUtils;
 
@@ -80,5 +82,40 @@ public class ArkNightsController {
 			}
 			return BotUtils.removeLastLine(sb);
 		}else return result.getMessage();
+	}
+
+	@PrivateController
+	public static class ArkNightsLoginController {
+		@Inject
+		private ArkNightsLogic arkNightsLogic;
+		@Inject
+		private ArkNightsService arkNightsService;
+
+		@Action("ark {account} {password}")
+		public String bindArk(String account, String password, long qq) throws IOException {
+			Result<ArkNightsEntity> result = arkNightsLogic.login(account, password);
+			if (result.isFailure()) return result.getMessage();
+			ArkNightsEntity newArkNightsEntity = result.getData();
+			ArkNightsEntity arkNightsEntity = arkNightsService.findByQQ(qq);
+			if (arkNightsEntity == null) arkNightsEntity = new ArkNightsEntity(qq);
+			arkNightsEntity.setCookie(newArkNightsEntity.getCookie());
+			arkNightsService.save(arkNightsEntity);
+			return "绑定ark成功！！";
+		}
+	}
+
+	@GroupController
+	public static class ArkNightsTagController {
+		@Inject
+		private ArkNightsTagLogic arkNightsTagLogic;
+
+		@Action("ark公招查询")
+		@QMsg(at = true, atNewLine = true)
+		public String arkTagInfo(Message message) {
+			List<String> tags = message.toPath();
+			tags.remove(0);
+			return arkNightsTagLogic.arkTagInfo(tags);
+		}
+
 	}
 }

@@ -1,5 +1,7 @@
 package me.kuku.yuq.entity;
 
+import com.icecreamqaq.yudb.jpa.JPADao;
+import com.icecreamqaq.yudb.jpa.annotation.Execute;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

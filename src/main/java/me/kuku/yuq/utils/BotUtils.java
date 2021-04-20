@@ -10,33 +10,12 @@ import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.message.*;
 import com.icecreamqaq.yuq.mirai.MiraiBot;
 import com.icecreamqaq.yuq.mirai.message.ImageReceive;
-import me.kuku.yuq.controller.*;
-import me.kuku.yuq.controller.arknights.ArkNightsController;
-import me.kuku.yuq.controller.arknights.ArkNightsLoginController;
-import me.kuku.yuq.controller.bilibili.BiliBiliController;
-import me.kuku.yuq.controller.bilibili.BiliBiliLoginController;
-import me.kuku.yuq.controller.hostloc.HostLocController;
-import me.kuku.yuq.controller.hostloc.HostLocLoginController;
-import me.kuku.yuq.controller.manage.ManageAdminController;
-import me.kuku.yuq.controller.manage.ManageNotController;
-import me.kuku.yuq.controller.manage.ManageOwnerController;
-import me.kuku.yuq.controller.manage.ManageSuperAdminController;
-import me.kuku.yuq.controller.motion.BindStepController;
-import me.kuku.yuq.controller.motion.MotionController;
-import me.kuku.yuq.controller.netease.BindNeTeaseController;
-import me.kuku.yuq.controller.netease.NeTeaseController;
-import me.kuku.yuq.controller.qqlogin.BindQQController;
-import me.kuku.yuq.controller.qqlogin.QQJobController;
-import me.kuku.yuq.controller.qqlogin.QQLoginController;
-import me.kuku.yuq.controller.qqlogin.QQQuickLoginController;
 import me.kuku.yuq.entity.QQLoginEntity;
-import me.kuku.yuq.pojo.UA;
 import okhttp3.Cookie;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
-import java.net.URLEncoder;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -286,12 +265,7 @@ public class BotUtils {
     }
 
     public static List<String> allCommand(){
-        List<String> list = menu(BiliBiliController.class, BiliBiliLoginController.class, HostLocController.class, HostLocLoginController.class,
-                ManageAdminController.class, ManageNotController.class, ManageOwnerController.class, ManageSuperAdminController.class,
-                BindStepController.class, MotionController.class, BindNeTeaseController.class, NeTeaseController.class,
-                BindQQController.class, QQJobController.class, QQLoginController.class, QQQuickLoginController.class,
-                ArkNightsController.class, BotController.class, MenuController.class,
-                MyQQController.class, ArkNightsLoginController.class, SettingController.class, ToolController.class, ToolController.class);
+        List<String> list = menu();
         for (int i = 0; i < list.size(); i++){
             String str = list.get(i);
             String command = str.split(" ")[0];

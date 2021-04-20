@@ -1,11 +1,10 @@
 package me.kuku.yuq.logic.impl;
 
-import com.IceCreamQAQ.Yu.annotation.HookBy;
 import com.baidu.aip.contentcensor.AipContentCensor;
-import com.baidu.aip.contentcensor.EImgType;
 import com.baidu.aip.ocr.AipOcr;
 import com.baidu.aip.speech.AipSpeech;
 import com.baidu.aip.speech.TtsResponse;
+import me.kuku.yuq.entity.ConfigEntity;
 import me.kuku.yuq.logic.AILogic;
 import me.kuku.yuq.pojo.BaiduAIPojo;
 import me.kuku.yuq.pojo.Result;
@@ -18,7 +17,6 @@ import org.json.JSONObject;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
-import java.net.URLEncoder;
 
 @SuppressWarnings({"SameParameterValue", "unused"})
 @Named("baiduAILogic")
@@ -27,27 +25,35 @@ public class BaiduAILogicImpl implements AILogic {
 	@Inject
 	private ConfigService configService;
 
-	private AipOcr getAipOcr(BaiduAIPojo baiduAIPojo){
-		return new AipOcr(baiduAIPojo.getOcrAppId(), baiduAIPojo.getOcrAppKey(), baiduAIPojo.getOcrSecretKey());
+	private BaiduAIPojo getByConfig(String type){
+		ConfigEntity configEntity = configService.findByType("baiduAI");
+		com.alibaba.fastjson.JSONObject jsonObject = configEntity.getContentJsonObject().getJSONObject(type);
+		String appId = jsonObject.getString("appId");
+		String appKey = jsonObject.getString("appKey");
+		String secretKey = jsonObject.getString("secretKey");
+		return new BaiduAIPojo(appId, appKey, secretKey);
 	}
 
-	private AipContentCensor getAipContentCensor(BaiduAIPojo baiduAIPojo){
-		return new AipContentCensor(baiduAIPojo.getContentCensorAppId(),
-				baiduAIPojo.getContentCensorAppKey(), baiduAIPojo.getContentCensorSecretKey());
+	private AipOcr getAipOcr(){
+		BaiduAIPojo baiduAIPojo = getByConfig("baiduAIOcr");
+		return new AipOcr(baiduAIPojo.getAppId(), baiduAIPojo.getAppKey(), baiduAIPojo.getSecretKey());
 	}
 
-	private AipSpeech getAipSpeech(BaiduAIPojo baiduAIPojo){
-		return new AipSpeech(baiduAIPojo.getSpeechAppId(), baiduAIPojo.getSpeechAppKey(),
-				baiduAIPojo.getSpeechSecretKey());
+	private AipContentCensor getAipContentCensor(){
+		BaiduAIPojo baiduAIPojo = getByConfig("baiduAIContentCensor");
+		return new AipContentCensor(baiduAIPojo.getAppId(),
+				baiduAIPojo.getAppKey(), baiduAIPojo.getSecretKey());
+	}
+
+	private AipSpeech getAipSpeech(){
+		BaiduAIPojo baiduAIPojo = getByConfig("baiduAISpeech");
+		return new AipSpeech(baiduAIPojo.getAppId(), baiduAIPojo.getAppKey(),
+				baiduAIPojo.getSecretKey());
 	}
 
 	@Override
 	public boolean pornIdentification(String imageUrl) throws IOException {
-		return pornIdentification(new BaiduAIPojo(), imageUrl);
-	}
-
-	private boolean pornIdentification(BaiduAIPojo baiduAIPojo, String imageUrl) throws IOException{
-		JSONObject jsonObject = getAipContentCensor(baiduAIPojo).imageCensorUserDefined(OkHttpUtils.getBytes(imageUrl), null);
+		JSONObject jsonObject = getAipContentCensor().imageCensorUserDefined(OkHttpUtils.getBytes(imageUrl), null);
 		if (!jsonObject.has("error_code")) {
 			if (jsonObject.getInt("conclusionType") == 1) return false;
 			if (jsonObject.has("data")) {
@@ -64,11 +70,7 @@ public class BaiduAILogicImpl implements AILogic {
 
 	@Override
 	public String generalOCR(String imageUrl) throws IOException {
-		return generalOCR(new BaiduAIPojo(), imageUrl);
-	}
-
-	private String generalOCR(BaiduAIPojo baiduAIPojo, String imageUrl) throws IOException {
-		JSONObject jsonObject = getAipOcr(baiduAIPojo).basicGeneral(OkHttpUtils.getBytes(imageUrl), null);
+		JSONObject jsonObject = getAipOcr().basicGeneral(OkHttpUtils.getBytes(imageUrl), null);
 		if (jsonObject.has("error_code")){
 			return jsonObject.getString("error_msg");
 		}else {
@@ -83,17 +85,8 @@ public class BaiduAILogicImpl implements AILogic {
 	}
 
 	@Override
-	public String textChat(String question, String session) throws IOException {
-		return null;
-	}
-
-	@Override
 	public Result<byte[]> voiceSynthesis(String text) throws IOException {
-		return voiceSynthesis(new BaiduAIPojo(), text);
-	}
-
-	private Result<byte[]> voiceSynthesis(BaiduAIPojo baiduAIPojo, String text){
-		TtsResponse result = getAipSpeech(baiduAIPojo).synthesis(text, "zh", 1, null);
+		TtsResponse result = getAipSpeech().synthesis(text, "zh", 1, null);
 		JSONObject jsonObject = result.getResult();
 		if (jsonObject != null){
 			return Result.failure(jsonObject.getString("error_msg"), null);
@@ -102,11 +95,7 @@ public class BaiduAILogicImpl implements AILogic {
 
 	@Override
 	public String voiceIdentify(String voiceUrl) throws IOException {
-		return voiceIdentify(new BaiduAIPojo(), voiceUrl);
-	}
-
-	private String voiceIdentify(BaiduAIPojo baiduAIPojo, String voiceUrl) throws IOException {
-		JSONObject jsonObject = getAipSpeech(baiduAIPojo).asr(OkHttpUtils.getBytes(voiceUrl), "wav", 8000, null);
+		JSONObject jsonObject = getAipSpeech().asr(OkHttpUtils.getBytes(voiceUrl), "wav", 8000, null);
 		if (jsonObject.getInt("err_no") != 0){
 			return jsonObject.getString("err_msg");
 		}else {

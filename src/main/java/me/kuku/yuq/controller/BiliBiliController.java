@@ -1,4 +1,4 @@
-package me.kuku.yuq.controller.bilibili;
+package me.kuku.yuq.controller;
 
 import com.IceCreamQAQ.Yu.annotation.Action;
 import com.IceCreamQAQ.Yu.annotation.Before;
@@ -8,23 +8,31 @@ import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.annotation.GroupController;
 import com.icecreamqaq.yuq.annotation.PathVar;
+import com.icecreamqaq.yuq.annotation.PrivateController;
 import com.icecreamqaq.yuq.annotation.QMsg;
 import com.icecreamqaq.yuq.controller.BotActionContext;
 import com.icecreamqaq.yuq.controller.ContextSession;
+import com.icecreamqaq.yuq.entity.Contact;
 import com.icecreamqaq.yuq.entity.Group;
+import com.icecreamqaq.yuq.entity.Member;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.BiliBiliEntity;
 import me.kuku.yuq.logic.BiliBiliLogic;
+import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.pojo.BiliBiliPojo;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.BiliBiliService;
+import me.kuku.yuq.utils.ExecutorUtils;
+import me.kuku.yuq.utils.IOUtils;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @GroupController
 @SuppressWarnings("unused")
@@ -243,5 +251,89 @@ public class BiliBiliController {
             msg = biliBiliLogic.reportComment(biliBiliEntity, oid, map.get("id"), 8);
         }
         return msg;
+    }
+
+    @GroupController
+    @PrivateController
+    public static class BiliBiliLoginController {
+        @Inject
+        private BiliBiliLogic biliBiliLogic;
+        @Inject
+        private BiliBiliService biliBiliService;
+        @Inject
+        private ToolLogic toolLogic;
+
+        @Action("bllogin qr")
+        @Synonym({"bilibililogin qr"})
+        public void biliBiliLoginByQr(Group group, Long qq) {
+            InputStream is = null;
+            String url;
+            AtomicInteger i = new AtomicInteger();
+            try {
+                url = biliBiliLogic.loginByQr1();
+                is = toolLogic.creatQr(url);
+                group.sendMessage(FunKt.getMif().at(qq).plus("请使用哔哩哔哩APP扫码登录：")
+                        .plus(FunKt.getMif().imageByInputStream(is)));
+            } catch (IOException e) {
+                group.sendMessage(FunKt.getMif().at(qq).plus("二维码获取失败，请重试！！"));
+                return;
+            } finally {
+                IOUtils.close(is);
+            }
+            ExecutorUtils.execute(() -> {
+                while (true) {
+                    try {
+                        TimeUnit.SECONDS.sleep(3);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    if (i.incrementAndGet() >= 20) {
+                        group.sendMessage(FunKt.getMif().at(qq).plus("您的二维码已失效！！"));
+                        break;
+                    }
+                    try {
+                        Result<BiliBiliEntity> result = biliBiliLogic.loginByQr2(url);
+                        switch (result.getCode()) {
+                            case 500:
+                                group.sendMessage(FunKt.getMif().at(qq).plus(result.getMessage()));
+                                return;
+                            case 200:
+                                BiliBiliEntity biliBiliEntity = biliBiliService.findByQQ(qq);
+                                if (biliBiliEntity == null) biliBiliEntity = new BiliBiliEntity(qq, group.getId());
+                                BiliBiliEntity newBiliBiliEntity = result.getData();
+                                biliBiliEntity.setCookie(newBiliBiliEntity.getCookie());
+                                biliBiliEntity.setToken(newBiliBiliEntity.getToken());
+                                biliBiliEntity.setUserId(newBiliBiliEntity.getUserId());
+                                biliBiliService.save(biliBiliEntity);
+                                group.sendMessage(FunKt.getMif().at(qq).plus("绑定或者更新哔哩哔哩成功！！"));
+                                return;
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        break;
+                    }
+                }
+            });
+        }
+
+        @Action("bilibililogin pwd {username} {password}")
+        public String loginByPassword(String username, String password, Contact qq) throws IOException {
+            Long group = null;
+            if (qq instanceof Member){
+                group = ((Member) qq).getGroup().getId();
+            }
+            Result<BiliBiliEntity> result = biliBiliLogic.loginByPassword(username, password);
+            if (result.isFailure()) return result.getMessage();
+            else {
+                BiliBiliEntity biliBiliEntity = biliBiliService.findByQQ(qq.getId());
+                if (biliBiliEntity == null) biliBiliEntity = new BiliBiliEntity(qq.getId(), group);
+                BiliBiliEntity newBiliBiliEntity = result.getData();
+                biliBiliEntity.setCookie(newBiliBiliEntity.getCookie());
+                biliBiliEntity.setToken(newBiliBiliEntity.getToken());
+                biliBiliEntity.setUserId(newBiliBiliEntity.getUserId());
+                biliBiliService.save(biliBiliEntity);
+                return "绑定或者更新哔哩哔哩成功！！";
+            }
+        }
     }
 }

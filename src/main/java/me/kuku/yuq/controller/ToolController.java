@@ -69,8 +69,6 @@ public class ToolController {
     @Config("YuQ.Mirai.protocol")
     private String protocol;
     @Inject
-    private TeambitionLogic teambitionLogic;
-    @Inject
     private DCloudLogic dCloudLogic;
     @Config("YuQ.Mirai.bot.master")
     private String master;
@@ -705,16 +703,15 @@ public class ToolController {
         return FunKt.getMif().imageByByteArray(bytes).toMessage();
     }
 
-    @Action("读懂世界")
-    public Image readTheWorld(){
-        InputStream is;
-        try {
-            is = toolLogic.readTheWorld();
-            return FunKt.getMif().imageByInputStream(is);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
+    @Action("\\.*\\")
+    @QMsg(at = true, mastAtBot = true)
+    public String readMessage(@PathVar(0) String str) throws IOException {
+        return toolLogic.qinYunKeChat(str);
+    }
+
+    @Action("菜单")
+    public String menu(){
+        return "https://api.kuku.me/menu";
     }
 
 }

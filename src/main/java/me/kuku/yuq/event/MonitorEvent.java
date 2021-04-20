@@ -6,40 +6,27 @@ import com.IceCreamQAQ.Yu.annotation.EventListener;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
-import com.icecreamqaq.yuq.entity.Group;
 import com.icecreamqaq.yuq.event.GroupMessageEvent;
 import com.icecreamqaq.yuq.event.GroupRecallEvent;
 import com.icecreamqaq.yuq.event.SendMessageEvent;
 import com.icecreamqaq.yuq.message.*;
-import me.kuku.yuq.entity.ConfigEntity;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.entity.MessageEntity;
 import me.kuku.yuq.entity.RecallEntity;
-import me.kuku.yuq.logic.AILogic;
-import me.kuku.yuq.logic.TeambitionLogic;
 import me.kuku.yuq.logic.ToolLogic;
-import me.kuku.yuq.pojo.ConfigType;
-import me.kuku.yuq.pojo.Result;
-import me.kuku.yuq.pojo.TeambitionPojo;
 import me.kuku.yuq.service.ConfigService;
 import me.kuku.yuq.service.GroupService;
 import me.kuku.yuq.service.MessageService;
 import me.kuku.yuq.service.RecallService;
 import me.kuku.yuq.utils.BotUtils;
-import me.kuku.yuq.utils.ExecutorUtils;
-import me.kuku.yuq.utils.IOUtils;
 import me.kuku.yuq.utils.OkHttpUtils;
-import okhttp3.Response;
 
 import javax.inject.Inject;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 
 @EventListener
 @SuppressWarnings("unused")
@@ -50,10 +37,6 @@ public class MonitorEvent {
     private MessageService messageService;
     @Inject
     private RecallService recallService;
-    @Inject
-    private AILogic AILogic;
-    @Inject
-    private TeambitionLogic teambitionLogic;
     @Inject
     private ConfigService configService;
     @Inject
@@ -67,12 +50,6 @@ public class MonitorEvent {
                 new MessageEntity(null, e.getMessage().source.getId(), e.getGroup().getId(), e.getSender().getId(),
                         BotUtils.messageToJsonArray(e.getMessage()).toString(), new Date())
         );
-        ExecutorUtils.execute(() -> {
-            ConfigEntity configEntity = configService.findByType(ConfigType.Teambition.getType());
-            if (configEntity != null){
-                uploadToTeam(e.getMessage(), configEntity, e.getGroup());
-            }
-        });
     }
 
     @Event
@@ -105,7 +82,7 @@ public class MonitorEvent {
     }
 
     @Event
-    public void readMessage(GroupMessageEvent e) throws IOException {
+    public void readMessage(GroupMessageEvent e){
         Message message = e.getMessage();
         MessageSource reply = message.getReply();
         List<String> list = message.toPath();
@@ -128,24 +105,6 @@ public class MonitorEvent {
                 msg = sb.deleteCharAt(sb.length() - 1).toString();
             }
             e.getGroup().sendMessage(Message.Companion.toMessage(msg));
-        }
-        MessageItem iat = message.getBody().get(0);
-        if (iat instanceof At){
-            At at = (At) iat;
-            if (at.getUser() == FunKt.getYuq().getBotId()){
-                StringBuilder sb = new StringBuilder();
-                for (MessageItem messageItem : message.getBody()) {
-                    if (messageItem instanceof Text){
-                        Text text = (Text) messageItem;
-                        String textStr = text.getText();
-                        textStr = textStr.trim();
-                        if ("读消息".equals(textStr)) return;
-                        sb.append(textStr);
-                    }
-                }
-                String textChat = AILogic.textChat(sb.toString(), String.valueOf(e.getSender().getId()));
-                e.getGroup().sendMessage(FunKt.getMif().at(e.getSender().getId()).plus(textChat));
-            }
         }
     }
 
@@ -180,79 +139,6 @@ public class MonitorEvent {
                             .plus("\n妄图发送闪照：\n")
                             .plus(FunKt.getMif().imageByUrl(fl.getUrl()));
                     e.getGroup().sendMessage(msg);
-                }
-            }
-        }
-    }
-
-
-    private void uploadToTeam(Message message, ConfigEntity configEntity, Group group){
-        ArrayList<MessageItem> list = message.getBody();
-        GroupEntity groupEntity = groupService.findByGroup(group.getId());
-        LocalDate localDate = LocalDate.now();
-        String year = String.valueOf(localDate.getYear());
-        String month = String.valueOf(localDate.getMonth().getValue());
-        String day = String.valueOf(localDate.getDayOfMonth());
-        for (MessageItem item: list){
-            if (item instanceof Image){
-                Image image = (Image) item;
-                String url = image.getUrl();
-                String id = image.getId();
-                JSONObject jsonObject = configEntity.getContentJsonObject();
-                String projectName = jsonObject.getString("project");
-                TeambitionPojo teambitionPojo = TeambitionPojo.fromConfig(jsonObject);
-                InputStream is = null;
-                try {
-                    Response response = OkHttpUtils.get(url);
-                    is = OkHttpUtils.getByteStream(response);
-                    int size = Math.toIntExact(Objects.requireNonNull(response.body()).contentLength());
-                    Result<String> result = teambitionLogic.uploadToProject(teambitionPojo, is, size,
-                            "qqpic", year, month, day, id);
-                    if (result.isFailure()){
-                        boolean b = true;
-                        if (result.getCode() == 501){
-                            Result<TeambitionPojo> loginResult = teambitionLogic.login(jsonObject.getString("phone"),
-                                    jsonObject.getString("password"));
-                            if (loginResult.isFailure()) b = false;
-                            else {
-                                TeambitionPojo pojo = loginResult.getData();
-                                String cookie = pojo.getCookie();
-                                String auth = pojo.getStrikerAuth();
-                                jsonObject.put("cookie", cookie);
-                                jsonObject.put("auth", auth);
-                                configEntity.setContentJsonObject(jsonObject);
-                                configService.save(configEntity);
-                            }
-                        }else if (result.getCode() == 502){
-                            Result<TeambitionPojo> loginResult = teambitionLogic.getAuth(teambitionPojo);
-                            if (loginResult.isFailure()) b = false;
-                            else {
-                                TeambitionPojo pojo = loginResult.getData();
-                                String auth = pojo.getStrikerAuth();
-                                jsonObject.put("auth", auth);
-                                configEntity.setContentJsonObject(jsonObject);
-                                configService.save(configEntity);
-                            }
-                        }else b = false;
-                        if (b){
-                            result = teambitionLogic.uploadToProject(teambitionPojo, is, size,
-                                    "qqpic", year, month, day, id);
-                        }else return;
-                    }
-                    if (result.isSuccess()){
-                        String path = "qqpic/" + year + "/" + month + "/" + day + "/" + id;
-                        if (groupEntity.getUploadPicNotice() != null && groupEntity.getUploadPicNotice()){
-                            String resultUrl = api + "/teambition/project/" +
-                                    jsonObject.getString("name") + "/" + path;
-                            Message sendMessage = FunKt.getMif().imageById(id).plus(
-                                    "\nTeambition的project链接：\n" + resultUrl);
-                            group.sendMessage(sendMessage);
-                        }
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } finally {
-                    IOUtils.close(is);
                 }
             }
         }

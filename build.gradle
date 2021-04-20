@@ -34,7 +34,7 @@ dependencies {
     }
     // my
     // mirai
-    implementation 'net.mamoe:mirai-core-jvm:2.6-RC'
+    implementation 'net.mamoe:mirai-core-jvm:2.6.1'
     // mirai
 }
 

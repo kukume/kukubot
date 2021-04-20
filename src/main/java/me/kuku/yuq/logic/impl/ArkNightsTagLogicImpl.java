@@ -1,8 +1,8 @@
-package me.kuku.yuq.service.impl;
+package me.kuku.yuq.logic.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import me.kuku.yuq.pojo.ArkNightsUserPojo;
-import me.kuku.yuq.service.ArkNightsTagService;
+import me.kuku.yuq.logic.ArkNightsTagLogic;
 import me.kuku.yuq.utils.OkHttpUtils;
 
 import java.io.IOException;
@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class ArkNightsTagServiceImpl implements ArkNightsTagService {
+public class ArkNightsTagLogicImpl implements ArkNightsTagLogic {
     private static List<ArkNightsUserPojo> arkNightsUserEntities = null;
 
     public static void getInstance() {

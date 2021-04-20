@@ -1,6 +1,5 @@
 package me.kuku.yuq;
 
-import com.IceCreamQAQ.Yu.hook.YuHook;
 import com.IceCreamQAQ.Yu.loader.AppClassloader;
 import com.IceCreamQAQ.Yu.util.IO;
 import me.kuku.yuq.asm.MyClassLoader;
@@ -31,14 +30,12 @@ public class Start {
         File yuqFile = new File("conf/YuQ.properties");
         if (!yuqFile.exists()){
             try {
-                byte[] bytes = OkHttpUtils.downloadBytes("https://vkceyugu.cdn.bspapp.com/VKCEYUGU-ba222f61-ee83-431d-bf9f-7e6216a8cf41/070694de-cbfa-43da-b332-a6c13b52b387.properties");
+                byte[] bytes = OkHttpUtils.downloadBytes("https://vkceyugu.cdn.bspapp.com/VKCEYUGU-ba222f61-ee83-431d-bf9f-7e6216a8cf41/0b84f939-3d10-45d6-a453-8bbb6828742f.properties");
                 IO.writeFile(yuqFile, bytes);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        YuHook.putMatchHookItem("me.kuku.yuq.logic.impl.BaiduAILogicImpl.*",
-                "me.kuku.yuq.aop.BaiduAIAop");
         AppClassloader.registerTransformerList("com.IceCreamQAQ.Yu.web.WebClassTransformer");
         try {
             ClassReader cr = new ClassReader("com.icecreamqaq.yuq.YuQStarter");

@@ -62,14 +62,12 @@ public class GroupEntity {
     private Boolean autoReview;
     private Boolean onTimeAlarm;
     private String colorPicType;
-    private String chatAiType;
     private Integer maxViolationCount;
     private Integer maxCommandCountOnTime;
     private Boolean locMonitor;
     private Boolean flashNotify;
     private Boolean repeat;
     private Boolean voiceIdentify;
-    private Boolean uploadPicNotice;
     private Boolean groupAdminAuth;
     private Boolean kickWithoutSpeaking;
 
@@ -89,9 +87,9 @@ public class GroupEntity {
         this.maxViolationCount = 5;
         this.repeat = true;
         this.voiceIdentify = false;
-        this.uploadPicNotice = false;
         this.groupAdminAuth = false;
         this.kickWithoutSpeaking = false;
+        this.colorPicType = "quickly";
     }
 
     public JSONArray getBlackJsonArray(){

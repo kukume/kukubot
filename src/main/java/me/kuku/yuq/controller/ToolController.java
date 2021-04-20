@@ -49,8 +49,6 @@ public class ToolController {
     @Inject
     private GroupService groupService;
     @Inject
-    private AILogic qqAILogic;
-    @Inject
     @Named("baiduAILogic")
     private AILogic baiduAILogic;
     @Inject
@@ -405,7 +403,7 @@ public class ToolController {
 
     @Action("语音合成 {text}")
     public Message voice(String text, Group group, long qq) throws IOException {
-        Result<byte[]> result = qqAILogic.voiceSynthesis(text);
+        Result<byte[]> result = baiduAILogic.voiceSynthesis(text);
         if (result.getCode() == 200){
             return FunKt.getMif().voiceByByteArray(result.getData()).toMessage();
         }else return FunKt.getMif().at(qq).plus(result.getMessage());

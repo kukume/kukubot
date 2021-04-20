@@ -125,6 +125,9 @@ public class SettingController extends QQController {
         innerJsonObject.put("appId", appId);
         innerJsonObject.put("appKey", appKey);
         innerJsonObject.put("secretKey", secretKey);
+        jsonObject.put(jsonType, innerJsonObject);
+        configEntity.setContentJsonObject(jsonObject);
+        configService.save(configEntity);
         return "绑定百度AI的信息成功！！";
     }
 

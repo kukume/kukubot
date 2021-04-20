@@ -432,18 +432,6 @@ public class ToolLogicImpl implements ToolLogic {
     }
 
     @Override
-    public byte[] queryTime() throws IOException {
-        String name = DateTimeFormatterUtils.formatNow("HH-mm") + ".jpg";
-        String hour = name.split("-")[0];
-        File file = new File("time" + File.separator + hour + File.separator + name);
-        if (file.exists()){
-            return IO.read(new FileInputStream(file), true);
-        }else {
-            return OkHttpUtils.downloadBytes("https://file.kuku.me/time/time/" + hour + "/" + name);
-        }
-    }
-
-    @Override
     public String queryVersion() throws IOException {
         String html = OkHttpUtils.getStr("https://github.com/kukume/kuku-bot/tags");
         Elements elements = Jsoup.parse(html).select(".Details .d-flex .commit-title a");

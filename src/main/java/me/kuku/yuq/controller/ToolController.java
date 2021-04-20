@@ -30,10 +30,7 @@ import oshi.hardware.GlobalMemory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
@@ -333,8 +330,15 @@ public class ToolController {
     }
 
     @Action("几点了")
-    public Image time() throws IOException {
-        return FunKt.getMif().imageByInputStream(new ByteArrayInputStream(toolLogic.queryTime()));
+    public Message time(long qq) throws IOException {
+        String name = DateTimeFormatterUtils.formatNow("HH-mm") + ".jpg";
+        String hour = name.split("-")[0];
+        File file = new File("time" + File.separator + hour + File.separator + name);
+        if (file.exists()){
+            return FunKt.getMif().imageByByteArray(IO.read(new FileInputStream(file), true)).toMessage();
+        }else {
+            return FunKt.getMif().at(qq).plus("请下载时间的压缩包：https://api.kuku.me/tb/pan/kuku/kuku-bot/time.zip，解压至程序根目录");
+        }
     }
 
     @Action("\\^BV.*\\")

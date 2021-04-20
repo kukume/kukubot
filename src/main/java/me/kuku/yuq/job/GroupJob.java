@@ -6,6 +6,7 @@ import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.service.GroupService;
+import me.kuku.yuq.utils.BotUtils;
 import me.kuku.yuq.utils.DateTimeFormatterUtils;
 
 import javax.inject.Inject;
@@ -31,8 +32,7 @@ public class GroupJob {
         if (file.exists()){
             message = FunKt.getMif().imageByFile(file).toMessage();
         }else {
-            String url = "https://file.kuku.me/time/hour/" + name;
-            message = FunKt.getMif().imageByUrl(url).toMessage();
+            message = BotUtils.toMessage("整点报时失败，请下载时间的压缩包：https://api.kuku.me/tb/pan/kuku/kuku-bot/hour.zip，解压至程序根目录");
         }
         list.forEach(groupEntity ->
                 FunKt.getYuq().getGroups().get(groupEntity.getGroup())

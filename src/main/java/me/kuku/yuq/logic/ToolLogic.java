@@ -38,7 +38,6 @@ public interface ToolLogic {
     String girlImage() throws IOException;
     String lolFree() throws IOException;
     String abbreviation(String content) throws IOException;
-    byte[] queryTime() throws IOException;
     String queryVersion() throws IOException;
     Result<Map<String, String>> bvToAv(String bv) throws IOException;
     String wordSegmentation(String text) throws IOException;

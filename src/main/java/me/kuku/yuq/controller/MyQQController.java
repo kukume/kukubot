@@ -97,7 +97,6 @@ public class MyQQController extends QQController {
     }
 
     @Action("删推特监控 {content}")
-    @Synonym({"删ins监控 {content}"})
     public String del(QQEntity qqEntity, @PathVar(0) String type, String content){
         switch (type){
             case "删推特监控":

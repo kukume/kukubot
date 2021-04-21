@@ -387,8 +387,6 @@ public class ManageController {
 		@Action("加指令限制 {command} {count}")
 		@QMsg(at = true)
 		public String addCommandLimit(GroupEntity groupEntity, String command, int count){
-			List<String> list = BotUtils.allCommand();
-			if (!list.contains(command)) return "添加失败！！没有发现{" + command + "}这个指令！！";
 			JSONObject jsonObject = groupEntity.getCommandLimitJsonObject();
 			jsonObject.put(command, count);
 			groupEntity.setCommandLimitJsonObject(jsonObject);

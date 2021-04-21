@@ -35,20 +35,4 @@ public class WebController {
         if (m == null) return "Error: Member Not Found!";
         return "OK!";
     }
-
-    @Action("menu")
-    public String menu(){
-        JSONObject jsonObject = new JSONObject();
-//        jsonObject.put("help", BotUtils.menu(MenuController.class));
-//        jsonObject.put("tool", BotUtils.menu(ToolController.class));
-//        jsonObject.put("bilibili", BotUtils.menu(BiliBiliLoginController.class, BiliBiliController.class));
-//        jsonObject.put("bot", BotUtils.menu(BotController.class));
-//        jsonObject.put("manage", BotUtils.menu(ManageNotController.class, ManageSuperAdminController.class, ManageAdminController.class));
-//        jsonObject.put("wy", BotUtils.menu(NeTeaseController.class, BindNeTeaseController.class));
-//        jsonObject.put("qq", BotUtils.menu(QQLoginController.class, BindQQController.class, QQJobController.class, QQQuickLoginController.class));
-//        jsonObject.put("setting", BotUtils.menu(SettingController.class));
-//        jsonObject.put("wb", BotUtils.menu(WeiboNotController.class, WeiboController.class));
-//        jsonObject.put("ark", BotUtils.menu(ArkNightsController.class, ArkNightsTagController.class, ArkNightsLoginController.class));
-        return jsonObject.toString();
-    }
 }

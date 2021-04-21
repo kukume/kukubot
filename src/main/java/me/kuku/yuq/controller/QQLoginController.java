@@ -63,12 +63,6 @@ public class QQLoginController{
         return qqLoginLogic.queryVip(qqLoginEntity);
     }
 
-    @Action("送花 {qqNo}")
-    @QMsg(at = true)
-    public String sendFlower(QQLoginEntity qqLoginEntity, Long qqNo, long group) throws IOException {
-        return qqLoginLogic.sendFlower(qqLoginEntity, qqNo, group);
-    }
-
     @Action("超级签到")
     @QMsg(at = true, atNewLine = true)
     public String allSign(QQLoginEntity qqLoginEntity, Group group, long qq) throws IOException {
@@ -441,21 +435,6 @@ public class QQLoginController{
                 biliBiliEntity.setToken(newBiliBiliEntity.getToken());
                 biliBiliService.save(biliBiliEntity);
                 return "绑定或者更新哔哩哔哩成功！！";
-            }else return result.getMessage();
-        }
-
-        @Action("lexin")
-        public String leXinLogin(QQLoginEntity qqLoginEntity, long qq, long group) throws IOException {
-            MotionEntity motionEntity = motionService.findByQQ(qq);
-            if (motionEntity == null) motionEntity = new MotionEntity(qq, group);
-            Result<MotionEntity> result = leXinMotionLogic.loginByQQ(qqLoginEntity);
-            if (result.getCode() == 200){
-                MotionEntity newMotionEntity = result.getData();
-                motionEntity.setLeXinCookie(newMotionEntity.getLeXinCookie());
-                motionEntity.setLeXinUserId(newMotionEntity.getLeXinUserId());
-                motionEntity.setLeXinAccessToken(newMotionEntity.getLeXinAccessToken());
-                motionService.save(motionEntity);
-                return "绑定或者更新乐心运行成功！！";
             }else return result.getMessage();
         }
 

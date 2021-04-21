@@ -713,7 +713,7 @@ public class ToolController {
 
     @Action("菜单")
     public String menu(){
-        return "https://api.kuku.me/menu";
+        return "https://botmenu.kukuqaq.com";
     }
 
 }

@@ -72,7 +72,7 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
             biliBiliPojo.setForwardBvId(forwardJsonObject.getString("bvid"));
             Long forwardTime = forwardJsonObject.getLong("timestamp");
             if (forwardTime != null){
-                biliBiliPojo.setForwardTime(Long.parseLong(forwardTime.toString() + "000"));
+                biliBiliPojo.setForwardTime(Long.parseLong(forwardTime + "000"));
             }
             biliBiliPojo.setForwardId(forwardJsonObject.getString("dynamic_id"));
         }
@@ -123,10 +123,18 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
                     }
                     biliBiliPojo.setForwardPicList(forwardPicList);
                     JSONObject forwardUserJsonObject = forwardContentJsonObject.getJSONObject("user");
-                    biliBiliPojo.setForwardUserId(forwardUserJsonObject.getString("uid"));
-                    biliBiliPojo.setForwardName(forwardUserJsonObject.getString("name"));
-                    if (biliBiliPojo.getForwardName() == null){
-                        biliBiliPojo.setForwardName(forwardUserJsonObject.getString("uname"));
+                    if (forwardUserJsonObject != null) {
+                        biliBiliPojo.setForwardUserId(forwardUserJsonObject.getString("uid"));
+                        biliBiliPojo.setForwardName(forwardUserJsonObject.getString("name"));
+                        if (biliBiliPojo.getForwardName() == null) {
+                            biliBiliPojo.setForwardName(forwardUserJsonObject.getString("uname"));
+                        }
+                    }else {
+                        JSONObject forwardOwnerJsonObject = forwardContentJsonObject.getJSONObject("owner");
+                        if (forwardOwnerJsonObject != null){
+                            biliBiliPojo.setForwardUserId(forwardOwnerJsonObject.getString("mid"));
+                            biliBiliPojo.setForwardName(forwardOwnerJsonObject.getString("name"));
+                        }
                     }
                 }else {
                     biliBiliPojo.setForwardText(forwardContentJsonObject.getString("dynamic"));

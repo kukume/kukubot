@@ -66,44 +66,28 @@ public class YuQStarterAdapter extends ClassVisitor {
 		public void visitVarInsn(int opcode, int var) {
 			super.visitVarInsn(opcode, var);
 			if (status){
-				super.visitLdcInsn("com.IceCreamQAQ.Yu.DefaultApp");
-				super.visitMethodInsn(Opcodes.INVOKESTATIC, "me/kuku/yuq/asm/AddBeanAdapter", "asm",
-						"(Ljava/lang/String;)[B", false);
-				super.visitVarInsn(Opcodes.ASTORE, 4);
-				super.visitVarInsn(Opcodes.ALOAD, 3);
-				super.visitLdcInsn("com.IceCreamQAQ.Yu.DefaultApp");
-				super.visitVarInsn(Opcodes.ALOAD, 4);
-				super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "com/IceCreamQAQ/Yu/loader/AppClassloader", "define",
-						"(Ljava/lang/String;[B)Ljava/lang/Class;", false);
-				super.visitInsn(Opcodes.POP);
-
 				super.visitLdcInsn("com.IceCreamQAQ.Yu.loader.AppLoader");
 				super.visitMethodInsn(Opcodes.INVOKESTATIC, "me/kuku/yuq/asm/AddControllerAdapter", "asm",
 						"(Ljava/lang/String;)[B", false);
-				super.visitVarInsn(Opcodes.ASTORE, 5);
+				super.visitVarInsn(Opcodes.ASTORE, 4);
 				super.visitVarInsn(Opcodes.ALOAD, 3);
 				super.visitLdcInsn("com.IceCreamQAQ.Yu.loader.AppLoader");
-				super.visitVarInsn(Opcodes.ALOAD, 5);
+				super.visitVarInsn(Opcodes.ALOAD, 4);
 				super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "com/IceCreamQAQ/Yu/loader/AppClassloader", "define",
 						"(Ljava/lang/String;[B)Ljava/lang/Class;", false);
 				super.visitInsn(Opcodes.POP);
 
 				super.visitMethodInsn(Opcodes.INVOKESTATIC, "me/kuku/yuq/asm/GenerateController", "generate",
 						"()[B", false);
-				super.visitVarInsn(Opcodes.ASTORE, 6);
+				super.visitVarInsn(Opcodes.ASTORE, 5);
 				super.visitVarInsn(Opcodes.ALOAD, 3);
 				super.visitLdcInsn("me.kuku.yuq.controller.ASMController");
-				super.visitVarInsn(Opcodes.ALOAD, 6);
+				super.visitVarInsn(Opcodes.ALOAD, 5);
 				super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "com/IceCreamQAQ/Yu/loader/AppClassloader", "define",
 						"(Ljava/lang/String;[B)Ljava/lang/Class;", false);
 				super.visitInsn(Opcodes.POP);
 				status = false;
 			}
-		}
-
-		@Override
-		public void visitMaxs(int maxStack, int maxLocals) {
-			super.visitMaxs(maxStack + 3, maxLocals + 4);
 		}
 	}
 }

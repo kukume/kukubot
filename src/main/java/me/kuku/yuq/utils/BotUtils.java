@@ -91,22 +91,6 @@ public class BotUtils {
         return ((int) (Math.random() * max)) % (max - min + 1) + min;
     }
 
-    public static QQLoginEntity toQQLoginEntity(OkHttpWebImpl web, MiraiBot miraiBot){
-        try {
-            ConcurrentHashMap<String, Map<String, Cookie>> map = web.getDomainMap();
-            Map<String, Cookie> qunMap = map.get("qun.qq.com");
-            String groupPsKey = qunMap.get("p_skey").value();
-            Map<String, Cookie> qqMap = map.get("qq.com");
-            String sKey = qqMap.get("skey").value();
-            Map<String, Cookie> qZoneMap = map.get("qzone.qq.com");
-            String psKey = qZoneMap.get("p_skey").value();
-            return new QQLoginEntity(null, FunKt.getYuq().getBotId(), 0L, "", sKey, psKey, groupPsKey, miraiBot.superKey,
-                    QQUtils.getToken(miraiBot.superKey).toString(), null, true);
-        }catch (Exception e){
-            return new QQLoginEntity();
-        }
-    }
-
     public static JSONArray messageToJsonArray(Message rm){
         if (rm == null) return null;
         ArrayList<MessageItem> body = rm.getBody();

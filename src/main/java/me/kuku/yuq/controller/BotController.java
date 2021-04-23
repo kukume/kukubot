@@ -173,8 +173,8 @@ public class BotController {
 
     @Action("查询 {qqNo}")
     @QMsg(at = true, atNewLine = true)
-    public String query(Long group, Long qqNo) throws IOException {
-        Result<GroupMember> result = qqGroupLogic.queryMemberInfo(botLogic.getQQLoginEntity(), group, qqNo);
+    public String query(QQLoginEntity qqLoginEntity, Long group, Long qqNo) throws IOException {
+        Result<GroupMember> result = qqGroupLogic.queryMemberInfo(qqLoginEntity, group, qqNo);
         GroupMember groupMember = result.getData();
         if (groupMember == null) return result.getMessage();
         String pattern = "yyyy-MM-dd HH:mm:ss";
@@ -193,9 +193,9 @@ public class BotController {
     }
 
     @Action("龙王")
-    public Message dragonKing(Long group, Member qq, @PathVar(value = 1, type = PathVar.Type.Integer) Integer num) throws IOException {
+    public Message dragonKing(QQLoginEntity qqLoginEntity, Long group, Member qq, @PathVar(value = 1, type = PathVar.Type.Integer) Integer num) throws IOException {
         GroupEntity groupEntity = groupService.findByGroup(group);
-        List<Map<String, String>> list = qqGroupLogic.groupHonor(botLogic.getQQLoginEntity(), group, "talkAtIve");
+        List<Map<String, String>> list = qqGroupLogic.groupHonor(qqLoginEntity, group, "talkAtIve");
         if (list.size() == 0) return FunKt.getMif().at(qq.getId()).plus("昨天没有龙王！！");
         if (num == null) num = 1;
         if (num > list.size()){
@@ -254,24 +254,24 @@ public class BotController {
 
     @Action("群聊炽焰")
     @Synonym({"群聊之火", "冒尖小春笋", "快乐源泉"})
-    public Message legend(Long group, Long qq, @PathVar(0) String str, @PathVar(value = 1, type = PathVar.Type.Integer) Integer num) throws IOException {
+    public Message legend(QQLoginEntity qqLoginEntity, Long group, Long qq, @PathVar(0) String str, @PathVar(value = 1, type = PathVar.Type.Integer) Integer num) throws IOException {
         String msg;
         List<Map<String, String>> list;
         switch (str){
             case "群聊炽焰":
-                list = qqGroupLogic.groupHonor(botLogic.getQQLoginEntity(), group, "legend");
+                list = qqGroupLogic.groupHonor(qqLoginEntity, group, "legend");
                 msg = "快续火！！";
                 break;
             case "群聊之火":
-                list = qqGroupLogic.groupHonor(botLogic.getQQLoginEntity(), group, "actor");
+                list = qqGroupLogic.groupHonor(qqLoginEntity, group, "actor");
                 msg = "快续火！！";
                 break;
             case "冒尖小春笋":
-                list = qqGroupLogic.groupHonor(botLogic.getQQLoginEntity(), group, "strongNewBie");
+                list = qqGroupLogic.groupHonor(qqLoginEntity, group, "strongNewBie");
                 msg = "快......我也不知道快啥了！！";
                 break;
             case "快乐源泉":
-                list = qqGroupLogic.groupHonor(botLogic.getQQLoginEntity(), group, "emotion");
+                list = qqGroupLogic.groupHonor(qqLoginEntity, group, "emotion");
                 msg = "快发表情包！！";
                 break;
             default: return FunKt.getMif().at(qq).plus("类型不匹配，查询失败！！");
@@ -284,8 +284,8 @@ public class BotController {
     }
 
     @Action("群精华")
-    public Message essenceMessage(Long group) throws IOException {
-        Result<List<JSONArray>> result = qqGroupLogic.essenceMessage(botLogic.getQQLoginEntity(), group);
+    public Message essenceMessage(QQLoginEntity qqLoginEntity, Long group) throws IOException {
+        Result<List<JSONArray>> result = qqGroupLogic.essenceMessage(qqLoginEntity, group);
         List<JSONArray> list = result.getData();
         if (list == null) return BotUtils.toMessage(result.getMessage());
         JSONArray jsonArray = list.get((int) (Math.random() * list.size()));

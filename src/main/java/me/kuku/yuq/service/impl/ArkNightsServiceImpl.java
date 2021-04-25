@@ -5,6 +5,7 @@ import me.kuku.yuq.entity.ArkNightsEntity;
 import me.kuku.yuq.service.ArkNightsService;
 
 import javax.inject.Inject;
+import java.util.List;
 
 public class ArkNightsServiceImpl implements ArkNightsService {
 	@Inject
@@ -23,5 +24,10 @@ public class ArkNightsServiceImpl implements ArkNightsService {
 	@Override
 	public void save(ArkNightsEntity arkNightsEntity) {
 		arkNightsDao.saveOrUpdate(arkNightsEntity);
+	}
+
+	@Override
+	public List<ArkNightsEntity> findAll() {
+		return arkNightsDao.findAll();
 	}
 }

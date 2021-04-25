@@ -75,6 +75,26 @@ public class ArkNightsLogicImpl implements ArkNightsLogic {
 	}
 
 	@Override
+	public Result<String> akCookie(ArkNightsEntity arkNightsEntity, String source, String sourceUid) throws IOException {
+		JSONObject jsonObject = OkHttpUtils.postJson("https://ak.hypergryph.com/user/api/sdk/user/getToken",
+				new HashMap<>(), OkHttpUtils.addHeaders(arkNightsEntity.getCookie(), "https://ak.hypergryph.com/", UA.PC));
+		if (jsonObject.getInteger("code") == 0){
+			String token = jsonObject.getJSONObject("data").getString("token");
+			JSONObject param = new JSONObject();
+			param.put("hgToken", token);
+			param.put("source", source);
+			param.put("sourceUid", "58005820");
+			Response response = OkHttpUtils.post("https://ak.hypergryph.com/activity/preparation/login/hg",
+					OkHttpUtils.addJson(param.toString()), OkHttpUtils.addHeaders(arkNightsEntity.getCookie(), "https://ak.hypergryph.com/", UA.PC));
+			JSONObject resultJsonObject = OkHttpUtils.getJson(response);
+			if (resultJsonObject.getInteger("code") == 0){
+				String cookie = OkHttpUtils.getCookie(response);
+				return Result.success(cookie);
+			}else return Result.failure(resultJsonObject.getString("msg"));
+		}else return Result.failure(jsonObject.getString("msg"));
+	}
+
+	@Override
 	public Result<List<Map<String, String>>> rechargeRecord(String cookie) throws IOException {
 		Response response = OkHttpUtils.get(url + "/user/inquiryOrder", OkHttpUtils.addCookie(cookie));
 		if (response.code() == 302) return Result.failure("cookie已失效！！", null);

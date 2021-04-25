@@ -102,8 +102,21 @@ public class ToolLogicImpl implements ToolLogic {
     }
 
     @Override
-    public String queryIp(String ip) throws IOException {
-        return OkHttpUtils.getStr(api + "/tool/ip?ip=" + ip);
+    public Result<List<Map<String, String>>> queryIp(String ip) throws IOException {
+        JSONObject jsonObject = OkHttpUtils.getJson(api + "/tool/ip?ip=" + ip);
+        if (jsonObject.getInteger("code") == 200){
+            JSONArray jsonArray = jsonObject.getJSONArray("data");
+            List<Map<String, String>> list = new ArrayList<>();
+            jsonArray.stream().map(obj -> (JSONObject) obj).forEach(singleJsonObject -> {
+                Map<String, String> map = new HashMap<>();
+                map.put("ip", singleJsonObject.getString("ip"));
+                map.put("address", singleJsonObject.getString("address"));
+                list.add(map);
+            });
+            if (list.size() != 0)
+                return Result.success(list);
+            else return Result.failure("查询IP地址失败！");
+        }else return Result.failure(jsonObject.getString("message"));
     }
 
     @Override
@@ -320,7 +333,11 @@ public class ToolLogicImpl implements ToolLogic {
             time = BotUtils.regex("时间=", "ms", result);
             if (time == null) time = BotUtils.regex("time=", "ms", result);
             if (time == null) return "请求超时！！"; else time = time.trim();
-            String ipInfo = queryIp(ip);
+            Result<List<Map<String, String>>> ipResult = queryIp(ip);
+            String ipInfo;
+            if (ipResult.isSuccess()){
+                ipInfo = ipResult.getData().get(0).get("address");
+            }else ipInfo = "查询IP地址失败！";
             return "====查询结果====\n" + "域名/IP：" + domain + "\n" +
                     "IP：" + ip + "\n" +
                     "延迟：" + time + "ms" + "\n" +

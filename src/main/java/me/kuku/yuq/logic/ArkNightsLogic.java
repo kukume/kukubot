@@ -11,6 +11,7 @@ import java.util.Map;
 @AutoBind
 public interface ArkNightsLogic {
 	Result<ArkNightsEntity> login(String account, String password) throws IOException;
+	Result<String> akCookie(ArkNightsEntity arkNightsEntity, String source, String sourceUid) throws IOException;
 	Result<List<Map<String, String>>> rechargeRecord(String cookie) throws IOException;
 	Result<List<Map<String, String>>> searchRecord(String cookie, Integer page) throws IOException;
 	Result<List<Map<String, String>>> sourceRecord(String cookie, Integer page) throws IOException;

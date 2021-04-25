@@ -138,9 +138,17 @@ public class ToolController {
     }
 
     @Action("ip/{params}")
-    @QMsg(at = true)
+    @QMsg(at = true, atNewLine = true)
     public String queryIp(String params) throws IOException {
-        return toolLogic.queryIp(params);
+        Result<List<Map<String, String>>> result = toolLogic.queryIp(params);
+        if (result.isSuccess()){
+            List<Map<String, String>> list = result.getData();
+            StringBuilder sb = new StringBuilder();
+            list.forEach(map ->
+                sb.append(map.get("ip")).append("->").append(map.get("address")).append("\n")
+            );
+            return BotUtils.removeLastLine(sb);
+        }else return "查询IP地址失败！";
     }
 
     @Action("whois/{params}")

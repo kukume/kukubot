@@ -25,7 +25,7 @@ public class ArkJob {
 	@Inject
 	private ArkNightsLogic arkNightsLogic;
 
-	@Cron("At::d::07:35")
+	@Cron("At::d::05:35")
 	public void arkSign(){
 		List<ArkNightsEntity> list = arkNightsService.findAll();
 		for (ArkNightsEntity arkNightsEntity : list) {
@@ -36,6 +36,9 @@ public class ArkJob {
 				Result<String> cookieResult = arkNightsLogic.akCookie(arkNightsEntity, source, uid);
 				if (cookieResult.isFailure()) continue;
 				String cookie = arkNightsEntity.getCookie() + cookieResult.getData();
+                OkHttpUtils.postJson("https://ak.hypergryph.com/activity/preparation/activity/share",
+                        OkHttpUtils.addJson("{\"source\":\"" + source + "\",\"method\":\"" + 1 + "\"}"),
+                        OkHttpUtils.addHeaders(cookie, url, UA.PC));
 				for (int i = 0; i < 2; i++) {
 					OkHttpUtils.postJson("https://ak.hypergryph.com/activity/preparation/activity/roll",
 							OkHttpUtils.addJson("{\"source\":\"" + source + "\",\"sourceUid\":\"" + uid + "\"}"),

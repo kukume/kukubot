@@ -2,6 +2,7 @@ package me.kuku.yuq.controller;
 
 import com.IceCreamQAQ.Yu.annotation.Action;
 import com.IceCreamQAQ.Yu.annotation.Before;
+import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.annotation.GroupController;
 import com.icecreamqaq.yuq.annotation.PathVar;
@@ -84,6 +85,17 @@ public class ArkNightsController {
 		}else return result.getMessage();
 	}
 
+    @Action("ark庆典签到")
+    @QMsg(at = true, atNewLine = true)
+    public String celebrationSign(ArkNightsEntity arkNightsEntity) throws IOException {
+        Result<List<Map<String, String>>> result = arkNightsLogic.celebrationSign(arkNightsEntity.getCookie());
+        if (result.getCode() == 200) {
+            if (result.getData().isEmpty()) {
+                return "庆典币不足,无法兑换任何物品";
+            }
+            return "签到成功:" + JSONObject.toJSONString(result.getData());
+        } else return result.getMessage();
+    }
 	@PrivateController
 	public static class ArkNightsLoginController {
 		@Inject

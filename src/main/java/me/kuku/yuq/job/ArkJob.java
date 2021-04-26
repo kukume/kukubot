@@ -16,6 +16,7 @@ import org.jsoup.Jsoup;
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @JobCenter
 public class ArkJob {
@@ -51,13 +52,11 @@ public class ArkJob {
 				String jsonStr = BotUtils.regex("e.exports=JSON.parse\\('", "'\\)\\},", jsStr);
 				JSONObject jsonObject = JSON.parseObject(jsonStr);
 				for (Map.Entry<String, Object> entry: jsonObject.entrySet()){
-					JSONObject innerJsonObject = (JSONObject) entry.getValue();
-					if (innerJsonObject.getBoolean("recall")){
-						OkHttpUtils.postJson("https://ak.hypergryph.com/activity/preparation/activity/exchange",
-								OkHttpUtils.addJson("{\"giftPackId\":\"" + entry.getKey() + "\",\"source\":\"" + source + "\",\"sourceUid\":\"" + uid + "\"}"),
-								OkHttpUtils.addHeaders(cookie, "https://ak.hypergryph.com/activity/preparation?source=linkShare&from=NTgwMDU4MjA=",
-										UA.PC));
-					}
+					TimeUnit.MILLISECONDS.sleep(500);
+					OkHttpUtils.postJson("https://ak.hypergryph.com/activity/preparation/activity/exchange",
+							OkHttpUtils.addJson("{\"giftPackId\":\"" + entry.getKey() + "\",\"source\":\"" + source + "\",\"sourceUid\":\"" + uid + "\"}"),
+							OkHttpUtils.addHeaders(cookie, "https://ak.hypergryph.com/activity/preparation?source=linkShare&from=NTgwMDU4MjA=",
+									UA.PC));
 				}
 			} catch (Exception e) {
 				e.printStackTrace();

@@ -724,4 +724,35 @@ public class ToolController {
         return "https://botmenu.kukuqaq.com";
     }
 
+    @Action("查企业 {name}")
+    @QMsg(at = true, atNewLine = true)
+    public String queryCompany(String name) throws IOException {
+        Map<String, String> map = toolLogic.queryCompanyInfo(name);
+        return "企业名称：" + map.get("entName") + "\n" +
+                "法定代表人：" + map.get("legalName") + "\n" +
+                "注册资本：" + map.get("regCapital") + "\n" +
+                "经营状态：" + map.get("regStatus") + "\n" +
+                "成立日期：" + map.get("createTime") + "\n" +
+                "注册号：" + map.get("regNo") + "\n" +
+                "组织机构代码：" + map.get("orgNo") + "\n" +
+                "统一社会信用代码：" + map.get("creditCode") + "\n" +
+                "核准日期：" + map.get("approvedTime") + "\n" +
+                "所属行业：" + map.get("industry") + "\n" +
+                "公司类型：" + map.get("companyType") + "\n" +
+                "登记机关：" + map.get("regInstitute") + "\n" +
+                "所属地区：" + map.get("province") + "\n" +
+                "注册地址：" + map.get("regLocation") + "\n" +
+                "经营范围：" + map.get("opScope") + "\n" +
+                "蓝鲸评分：" + map.get("score");
+    }
+
+    @Action("搜企业 {name}")
+    @QMsg(at = true, atNewLine = true)
+    public String searchCompany(String name) throws IOException {
+        List<String> list = toolLogic.searchCompany(name);
+        StringBuilder sb = new StringBuilder().append("您搜索的企业名称如下：").append("\n");
+        list.forEach(s -> sb.append(s).append("\n"));
+        return BotUtils.removeLastLine(sb);
+    }
+
 }

@@ -673,9 +673,16 @@ public class ToolLogicImpl implements ToolLogic {
     @Override
     public JSONObject luckJson(int index){
         if(luckJson == null){
-            InputStream is = this.getClass().getResourceAsStream("/db/luck.json");
-            byte[] bytes = IO.read(is, true);
-            luckJson = JSON.parseArray(new String(bytes, StandardCharsets.UTF_8));
+            InputStream is = null;
+            try {
+                is = this.getClass().getResourceAsStream("/db/luck.json");
+                if (is != null) {
+                    byte[] bytes = IO.read(is, true);
+                    luckJson = JSON.parseArray(new String(bytes, StandardCharsets.UTF_8));
+                }
+            } finally {
+                IOUtils.close(is);
+            }
         }
         return luckJson.getJSONObject(index-1);
     }
@@ -747,5 +754,31 @@ public class ToolLogicImpl implements ToolLogic {
     public String qinYunKeChat(String message) throws IOException {
         JSONObject jsonObject = OkHttpUtils.getJson("http://api.qingyunke.com/api.php?key=free&appid=0&msg=" + URLEncoder.encode(message, "utf-8"));
         return jsonObject.getString("content");
+    }
+
+    @Override
+    public Map<String, String> queryCompanyInfo(String companyName) throws IOException {
+        JSONObject jsonObject = OkHttpUtils.postJson("https://icredit.jd.com/search/common/queryEntCard",
+                OkHttpUtils.addJson("{\"queryString\":\"" + companyName + "\"}"),
+                OkHttpUtils.addHeaders(null, "https://icredit.jd.com/enterprise?name=" + URLEncoder.encode(companyName, "utf-8"), UA.PC));
+        JSONObject data = jsonObject.getJSONObject("data");
+        if (data == null) return null;
+        Map<String, String> map = new HashMap<>();
+        map.put("score", data.getString("score"));
+        map.put("title", data.getString("title"));
+        map.put("progress", data.getString("progress"));
+        data.getJSONObject("companyInfo").forEach((str, obj) -> map.put(str, obj == null ? null : obj.toString()));
+        return map;
+    }
+
+    @Override
+    public List<String> searchCompany(String name) throws IOException {
+        JSONObject jsonObject = OkHttpUtils.postJson("https://icredit.jd.com/search/common/entList",
+                OkHttpUtils.addJson("{\"queryString\":\"" + name + "\",\"pageNum\":1,\"pageSize\":10}"),
+                OkHttpUtils.addReferer("https://icredit.jd.com/result?name=" + URLEncoder.encode(name, "utf-8")));
+        JSONArray jsonArray = jsonObject.getJSONObject("data").getJSONArray("list");
+        List<String> list = new ArrayList<>();
+        jsonArray.stream().map(obj -> (JSONObject) obj).forEach(obj -> list.add(obj.getString("entName")));
+        return list;
     }
 }

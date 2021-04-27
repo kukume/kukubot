@@ -57,4 +57,6 @@ public interface ToolLogic {
     byte[] pa(String url);
     JSONArray loLiConQuickly(String tags) throws IOException;
     String qinYunKeChat(String message) throws IOException;
+    Map<String, String> queryCompanyInfo(String companyName) throws IOException;
+    List<String> searchCompany(String name) throws IOException;
 }

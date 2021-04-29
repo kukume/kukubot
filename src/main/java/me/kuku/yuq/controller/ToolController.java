@@ -728,6 +728,7 @@ public class ToolController {
     @QMsg(at = true, atNewLine = true)
     public String queryCompany(String name) throws IOException {
         Map<String, String> map = toolLogic.queryCompanyInfo(name);
+        if (map == null) return "没有搜索到该企业！";
         return "企业名称：" + map.get("entName") + "\n" +
                 "法定代表人：" + map.get("legalName") + "\n" +
                 "注册资本：" + map.get("regCapital") + "\n" +

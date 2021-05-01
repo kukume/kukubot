@@ -30,12 +30,10 @@ public class BotUtils {
         // http://www.uc4.cn/
         try {
             if (!url.startsWith("http") && !url.startsWith("https")) url = "http://" + url;
-            Map<String, String> map = new HashMap<>();
-            map.put("i", "1");
-            map.put("url", url);
-            JSONObject jsonObject = OkHttpUtils.postJson("https://dwz.ng/api.php", map);
-            if (jsonObject.getInteger("code") == 1){
-                return jsonObject.getString("url");
+            JSONObject jsonObject = OkHttpUtils.postJson("https://links.iyou.eu.org/",
+                    OkHttpUtils.addJson("{\"url\":\"" + url + "\"}"));
+            if (jsonObject.getInteger("status") == 200){
+                return "https://links.iyou.eu.org" + jsonObject.getString("key");
             }else return url;
         } catch (Exception e) {
             return url;

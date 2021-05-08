@@ -4,6 +4,7 @@ import com.IceCreamQAQ.Yu.annotation.Action;
 import com.IceCreamQAQ.Yu.annotation.Before;
 import com.IceCreamQAQ.Yu.annotation.Config;
 import com.IceCreamQAQ.Yu.annotation.Synonym;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
@@ -21,6 +22,7 @@ import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.logic.*;
 import me.kuku.yuq.pojo.ConfigType;
 import me.kuku.yuq.pojo.DCloudPojo;
+import me.kuku.yuq.pojo.OfficeUserPojo;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.ConfigService;
 import me.kuku.yuq.service.GroupService;
@@ -28,6 +30,7 @@ import me.kuku.yuq.utils.BotUtils;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -209,6 +212,33 @@ public class SettingController extends QQController {
         configEntity.setContent(apiKey);
         configService.save(configEntity);
         return "绑定ddOcr成功！！";
+    }
+
+    @Action("officeuser {clientId} {clientSecret} {tenantId} {domain}")
+    public String bindOfficeUser(ContextSession session, String clientId, String clientSecret, String tenantId,
+                                 String domain){
+        reply("请输入订阅显示名称和订阅ID，名称和ID以|分割，如果有多个订阅，请使用;分割");
+        Message nextMessage = session.waitNextMessage(1000 * 60 * 5);
+        String ss = BotUtils.firstString(nextMessage);
+        String[] arr = ss.split(";");
+        List<OfficeUserPojo.Sku> list = new ArrayList<>();
+        for (String sss: arr){
+            OfficeUserPojo.Sku sku = new OfficeUserPojo.Sku();
+            String[] arrr = sss.split("\\|");
+            sku.setName(arrr[0]);
+            sku.setId(arrr[1]);
+            list.add(sku);
+        }
+        OfficeUserPojo pojo = new OfficeUserPojo();
+        pojo.setClientId(clientId);
+        pojo.setClientSecret(clientSecret);
+        pojo.setTenantId(tenantId);
+        pojo.setDomain(domain);
+        pojo.setSku(list);
+        ConfigEntity entity = getEntity(ConfigType.OFFICE_USER);
+        entity.setContent(JSON.toJSONString(pojo));
+        configService.save(entity);
+        return "绑定信息成功！！";
     }
 
     private ConfigEntity getEntity(ConfigType configType){

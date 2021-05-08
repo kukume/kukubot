@@ -20,7 +20,8 @@ public enum ConfigType {
 	SauceNao("sauceNao"),
 	IdentifyCode("identifyCode"),
 	FateAdmCode("fateAdmCode"),
-	DdOcrCode("ddOcrCode");
+	DdOcrCode("ddOcrCode"),
+	OFFICE_USER("officeUser");
 
 
 	private final String type;

@@ -22,7 +22,7 @@ import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.logic.*;
 import me.kuku.yuq.pojo.ConfigType;
 import me.kuku.yuq.pojo.DCloudPojo;
-import me.kuku.yuq.pojo.OfficeUserPojo;
+import me.kuku.yuq.pojo.OfficePojo;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.ConfigService;
 import me.kuku.yuq.service.GroupService;
@@ -214,31 +214,70 @@ public class SettingController extends QQController {
         return "绑定ddOcr成功！！";
     }
 
-    @Action("officeuser {clientId} {clientSecret} {tenantId} {domain}")
-    public String bindOfficeUser(ContextSession session, String clientId, String clientSecret, String tenantId,
-                                 String domain){
+    @Action("绑全局")
+    public String bindOffice(ContextSession session){
+        reply("请输入该全局显示的名称");
+        Message nameMessage = session.waitNextMessage();
+        String name = BotUtils.firstString(nameMessage);
+        ConfigEntity entity = getEntity(ConfigType.OFFICE_USER);
+        String content = entity.getContent();
+        List<OfficePojo> officeList;
+        if (content == null) officeList = new ArrayList<>();
+        else {
+            officeList = JSON.parseArray(content, OfficePojo.class);
+            long count = officeList.stream().filter(it -> it.getName().equals(name)).count();
+            if (count != 0) return "该名称已存在，请重新输入";
+        }
+        reply("请输入clientId");
+        Message clientIdMessage = session.waitNextMessage();
+        String clientId = BotUtils.firstString( clientIdMessage);
+        reply("请输入clientSecret");
+        Message clientSecretMessage = session.waitNextMessage();
+        String clientSecret = BotUtils.firstString(clientSecretMessage);
+        reply("请输入tenantId");
+        Message tenantIdMessage = session.waitNextMessage();
+        String tenantId = BotUtils.firstString(tenantIdMessage);
+        reply("请输入domain");
+        Message domainMessage = session.waitNextMessage();
+        String domain = BotUtils.messageToString(domainMessage);
         reply("请输入订阅显示名称和订阅ID，名称和ID以|分割，如果有多个订阅，请使用;分割");
-        Message nextMessage = session.waitNextMessage(1000 * 60 * 5);
-        String ss = BotUtils.firstString(nextMessage);
+        Message skuMessage = session.waitNextMessage(1000 * 60 * 5);
+        String ss = BotUtils.firstString(skuMessage);
         String[] arr = ss.split(";");
-        List<OfficeUserPojo.Sku> list = new ArrayList<>();
+        List<OfficePojo.Sku> list = new ArrayList<>();
         for (String sss: arr){
-            OfficeUserPojo.Sku sku = new OfficeUserPojo.Sku();
+            OfficePojo.Sku sku = new OfficePojo.Sku();
             String[] arrr = sss.split("\\|");
             sku.setName(arrr[0]);
             sku.setId(arrr[1]);
             list.add(sku);
         }
-        OfficeUserPojo pojo = new OfficeUserPojo();
+        OfficePojo pojo = new OfficePojo();
         pojo.setClientId(clientId);
         pojo.setClientSecret(clientSecret);
         pojo.setTenantId(tenantId);
         pojo.setDomain(domain);
         pojo.setSku(list);
-        ConfigEntity entity = getEntity(ConfigType.OFFICE_USER);
-        entity.setContent(JSON.toJSONString(pojo));
+        pojo.setName(name);
+        officeList.add(pojo);
+        entity.setContent(JSON.toJSONString(officeList));
         configService.save(entity);
-        return "绑定信息成功！！";
+        return "绑定全局信息成功！";
+    }
+
+    @Action("删全局 {name}")
+    public String delOffice(String name){
+        ConfigEntity entity = getEntity(ConfigType.OFFICE_USER);
+        String content = entity.getContent();
+        List<OfficePojo> list = JSON.parseArray(content, OfficePojo.class);
+        List<OfficePojo> delList = new ArrayList<>();
+        list.forEach(it -> {
+            if (it.getName().equals(name)) delList.add(it);
+        });
+        delList.forEach(list::remove);
+        entity.setContent(JSON.toJSONString(list));
+        configService.save(entity);
+        return "删除全局信息成功！";
     }
 
     private ConfigEntity getEntity(ConfigType configType){

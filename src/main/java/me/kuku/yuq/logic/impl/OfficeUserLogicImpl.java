@@ -4,9 +4,8 @@ import com.alibaba.fastjson.JSONObject;
 import me.kuku.yuq.exception.VerifyFailedException;
 import me.kuku.yuq.logic.OfficeUserLogic;
 import me.kuku.yuq.pojo.OfficeToken;
-import me.kuku.yuq.pojo.OfficeUserPojo;
+import me.kuku.yuq.pojo.OfficePojo;
 import me.kuku.yuq.pojo.Result;
-import me.kuku.yuq.utils.BotUtils;
 import me.kuku.yuq.utils.OkHttpUtils;
 import okhttp3.Headers;
 import okhttp3.Response;
@@ -19,20 +18,20 @@ public class OfficeUserLogicImpl implements OfficeUserLogic {
 
 	private final Map<String, OfficeToken> cache = new HashMap<>();
 
-	private String getToken(OfficeUserPojo officeUserPojo) throws IOException {
+	private String getToken(OfficePojo officePojo) throws IOException {
 		boolean isUpdate = false;
-		String clientId = officeUserPojo.getClientId();
+		String clientId = officePojo.getClientId();
 		OfficeToken token = cache.get(clientId);
 		if (token == null) isUpdate = true;
 		else {
 			if (System.currentTimeMillis() > token.getExpiresTime()) isUpdate = true;
 		}
 		if (isUpdate) {
-			String url = "https://login.microsoftonline.com/" + officeUserPojo.getTenantId() + "/oauth2/v2.0/token";
+			String url = "https://login.microsoftonline.com/" + officePojo.getTenantId() + "/oauth2/v2.0/token";
 			Map<String, String> map = new HashMap<>();
 			map.put("grant_type", "client_credentials");
-			map.put("client_id", officeUserPojo.getClientId());
-			map.put("client_secret", officeUserPojo.getClientSecret());
+			map.put("client_id", officePojo.getClientId());
+			map.put("client_secret", officePojo.getClientSecret());
 			map.put("scope", "https://graph.microsoft.com/.default");
 			JSONObject jsonObject = OkHttpUtils.postJson(url, map);
 			if (jsonObject.containsKey("access_token")) {
@@ -47,10 +46,10 @@ public class OfficeUserLogicImpl implements OfficeUserLogic {
 	}
 
 	@Override
-	public Result<?> createUser(OfficeUserPojo officeUserPojo, String displayName, String username, String password, Integer index) throws IOException {
+	public Result<?> createUser(OfficePojo officePojo, String displayName, String username, String password, Integer index) throws IOException {
 		if (index == null) index = 0;
 		Headers headers = OkHttpUtils.addSingleHeader("Authorization",
-				getToken(officeUserPojo));
+				getToken(officePojo));
 		JSONObject jsonObject = new JSONObject();
 		jsonObject.put("accountEnabled", true);
 		jsonObject.put("displayName", displayName);
@@ -60,7 +59,7 @@ public class OfficeUserLogicImpl implements OfficeUserLogic {
 		innerJsonObject.put("password", password);
 		innerJsonObject.put("forceChangePasswordNextSignIn", true);
 		jsonObject.put("passwordProfile", innerJsonObject);
-		String email = username + "@" + officeUserPojo.getDomain();
+		String email = username + "@" + officePojo.getDomain();
 		jsonObject.put("userPrincipalName", email);
 		jsonObject.put("usageLocation", "CN");
 		Response response = OkHttpUtils.post("https://graph.microsoft.com/v1.0/users",
@@ -68,7 +67,7 @@ public class OfficeUserLogicImpl implements OfficeUserLogic {
 		if (response.code() == 201){
 			response.close();
 			Response finallyResponse = OkHttpUtils.post("https://graph.microsoft.com/v1.0/users/" + email + "/assignLicense",
-					OkHttpUtils.addJson("{\"addLicenses\":[{\"disabledPlans\":[],\"skuId\":\"" + officeUserPojo.getSku().get(index).getId() + "\"}],\"removeLicenses\":[]}"),
+					OkHttpUtils.addJson("{\"addLicenses\":[{\"disabledPlans\":[],\"skuId\":\"" + officePojo.getSku().get(index).getId() + "\"}],\"removeLicenses\":[]}"),
 					headers);
 			if (finallyResponse.code() == 200){
 				finallyResponse.close();

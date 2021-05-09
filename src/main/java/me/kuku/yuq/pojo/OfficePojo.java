@@ -9,7 +9,8 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class OfficeUserPojo {
+public class OfficePojo {
+	private String name;
 	private String clientId;
 	private String clientSecret;
 	private String tenantId;

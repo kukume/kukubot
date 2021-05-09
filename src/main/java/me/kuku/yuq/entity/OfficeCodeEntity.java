@@ -10,8 +10,8 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "office_user_code")
-public class OfficeUserCodeEntity {
+@Table(name = "office_code")
+public class OfficeCodeEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
@@ -19,7 +19,7 @@ public class OfficeUserCodeEntity {
 	private String code;
 	private Boolean isUse;
 
-	public OfficeUserCodeEntity(String code){
+	public OfficeCodeEntity(String code){
 		this.code = code;
 		this.isUse = false;
 	}

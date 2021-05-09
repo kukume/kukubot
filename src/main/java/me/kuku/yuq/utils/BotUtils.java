@@ -217,43 +217,6 @@ public class BotUtils {
         return list;
     }
 
-    public static List<String> menu(Class<?>...clazzArr){
-        List<String> list = new ArrayList<>();
-        for (Class<?> clazz : clazzArr) {
-            String first = "";
-            Path path = clazz.getAnnotation(Path.class);
-            if (path != null){
-                first = path.value() + " ";
-            }
-            Method[] methods = clazz.getMethods();
-            for (Method method: methods){
-                Action action = method.getAnnotation(Action.class);
-                if (action != null){
-                    list.add(first + action.value());
-                }
-                Synonym synonym = method.getAnnotation(Synonym.class);
-                if (synonym != null){
-                    String[] arr = synonym.value();
-                    for (String str: arr){
-                        list.add(first + str);
-                    }
-                }
-            }
-        }
-        return list;
-    }
-
-    public static List<String> allCommand(){
-        List<String> list = menu();
-        for (int i = 0; i < list.size(); i++){
-            String str = list.get(i);
-            String command = str.split(" ")[0];
-            if (command.contains("/")) command = str.split("/")[0];
-            list.set(i, command);
-        }
-        return list;
-    }
-
     public static String removeLastLine(StringBuilder sb){
         if ("\n".equals(sb.substring(sb.length() - 1, sb.length()))) return sb.deleteCharAt(sb.length() - 1).toString();
         else return sb.toString();
@@ -265,6 +228,21 @@ public class BotUtils {
 
     public static String firstString(Message message){
         return Message.Companion.firstString(message);
+    }
+
+    public static String messageToString(Message message){
+        StringBuilder sb = new StringBuilder();
+        for (MessageItem item : message.getBody()) {
+            if (item instanceof Text){
+                sb.append(((Text) item).getText()).append(" ");
+            }
+            if (item instanceof XmlEx){
+                String value = ((XmlEx) item).getValue();
+                String url = regex("url=\"http://", "\"", value);
+                if (url != null) sb.append(url);
+            }
+        }
+        return sb.toString().trim();
     }
 
 }

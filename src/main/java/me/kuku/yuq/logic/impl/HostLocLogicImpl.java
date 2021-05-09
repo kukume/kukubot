@@ -78,8 +78,7 @@ public class HostLocLogicImpl implements HostLocLogic {
         String cookie = "";
         try {
             cookie = preventCookie();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException ignore) {
         }
         List<Map<String, String>> list = new ArrayList<>();
         String html;

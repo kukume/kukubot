@@ -1,12 +1,15 @@
 package me.kuku.yuq.entity;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "config")
@@ -30,6 +33,16 @@ public class ConfigEntity {
     public JSONObject getContentJsonObject(){
         if (content == null) return new JSONObject();
         else return JSON.parseObject(content);
+    }
+
+    public JSONArray getContentJsonArray(){
+        if (content == null) return new JSONArray();
+        else return JSON.parseArray(content);
+    }
+
+    public <T> List<T> getContentList(Class<T> clazz){
+        if (content == null) return new ArrayList<>();
+        else return JSON.parseArray(content, clazz);
     }
 
     public void setContentJsonObject(JSONObject jsonObject){

@@ -15,6 +15,7 @@ import me.kuku.yuq.entity.OfficeCodeEntity;
 import me.kuku.yuq.logic.OfficeUserLogic;
 import me.kuku.yuq.pojo.ConfigType;
 import me.kuku.yuq.pojo.OfficePojo;
+import me.kuku.yuq.pojo.OfficeRole;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.ConfigService;
 import me.kuku.yuq.service.OfficeCodeService;
@@ -100,6 +101,10 @@ public class OfficeController {
 	public static class OfficeAdminController{
 		@Inject
 		private OfficeCodeService officeCodeService;
+		@Inject
+		private ConfigService configService;
+		@Inject
+		private OfficeUserLogic officeUserLogic;
 		@Config("YuQ.Mirai.bot.master")
 		private String master;
 
@@ -109,6 +114,7 @@ public class OfficeController {
 				throw FunKt.getMif().text("您不是主人，无法执行！").toMessage().toThrowable();
 			}
 		}
+
 		@Action("office生成码子")
 		public String createCode(long qq, @PathVar(1) String numStr){
 			int num;
@@ -131,9 +137,7 @@ public class OfficeController {
 		public String queryCode(){
 			List<OfficeCodeEntity> list = officeCodeService.findAll();
 			StringBuilder sb = new StringBuilder().append("office激活码如下：").append("\n");
-			list.forEach(it -> {
-				sb.append(it.getCode()).append("->").append(it.getIsUse() ? "已使用" : "未使用").append("\n");
-			});
+			list.forEach(it -> sb.append(it.getCode()).append("->").append(it.getIsUse() ? "已使用" : "未使用").append("\n"));
 			return BotUtils.removeLastLine(sb);
 		}
 
@@ -144,6 +148,31 @@ public class OfficeController {
 					.map(OfficeCodeEntity::getCode).collect(Collectors.toList());
 			codeList.forEach(it -> officeCodeService.delByCode(it));
 			return "删除已使用的码子成功！";
+		}
+
+		@Action("office提权 {mail}")
+		public String setAdmin(String mail, Contact qq, ContextSession session) throws IOException {
+			ConfigEntity configEntity = configService.findByType(ConfigType.OFFICE_USER.getType());
+			if (configEntity == null) return "没有绑定office信息，提权失败！";
+			List<OfficePojo> officeList = configEntity.getContentList(OfficePojo.class);
+			if (officeList.size() == 0) return "管理员还没有绑定office信息，创建失败！";
+			int officeIndex = 0;
+			if (officeList.size() > 1){
+				StringBuilder sb = new StringBuilder("请选择您需要创建的全局名称，回复序号数字即可").append("\n");
+				for (int i = 0; i < officeList.size(); i++){
+					sb.append(i).append("、").append(officeList.get(i).getName()).append("\n");
+				}
+				qq.sendMessage(BotUtils.toMessage(BotUtils.removeLastLine(sb)));
+				Message ssMessage = session.waitNextMessage();
+				String numStr = BotUtils.firstString(ssMessage);
+				if (!numStr.matches("[0-9]+")) return "回复的不为数字！";
+				int num = Integer.parseInt(numStr);
+				if (num > officeList.size() - 1) return "回复的数字超限！";
+				officeIndex = num;
+			}
+			OfficePojo officePojo = officeList.get(officeIndex);
+			Result<?> result = officeUserLogic.userToAdmin(officePojo, mail, OfficeRole.GLOBAL_ADMIN);
+			return result.getMessage();
 		}
 	}
 

@@ -3,6 +3,7 @@ package me.kuku.yuq.logic.impl;
 import com.alibaba.fastjson.JSONObject;
 import me.kuku.yuq.exception.VerifyFailedException;
 import me.kuku.yuq.logic.OfficeUserLogic;
+import me.kuku.yuq.pojo.OfficeRole;
 import me.kuku.yuq.pojo.OfficeToken;
 import me.kuku.yuq.pojo.OfficePojo;
 import me.kuku.yuq.pojo.Result;
@@ -79,6 +80,37 @@ public class OfficeUserLogicImpl implements OfficeUserLogic {
 		}else {
 			JSONObject resultJsonObject = OkHttpUtils.getJson(response);
 			return Result.failure("创建账号失败！" + resultJsonObject.getJSONObject("error").getString("message"));
+		}
+	}
+
+	private Result<String> getUserid(OfficePojo officePojo, String mail) throws IOException {
+		String token = getToken(officePojo);
+		JSONObject jsonObject = OkHttpUtils.getJson("https://graph.microsoft.com/v1.0/users/" + mail,
+				OkHttpUtils.addSingleHeader("Authorization", token));
+		if (jsonObject.containsKey("error")){
+			return Result.failure(jsonObject.getJSONObject("error").getString("message"));
+		}else return Result.success(jsonObject.getString("id"));
+	}
+
+	@Override
+	public Result<?> userToAdmin(OfficePojo officePojo, String mail, OfficeRole officeRole) throws IOException {
+		//roletemplateID
+		//useradmin:fe930be7-5e62-47db-91af-98c3a49a38b1
+		//globalAdmin:62e90394-69f5-4237-9190-012177145e10
+		//Privileged role Admin:e8611ab8-c189-46e8-94e1-60213ab1f814
+		String token = getToken(officePojo);
+		Result<String> idResult = getUserid(officePojo, mail);
+		if (idResult.isFailure()) return idResult;
+		Response response = OkHttpUtils.post("https://graph.microsoft.com/v1.0/directoryRoles/roleTemplateId=" + officeRole.getValue() + "/members/$ref",
+				OkHttpUtils.addJson(new JSONObject() {{
+					put("@odata.id", "https://graph.microsoft.com/v1.0/directoryObjects/" + idResult.getData());
+				}}.toJSONString()), OkHttpUtils.addSingleHeader("Authorization", token));
+		if (response.code() == 204) {
+			response.close();
+			return Result.success("升级该用户为管理员成功！", null);
+		} else {
+			JSONObject jsonObject = OkHttpUtils.getJson(response);
+			return Result.failure(jsonObject.getJSONObject("error").getString("message"));
 		}
 	}
 }

@@ -76,6 +76,8 @@ public class NeTeaseLogicImpl implements NeTeaseLogic {
     public String sign(NeTeaseEntity neTeaseEntity) throws IOException {
         OkHttpUtils.get(api + "/daily_signin?type=1",
                 OkHttpUtils.addCookie(neTeaseEntity.getCookie())).close();
+        OkHttpUtils.get(api + "/yunbei/sign",
+                OkHttpUtils.addCookie(neTeaseEntity.getCookie())).close();
         JSONObject jsonObject = OkHttpUtils.getJson(api + "/daily_signin?type=0",
                 OkHttpUtils.addCookie(neTeaseEntity.getCookie()));
         Integer code = jsonObject.getInteger("code");

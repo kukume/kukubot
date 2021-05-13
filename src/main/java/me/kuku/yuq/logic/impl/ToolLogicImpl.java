@@ -779,4 +779,11 @@ public class ToolLogicImpl implements ToolLogic {
         jsonArray.stream().map(obj -> (JSONObject) obj).forEach(obj -> list.add(obj.getString("entName")));
         return list;
     }
+
+    @Override
+    public String girl() throws IOException {
+        JSONObject jsonObject = OkHttpUtils.getJson("https://www.onexiaolaji.cn/RandomPicture/api/?class=jkfun&type=json");
+        if (jsonObject.getInteger("code") == 200) return jsonObject.getString("url");
+        else return jsonObject.getString("msg");
+    }
 }

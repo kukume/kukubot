@@ -701,7 +701,7 @@ public class ToolController {
     public Message diu(Member qq, @PathVar(1) String paramQQ, @PathVar(0) String type){
         String url = qq.getAvatar();
         if (paramQQ != null){
-            if (!paramQQ.matches("^[0-9][0-9]*[0-9]$"))
+            if (!paramQQ.matches("[0-9]+"))
                 return FunKt.getMif().at(qq).plus("您输入的不为qq号，请重试！！");
             url = "http://q1.qlogo.cn/g?b=qq&nk=" + paramQQ + "&s=640";
         }
@@ -754,6 +754,11 @@ public class ToolController {
         StringBuilder sb = new StringBuilder().append("您搜索的企业名称如下：").append("\n");
         list.forEach(s -> sb.append(s).append("\n"));
         return BotUtils.removeLastLine(sb);
+    }
+
+    @Action("妹子")
+    public Image girls() throws IOException {
+        return FunKt.getMif().imageByUrl(toolLogic.girl());
     }
 
 }

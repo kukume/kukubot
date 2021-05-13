@@ -59,4 +59,5 @@ public interface ToolLogic {
     String qinYunKeChat(String message) throws IOException;
     Map<String, String> queryCompanyInfo(String companyName) throws IOException;
     List<String> searchCompany(String name) throws IOException;
+    String girl() throws IOException;
 }

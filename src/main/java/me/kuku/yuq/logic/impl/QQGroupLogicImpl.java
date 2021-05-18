@@ -321,104 +321,104 @@ public class QQGroupLogicImpl implements QQGroupLogic {
         return list;
     }
 
-    @Override
-    public Result<String> groupSign(QQLoginEntity qqLoginEntity, Long group, String place, String text, String name, String picId, String picUrl) throws IOException {
-        String gtk = qqLoginEntity.getGtk();
-        String qq= qqLoginEntity.getQq().toString();
-        String info = null;
-        String templateId = null;
-        JSONObject templateJsonObject = OkHttpUtils.getJson(String.format("https://qun.qq.com/cgi-bin/qiandao/gallery_template?gc=%d&bkn=%s&time=1014", group, gtk),
-                OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
-        if (templateJsonObject.getInteger("retcode") != 0) return Result.failure("qq群签到失败，请更新QQ！！", null);
-        out:for (Object obj: templateJsonObject.getJSONObject("data").getJSONArray("list")){
-            JSONObject singleJsonObject = (JSONObject) obj;
-            if (name.equals(singleJsonObject.getString("name"))){
-                if (singleJsonObject.containsKey("gallery_info")){
-                    JSONObject infoJsonObject = singleJsonObject.getJSONObject("gallery_info");
-                    picUrl = infoJsonObject.getString("url");
-                    info = String.format("{\"category_id\":%s,\"page\":%s,\"pic_id\":%s}",
-                            infoJsonObject.getInteger("category_id"), infoJsonObject.getInteger("page"),
-                            infoJsonObject.getInteger("pic_id"));
-                }else info = "{\"category_id\":\"\",\"page\":\"\",\"pic_id\":\"\"}";
-                templateId = singleJsonObject.getString("id");
-                break;
-            }
-            if ("自定义".equals(singleJsonObject.getString("name"))) break;
-            JSONObject idJsonObject = OkHttpUtils.getJson(String.format("https://qun.qq.com/cgi-bin/qiandao/gallery_list/category?template_id=%s&bkn=%s&need_dynamic=1",
-                    singleJsonObject.getInteger("id"), gtk), OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
-            List<String> param = new ArrayList<>();
-            for (Object id: idJsonObject.getJSONObject("data").getJSONArray("category_list")){
-                JSONObject singleIdJsonObject = (JSONObject) id;
-                param.add(singleIdJsonObject.getString("category_id"));
-            }
-            JSONObject deepJsonObject = OkHttpUtils.getJson(String.format("https://qun.qq.com/cgi-bin/qiandao/gallery_list?bkn=%s&category_ids=%s&start=0&num=50",
-                    gtk, param), OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
-            for (Object sin: deepJsonObject.getJSONObject("data").getJSONArray("picture_list")){
-                JSONObject jsonObject = (JSONObject) sin;
-                for (Object item: jsonObject.getJSONArray("picture_item")){
-                    JSONObject itemJsonObject = (JSONObject) item;
-                    if (name.equals(itemJsonObject.getString("name"))){
-                        info = String.format("{\"category_id\":\"%s\",\"page\":\"%s\",\"pic_id\":\"%s\"}",
-                                jsonObject.getInteger("category_id"), itemJsonObject.getInteger("page"),
-                                itemJsonObject.getInteger("picture_id"));
-                        templateId = singleJsonObject.getString("id");
-                        picUrl = itemJsonObject.getString("url");
-                        break out;
-                    }
-                }
-
-            }
-        }
-        if (info == null || templateId == null){
-            JSONObject template2JsonObject = OkHttpUtils.getJson(String.format("https://qun.qq.com/cgi-bin/qiandao/gallery_list?bkn=%s&category_ids=[9]&start=0&num=50", gtk),
-                    OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
-            JSONObject picJsonObject = template2JsonObject.getJSONObject("data").getJSONArray("picture_list").getJSONObject(0);
-            for (Object obj: picJsonObject.getJSONArray("picture_item")){
-                JSONObject singleJsonObject = (JSONObject) obj;
-                if (name.equals(singleJsonObject.getString("name"))){
-                    info = String.format("{\"category_id\":%s,\"page\":%s,\"pic_id\":%s}",
-                            picJsonObject.getInteger("category_id"), singleJsonObject.getInteger("page"), singleJsonObject.getInteger("picture_id"));
-                    templateId = "[object Object]";
-                    picUrl = singleJsonObject.getString("url");
-                    break;
-                }
-            }
-        }
-
-        if (info == null || templateId == null) return Result.failure("群签到类型中没有" + name + "这个类型，请重试！！", null);
-        Map<String, String> map = new HashMap<>();
-        map.put("btn", gtk);
-        map.put("template_data", "");
-        map.put("gallery_info", info);
-        map.put("template_id", templateId);
-        map.put("gc", group.toString());
-        map.put("client", "2");
-        map.put("lgt", "0");
-        map.put("lat", "0");
-        map.put("poi", place);
-        map.put("text", text);
-        if (picId == null) picId = "";
-        map.put("pic_id", picId);
-        JSONObject jsonObject;
-        try {
-            jsonObject = OkHttpUtils.postJson("https://qun.qq.com/cgi-bin/qiandao/sign/publish", map,
-                    OkHttpUtils.addHeaders(qqLoginEntity.getCookieWithGroup(), null, UA.QQ2));
-        } catch (IOException e) {
-            e.printStackTrace();
-            return Result.failure("出现异常了！！", null);
-        }
-        switch (jsonObject.getInteger("retcode")){
-            case 0: {
-                JSONObject resultJsonObject = OkHttpUtils.getJson(String.format("https://qun.qq.com/cgi-bin/qiandao/list?gc=%s&uin=%s&type=0&num=10&sign_id=&bkn=%s", group, qq, gtk),
-                        OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
-                String id = resultJsonObject.getJSONObject("data").getJSONArray("list").getJSONObject(0).getString("sign_id");
-                return Result.success("{\"app\":\"com.tencent.qq.checkin\",\"desc\":\"群签到\",\"view\":\"checkIn\",\"ver\":\"1.0.0.25\",\"prompt\":\"[群签到]群签到\",\"appID\":\"\",\"sourceName\":\"\",\"actionData\":\"\",\"actionData_A\":\"\",\"sourceUrl\":\"\",\"meta\":{\"checkInData\":{\"address\":\"" + place + "\",\"cover\":{\"height\":0,\"url\":\"" + picUrl + "\",\"width\":0},\"desc\":\"" + text + "\",\"hostuin\":" + qq + ",\"id\":\"" + id + "\",\"media_type\":0,\"qunid\":\"" + group + "\",\"rank\":1,\"skip_to\":1,\"time\":0,\"url\":\"mqqapi:\\/\\/microapp\\/open?appid=1108164955&path=pages%2Fchecklist%2Fchecklist&extraData=929630359%7C" + id + "\",\"vid\":\"\"}},\"config\":{\"forward\":0,\"showSender\":1},\"text\":\"\",\"sourceAd\":\"\",\"extra\":\"\"}");
-            }
-            case 10013:
-            case 10001: return Result.failure("qq群签到失败，已被禁言！", null);
-            case 10016: return Result.failure("群签到一次性只能签到5个群，请10分钟后再试！");
-            case 5: return Result.failure("qq群签到失败，请更新QQ！！");
-            default: return Result.failure("qq群签到失败，" + jsonObject.getString("msg"), null);
-        }
-    }
+//    @Override
+//    public Result<String> groupSign(QQLoginEntity qqLoginEntity, Long group, String place, String text, String name, String picId, String picUrl) throws IOException {
+//        String gtk = qqLoginEntity.getGtk();
+//        String qq= qqLoginEntity.getQq().toString();
+//        String info = null;
+//        String templateId = null;
+//        JSONObject templateJsonObject = OkHttpUtils.getJson(String.format("https://qun.qq.com/cgi-bin/qiandao/gallery_template?gc=%d&bkn=%s&time=1014", group, gtk),
+//                OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
+//        if (templateJsonObject.getInteger("retcode") != 0) return Result.failure("qq群签到失败，请更新QQ！！", null);
+//        out:for (Object obj: templateJsonObject.getJSONObject("data").getJSONArray("list")){
+//            JSONObject singleJsonObject = (JSONObject) obj;
+//            if (name.equals(singleJsonObject.getString("name"))){
+//                if (singleJsonObject.containsKey("gallery_info")){
+//                    JSONObject infoJsonObject = singleJsonObject.getJSONObject("gallery_info");
+//                    picUrl = infoJsonObject.getString("url");
+//                    info = String.format("{\"category_id\":%s,\"page\":%s,\"pic_id\":%s}",
+//                            infoJsonObject.getInteger("category_id"), infoJsonObject.getInteger("page"),
+//                            infoJsonObject.getInteger("pic_id"));
+//                }else info = "{\"category_id\":\"\",\"page\":\"\",\"pic_id\":\"\"}";
+//                templateId = singleJsonObject.getString("id");
+//                break;
+//            }
+//            if ("自定义".equals(singleJsonObject.getString("name"))) break;
+//            JSONObject idJsonObject = OkHttpUtils.getJson(String.format("https://qun.qq.com/cgi-bin/qiandao/gallery_list/category?template_id=%s&bkn=%s&need_dynamic=1",
+//                    singleJsonObject.getInteger("id"), gtk), OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
+//            List<String> param = new ArrayList<>();
+//            for (Object id: idJsonObject.getJSONObject("data").getJSONArray("category_list")){
+//                JSONObject singleIdJsonObject = (JSONObject) id;
+//                param.add(singleIdJsonObject.getString("category_id"));
+//            }
+//            JSONObject deepJsonObject = OkHttpUtils.getJson(String.format("https://qun.qq.com/cgi-bin/qiandao/gallery_list?bkn=%s&category_ids=%s&start=0&num=50",
+//                    gtk, param), OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
+//            for (Object sin: deepJsonObject.getJSONObject("data").getJSONArray("picture_list")){
+//                JSONObject jsonObject = (JSONObject) sin;
+//                for (Object item: jsonObject.getJSONArray("picture_item")){
+//                    JSONObject itemJsonObject = (JSONObject) item;
+//                    if (name.equals(itemJsonObject.getString("name"))){
+//                        info = String.format("{\"category_id\":\"%s\",\"page\":\"%s\",\"pic_id\":\"%s\"}",
+//                                jsonObject.getInteger("category_id"), itemJsonObject.getInteger("page"),
+//                                itemJsonObject.getInteger("picture_id"));
+//                        templateId = singleJsonObject.getString("id");
+//                        picUrl = itemJsonObject.getString("url");
+//                        break out;
+//                    }
+//                }
+//
+//            }
+//        }
+//        if (info == null || templateId == null){
+//            JSONObject template2JsonObject = OkHttpUtils.getJson(String.format("https://qun.qq.com/cgi-bin/qiandao/gallery_list?bkn=%s&category_ids=[9]&start=0&num=50", gtk),
+//                    OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
+//            JSONObject picJsonObject = template2JsonObject.getJSONObject("data").getJSONArray("picture_list").getJSONObject(0);
+//            for (Object obj: picJsonObject.getJSONArray("picture_item")){
+//                JSONObject singleJsonObject = (JSONObject) obj;
+//                if (name.equals(singleJsonObject.getString("name"))){
+//                    info = String.format("{\"category_id\":%s,\"page\":%s,\"pic_id\":%s}",
+//                            picJsonObject.getInteger("category_id"), singleJsonObject.getInteger("page"), singleJsonObject.getInteger("picture_id"));
+//                    templateId = "[object Object]";
+//                    picUrl = singleJsonObject.getString("url");
+//                    break;
+//                }
+//            }
+//        }
+//
+//        if (info == null || templateId == null) return Result.failure("群签到类型中没有" + name + "这个类型，请重试！！", null);
+//        Map<String, String> map = new HashMap<>();
+//        map.put("btn", gtk);
+//        map.put("template_data", "");
+//        map.put("gallery_info", info);
+//        map.put("template_id", templateId);
+//        map.put("gc", group.toString());
+//        map.put("client", "2");
+//        map.put("lgt", "0");
+//        map.put("lat", "0");
+//        map.put("poi", place);
+//        map.put("text", text);
+//        if (picId == null) picId = "";
+//        map.put("pic_id", picId);
+//        JSONObject jsonObject;
+//        try {
+//            jsonObject = OkHttpUtils.postJson("https://qun.qq.com/cgi-bin/qiandao/sign/publish", map,
+//                    OkHttpUtils.addHeaders(qqLoginEntity.getCookieWithGroup(), null, UA.QQ2));
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            return Result.failure("出现异常了！！", null);
+//        }
+//        switch (jsonObject.getInteger("retcode")){
+//            case 0: {
+//                JSONObject resultJsonObject = OkHttpUtils.getJson(String.format("https://qun.qq.com/cgi-bin/qiandao/list?gc=%s&uin=%s&type=0&num=10&sign_id=&bkn=%s", group, qq, gtk),
+//                        OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
+//                String id = resultJsonObject.getJSONObject("data").getJSONArray("list").getJSONObject(0).getString("sign_id");
+//                return Result.success("{\"app\":\"com.tencent.qq.checkin\",\"desc\":\"群签到\",\"view\":\"checkIn\",\"ver\":\"1.0.0.25\",\"prompt\":\"[群签到]群签到\",\"appID\":\"\",\"sourceName\":\"\",\"actionData\":\"\",\"actionData_A\":\"\",\"sourceUrl\":\"\",\"meta\":{\"checkInData\":{\"address\":\"" + place + "\",\"cover\":{\"height\":0,\"url\":\"" + picUrl + "\",\"width\":0},\"desc\":\"" + text + "\",\"hostuin\":" + qq + ",\"id\":\"" + id + "\",\"media_type\":0,\"qunid\":\"" + group + "\",\"rank\":1,\"skip_to\":1,\"time\":0,\"url\":\"mqqapi:\\/\\/microapp\\/open?appid=1108164955&path=pages%2Fchecklist%2Fchecklist&extraData=929630359%7C" + id + "\",\"vid\":\"\"}},\"config\":{\"forward\":0,\"showSender\":1},\"text\":\"\",\"sourceAd\":\"\",\"extra\":\"\"}");
+//            }
+//            case 10013:
+//            case 10001: return Result.failure("qq群签到失败，已被禁言！", null);
+//            case 10016: return Result.failure("群签到一次性只能签到5个群，请10分钟后再试！");
+//            case 5: return Result.failure("qq群签到失败，请更新QQ！！");
+//            default: return Result.failure("qq群签到失败，" + jsonObject.getString("msg"), null);
+//        }
+//    }
 }

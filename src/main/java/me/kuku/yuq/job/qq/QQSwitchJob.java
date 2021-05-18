@@ -37,9 +37,7 @@ public class QQSwitchJob {
             try {
                 QQLoginEntity qqLoginEntity = qqLoginService.findByQQ(qqJobEntity.getQq());
                 if (qqLoginEntity == null) continue;
-                String str = qqLoginLogic.qqSign(qqLoginEntity);
-                if (!str.contains("更新QQ")){
-                    qqLoginLogic.anotherSign(qqLoginEntity);
+                if (qqLoginEntity.getStatus()){
                     qqLoginLogic.vipSign(qqLoginEntity);
                     qqLoginLogic.yellowSign(qqLoginEntity);
                     qqLoginLogic.qqVideoSign1(qqLoginEntity);

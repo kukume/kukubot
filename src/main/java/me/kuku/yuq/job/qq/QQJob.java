@@ -30,8 +30,8 @@ public class QQJob {
         List<QQLoginEntity> list = qqLoginService.findByActivity();
         for (QQLoginEntity qqLoginEntity: list){
             try {
-                String result = qqLoginLogic.qqSign(qqLoginEntity);
-                if (result.contains("失败")){
+                String result = qqLoginLogic.groupMemberInfo(qqLoginEntity, 123456L).getMessage();
+                if (result.contains("失败，请更新QQ")){
                     if (qqLoginEntity.getPassword() == null){
                         qqLoginEntity.setStatus(false);
                         qqLoginService.save(qqLoginEntity);

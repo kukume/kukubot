@@ -67,54 +67,49 @@ public class QQLoginController{
     @QMsg(at = true, atNewLine = true)
     public String allSign(QQLoginEntity qqLoginEntity, Group group, long qq) throws IOException {
         group.sendMessage(FunKt.getMif().at(qq).plus("请稍后！！！正在为您签到中~~~"));
-        String str1 = qqLoginLogic.qqSign(qqLoginEntity);
-        if (!str1.contains("更新QQ")){
-            try {
-                StringBuilder sb = new StringBuilder();
-                qqLoginLogic.anotherSign(qqLoginEntity);
-                String str2;
-                if (qqLoginLogic.vipSign(qqLoginEntity).contains("失败"))
-                    str2 = "签到失败";
-                else str2 = "签到成功";
-                String str3 = qqLoginLogic.yellowSign(qqLoginEntity);
-                String str4 = qqLoginLogic.qqVideoSign1(qqLoginEntity);
-                String str5 = qqLoginLogic.qqVideoSign2(qqLoginEntity);
-                String str6 = qqLoginLogic.bigVipSign(qqLoginEntity);
-                String str7;
-                if (qqLoginLogic.qqMusicSign(qqLoginEntity).contains("失败"))
-                    str7 = "签到失败";
-                else str7 = "签到成功";
-                String str8;
-                if (qqLoginLogic.qPetSign(qqLoginEntity).contains("失败"))
-                    str8 = "领取失败";
-                else str8 = "领取成功";
-                String str9 = qqLoginLogic.motionSign(qqLoginEntity);
-                String str10;
-                if (qqLoginLogic.blueSign(qqLoginEntity).contains("成功"))
-                    str10 = "签到成功";
-                else str10 = "签到失败";
-                String str11 = qqLoginLogic.sVipMornSign(qqLoginEntity);
-                String str12 = qqLoginLogic.weiYunSign(qqLoginEntity);
-                String str13 = qqLoginLogic.growthLike(qqLoginEntity);
-                sb.append("手机打卡：").append(str1).append("\n")
-                        .append("会员签到：").append(str2).append("\n")
-                        .append("黄钻签到：").append(str3).append("\n")
-                        .append("腾讯视频签到1：").append(str4).append("\n")
-                        .append("腾讯视频签到2：").append(str5).append("\n")
-                        .append("大会员签到；").append(str6).append("\n")
-                        .append("音乐签到：").append(str7).append("\n")
-                        .append("大乐斗签到：").append(str8).append("\n")
-                        .append("运动签到：").append(str9).append("\n")
-                        .append("蓝钻签到：").append(str10).append("\n")
-                        .append("svip打卡报名：").append(str11).append("\n")
-                        .append("微云签到：").append(str12).append("\n")
-                        .append("排行榜点赞：").append(str13);
-                return sb.toString();
+        try {
+            StringBuilder sb = new StringBuilder();
+            String str1;
+            if (qqLoginLogic.vipSign(qqLoginEntity).contains("失败"))
+                str1 = "签到失败";
+            else str1 = "签到成功";
+            String str2 = qqLoginLogic.yellowSign(qqLoginEntity);
+            String str3 = qqLoginLogic.qqVideoSign1(qqLoginEntity);
+            String str4 = qqLoginLogic.qqVideoSign2(qqLoginEntity);
+            String str5 = qqLoginLogic.bigVipSign(qqLoginEntity);
+            String str6;
+            if (qqLoginLogic.qqMusicSign(qqLoginEntity).contains("失败"))
+                str6 = "签到失败";
+            else str6 = "签到成功";
+            String str7;
+            if (qqLoginLogic.qPetSign(qqLoginEntity).contains("失败"))
+                str7 = "领取失败";
+            else str7 = "领取成功";
+            String str8 = qqLoginLogic.motionSign(qqLoginEntity);
+            String str9;
+            if (qqLoginLogic.blueSign(qqLoginEntity).contains("成功"))
+                str9 = "签到成功";
+            else str9 = "签到失败";
+            String str10 = qqLoginLogic.sVipMornSign(qqLoginEntity);
+            String str11 = qqLoginLogic.weiYunSign(qqLoginEntity);
+            String str12 = qqLoginLogic.growthLike(qqLoginEntity);
+            sb.append("会员签到：").append(str1).append("\n")
+                    .append("黄钻签到：").append(str2).append("\n")
+                    .append("腾讯视频签到1：").append(str3).append("\n")
+                    .append("腾讯视频签到2：").append(str4).append("\n")
+                    .append("大会员签到；").append(str5).append("\n")
+                    .append("音乐签到：").append(str6).append("\n")
+                    .append("大乐斗签到：").append(str7).append("\n")
+                    .append("运动签到：").append(str8).append("\n")
+                    .append("蓝钻签到：").append(str9).append("\n")
+                    .append("svip打卡报名：").append(str10).append("\n")
+                    .append("微云签到：").append(str11).append("\n")
+                    .append("排行榜点赞：").append(str12);
+            return sb.toString();
 //                return "超级签到成功！！";
-            }catch (Exception e){
-                return "超级签到失败！！异常信息为：" + e.getMessage();
-            }
-        }else return "超级签到失败，请更新QQ！！";
+        }catch (Exception e){
+            return "超级签到失败！！异常信息为：" + e.getMessage();
+        }
     }
 
     @Action("赞说说")

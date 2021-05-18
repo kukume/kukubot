@@ -23,5 +23,5 @@ public interface QQGroupLogic {
     Result<List<JSONArray>> essenceMessage(QQLoginEntity qqLoginEntity, Long group) throws IOException;
     Result<List<Long>> queryGroup(QQLoginEntity qqLoginEntity) throws IOException;
     List<Map<String, String>> groupHonor(QQLoginEntity qqLoginEntity, Long group, String type) throws IOException;
-    Result<String> groupSign(QQLoginEntity qqLoginEntity, Long group, String place, String text, String name, String picId, String picUrl) throws IOException;
+//    Result<String> groupSign(QQLoginEntity qqLoginEntity, Long group, String place, String text, String name, String picId, String picUrl) throws IOException;
 }

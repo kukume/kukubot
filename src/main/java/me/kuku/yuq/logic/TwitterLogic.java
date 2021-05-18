@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.List;
 
 @AutoBind
-public interface MyApiLogic {
-    List<TwitterPojo> findTwitterIdByName(String name) throws IOException;
-    List<TwitterPojo> findTweetsById(Long id) throws IOException;
+public interface TwitterLogic {
+	List<TwitterPojo> findIdByName(String name) throws IOException;
+	List<TwitterPojo> findTweetsById(Long id) throws IOException;
 }

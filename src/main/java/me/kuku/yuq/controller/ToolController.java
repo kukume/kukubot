@@ -59,8 +59,6 @@ public class ToolController {
     private RainInfo rainInfo;
     @Inject
     private MessageItemFactory mif;
-    @Inject
-    private MyApiLogic myApiLogic;
     @Config("YuQ.Mirai.protocol")
     private String protocol;
     @Inject

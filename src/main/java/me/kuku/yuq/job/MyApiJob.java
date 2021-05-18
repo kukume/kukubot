@@ -7,7 +7,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
 import me.kuku.yuq.entity.QQEntity;
 import me.kuku.yuq.logic.ToolLogic;
-import me.kuku.yuq.logic.MyApiLogic;
+import me.kuku.yuq.logic.TwitterLogic;
 import me.kuku.yuq.pojo.TwitterPojo;
 import me.kuku.yuq.service.QQService;
 
@@ -23,7 +23,7 @@ import java.util.Map;
 public class MyApiJob {
 
     @Inject
-    private MyApiLogic myApiLogic;
+    private TwitterLogic twitterLogic;
     @Inject
     private QQService qqService;
     @Inject
@@ -47,7 +47,7 @@ public class MyApiJob {
                 Long userId = jsonObject.getLong("id");
                 List<TwitterPojo> list;
                 try {
-                    list = myApiLogic.findTweetsById(userId);
+                    list = twitterLogic.findTweetsById(userId);
                 } catch (IOException e) {
                     e.printStackTrace();
                     continue;

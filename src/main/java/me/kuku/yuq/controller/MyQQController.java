@@ -2,7 +2,6 @@ package me.kuku.yuq.controller;
 
 import com.IceCreamQAQ.Yu.annotation.Action;
 import com.IceCreamQAQ.Yu.annotation.Before;
-import com.IceCreamQAQ.Yu.annotation.Synonym;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
@@ -15,7 +14,7 @@ import com.icecreamqaq.yuq.controller.QQController;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.entity.QQEntity;
-import me.kuku.yuq.logic.MyApiLogic;
+import me.kuku.yuq.logic.TwitterLogic;
 import me.kuku.yuq.pojo.TwitterPojo;
 import me.kuku.yuq.service.GroupService;
 import me.kuku.yuq.service.QQService;
@@ -34,7 +33,7 @@ public class MyQQController extends QQController {
     @Inject
     private GroupService groupService;
     @Inject
-    private MyApiLogic myApiLogic;
+    private TwitterLogic twitterLogic;
 
     @Before
     public void before(long qq, long group, BotActionContext actionContext){
@@ -69,7 +68,7 @@ public class MyQQController extends QQController {
     public String add(QQEntity qqEntity, @PathVar(0) String type, String content, ContextSession session, long qq) throws IOException {
         switch (type){
             case "加推特监控":
-                List<TwitterPojo> twIdList = myApiLogic.findTwitterIdByName(content);
+                List<TwitterPojo> twIdList = twitterLogic.findIdByName(content);
                 if (twIdList == null) return "没有找到该用户，请重试";
                 StringBuilder idMsg = new StringBuilder();
                 for (int i = 0; i < twIdList.size(); i++){

@@ -3,6 +3,7 @@ package me.kuku.yuq.service.impl;
 import com.icecreamqaq.yudb.jpa.annotation.Transactional;
 import me.kuku.yuq.dao.ConfigDao;
 import me.kuku.yuq.entity.ConfigEntity;
+import me.kuku.yuq.pojo.ConfigType;
 import me.kuku.yuq.service.ConfigService;
 
 import javax.inject.Inject;
@@ -29,5 +30,10 @@ public class ConfigServiceImpl implements ConfigService {
     @Transactional
     public ConfigEntity findByType(String type) {
         return configDao.findByType(type);
+    }
+
+    @Override
+    public ConfigEntity findByType(ConfigType configType) {
+        return findByType(configType.getType());
     }
 }

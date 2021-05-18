@@ -21,7 +21,8 @@ public enum ConfigType {
 	IdentifyCode("identifyCode"),
 	FateAdmCode("fateAdmCode"),
 	DdOcrCode("ddOcrCode"),
-	OFFICE_USER("officeUser");
+	OFFICE_USER("officeUser"),
+	TWITTER_COOKIE("twitterCookie");
 
 
 	private final String type;

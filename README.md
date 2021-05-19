@@ -3,14 +3,16 @@
 * [YuQ-Mirai-SuperDemo](https://github.com/YuQWorks/YuQ-SuperDemo)
 * [Mirai](https://github.com/mamoe/mirai)
 
-**最新版本已支持过滑块验证码（版本过低，环境异常等都是不能过滑块验证码的原因），但是需要gui环境，如果是把挂在无ui环境的，可以在有ui环境（比如：windows系统）的机器上登录成功后，把`device.json`复制到程序根目录或者`conf`文件夹下**
+**首次登陆可能需要验证验证码，需要gui环境，如果是把挂在无ui环境的，可以在有ui环境（比如：windows系统）的机器上登录成功后，把`device.json`复制到程序根目录或者`conf`文件夹下**
+
+**环境：Oracle jdk8，其他环境均会异常，搭建教程中的压缩包已自带Oracle jdk8**
 
 ## 功能
 * 自动签到（QQ、哔哩哔哩、原神、HostLoc、网易云）
 * 新帖推送（微博、哔哩哔哩、Twitter、HostLoc）
 * 修改步数
-* 图床（图片取直链）（qq、teambition、dCloud）
 * 群管功能
+* office自助注册
 * 一些小工具
 
 ## 教程文章
@@ -25,7 +27,7 @@ docker pull kukume/kukubot
 # 创建文件夹
 mkdir -p kukubot/conf
 # 把device.json放到kukubot目录下
-# 把配置文件YuQ.properties（https://file.kuku.me/kuku-bot/YuQ.properties）设置好账号和密码等信息放到conf目录下
+# 把配置文件YuQ.properties（https://vkceyugu.cdn.bspapp.com/VKCEYUGU-ba222f61-ee83-431d-bf9f-7e6216a8cf41/0b84f939-3d10-45d6-a453-8bbb6828742f.properties）（更名为YuQ.properties）设置好账号和密码等信息放到conf目录下
 # 运行容器
 docker run -it --name kukubot -d  \
 -p 8081:8081 \
@@ -33,6 +35,14 @@ docker run -it --name kukubot -d  \
 -v $(pwd)/kukubot/db:/kukubot/db \
 kukume/kukubot
 ```
+
+## Windows
+
+不会Linux的强力推荐使用Windows搭建。不接受搭建问题
+
+1、下载 [压缩包](https://api.kuku.me/tb/pan/kuku/kuku-bot/kukubot-windows.zip) ，解压，用记事本（文本编辑器就行）打开conf/YuQ.properties更改需要登录的机器人QQ号和密码
+
+2、打开 start.bat即可
 
 ## 鸣谢
 

@@ -214,6 +214,14 @@ public class SettingController extends QQController {
         return "绑定ddOcr成功！！";
     }
 
+    @Action("twitter {cookie}")
+    public String twitter(String cookie){
+        ConfigEntity configEntity = getEntity(ConfigType.TWITTER_COOKIE);
+        configEntity.setContent(cookie);
+        configService.save(configEntity);
+        return "绑定twitter的cookie成功！";
+    }
+
     @Action("绑全局")
     public String bindOffice(ContextSession session){
         reply("请输入该全局显示的名称");

@@ -26,7 +26,7 @@
 docker pull kukume/kukubot
 # 创建文件夹
 mkdir -p kukubot/conf
-# 把device.json放到kukubot目录下
+# 把device.json放到conf目录下
 # 把配置文件YuQ.properties（https://vkceyugu.cdn.bspapp.com/VKCEYUGU-ba222f61-ee83-431d-bf9f-7e6216a8cf41/0b84f939-3d10-45d6-a453-8bbb6828742f.properties）（更名为YuQ.properties）设置好账号和密码等信息放到conf目录下
 # 运行容器
 docker run -it --name kukubot -d  \

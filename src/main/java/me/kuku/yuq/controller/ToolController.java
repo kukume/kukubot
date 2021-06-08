@@ -223,6 +223,10 @@ public class ToolController {
                 return;
             }
             num = Integer.parseInt(numStr);
+            if (num <= 0) {
+                group.sendMessage(FunKt.getMif().at(qq).plus("色图数量不能为非正数，请重试！！"));
+                return;
+            }
             if (num > 20) {
                 group.sendMessage(FunKt.getMif().at(qq).plus("色图数量不能大于20，请重试！！"));
                 return;

@@ -2,13 +2,10 @@ package me.kuku.yuq.logic.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import me.kuku.yuq.entity.MotionEntity;
-import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.logic.LeXinMotionLogic;
 import me.kuku.yuq.pojo.Result;
-import me.kuku.yuq.pojo.UA;
 import me.kuku.yuq.utils.BotUtils;
 import me.kuku.yuq.utils.OkHttpUtils;
-import me.kuku.yuq.utils.QQUtils;
 import okhttp3.Response;
 
 import java.io.IOException;
@@ -48,30 +45,6 @@ public class LeXinMotionLogicImpl implements LeXinMotionLogic {
                     jsonObject.getJSONObject("data").getString("accessToken")
             ));
         }else return Result.failure(jsonObject.getString("msg"), null);
-    }
-
-    @Override
-    public Result<MotionEntity> loginByQQ(QQLoginEntity qqLoginEntity) throws IOException {
-        Response firstResponse = OkHttpUtils.get("https://xui.ptlogin2.qq.com/cgi-bin/xlogin?appid=716027609&pt_3rd_aid=1101774620&daid=381&pt_skey_valid=1&style=35&s_url=http://connect.qq.com&refer_cgi=m_authorize&ucheck=1&fall_to_wv=1&status_os=9.3.2&redirect_uri=auth://www.qq.com&client_id=1104904286&response_type=token&scope=all&sdkp=i&sdkv=2.9&state=test&status_machine=iPhone8,1&switch=1",
-                OkHttpUtils.addCookie(qqLoginEntity.getCookieWithSuper()));
-        firstResponse.close();
-        String addCookie = OkHttpUtils.getCookie(firstResponse);
-        String str = OkHttpUtils.getStr("https://ssl.ptlogin2.qq.com/pt_open_login?openlogin_data=appid%3D716027609%26pt_3rd_aid%3D1101774620%26daid%3D381%26pt_skey_valid%3D1%26style%3D35%26s_url%3Dhttp%3A%2F%2Fconnect.qq.com%26refer_cgi%3Dm_authorize%26ucheck%3D1%26fall_to_wv%3D1%26status_os%3D9.3.2%26redirect_uri%3Dauth%3A%2F%2Fwww.qq.com%26client_id%3D1104904286%26response_type%3Dtoken%26scope%3Dall%26sdkp%3Di%26sdkv%3D2.9%26state%3Dtest%26status_machine%3DiPhone8%2C1%26switch%3D1%26pt_flex%3D1&auth_token=" + QQUtils.getToken2(qqLoginEntity.getSuperToken()) + "&pt_vcode_v1=0&pt_verifysession_v1=&verifycode=&u=" + qqLoginEntity.getQq() + "&pt_randsalt=0&ptlang=2052&low_login_enable=0&u1=http%3A%2F%2Fconnect.qq.com&from_ui=1&fp=loginerroralert&device=2&aid=716027609&daid=381&pt_3rd_aid=1101774620&ptredirect=1&h=1&g=1&pt_uistyle=35&regmaster=&",
-                OkHttpUtils.addHeaders(qqLoginEntity.getCookieWithSuper() + addCookie, "https://xui.ptlogin2.qq.com/cgi-bin/xlogin?appid=716027609&pt_3rd_aid=1101774620&daid=381&pt_skey_valid=1&style=35&s_url=http://connect.qq.com&refer_cgi=m_authorize&ucheck=1&fall_to_wv=1&status_os=9.3.2&redirect_uri=auth://www.qq.com&client_id=1104904286&response_type=token&scope=all&sdkp=i&sdkv=2.9&state=test&status_machine=iPhone8,1&switch=1", UA.PC));
-        Result<String> result = QQUtils.getResultUrl(str);
-        if (result.getCode() == 200){
-            String url = result.getData();
-            String openId = BotUtils.regex("openid=", "&", url);
-            String accessToken = BotUtils.regex("access_token=", "&", url);
-            Response response = OkHttpUtils.post("https://sports.lifesense.com/sessions_service/loginFromOpenId?systemType=2&version=3.7.5",
-                    OkHttpUtils.addJson("{\"openAccountType\":2,\"clientId\":\"" + BotUtils.randomStr(33) + "}\",\"expireTime\":" + (System.currentTimeMillis() + 1000L * 60 * 60 * 24 * 90) + ",\"appType\":6,\"openId\":\"" + openId + "\",\"roleType\":0,\"openAccessToken\":\"" + accessToken + "\"}"));
-            JSONObject jsonObject = OkHttpUtils.getJson(response);
-            String cookie = OkHttpUtils.getCookie(response);
-            if (jsonObject.getInteger("code") == 200){
-                return Result.success(new MotionEntity(null, null, cookie, jsonObject.getJSONObject("data").getString("userId"),
-                        jsonObject.getJSONObject("data").getString("accessToken")));
-            }else return Result.failure("您没有使用qq绑定lexin运动，登录失败！！", null);
-        }else return Result.failure("您的QQ已失效，请更新QQ！！", null);
     }
 
     @Override

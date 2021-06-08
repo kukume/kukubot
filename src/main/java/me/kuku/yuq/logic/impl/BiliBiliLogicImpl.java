@@ -4,13 +4,11 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import me.kuku.yuq.entity.BiliBiliEntity;
-import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.logic.BiliBiliLogic;
 import me.kuku.yuq.logic.DdOcrCodeLogic;
 import me.kuku.yuq.pojo.*;
 import me.kuku.yuq.utils.BotUtils;
 import me.kuku.yuq.utils.OkHttpUtils;
-import me.kuku.yuq.utils.QQUtils;
 import me.kuku.yuq.utils.RSAUtils;
 import okhttp3.MultipartBody;
 import okhttp3.Response;
@@ -249,34 +247,6 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
             Response response = OkHttpUtils.get(successUrl, OkHttpUtils.addReferer("https://passport.bilibili.com/login"));
             return Result.success(getBiliBiliEntityByResponse(response));
         }
-    }
-
-    @Override
-    public Result<BiliBiliEntity> loginByQQ(QQLoginEntity qqLoginEntity) throws IOException {
-        Response dfcResponse = OkHttpUtils.post("https://passport.bilibili.com/captcha/dfc");
-        String dfcToken = OkHttpUtils.getJson(dfcResponse).getJSONObject("data").getString("dfc");
-        String dfcCookie = OkHttpUtils.getCookie(dfcResponse);
-        Map<String, String> loginUrlMap = new HashMap<>();
-        loginUrlMap.put("gourl", "");
-        loginUrlMap.put("csrf", dfcToken);
-        Response loginUrlResponse = OkHttpUtils.post("https://passport.bilibili.com/login/qq",
-                loginUrlMap, OkHttpUtils.addCookie(dfcCookie));
-        JSONObject loginUrlJsonObject = OkHttpUtils.getJson(loginUrlResponse);
-        String loginUrl = loginUrlJsonObject.getString("data");
-        String state = BotUtils.regex("state%3D", "&", loginUrl);
-        if (state == null) return Result.failure("登录失败，请稍后再试！！", null);
-        Response loginFirstResponse = OkHttpUtils.get("https://xui.ptlogin2.qq.com/cgi-bin/xlogin?appid=716027609&pt_3rd_aid=101135748&daid=383&pt_skey_valid=1&style=35&s_url=http%3A%2F%2Fconnect.qq.com&refer_cgi=authorize&which=&response_type=code&state=authorize&client_id=101135748&redirect_uri=https%3A%2F%2Fpassport.bilibili.com%2Flogin%2Fsnsback%3Fsns%3Dqq%26%26state%3D" + state + "&scope=do_like,get_user_info,get_simple_userinfo,get_vip_info,get_vip_rich_info,add_one_blog,list_album,upload_pic,add_album,list_photo,get_info,add_t,del_t,add_pic_t,get_repost_list,get_other_info,get_fanslist,get_idollist,add_idol,del_idol,get_tenpay_addr");
-        loginFirstResponse.close();
-        String qqLoginCookie = OkHttpUtils.getCookie(loginFirstResponse);
-        String superLoginUrl = "https://ssl.ptlogin2.qq.com/pt_open_login?openlogin_data=which%3D%26refer_cgi%3Dauthorize%26response_type%3Dcode%26client_id%3D101135748%26state%3Dauthorize%26display%3D%26openapi%3D%2523%26switch%3D0%26src%3D1%26sdkv%3D%26sdkp%3Da%26tid%3D1598024545%26pf%3D%26need_pay%3D0%26browser%3D0%26browser_error%3D%26serial%3D%26token_key%3D%26redirect_uri%3Dhttps%253A%252F%252Fpassport.bilibili.com%252Flogin%252Fsnsback%253Fsns%253Dqq%2526%2526state%253D" + state + "%26sign%3D%26time%3D%26status_version%3D%26status_os%3D%26status_machine%3D%26page_type%3D1%26has_auth%3D0%26update_auth%3D0%26auth_time%3D" + System.currentTimeMillis() + "&auth_token=" + QQUtils.getToken2(qqLoginEntity.getSuperToken()) + "&pt_vcode_v1=0&pt_verifysession_v1=&verifycode=&u=" + qqLoginEntity.getQq() + "&pt_randsalt=0&ptlang=2052&low_login_enable=0&u1=http%3A%2F%2Fconnect.qq.com&from_ui=1&fp=loginerroralert&device=2&aid=716027609&daid=383&pt_3rd_aid=101135748&ptredirect=1&h=1&g=1&pt_uistyle=35&regmaster=&";
-        String str = OkHttpUtils.getStr(superLoginUrl, OkHttpUtils.addCookie(qqLoginEntity.getCookieWithSuper() + qqLoginCookie));
-        Result<String> result = QQUtils.getResultUrl(str);
-        String url = result.getData();
-        if (url == null) return Result.failure(result.getMessage(), null);
-        Response biliBiliLoginResponse = OkHttpUtils.get(url, OkHttpUtils.addHeaders(dfcCookie, superLoginUrl));
-        BiliBiliEntity biliBiliEntity = getBiliBiliEntityByResponse(biliBiliLoginResponse);
-        if (biliBiliEntity == null) return Result.failure("您可能没有使用哔哩哔哩绑定您的QQ账号，请绑定后再试！！", null);
-        else return Result.success(biliBiliEntity);
     }
 
     @Override

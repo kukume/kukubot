@@ -1,7 +1,6 @@
 package me.kuku.yuq.logic;
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind;
-import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.entity.WeiboEntity;
 import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.pojo.WeiboPojo;
@@ -32,7 +31,6 @@ public interface WeiboLogic {
     Result<WeiboEntity> loginBySms2(String token, String phone, String code) throws IOException;
     Result<WeiboEntity> loginByPrivateMsg(String token) throws IOException;
     // 电脑端模拟登录已凉
-    Result<WeiboEntity> loginByQQ(QQLoginEntity qqLoginEntity) throws IOException;
     Map<String, String> loginByQr1() throws IOException;
     Result<WeiboEntity> loginByQr2(String id) throws IOException;
     // 模拟登录

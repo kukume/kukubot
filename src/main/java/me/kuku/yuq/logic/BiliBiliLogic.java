@@ -3,7 +3,6 @@ package me.kuku.yuq.logic;
 import com.IceCreamQAQ.Yu.annotation.AutoBind;
 import com.alibaba.fastjson.JSONObject;
 import me.kuku.yuq.entity.BiliBiliEntity;
-import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.pojo.BiliBiliPojo;
 import me.kuku.yuq.pojo.Result;
 import okio.ByteString;
@@ -21,7 +20,6 @@ public interface BiliBiliLogic {
     List<BiliBiliPojo> getAllDynamicById(String id) throws IOException;
     String loginByQr1() throws IOException;
     Result<BiliBiliEntity> loginByQr2(String url) throws IOException;
-    Result<BiliBiliEntity> loginByQQ(QQLoginEntity qqLoginEntity) throws IOException;
     Result<BiliBiliEntity> loginByPassword(String username, String password) throws IOException;
     Result<List<BiliBiliPojo>> getFriendDynamic(BiliBiliEntity biliBiliEntity) throws IOException;
     JSONObject live(String id) throws IOException;

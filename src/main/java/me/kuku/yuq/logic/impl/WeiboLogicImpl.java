@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
-import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.entity.WeiboEntity;
 import me.kuku.yuq.logic.WeiboLogic;
 import me.kuku.yuq.pojo.Result;
@@ -446,44 +445,6 @@ public class WeiboLogicImpl implements WeiboLogic {
                 else return Result.failure(jsonObject.getString("msg"), null);
             }
         }else return Result.failure(jsonObject.getString("msg"), null);
-    }
-
-    @Override
-    public Result<WeiboEntity> loginByQQ(QQLoginEntity qqLoginEntity) throws IOException {
-        Response startWeiboResponse = OkHttpUtils.get("https://passport.weibo.com/othersitebind/authorize?entry=miniblog&site=qq");
-        startWeiboResponse.close();
-        String weiboCookie = OkHttpUtils.getCookie(startWeiboResponse);
-        String code = BotUtils.regex("crossidccode=", ";", weiboCookie);
-        String startUrl = "https://xui.ptlogin2.qq.com/cgi-bin/xlogin?appid=716027609&pt_3rd_aid=101019034&daid=383&pt_skey_valid=0&style=35&s_url=http%3A%2F%2Fconnect.qq.com&refer_cgi=authorize&which=&client_id=101019034&response_type=code&scope=get_info%2Cget_user_info&redirect_uri=https%3A%2F%2Fpassport.weibo.com%2Fothersitebind%2Fbind%3Fsite%3Dqq%26state%3D" + code + "%26bentry%3Dminiblog%26wl%3D&display=";
-        Response startResponse = OkHttpUtils.get(startUrl);
-        startResponse.close();
-        String cookie = OkHttpUtils.getCookie(startResponse);
-        String str = OkHttpUtils.getStr("https://ssl.ptlogin2.qq.com/pt_open_login?openlogin_data=which%3D%26refer_cgi%3Dauthorize%26response_type%3Dcode%26client_id%3D101019034%26state%3D%26display%3D%26openapi%3D%2523%26switch%3D0%26src%3D1%26sdkv%3D%26sdkp%3Da%26tid%3D1597734121%26pf%3D%26need_pay%3D0%26browser%3D0%26browser_error%3D%26serial%3D%26token_key%3D%26redirect_uri%3Dhttps%253A%252F%252Fpassport.weibo.com%252Fothersitebind%252Fbind%253Fsite%253Dqq%2526state%253D" + code + "%2526bentry%253Dminiblog%2526wl%253D%26sign%3D%26time%3D%26status_version%3D%26status_os%3D%26status_machine%3D%26page_type%3D1%26has_auth%3D0%26update_auth%3D0%26auth_time%3D" + System.currentTimeMillis() + "&auth_token=" + QQUtils.getToken2(qqLoginEntity.getSuperToken()) + "&pt_vcode_v1=0&pt_verifysession_v1=&verifycode=&u=" + qqLoginEntity.getQq() + "&pt_randsalt=0&ptlang=2052&low_login_enable=0&u1=http%3A%2F%2Fconnect.qq.com&from_ui=1&fp=loginerroralert&device=2&aid=716027609&daid=383&pt_3rd_aid=101019034&ptredirect=1&h=1&g=1&pt_uistyle=35&regmaster=&",
-                OkHttpUtils.addHeaders(qqLoginEntity.getCookieWithSuper() + cookie, startUrl));
-        Result<String> result = QQUtils.getResultUrl(str);
-        String url = result.getData();
-        if (url == null) return Result.failure(result.getMessage(), null);
-        Response secondResponse = OkHttpUtils.get(url,
-                OkHttpUtils.addHeaders(weiboCookie, startUrl));
-        secondResponse.close();
-        String refererUrl = secondResponse.header("location");
-        if (refererUrl == null) return Result.failure("登录失败，请稍后再试！！", null);
-        Response thirdResponse = OkHttpUtils.get(refererUrl, OkHttpUtils.addCookie(weiboCookie));
-        thirdResponse.close();
-//        String cnCookie = OkHttpUtils.getCookie(thirdResponse);
-        String firstSuccessUrl = thirdResponse.header("location");
-        if (firstSuccessUrl == null) return Result.failure("登录失败，请稍后再试！！", null);
-        Response secondSuccessResponse = OkHttpUtils.get(firstSuccessUrl);
-        secondSuccessResponse.close();
-        String thirdSuccessUrl = secondSuccessResponse.header("location");
-        Response fourthSuccessResponse = OkHttpUtils.get(thirdSuccessUrl);
-        fourthSuccessResponse.close();
-        String pcCookie = OkHttpUtils.getCookie(fourthSuccessResponse);
-        String finallyUrl = fourthSuccessResponse.header("location");
-        Response finallyResponse = OkHttpUtils.get(finallyUrl);
-        finallyResponse.close();
-        String mobileCookie = OkHttpUtils.getCookie(finallyResponse);
-        return Result.success(new WeiboEntity(pcCookie, mobileCookie));
     }
 
     @Override

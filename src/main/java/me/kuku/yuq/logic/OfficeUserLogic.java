@@ -1,9 +1,9 @@
 package me.kuku.yuq.logic;
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind;
+import me.kuku.pojo.Result;
 import me.kuku.yuq.pojo.OfficePojo;
 import me.kuku.yuq.pojo.OfficeRole;
-import me.kuku.yuq.pojo.Result;
 
 import java.io.IOException;
 

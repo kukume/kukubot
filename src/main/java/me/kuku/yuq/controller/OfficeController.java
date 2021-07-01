@@ -10,13 +10,14 @@ import com.icecreamqaq.yuq.annotation.PrivateController;
 import com.icecreamqaq.yuq.controller.ContextSession;
 import com.icecreamqaq.yuq.entity.Contact;
 import com.icecreamqaq.yuq.message.Message;
+import me.kuku.pojo.Result;
+import me.kuku.utils.MyUtils;
 import me.kuku.yuq.entity.ConfigEntity;
 import me.kuku.yuq.entity.OfficeCodeEntity;
 import me.kuku.yuq.logic.OfficeUserLogic;
 import me.kuku.yuq.pojo.ConfigType;
 import me.kuku.yuq.pojo.OfficePojo;
 import me.kuku.yuq.pojo.OfficeRole;
-import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.ConfigService;
 import me.kuku.yuq.service.OfficeCodeService;
 import me.kuku.yuq.utils.BotUtils;
@@ -83,7 +84,7 @@ public class OfficeController {
 			if (num > skuList.size() - 1) return "回复的数字超限！";
 			index = num;
 		}
-		String password = BotUtils.randomStr(8);
+		String password = MyUtils.randomStr(8);
 		Result<?> result = officeUserLogic.createUser(officePojo, username, username, password, index);
 		if (result.isSuccess()) {
 			entity.setIsUse(true);
@@ -125,7 +126,7 @@ public class OfficeController {
 			}
 			List<String> list = new ArrayList<>();
 			for (int i = 0; i < num; i++){
-				list.add(BotUtils.randomStr(8));
+				list.add(MyUtils.randomStr(8));
 			}
 			list.stream().map(OfficeCodeEntity::new).forEach(officeCodeService::save);
 			StringBuilder sb = new StringBuilder().append("您本次生成的code如下：").append("\n");

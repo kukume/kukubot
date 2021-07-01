@@ -1,7 +1,5 @@
 package me.kuku.yuq.utils;
 
-import me.kuku.yuq.pojo.Result;
-import me.kuku.yuq.pojo.UA;
 import okhttp3.Response;
 
 import javax.script.ScriptEngine;

@@ -1,13 +1,13 @@
 package me.kuku.yuq.logic.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import me.kuku.pojo.Result;
+import me.kuku.utils.OkHttpUtils;
 import me.kuku.yuq.entity.ConfigEntity;
 import me.kuku.yuq.logic.DdOcrCodeLogic;
 import me.kuku.yuq.pojo.ConfigType;
 import me.kuku.yuq.pojo.DdOcrPojo;
-import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.ConfigService;
-import me.kuku.yuq.utils.OkHttpUtils;
 
 import javax.inject.Inject;
 import java.io.IOException;

@@ -1,30 +1,18 @@
 package me.kuku.yuq.utils;
 
-import com.IceCreamQAQ.Yu.annotation.Action;
-import com.IceCreamQAQ.Yu.annotation.Path;
-import com.IceCreamQAQ.Yu.annotation.Synonym;
-import com.IceCreamQAQ.Yu.util.OkHttpWebImpl;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.message.*;
-import com.icecreamqaq.yuq.mirai.MiraiBot;
 import com.icecreamqaq.yuq.mirai.message.ImageReceive;
-import me.kuku.yuq.entity.QQLoginEntity;
-import okhttp3.Cookie;
+import me.kuku.utils.MyUtils;
+import me.kuku.utils.OkHttpUtils;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Method;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @SuppressWarnings("UnusedReturnValue")
 public class BotUtils {
-
-    private static final Map<String, Pattern> patternMap = new HashMap<>();
 
     public static String shortUrl(String url){
         // http://www.uc4.cn/
@@ -38,55 +26,6 @@ public class BotUtils {
         } catch (Exception e) {
             return url;
         }
-    }
-
-    public static String regex(String regex, String text){
-        Pattern pattern;
-        if (patternMap.containsKey(regex))
-            pattern = patternMap.get(regex);
-        else {
-            pattern = Pattern.compile(regex);
-            patternMap.put(regex, pattern);
-        }
-        Matcher matcher = pattern.matcher(text);
-        if (matcher.find()){
-            return matcher.group();
-        }
-        return null;
-    }
-
-    public static String regex(String first, String last, String text){
-        String regex = String.format("(?<=%s).*?(?=%s)", first, last);
-        return regex(regex, text);
-    }
-
-    private static String random(String str, int length){
-        StringBuilder result = new StringBuilder();
-        for (int i = 0; i < length; i++){
-            int at = (int) (Math.random() * str.length());
-            result.append(str.charAt(at));
-        }
-        return result.toString();
-    }
-
-    public static String randomStr(int length){
-        return random("1234567890abcdefghijklmnopqrstuvwxyz", length);
-    }
-
-    public static String randomStrLetter(int length){
-        return random("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", length);
-    }
-
-    public static String randomNum(int length){
-        return random("1234567890", length);
-    }
-
-    public static Long randomLong(long min, long max){
-        return ((long) (Math.random() * max)) % (max - min + 1) + min;
-    }
-
-    public static int randomInt(int min, int max){
-        return ((int) (Math.random() * max)) % (max - min + 1) + min;
     }
 
     public static JSONArray messageToJsonArray(Message rm){
@@ -238,7 +177,7 @@ public class BotUtils {
             }
             if (item instanceof XmlEx){
                 String value = ((XmlEx) item).getValue();
-                String url = regex("url=\"http://", "\"", value);
+                String url = MyUtils.regex("url=\"http://", "\"", value);
                 if (url != null) sb.append(url);
             }
         }

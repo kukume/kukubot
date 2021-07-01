@@ -9,7 +9,6 @@ import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.entity.HostLocEntity;
 import me.kuku.yuq.entity.QQEntity;
 import me.kuku.yuq.logic.HostLocLogic;
-import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.GroupService;
 import me.kuku.yuq.service.HostLocService;
 import me.kuku.yuq.service.QQService;

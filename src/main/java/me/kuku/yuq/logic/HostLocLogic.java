@@ -1,7 +1,7 @@
 package me.kuku.yuq.logic;
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind;
-import me.kuku.yuq.pojo.Result;
+import me.kuku.pojo.Result;
 
 import java.io.IOException;
 import java.util.List;

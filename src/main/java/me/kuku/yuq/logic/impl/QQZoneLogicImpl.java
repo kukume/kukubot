@@ -2,12 +2,13 @@ package me.kuku.yuq.logic.impl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import me.kuku.pojo.Result;
+import me.kuku.pojo.UA;
+import me.kuku.utils.MyUtils;
+import me.kuku.utils.OkHttpUtils;
 import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.logic.QQZoneLogic;
-import me.kuku.yuq.pojo.Result;
-import me.kuku.yuq.pojo.UA;
 import me.kuku.yuq.utils.BotUtils;
-import me.kuku.yuq.utils.OkHttpUtils;
 import okhttp3.Response;
 
 import java.io.IOException;
@@ -148,7 +149,7 @@ public class QQZoneLogicImpl implements QQZoneLogic {
     @Override
     public Result<List<Map<String, String>>> queryGroup(QQLoginEntity qqLoginEntity) throws IOException {
         JSONObject jsonObject = OkHttpUtils.getJsonp(String.format("https://user.qzone.qq.com/proxy/domain/r.qzone.qq.com/cgi-bin/tfriend/qqgroupfriend_extend.cgi?uin=%d&rd=0.%s&cntperpage=0&fupdate=1&g_tk=%s&g_tk=%s",
-                qqLoginEntity.getQq(), BotUtils.randomNum(16), qqLoginEntity.getGtkP(), qqLoginEntity.getGtkP()),
+                qqLoginEntity.getQq(), MyUtils.randomNum(16), qqLoginEntity.getGtkP(), qqLoginEntity.getGtkP()),
                 OkHttpUtils.addCookie(qqLoginEntity.getCookieWithQQZone()));
         if (jsonObject.getInteger("code") == 0){
             JSONArray jsonArray = jsonObject.getJSONObject("data").getJSONArray("group");
@@ -208,7 +209,7 @@ public class QQZoneLogicImpl implements QQZoneLogic {
             String gtk = qqLoginEntity.getGtkP();
             String cookie = OkHttpUtils.getCookie(response);
             Response visitResponse = OkHttpUtils.get(String.format("https://user.qzone.qq.com/proxy/domain/g.qzone.qq.com/fcg-bin/cgi_emotion_list.fcg?uin=%s&loginUin=%s&rd=0.%s&num=3&noflower=1&jsonpCallback=_Callback&format=jsonp&g_tk=%s&g_tk=%s",
-                    qq, qqLoginEntity.getQq(), BotUtils.randomNum(16), gtk, gtk),
+                    qq, qqLoginEntity.getQq(), MyUtils.randomNum(16), gtk, gtk),
                     OkHttpUtils.addCookie(qqLoginEntity.getCookieWithQQZone() + cookie));
             visitResponse.close();
             if (visitResponse.code() == 200) return "访问" + qq + "的空间成功！";

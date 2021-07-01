@@ -3,11 +3,11 @@ package me.kuku.yuq.logic.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import me.kuku.pojo.Result;
+import me.kuku.utils.AESUtils;
+import me.kuku.utils.OkHttpUtils;
 import me.kuku.yuq.entity.NeTeaseEntity;
 import me.kuku.yuq.logic.NeTeaseLogic;
-import me.kuku.yuq.pojo.Result;
-import me.kuku.yuq.utils.AESUtils;
-import me.kuku.yuq.utils.OkHttpUtils;
 import okhttp3.Response;
 
 import java.io.IOException;
@@ -23,7 +23,7 @@ public class NeTeaseLogicImpl implements NeTeaseLogic {
     private final String nonce = "0CoJUm6Qyw8W8jud";
     private final String secretKey = "TA3YiYCfY2dDJQgg";
     private final String encSecKey = "84ca47bca10bad09a6b04c5c927ef077d9b9f1e37098aa3eac6ea70eb59df0aa28b691b7e75e4f1f9831754919ea784c8f74fbfadf2898b0be17849fd656060162857830e241aba44991601f137624094c114ea8d17bce815b0cd4e5b8e2fbaba978c6d1d14dc3d1faf852bdd28818031ccdaaa13a6018e1024e2aae98844210";
-    private final String UA = me.kuku.yuq.pojo.UA.PC.getValue();
+    private final String UA = me.kuku.pojo.UA.PC.getValue();
     private final String api = "https://netease.kuku.me";
 
     private String aesEncode(String secretData, String secret){

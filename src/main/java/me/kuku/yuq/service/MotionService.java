@@ -1,14 +1,14 @@
 package me.kuku.yuq.service;
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind;
-import me.kuku.yuq.entity.MotionEntity;
+import me.kuku.yuq.entity.StepEntity;
 
 import java.util.List;
 
 @AutoBind
 public interface MotionService {
-    MotionEntity findByQQ(long qq);
-    List<MotionEntity> findAll();
-    void save(MotionEntity motionEntity);
+    StepEntity findByQQ(long qq);
+    List<StepEntity> findAll();
+    void save(StepEntity stepEntity);
     void delByQQ(Long qq);
 }

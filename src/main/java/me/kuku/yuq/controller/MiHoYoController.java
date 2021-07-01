@@ -10,7 +10,6 @@ import com.icecreamqaq.yuq.annotation.PrivateController;
 import com.icecreamqaq.yuq.annotation.QMsg;
 import me.kuku.yuq.entity.MiHoYoEntity;
 import me.kuku.yuq.logic.MiHoYoLogic;
-import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.MiHoYoService;
 
 import javax.inject.Inject;

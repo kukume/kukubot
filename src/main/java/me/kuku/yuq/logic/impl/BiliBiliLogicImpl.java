@@ -3,13 +3,16 @@ package me.kuku.yuq.logic.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import me.kuku.pojo.Result;
+import me.kuku.pojo.ResultStatus;
+import me.kuku.pojo.UA;
+import me.kuku.utils.MyUtils;
+import me.kuku.utils.OkHttpUtils;
+import me.kuku.utils.RSAUtils;
 import me.kuku.yuq.entity.BiliBiliEntity;
 import me.kuku.yuq.logic.BiliBiliLogic;
 import me.kuku.yuq.logic.DdOcrCodeLogic;
 import me.kuku.yuq.pojo.*;
-import me.kuku.yuq.utils.BotUtils;
-import me.kuku.yuq.utils.OkHttpUtils;
-import me.kuku.yuq.utils.RSAUtils;
 import okhttp3.MultipartBody;
 import okhttp3.Response;
 import okio.ByteString;
@@ -190,7 +193,7 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
         // next_offset  下一页开头
         JSONObject dataJsonObject = jsonObject.getJSONObject("data");
         JSONArray jsonArray = dataJsonObject.getJSONArray("cards");
-        if (jsonArray == null) return Result.failure(ResultStatus.DYNAMIC_NOT_FOUNT);
+        if (jsonArray == null) return Result.failure(ResultStatus.DATA_NOT_EXISTS);
         List<BiliBiliPojo> list = new ArrayList<>();
         for (int i = 0; i < jsonArray.size(); i++){
             JSONObject singleJsonObject = jsonArray.getJSONObject(i);
@@ -228,7 +231,7 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
 
     @Override
     public Result<BiliBiliEntity> loginByQr2(String url) throws IOException {
-        String oauthKey = BotUtils.regex("(?<=oauthKey\\=).*", url);
+        String oauthKey = MyUtils.regex("(?<=oauthKey\\=).*", url);
         if (oauthKey == null) return Result.failure("链接格式不正确！！", null);
         Map<String, String> map = new HashMap<>();
         map.put("oauthKey", oauthKey);
@@ -238,8 +241,8 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
         if (!status){
             switch (jsonObject.getInteger("data")){
                 case -2: return Result.failure("您的二维码已过期！！", null);
-                case -4: return Result.failure(ResultStatus.QRCODE_NOT_SCANNED);
-                case -5: return Result.failure(ResultStatus.QRCODE_IS_SCANNED);
+                case -4: return Result.failure(ResultStatus.NOT_SCANNED);
+                case -5: return Result.failure(ResultStatus.SCANNED);
                 default: return Result.failure(jsonObject.getString("message"), null);
             }
         }else {
@@ -263,7 +266,7 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
         if (codeResult.isFailure()) return Result.failure(codeResult.getMessage());
         DdOcrPojo ddOcrPojo = codeResult.getData();
         // 登录
-        JSONObject keyJsonObject = OkHttpUtils.getJson("https://passport.bilibili.com/x/passport-login/web/key?r=0." + BotUtils.randomNum(16),
+        JSONObject keyJsonObject = OkHttpUtils.getJson("https://passport.bilibili.com/x/passport-login/web/key?r=0." + MyUtils.randomNum(16),
                 OkHttpUtils.addHeaders(null, "https://passport.bilibili.com/login", UA.PC));
         JSONObject keyDataJsonObject = keyJsonObject.getJSONObject("data");
         String key = keyDataJsonObject.getString("key");
@@ -298,10 +301,10 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
     private BiliBiliEntity getBiliBiliEntityByResponse(Response response){
         response.close();
         String cookie = OkHttpUtils.getCookie(response);
-        String token = BotUtils.regex("bili_jct=", "; ", cookie);
+        String token = MyUtils.regex("bili_jct=", "; ", cookie);
         if (token == null) return null;
         String locationUrl = response.header("location");
-        String userId = BotUtils.regex("DedeUserID=", "&", locationUrl);
+        String userId = MyUtils.regex("DedeUserID=", "&", locationUrl);
         return new BiliBiliEntity(cookie, userId, token);
     }
 
@@ -566,7 +569,7 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
     public String getOidByBvId(String bvId) throws IOException {
         String html = OkHttpUtils.getStr("https://www.bilibili.com/video/" + bvId,
                 OkHttpUtils.addUA(UA.PC));
-        String jsonStr = BotUtils.regex("INITIAL_STATE__=", ";\\(function\\(\\)", html);
+        String jsonStr = MyUtils.regex("INITIAL_STATE__=", ";\\(function\\(\\)", html);
         JSONObject jsonObject = JSON.parseObject(jsonStr);
         return jsonObject.getString("aid");
     }

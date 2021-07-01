@@ -16,14 +16,14 @@ import com.icecreamqaq.yuq.entity.Contact;
 import com.icecreamqaq.yuq.entity.Group;
 import com.icecreamqaq.yuq.entity.Member;
 import com.icecreamqaq.yuq.message.Message;
+import me.kuku.pojo.Result;
+import me.kuku.utils.IOUtils;
 import me.kuku.yuq.entity.BiliBiliEntity;
 import me.kuku.yuq.logic.BiliBiliLogic;
 import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.pojo.BiliBiliPojo;
-import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.BiliBiliService;
 import me.kuku.yuq.utils.ExecutorUtils;
-import me.kuku.yuq.utils.IOUtils;
 
 import javax.inject.Inject;
 import java.io.IOException;

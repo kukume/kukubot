@@ -2,9 +2,9 @@ package me.kuku.yuq;
 
 import com.IceCreamQAQ.Yu.loader.AppClassloader;
 import com.IceCreamQAQ.Yu.util.IO;
+import me.kuku.utils.OkHttpUtils;
 import me.kuku.yuq.asm.MyClassLoader;
 import me.kuku.yuq.asm.YuQStarterAdapter;
-import me.kuku.yuq.utils.OkHttpUtils;
 import org.objectweb.asm.*;
 
 import java.io.*;

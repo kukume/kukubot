@@ -11,7 +11,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class MotionEntity {
+public class StepEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -37,7 +37,7 @@ public class MotionEntity {
     private String miLoginToken;
     private Boolean miStatus;
 
-    public MotionEntity(String leXinPhone, String leXinPassword, String leXinCookie, String leXinUserId, String leXinAccessToken){
+    public StepEntity(String leXinPhone, String leXinPassword, String leXinCookie, String leXinUserId, String leXinAccessToken){
         this.leXinPhone = leXinPhone;
         this.leXinPassword = leXinPassword;
         this.leXinCookie = leXinCookie;
@@ -45,11 +45,17 @@ public class MotionEntity {
         this.leXinAccessToken = leXinAccessToken;
     }
 
-    public MotionEntity(Long qq, Long group){
+    public StepEntity(Long qq, Long group){
         this.group = group;
         this.leXinStatus = false;
         this.miStatus = false;
         this.qq = qq;
         this.step = 0;
+    }
+
+    public StepEntity(String miPhone, String miPassword, String miLoginToken){
+        this.miPhone = miPhone;
+        this.miPassword = miPassword;
+        this.miLoginToken = miLoginToken;
     }
 }

@@ -2,8 +2,6 @@ package me.kuku.yuq.controller;
 
 import com.IceCreamQAQ.Yu.annotation.Action;
 import com.IceCreamQAQ.Yu.annotation.Before;
-import com.IceCreamQAQ.Yu.annotation.Path;
-import com.IceCreamQAQ.Yu.annotation.Synonym;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
@@ -19,7 +17,6 @@ import com.icecreamqaq.yuq.entity.Member;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.*;
 import me.kuku.yuq.logic.*;
-import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.*;
 import me.kuku.yuq.utils.*;
 

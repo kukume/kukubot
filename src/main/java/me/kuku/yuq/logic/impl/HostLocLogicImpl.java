@@ -1,15 +1,18 @@
 package me.kuku.yuq.logic.impl;
 
+import me.kuku.pojo.Result;
+import me.kuku.pojo.UA;
+import me.kuku.utils.AESUtils;
+import me.kuku.utils.HexUtils;
+import me.kuku.utils.MyUtils;
+import me.kuku.utils.OkHttpUtils;
 import me.kuku.yuq.logic.HostLocLogic;
-import me.kuku.yuq.pojo.Result;
-import me.kuku.yuq.pojo.UA;
 import me.kuku.yuq.utils.*;
 import okhttp3.Response;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import javax.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -54,7 +57,7 @@ public class HostLocLogicImpl implements HostLocLogic {
         ExecutorUtils.execute(() -> {
             List<String> urlList = new ArrayList<>();
             for (int i = 0; i < 12; i++){
-                int num = BotUtils.randomInt(10000, 50000);
+                int num = MyUtils.randomInt(10000, 50000);
                 urlList.add("https://hostloc.com/space-uid-" + num + ".html");
             }
             for (String url: urlList){
@@ -103,7 +106,7 @@ public class HostLocLogicImpl implements HostLocLogic {
 //                e.printStackTrace();
                 return list;
             }
-            String id = BotUtils.regex("tid=", "&", url);
+            String id = MyUtils.regex("tid=", "&", url);
             Map<String, String> map = new HashMap<>();
             map.put("title", title);
             map.put("url", url);
@@ -120,9 +123,9 @@ public class HostLocLogicImpl implements HostLocLogic {
         if (!html.matches("toNumbers\\(\"(.*?)\"\\)")){
             return "";
         }
-        String aTemp = BotUtils.regex("a = toNumbers\\(\"", "\"\\),", html);
-        String bTemp = BotUtils.regex("b = toNumbers\\(\"", "\"\\),", html);
-        String cTemp = BotUtils.regex("c = toNumbers\\(\"", "\"\\);", html);
+        String aTemp = MyUtils.regex("a = toNumbers\\(\"", "\"\\),", html);
+        String bTemp = MyUtils.regex("b = toNumbers\\(\"", "\"\\),", html);
+        String cTemp = MyUtils.regex("c = toNumbers\\(\"", "\"\\);", html);
         byte[] a = intArrToByteArr(toNumbers(aTemp));
         byte[] b = intArrToByteArr(toNumbers(bTemp));
         byte[] c = intArrToByteArr(toNumbers(cTemp));

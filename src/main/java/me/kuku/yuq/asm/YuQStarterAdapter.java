@@ -1,13 +1,8 @@
 package me.kuku.yuq.asm;
 
-import me.kuku.yuq.utils.RSAUtils;
 import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 
 public class YuQStarterAdapter extends ClassVisitor {
 	public YuQStarterAdapter(ClassVisitor cv) {

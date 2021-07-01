@@ -3,14 +3,15 @@ package me.kuku.yuq.logic.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import me.kuku.pojo.Result;
+import me.kuku.pojo.UA;
+import me.kuku.utils.MyUtils;
+import me.kuku.utils.OkHttpUtils;
 import me.kuku.yuq.entity.ArkNightsEntity;
 import me.kuku.yuq.logic.ArkNightsLogic;
 import me.kuku.yuq.logic.DdOcrCodeLogic;
 import me.kuku.yuq.pojo.DdOcrPojo;
-import me.kuku.yuq.pojo.Result;
-import me.kuku.yuq.pojo.UA;
 import me.kuku.yuq.utils.BotUtils;
-import me.kuku.yuq.utils.OkHttpUtils;
 import okhttp3.Headers;
 import okhttp3.Response;
 import org.jsoup.Jsoup;
@@ -103,7 +104,7 @@ public class ArkNightsLogicImpl implements ArkNightsLogic {
 		Response response = OkHttpUtils.get(url + "/user/inquiryOrder", OkHttpUtils.addCookie(cookie));
 		if (response.code() == 302) return Result.failure("cookie已失效！！", null);
 		String html = OkHttpUtils.getStr(response);
-		String jsonStr = BotUtils.regex("window.__INITIAL_DATA__ =", "</script>", html);
+		String jsonStr = MyUtils.regex("window.__INITIAL_DATA__ =", "</script>", html);
 		JSONObject jsonObject = JSON.parseObject(jsonStr);
 		JSONArray jsonArray = jsonObject.getJSONObject("inquiryOrder").getJSONArray("data");
 		List<Map<String, String>> list = new ArrayList<>();
@@ -188,7 +189,7 @@ public class ArkNightsLogicImpl implements ArkNightsLogic {
                     OkHttpUtils.addUA(UA.PC));
             String js = Jsoup.parse(html).getElementsByTag("script").first().attr("src");
             String jsStr = OkHttpUtils.getStr(js);
-            String jsonStr = BotUtils.regex("e.exports=JSON.parse\\('", "'\\)\\},", jsStr);
+            String jsonStr = MyUtils.regex("e.exports=JSON.parse\\('", "'\\)\\},", jsStr);
             JSONObject jsonObject = JSON.parseObject(jsonStr);
             for (Map.Entry<String, Object> entry : jsonObject.entrySet()) {
                 JSONObject innerJsonObject = (JSONObject) entry.getValue();

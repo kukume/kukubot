@@ -3,15 +3,16 @@ package me.kuku.yuq.logic.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import me.kuku.pojo.Result;
+import me.kuku.pojo.UA;
+import me.kuku.utils.MyUtils;
+import me.kuku.utils.OkHttpUtils;
+import me.kuku.utils.QqUtils;
 import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.logic.QQLoginLogic;
 import me.kuku.yuq.pojo.GroupMember;
-import me.kuku.yuq.pojo.Result;
-import me.kuku.yuq.pojo.UA;
 import me.kuku.yuq.utils.BotUtils;
-import me.kuku.yuq.utils.OkHttpUtils;
 import me.kuku.yuq.utils.QQSuperLoginUtils;
-import me.kuku.yuq.utils.QQUtils;
 import okhttp3.FormBody;
 import okhttp3.Headers;
 import okhttp3.MultipartBody;
@@ -227,7 +228,7 @@ public class QQLoginLogicImpl implements QQLoginLogic {
         if (result.getCode() == 200){
             String psKey = result.getData();
             String str = OkHttpUtils.getStr("https://h5.weiyun.com/sign_in", OkHttpUtils.addCookie(qqLoginEntity.getCookie(psKey)));
-            String json = BotUtils.regex("(?<=window\\.__INITIAL_STATE__=).+?(?=</script>)", str);
+            String json = MyUtils.regex("(?<=window\\.__INITIAL_STATE__=).+?(?=</script>)", str);
             JSONObject jsonObject = JSON.parseObject(json);
             return String.format("微云签到成功，已连续签到%d天，当前金币%d",
                     jsonObject.getJSONObject("index").getInteger("consecutiveSignInCount"), jsonObject.getJSONObject("global").getInteger("totalCoin"));
@@ -332,7 +333,7 @@ public class QQLoginLogicImpl implements QQLoginLogic {
         }else response.close();
         response = OkHttpUtils.get("https://1.game.qq.com/app/sign?start=" + new SimpleDateFormat("yyyy-MM").format(new Date()) +
                 "&g_tk=$gtk&_t=0.6780016267291531", OkHttpUtils.addCookie(qqLoginEntity.getCookie()));
-        String jsonStr = BotUtils.regex("(?<=var sign_index = ).*?(?=;)", OkHttpUtils.getStr(response));
+        String jsonStr = MyUtils.regex("(?<=var sign_index = ).*?(?=;)", OkHttpUtils.getStr(response));
         jsonObject = JSON.parseObject(jsonStr);
         Integer iRet = jsonObject.getInteger("iRet");
         switch (iRet){
@@ -712,7 +713,7 @@ public class QQLoginLogicImpl implements QQLoginLogic {
 
     private String getGroupFileUrl(QQLoginEntity qqLoginEntity, Long group, String busId, String id) throws IOException {
         JSONObject jsonObject = OkHttpUtils.getJsonp(String.format("https://pan.qun.qq.com/cgi-bin/group_share_get_downurl?uin=%d&groupid=%d&pa=%s&r=0.%s&charset=utf-8&g_tk=%s&callback=_Callback",
-                qqLoginEntity.getQq(), group, URLEncoder.encode("/" + busId + id, "utf-8"), BotUtils.randomNum(16), qqLoginEntity.getGtk()),
+                qqLoginEntity.getQq(), group, URLEncoder.encode("/" + busId + id, "utf-8"), MyUtils.randomNum(16), qqLoginEntity.getGtk()),
                 OkHttpUtils.addCookie(qqLoginEntity.getCookie()));
         if (jsonObject.getInteger("code") == 0) return jsonObject.getJSONObject("data").getString("url");
         else return "获取链接失败！！";
@@ -816,7 +817,7 @@ public class QQLoginLogicImpl implements QQLoginLogic {
                     String toUin = ele.text();
                     if (qqLoginEntity.getQq().toString().equals(toUin)) continue;
                     JSONObject jsonObject = OkHttpUtils.getJson(String.format("https://mq.vip.qq.com/m/growth/doPraise?method=0&toUin=%s&g_tk=%s&ps_tk=%s",
-                            toUin, QQUtils.getGTK2(qqLoginEntity.getSKey()), qqLoginEntity.getGtk(psKey)),
+                            toUin, QqUtils.getGTK2(qqLoginEntity.getSKey()), qqLoginEntity.getGtk(psKey)),
                             OkHttpUtils.addHeaders(qqLoginEntity.getCookie(psKey), url));
                     Integer code = jsonObject.getInteger("ret");
                     if (code != -12002 && code != 0){

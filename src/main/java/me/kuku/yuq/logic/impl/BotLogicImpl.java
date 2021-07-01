@@ -2,11 +2,10 @@ package me.kuku.yuq.logic.impl;
 
 import com.IceCreamQAQ.Yu.annotation.Config;
 import com.IceCreamQAQ.Yu.util.OkHttpWebImpl;
-import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.mirai.MiraiBot;
+import me.kuku.utils.QqUtils;
 import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.logic.BotLogic;
-import me.kuku.yuq.utils.QQUtils;
 import okhttp3.Cookie;
 
 import javax.inject.Inject;
@@ -34,7 +33,7 @@ public class BotLogicImpl implements BotLogic {
             Map<String, Cookie> qZoneMap = map.get("qzone.qq.com");
             String psKey = qZoneMap.get("p_skey").value();
             return new QQLoginEntity(null, Long.valueOf(qqStr), 0L, "", sKey, psKey, groupPsKey, miraiBot.superKey,
-                    QQUtils.getToken(miraiBot.superKey).toString(), null, true);
+                    QqUtils.getToken(miraiBot.superKey).toString(), null, true);
         }catch (Exception e){
             return new QQLoginEntity();
         }

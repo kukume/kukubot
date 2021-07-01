@@ -3,13 +3,13 @@ package me.kuku.yuq.logic.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import me.kuku.pojo.Result;
+import me.kuku.utils.MyUtils;
+import me.kuku.utils.OkHttpUtils;
 import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.logic.QQGroupLogic;
 import me.kuku.yuq.pojo.GroupMember;
-import me.kuku.yuq.pojo.Result;
-import me.kuku.yuq.pojo.UA;
 import me.kuku.yuq.utils.BotUtils;
-import me.kuku.yuq.utils.OkHttpUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -144,7 +144,7 @@ public class QQGroupLogicImpl implements QQGroupLogic {
     public Result<List<Map<String, String>>> groupLevel(QQLoginEntity qqLoginEntity, Long group) throws IOException {
         String str = OkHttpUtils.getStr("https://qun.qq.com/interactive/levellist?gc=$group&type=7&_wv=3&_wwv=128",
                 OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
-        String jsonStr = BotUtils.regex("window.__INITIAL_STATE__=", "</script>", str);
+        String jsonStr = MyUtils.regex("window.__INITIAL_STATE__=", "</script>", str);
         JSONObject jsonObject = JSON.parseObject(jsonStr);
         JSONArray jsonArray = jsonObject.getJSONArray("membersList");
         if (jsonArray.size() == 0) return Result.failure("获取群等级列表失败，请更新QQ！！", null);
@@ -198,7 +198,7 @@ public class QQGroupLogicImpl implements QQGroupLogic {
     public Result<List<JSONArray>> essenceMessage(QQLoginEntity qqLoginEntity, Long group) throws IOException {
         String html = OkHttpUtils.getStr("https://qun.qq.com/essence/index?gc=" + group + "&_wv=3&_wwv=128&_wvx=2&_wvxBclr=f5f6fa",
                 OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
-        String jsonStr = BotUtils.regex("window.__INITIAL_STATE__=", "</", html);
+        String jsonStr = MyUtils.regex("window.__INITIAL_STATE__=", "</", html);
         JSONObject jsonObject = JSON.parseObject(jsonStr);
         JSONArray jsonArray = jsonObject.getJSONArray("msgList");
         if (jsonArray.size() == 0) return Result.failure("当前群内没有精华消息！！或者cookie已失效！！", null);
@@ -306,7 +306,7 @@ public class QQGroupLogicImpl implements QQGroupLogic {
         }
         String html = OkHttpUtils.getStr(String.format("https://qun.qq.com/interactive/honorlist?gc=%d&type=%d&_wv=3&_wwv=%d", group, typeNum, wwv),
                 OkHttpUtils.addCookie(qqLoginEntity.getCookieWithGroup()));
-        String jsonStr = BotUtils.regex("window.__INITIAL_STATE__=", "</script", html);
+        String jsonStr = MyUtils.regex("window.__INITIAL_STATE__=", "</script", html);
         JSONObject jsonObject = JSON.parseObject(jsonStr);
         JSONArray jsonArray = jsonObject.getJSONArray(param);
         jsonArray.forEach(obj -> {

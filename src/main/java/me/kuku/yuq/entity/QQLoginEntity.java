@@ -3,7 +3,7 @@ package me.kuku.yuq.entity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import me.kuku.yuq.utils.QQUtils;
+import me.kuku.utils.QqUtils;
 
 import javax.persistence.*;
 
@@ -50,23 +50,23 @@ public class QQLoginEntity {
     }
 
     public String getGtk(){
-        return String.valueOf(QQUtils.getGTK(sKey));
+        return String.valueOf(QqUtils.getGTK(sKey));
     }
 
     public String getGtk(String psKey){
-        return String.valueOf(QQUtils.getGTK(psKey));
+        return String.valueOf(QqUtils.getGTK(psKey));
     }
 
     public String getGtk2(){
-        return QQUtils.getGTK2(sKey);
+        return QqUtils.getGTK2(sKey);
     }
 
     public String getGtkP(){
-        return String.valueOf(QQUtils.getGTK(psKey));
+        return String.valueOf(QqUtils.getGTK(psKey));
     }
 
     public String getToken(){
-        return String.valueOf(QQUtils.getToken(superToken));
+        return String.valueOf(QqUtils.getToken(superToken));
     }
 
 }

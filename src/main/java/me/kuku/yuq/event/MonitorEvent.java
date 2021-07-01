@@ -19,7 +19,6 @@ import me.kuku.yuq.service.GroupService;
 import me.kuku.yuq.service.MessageService;
 import me.kuku.yuq.service.RecallService;
 import me.kuku.yuq.utils.BotUtils;
-import me.kuku.yuq.utils.OkHttpUtils;
 
 import javax.inject.Inject;
 import java.io.InputStream;

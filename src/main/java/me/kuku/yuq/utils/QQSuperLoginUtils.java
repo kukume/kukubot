@@ -1,7 +1,9 @@
 package me.kuku.yuq.utils;
 
+import me.kuku.pojo.Result;
+import me.kuku.utils.OkHttpUtils;
+import me.kuku.utils.QqUtils;
 import me.kuku.yuq.entity.QQLoginEntity;
-import me.kuku.yuq.pojo.Result;
 
 import java.io.IOException;
 import java.util.Map;
@@ -10,9 +12,9 @@ public class QQSuperLoginUtils {
     private static Result<String> login(QQLoginEntity qqLoginEntity, String appId, String daId, String prefixUrl, String suffixUrl) throws IOException {
         String str = OkHttpUtils.getStr(String.format("https://ssl.ptlogin2.qq.com/pt4_auth?daid=%s&appid=%s&auth_token=%s", daId, appId, qqLoginEntity.getToken()),
                 OkHttpUtils.addHeaders(qqLoginEntity.getCookieWithSuper(), "https://ui.ptlogin2.qq.com/cgi-bin/login"));
-        Result<String> result = QQUtils.getPtToken(str);
+        Result<String> result = QqUtils.getPtToken(str);
         if (result.getCode() == 200){
-            Map<String, String> map = QQUtils.getKey(result.getData(), qqLoginEntity.getQq().toString(), prefixUrl, suffixUrl);
+            Map<String, String> map = QqUtils.getKey(result.getData(), qqLoginEntity.getQq().toString(), prefixUrl, suffixUrl);
             return Result.success(map.get("p_skey"));
         }else return Result.failure(result.getMessage(), null);
     }

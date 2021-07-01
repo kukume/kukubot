@@ -4,10 +4,14 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
+import me.kuku.pojo.Result;
+import me.kuku.pojo.UA;
+import me.kuku.utils.HexUtils;
+import me.kuku.utils.MyUtils;
+import me.kuku.utils.OkHttpUtils;
+import me.kuku.utils.RSAUtils;
 import me.kuku.yuq.entity.WeiboEntity;
 import me.kuku.yuq.logic.WeiboLogic;
-import me.kuku.yuq.pojo.Result;
-import me.kuku.yuq.pojo.UA;
 import me.kuku.yuq.pojo.WeiboPojo;
 import me.kuku.yuq.pojo.WeiboToken;
 import me.kuku.yuq.utils.*;
@@ -174,7 +178,7 @@ public class WeiboLogicImpl implements WeiboLogic {
 
     @Override
     public String getCaptchaUrl(String pcId){
-        return "https://login.sina.com.cn/cgi/pin.php?r=" + BotUtils.randomNum(8) + "&s=0&p=" + pcId;
+        return "https://login.sina.com.cn/cgi/pin.php?r=" + MyUtils.randomNum(8) + "&s=0&p=" + pcId;
     }
 
     private String encryptPassword(Map<String, String> map, String password){
@@ -231,9 +235,9 @@ public class WeiboLogicImpl implements WeiboLogic {
         Response response = OkHttpUtils.post("https://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.19)&_=" + System.currentTimeMillis(),
                 paramMap, OkHttpUtils.addHeaders(headerMap));
         String html = OkHttpUtils.getStr(response);
-        String url = BotUtils.regex("location.replace\\(\"", "\"\\);", html);
+        String url = MyUtils.regex("location.replace\\(\"", "\"\\);", html);
         if (url == null) return Result.failure("获取失败！！", null);
-        String token = BotUtils.regex("token%3D", "\"\\);", html);
+        String token = MyUtils.regex("token%3D", "\"\\);", html);
         String cookie = OkHttpUtils.getCookie(response);
         map.put("cookie", cookie);
         if (url.contains("https://login.sina.com.cn/crossdomain2.php")){
@@ -241,7 +245,7 @@ public class WeiboLogicImpl implements WeiboLogic {
             map.put("referer", "https://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.19)");
             return Result.success(map);
         }else if (token == null){
-            String reason = BotUtils.regex("reason=", "&", html);
+            String reason = MyUtils.regex("reason=", "&", html);
             String result = URLDecoder.decode(reason, "gbk");
             return Result.failure(result, null);
         }else {
@@ -274,7 +278,7 @@ public class WeiboLogicImpl implements WeiboLogic {
         if (code == 50050011){
             JSONObject data = jsonObject.getJSONObject("data");
             String errUrl = data.getString("errurl");
-            String id = BotUtils.regex("id=", "&", errUrl);
+            String id = MyUtils.regex("id=", "&", errUrl);
             if (id == null){
                 return Result.failure("登录失败，请稍后再试！！");
             }else {
@@ -282,7 +286,7 @@ public class WeiboLogicImpl implements WeiboLogic {
                 String cookie = "FID=" + id + "; ";
                 String html = OkHttpUtils.getStr("https://passport.weibo.cn/signin/secondverify/index?first_enter=1&c=",
                         OkHttpUtils.addHeaders(cookie, "", UA.PC));
-                String phone = BotUtils.regex("\"maskMobile\":\"", "\"", html);
+                String phone = MyUtils.regex("\"maskMobile\":\"", "\"", html);
                 resultMap.put("cookie", cookie);
                 resultMap.put("phone", phone);
                 return Result.failure(201, "账号需要验证", resultMap);
@@ -347,104 +351,6 @@ public class WeiboLogicImpl implements WeiboLogic {
         forthResponse.close();
         String mobileCookie = OkHttpUtils.getCookie(forthResponse);
         return new WeiboEntity(pcCookie, mobileCookie);
-    }
-
-    @Override
-    public WeiboEntity loginSuccess(String cookie, String referer, String url) throws IOException {
-        String html = OkHttpUtils.getStr(url, OkHttpUtils.addHeaders(cookie, referer));
-        String jsonStr = BotUtils.regex("sinaSSOController.setCrossDomainUrlList\\(", "\\);", html);
-        JSONObject urlJsonObject = JSON.parseObject(jsonStr);
-        String pcUrl = urlJsonObject.getJSONArray("arrURL").getString(0);
-        Response pcResponse = OkHttpUtils.get(pcUrl + "&callback=sinaSSOController.doCrossDomainCallBack&scriptId=ssoscript0&client=ssologin.js(v1.4.19)&_=" + System.currentTimeMillis());
-        pcResponse.close();
-        String pcCookie = OkHttpUtils.getCookie(pcResponse);
-        String mobileCookie = getMobileCookie(cookie);
-        return new WeiboEntity(pcCookie, mobileCookie);
-    }
-
-    @Override
-    public Result<Map<String, String>> preparedLogin(String username, String password) throws IOException {
-        String newUsername = Base64.getEncoder().encodeToString(username.getBytes());
-        Map<String, String> loginParams = loginParams(newUsername);
-        loginParams.put("password", password);
-        if ("0".equals(loginParams.get("showpin"))) return Result.success(loginParams);
-        else return Result.failure(201, "需要验证码！！", loginParams);
-    }
-
-    @Override
-    public Result<Map<String, String>> loginBySms1(String token) throws IOException {
-        String phoneHtml = OkHttpUtils.getStr("https://login.sina.com.cn/protection/index?token=" + token + "&callback_url=https%3A%2F%2Fweibo.com");
-        String phone = Jsoup.parse(phoneHtml).getElementById("ss0").attr("value");
-        Map<String, String> phoneMap = new HashMap<>();
-        phoneMap.put("encrypt_mobile", phone);
-        JSONObject smsJsonObject = OkHttpUtils.postJson("https://login.sina.com.cn/protection/mobile/sendcode?token=" + token, phoneMap);
-        if (smsJsonObject.getInteger("retcode") == 20000000){
-            Map<String, String> map = new HashMap<>();
-            map.put("token", token);
-            map.put("phone", phone);
-            return Result.success("请输入短信验证码！！", map);
-        }else return Result.failure(smsJsonObject.getString("msg"), null);
-    }
-
-    @Override
-    public Result<WeiboEntity> loginBySms2(String token, String phone, String code) throws IOException {
-        String refererUrl = "https://login.sina.com.cn/protection/mobile/confirm?token=" + token;
-        Map<String, String> map = new HashMap<>();
-        map.put("encrypt_mobile", phone);
-        map.put("code", code);
-        JSONObject jsonObject = OkHttpUtils.postJson(refererUrl, map);
-        switch (jsonObject.getInteger("retcode")){
-            case 20000000:
-                String url = jsonObject.getJSONObject("data").getString("redirect_url");
-                Response resultResponse = OkHttpUtils.get(url, OkHttpUtils.addReferer(refererUrl));
-                String cookie = OkHttpUtils.getCookie(resultResponse);
-                String html = OkHttpUtils.getStr(resultResponse);
-                String secondUrl = BotUtils.regex("location.replace\\(\"", "\"\\);", html);
-                if (secondUrl == null) return Result.failure("登录失败，请稍后再试！！", null);
-                return Result.success(loginSuccess(cookie, url, secondUrl));
-            case 8518: return Result.failure("验证码错误或已经过期！！！", null);
-            default: return Result.failure(jsonObject.getString("msg"), null);
-        }
-    }
-
-    @SuppressWarnings("UnnecessaryContinue")
-    @Override
-    public Result<WeiboEntity> loginByPrivateMsg(String token) throws IOException {
-        Map<String, String> map = new HashMap<>();
-        String referer = "https://passport.weibo.com/protection/index?token=" + token + "&callback_url=https%3A%2F%2Fweibo.com%2Flogin.php%3Furl%3Dhttps%253A%252F%252Fweibo.com%252F";
-        map.put("token", token);
-        JSONObject jsonObject = OkHttpUtils.postJson("https://passport.weibo.com/protection/privatemsg/send", map,
-                OkHttpUtils.addReferer(referer));
-        if (jsonObject.getInteger("retcode") == 20000000){
-            while (true){
-                try {
-                    TimeUnit.SECONDS.sleep(3);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                jsonObject = OkHttpUtils.postJson("https://passport.weibo.com/protection/privatemsg/getstatus",
-                        map, OkHttpUtils.addReferer(referer));
-                Integer code = jsonObject.getInteger("retcode");
-                 if (code == 20000000) {
-                    JSONObject dataJsonObject = jsonObject.getJSONObject("data");
-                    Integer statusCode = dataJsonObject.getInteger("status_code");
-                    if (statusCode == 2){
-                        String resultUrl = dataJsonObject.getString("redirect_url");
-                        Response response = OkHttpUtils.get(resultUrl, OkHttpUtils.addReferer(referer));
-                        String html = OkHttpUtils.getStr(response);
-                        String cookie = OkHttpUtils.getCookie(response);
-                        String secondUrl = BotUtils.regex("location.replace\\(\"", "\"\\);", html);
-                        if (secondUrl == null) return Result.failure("登录失败，请稍后再试！！", null);
-                        return Result.success(loginSuccess(cookie, resultUrl, secondUrl));
-                    } else if (statusCode == 3){
-                        return Result.failure("手机客户端拒绝此次登录，请重发私信", null);
-                    } else if (statusCode == 1) continue;
-                    else if (statusCode == 4) return Result.failure("验证已过期，请重新发送私信", null);
-                    else return Result.failure(dataJsonObject.getString("status_msg"), null);
-                }
-                else return Result.failure(jsonObject.getString("msg"), null);
-            }
-        }else return Result.failure(jsonObject.getString("msg"), null);
     }
 
     @Override

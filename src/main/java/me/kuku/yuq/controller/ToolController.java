@@ -15,6 +15,11 @@ import com.icecreamqaq.yuq.entity.Group;
 import com.icecreamqaq.yuq.entity.Member;
 import com.icecreamqaq.yuq.job.RainInfo;
 import com.icecreamqaq.yuq.message.*;
+import me.kuku.pojo.Result;
+import me.kuku.utils.DateTimeFormatterUtils;
+import me.kuku.utils.IOUtils;
+import me.kuku.utils.MyUtils;
+import me.kuku.utils.OkHttpUtils;
 import me.kuku.yuq.entity.ConfigEntity;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.logic.*;
@@ -61,8 +66,6 @@ public class ToolController {
     private MessageItemFactory mif;
     @Config("YuQ.Mirai.protocol")
     private String protocol;
-    @Inject
-    private DCloudLogic dCloudLogic;
     @Config("YuQ.Mirai.bot.master")
     private String master;
     @Config("YuQ.Mirai.bot.api")
@@ -550,7 +553,7 @@ public class ToolController {
 
     @Action("窥屏检测")
     public void checkPeeping(Group group){
-        String random = BotUtils.randomNum(4);
+        String random = MyUtils.randomNum(4);
         group.sendMessage(FunKt.getMif().jsonEx("{\"app\":\"com.tencent.miniapp\",\"desc\":\"\",\"view\":\"notification\",\"ver\":\"1.0.0.11\",\"prompt\":\"QQ程序\",\"appID\":\"\",\"sourceName\":\"\",\"actionData\":\"\",\"actionData_A\":\"\",\"sourceUrl\":\"\",\"meta\":{\"notification\":{\"appInfo\":{\"appName\":\"三楼有只猫\",\"appType\":4,\"appid\":1109659848,\"iconUrl\":\"" + api + "\\/tool\\/peeping\\/check\\/" + random + "\"},\"button\":[],\"data\":[],\"emphasis_keyword\":\"\",\"title\":\"请等待15s\"}},\"text\":\"\",\"extraApps\":[],\"sourceAd\":\"\",\"extra\":\"\"}").toMessage());
         executorService.schedule(() -> {
             String msg;
@@ -585,50 +588,6 @@ public class ToolController {
         Message message = session.waitNextMessage();
         String code = Message.Companion.firstString(message);
         return toolLogic.executeCode(code, codeType);
-    }
-
-    @Action("dcloud上传")
-    @QMsg(at = true, atNewLine = true)
-    public String dCloudUpload(Group group, long qq, ContextSession session){
-        ConfigEntity configEntity = configService.findByType(ConfigType.DCloud.getType());
-        if (configEntity == null) return "机器人还没有配置dCloud，请联系机器人主人进行配置。";
-        JSONObject jsonObject = configEntity.getContentJsonObject();
-        group.sendMessage(FunKt.getMif().at(qq).plus("请发送需要上传的图片"));
-        Message imageMessage = session.waitNextMessage();
-        DCloudPojo dCloudPojo = new DCloudPojo(jsonObject.getString("cookie"), jsonObject.getString("token"));
-        String spaceId = jsonObject.getString("spaceId");
-        StringBuilder sb = new StringBuilder().append("您上传的图片链接如下：").append("\n");
-        int i = 1;
-        for (MessageItem item : imageMessage.getBody()) {
-            if (item instanceof Image) {
-                Image image = (Image) item;
-                String url = image.getUrl();
-                String id = image.getId();
-                sb.append(i++).append("、");
-                InputStream is = null;
-                try {
-                    Response response = OkHttpUtils.get(url);
-                    is = OkHttpUtils.getByteStream(response);
-                    long size = Objects.requireNonNull(response.body()).contentLength();
-                    Result<String> result = dCloudLogic.upload(dCloudPojo, spaceId, id, is, Math.toIntExact(size));
-                    if (result.getCode() == 502){
-                        Result<DCloudPojo> reResult = dCloudLogic.reLogin();
-                        if (reResult.isFailure()) return "cookie失效，尝试重新登录，登录失败。" + reResult.getMessage();
-                        else {
-                            dCloudPojo = reResult.getData();
-                            result = dCloudLogic.upload(dCloudPojo, spaceId, id, is);
-                        }
-                    }
-                    if (result.isFailure()) sb.append(result.getMessage()).append("\n");
-                    else sb.append(result.getData()).append("\n");
-                } catch (IOException e) {
-                    sb.append("网络出现异常，上传失败").append("\n");
-                }finally {
-                    IOUtils.close(is);
-                }
-            }
-        }
-        return BotUtils.removeLastLine(sb);
     }
 
     @Action("妹子图")

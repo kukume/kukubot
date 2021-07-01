@@ -5,10 +5,13 @@ import com.IceCreamQAQ.Yu.util.IO;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import me.kuku.pojo.Result;
+import me.kuku.pojo.UA;
+import me.kuku.utils.IOUtils;
+import me.kuku.utils.MyUtils;
+import me.kuku.utils.OkHttpUtils;
 import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.pojo.CodeType;
-import me.kuku.yuq.pojo.Result;
-import me.kuku.yuq.pojo.UA;
 import me.kuku.yuq.utils.*;
 import okhttp3.*;
 import org.jsoup.Jsoup;
@@ -271,7 +274,7 @@ public class ToolLogicImpl implements ToolLogic {
         String code = null;
         String id = null;
         String jsStr = OkHttpUtils.getStr("https://qq-web.cdn-go.cn/city-selector/41c008e0/app/index/dist/cdn/index.bundle.js");
-        String jsonStr = BotUtils.regex("var y=c\\(\"[0-9a-z]{20}\"\\),p=", ",s=\\{name", jsStr);
+        String jsonStr = MyUtils.regex("var y=c\\(\"[0-9a-z]{20}\"\\),p=", ",s=\\{name", jsStr);
         JSONArray cityJsonArray = JSON.parseArray(jsonStr);
         for (Object obj: cityJsonArray){
             JSONObject jsonObject = (JSONObject) obj;
@@ -323,13 +326,13 @@ public class ToolLogicImpl implements ToolLogic {
             else result = new String(bytes, StandardCharsets.UTF_8);
             if (result.contains("找不到主机") || result.contains("Name or service not known")) return "域名解析失败！！";
             String ip;
-            ip = BotUtils.regex("\\[", "\\]", result);
-            if (ip == null) ip = BotUtils.regex("\\(", "\\)", result);
+            ip = MyUtils.regex("\\[", "\\]", result);
+            if (ip == null) ip = MyUtils.regex("\\(", "\\)", result);
             if (ip == null) return "域名解析失败！！！";
             else ip = ip.trim();
             String time;
-            time = BotUtils.regex("时间=", "ms", result);
-            if (time == null) time = BotUtils.regex("time=", "ms", result);
+            time = MyUtils.regex("时间=", "ms", result);
+            if (time == null) time = MyUtils.regex("time=", "ms", result);
             if (time == null) return "请求超时！！"; else time = time.trim();
             Result<List<Map<String, String>>> ipResult = queryIp(ip);
             String ipInfo;
@@ -602,7 +605,7 @@ public class ToolLogicImpl implements ToolLogic {
     public String executeCode(String code, CodeType codeType) throws IOException {
         String type = codeType.getType();
         String html = OkHttpUtils.getStr("http://www.dooccn.com/" + type + "/", OkHttpUtils.addUA(UA.PC));
-        String id = BotUtils.regex("langid = ", ";", html);
+        String id = MyUtils.regex("langid = ", ";", html);
         Map<String, String> map = new HashMap<>();
         map.put("language", id);
         map.put("code", Base64.getEncoder().encodeToString(code.getBytes(StandardCharsets.UTF_8)));
@@ -617,8 +620,8 @@ public class ToolLogicImpl implements ToolLogic {
         Response response = OkHttpUtils.get("https://www.iloveimg.com/zh-cn/html-to-image", OkHttpUtils.addUA(UA.PC));
         String cookie = OkHttpUtils.getCookie(response);
         String str = OkHttpUtils.getStr(response);
-        String token = "Bearer " + BotUtils.regex("\"token\":\"", "\"", str);
-        String taskId = BotUtils.regex("ilovepdfConfig.taskId = '", "';", str);
+        String token = "Bearer " + MyUtils.regex("\"token\":\"", "\"", str);
+        String taskId = MyUtils.regex("ilovepdfConfig.taskId = '", "';", str);
         MultipartBody uploadBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
                 .addFormDataPart("task", taskId)
                 .addFormDataPart("cloud_file", url).build();

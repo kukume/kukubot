@@ -6,10 +6,8 @@ import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.QQLoginEntity;
 import me.kuku.yuq.logic.QQLoginLogic;
-import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.QQLoginService;
 import me.kuku.yuq.utils.QQPasswordLoginUtils;
-import me.kuku.yuq.utils.QQUtils;
 
 import javax.inject.Inject;
 import java.io.IOException;

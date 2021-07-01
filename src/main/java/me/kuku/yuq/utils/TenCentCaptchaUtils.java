@@ -2,8 +2,6 @@ package me.kuku.yuq.utils;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import me.kuku.yuq.pojo.Result;
-import me.kuku.yuq.pojo.UA;
 import okhttp3.Response;
 
 import javax.imageio.ImageIO;
@@ -12,7 +10,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.Base64;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 

@@ -2,9 +2,9 @@ package me.kuku.yuq.logic;
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind;
 import com.alibaba.fastjson.JSONObject;
+import me.kuku.pojo.Result;
 import me.kuku.yuq.entity.BiliBiliEntity;
 import me.kuku.yuq.pojo.BiliBiliPojo;
-import me.kuku.yuq.pojo.Result;
 import okio.ByteString;
 
 import java.io.IOException;

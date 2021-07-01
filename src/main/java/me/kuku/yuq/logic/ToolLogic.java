@@ -3,8 +3,8 @@ package me.kuku.yuq.logic;
 import com.IceCreamQAQ.Yu.annotation.AutoBind;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import me.kuku.pojo.Result;
 import me.kuku.yuq.pojo.CodeType;
-import me.kuku.yuq.pojo.Result;
 
 import java.io.IOException;
 import java.io.InputStream;

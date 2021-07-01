@@ -4,11 +4,9 @@ import com.IceCreamQAQ.Yu.annotation.Cron;
 import com.IceCreamQAQ.Yu.annotation.JobCenter;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.message.Message;
-import me.kuku.yuq.entity.MotionEntity;
+import me.kuku.yuq.entity.StepEntity;
 import me.kuku.yuq.entity.QQLoginEntity;
-import me.kuku.yuq.logic.LeXinMotionLogic;
 import me.kuku.yuq.logic.QQLoginLogic;
-import me.kuku.yuq.logic.XiaomiMotionLogic;
 import me.kuku.yuq.service.MotionService;
 import me.kuku.yuq.service.QQLoginService;
 
@@ -33,30 +31,30 @@ public class MotionJob {
     @SuppressWarnings("DuplicatedCode")
     @Cron("At::d::08:00")
     public void motion(){
-        List<MotionEntity> list = motionService.findAll();
-        for (MotionEntity motionEntity : list) {
-            if (motionEntity.getStep() != null && motionEntity.getStep() != 0){
-                if (motionEntity.getLeXinStatus() != null && motionEntity.getLeXinStatus()) {
+        List<StepEntity> list = motionService.findAll();
+        for (StepEntity stepEntity : list) {
+            if (stepEntity.getStep() != null && stepEntity.getStep() != 0){
+                if (stepEntity.getLeXinStatus() != null && stepEntity.getLeXinStatus()) {
                     try {
-                        String result = leXinMotionLogic.modifyStepCount(motionEntity.getStep(), motionEntity);
+                        String result = leXinMotionLogic.modifyStepCount(stepEntity.getStep(), stepEntity);
                         if (result.contains("成功")) {
-                            QQLoginEntity qqLoginEntity = qqLoginService.findByQQ(motionEntity.getQq());
+                            QQLoginEntity qqLoginEntity = qqLoginService.findByQQ(stepEntity.getQq());
                             if (qqLoginEntity != null && qqLoginEntity.getStatus()) {
                                 qqLoginLogic.motionSign(qqLoginEntity);
                             }
                         }else {
-                            motionEntity.setLeXinStatus(false);
-                            motionService.save(motionEntity);
+                            stepEntity.setLeXinStatus(false);
+                            motionService.save(stepEntity);
                             Message message = Message.Companion.toMessage("使用乐心运动修改步数失败，请更新乐心运动！！");
-                            if (motionEntity.getGroup() == null){
+                            if (stepEntity.getGroup() == null){
                                 try {
-                                    FunKt.getYuq().getFriends().get(motionEntity.getQq())
+                                    FunKt.getYuq().getFriends().get(stepEntity.getQq())
                                             .sendMessage(message);
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
                             }else {
-                                FunKt.getYuq().getGroups().get(motionEntity.getGroup()).get(motionEntity.getQq())
+                                FunKt.getYuq().getGroups().get(stepEntity.getGroup()).get(stepEntity.getQq())
                                         .sendMessage(message);
                             }
                         }
@@ -64,22 +62,22 @@ public class MotionJob {
                         e.printStackTrace();
                     }
                 }
-                if (motionEntity.getMiStatus() != null && motionEntity.getMiStatus()){
+                if (stepEntity.getMiStatus() != null && stepEntity.getMiStatus()){
                     try {
-                        String result = xiaomiMotionLogic.changeStep(motionEntity.getMiLoginToken(), motionEntity.getStep());
+                        String result = xiaomiMotionLogic.changeStep(stepEntity.getMiLoginToken(), stepEntity.getStep());
                         if (!result.contains("成功")){
-                            motionEntity.setMiStatus(false);
-                            motionService.save(motionEntity);
+                            stepEntity.setMiStatus(false);
+                            motionService.save(stepEntity);
                             Message message = Message.Companion.toMessage("使用小米运动修改步数失败，请更新小米运动！！");
-                            if (motionEntity.getGroup() == null){
+                            if (stepEntity.getGroup() == null){
                                 try {
-                                    FunKt.getYuq().getFriends().get(motionEntity.getQq())
+                                    FunKt.getYuq().getFriends().get(stepEntity.getQq())
                                             .sendMessage(message);
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
                             }else {
-                                FunKt.getYuq().getGroups().get(motionEntity.getGroup()).get(motionEntity.getQq())
+                                FunKt.getYuq().getGroups().get(stepEntity.getGroup()).get(stepEntity.getQq())
                                         .sendMessage(message);
                             }
                         }

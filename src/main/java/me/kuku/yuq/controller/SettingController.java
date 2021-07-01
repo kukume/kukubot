@@ -23,7 +23,6 @@ import me.kuku.yuq.logic.*;
 import me.kuku.yuq.pojo.ConfigType;
 import me.kuku.yuq.pojo.DCloudPojo;
 import me.kuku.yuq.pojo.OfficePojo;
-import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.ConfigService;
 import me.kuku.yuq.service.GroupService;
 import me.kuku.yuq.utils.BotUtils;

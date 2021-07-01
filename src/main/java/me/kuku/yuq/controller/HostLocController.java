@@ -11,7 +11,6 @@ import com.icecreamqaq.yuq.entity.Group;
 import com.icecreamqaq.yuq.entity.Member;
 import me.kuku.yuq.entity.HostLocEntity;
 import me.kuku.yuq.logic.HostLocLogic;
-import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.HostLocService;
 
 import javax.inject.Inject;

@@ -9,9 +9,9 @@ import com.icecreamqaq.yuq.annotation.QMsg;
 import com.icecreamqaq.yuq.controller.ContextSession;
 import com.icecreamqaq.yuq.entity.Contact;
 import com.icecreamqaq.yuq.message.Message;
+import me.kuku.pojo.Result;
 import me.kuku.yuq.entity.NeTeaseEntity;
 import me.kuku.yuq.logic.NeTeaseLogic;
-import me.kuku.yuq.pojo.Result;
 import me.kuku.yuq.service.NeTeaseService;
 
 import javax.inject.Inject;

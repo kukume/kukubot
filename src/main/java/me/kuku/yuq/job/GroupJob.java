@@ -7,7 +7,6 @@ import com.icecreamqaq.yuq.message.Message;
 import me.kuku.yuq.entity.GroupEntity;
 import me.kuku.yuq.service.GroupService;
 import me.kuku.yuq.utils.BotUtils;
-import me.kuku.yuq.utils.DateTimeFormatterUtils;
 
 import javax.inject.Inject;
 import java.io.File;

@@ -2,16 +2,16 @@ package me.kuku.yuq.logic.impl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import me.kuku.pojo.Result;
+import me.kuku.pojo.UA;
+import me.kuku.utils.MD5Utils;
+import me.kuku.utils.MyUtils;
+import me.kuku.utils.OkHttpUtils;
+import me.kuku.utils.RSAUtils;
 import me.kuku.yuq.entity.MiHoYoEntity;
 import me.kuku.yuq.logic.DdOcrCodeLogic;
 import me.kuku.yuq.logic.MiHoYoLogic;
 import me.kuku.yuq.pojo.DdOcrPojo;
-import me.kuku.yuq.pojo.Result;
-import me.kuku.yuq.pojo.UA;
-import me.kuku.yuq.utils.BotUtils;
-import me.kuku.yuq.utils.MD5Utils;
-import me.kuku.yuq.utils.OkHttpUtils;
-import me.kuku.yuq.utils.RSAUtils;
 import okhttp3.Response;
 
 import javax.inject.Inject;
@@ -78,7 +78,7 @@ public class MiHoYoLogicImpl implements MiHoYoLogic {
 //		String n = "h8w582wxwgqvahcdkpvdhbh2w9casgfl";
 //		String n = "pbcfcvnfsm5s2w4x3lsq8caor7v8nlqm";
 		String i = String.valueOf(System.currentTimeMillis() / 1000);
-		String r = BotUtils.randomStrLetter(6);
+		String r = MyUtils.randomStrLetter(6);
 		String c = MD5Utils.toMD5("salt=" + n + "&t=" + i + "&r=" + r);
 		return i + "," + r + "," + c;
 	}

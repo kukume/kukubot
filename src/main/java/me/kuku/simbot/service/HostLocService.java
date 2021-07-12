@@ -9,4 +9,6 @@ public interface HostLocService {
 	HostLocEntity findByQqEntity(QqEntity qqEntity);
 	HostLocEntity save(HostLocEntity entity);
 	List<HostLocEntity> findAll();
+	List<HostLocEntity> findByMonitor(Boolean monitor);
+	List<HostLocEntity> findBySign(Boolean sign);
 }

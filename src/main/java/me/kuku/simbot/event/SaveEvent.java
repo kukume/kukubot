@@ -2,14 +2,11 @@ package me.kuku.simbot.event;
 
 import catcode.CatCodeUtil;
 import catcode.CodeTemplate;
-import love.forte.simbot.annotation.Listen;
 import love.forte.simbot.annotation.OnGroup;
 import love.forte.simbot.annotation.OnGroupMsgRecall;
-import love.forte.simbot.annotation.Priority;
 import love.forte.simbot.api.message.events.GroupMsg;
 import love.forte.simbot.api.message.events.GroupMsgRecall;
 import love.forte.simbot.api.sender.MsgSender;
-import love.forte.simbot.constant.PriorityConstant;
 import me.kuku.simbot.entity.GroupEntity;
 import me.kuku.simbot.entity.MessageEntity;
 import me.kuku.simbot.entity.QqEntity;
@@ -23,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
-import java.util.Set;
 
 @Service
 public class SaveEvent {
@@ -36,37 +32,6 @@ public class SaveEvent {
 	private RecallMessageService recallMessageService;
 	@Autowired
 	private GroupService groupService;
-
-	@OnGroup
-	@Transactional
-	@Priority(value = PriorityConstant.FIRST)
-	public synchronized void save(GroupMsg groupMsg){
-		long qq = groupMsg.getAccountInfo().getAccountCodeNumber();
-		long group = groupMsg.getGroupInfo().getGroupCodeNumber();
-		boolean isSave = false;
-		boolean isAdd = true;
-		QqEntity qqEntity = qqService.findByQq(qq);
-		if (qqEntity == null){
-			qqEntity = new QqEntity(qq);
-			isSave = true;
-		}
-		Set<GroupEntity> groups = qqEntity.getGroups();
-		for (GroupEntity groupEntity : groups) {
-			if (groupEntity.getGroup().equals(group)){
-				isAdd = false;
-				isSave = true;
-				break;
-			}
-		}
-		if (isAdd){
-			GroupEntity groupEntity = groupService.findByGroup(group);
-			if (groupEntity == null) groupEntity = new GroupEntity(group);
-			groups.add(groupEntity);
-			groupEntity.getQqEntities().add(qqEntity);
-		}
-		if (isSave)
-			qqService.save(qqEntity);
-	}
 
 	@OnGroup
 	@Transactional

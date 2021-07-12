@@ -29,4 +29,14 @@ public class HostLocServiceImpl implements HostLocService {
 	public List<HostLocEntity> findAll() {
 		return hostLocRepository.findAll();
 	}
+
+	@Override
+	public List<HostLocEntity> findByMonitor(Boolean monitor) {
+		return hostLocRepository.findByMonitor(monitor);
+	}
+
+	@Override
+	public List<HostLocEntity> findBySign(Boolean sign) {
+		return hostLocRepository.findBySign(sign);
+	}
 }

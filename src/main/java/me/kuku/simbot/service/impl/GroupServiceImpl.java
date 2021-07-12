@@ -16,4 +16,9 @@ public class GroupServiceImpl implements GroupService {
 	public GroupEntity findByGroup(Long group) {
 		return groupRepository.findByGroup(group);
 	}
+
+	@Override
+	public GroupEntity save(GroupEntity groupEntity) {
+		return groupRepository.save(groupEntity);
+	}
 }

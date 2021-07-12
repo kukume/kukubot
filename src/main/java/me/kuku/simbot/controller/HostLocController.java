@@ -30,15 +30,13 @@ public class HostLocController {
 	@OnPrivate
 	@ListenGroup(value = "", append = false)
 	@RegexFilter("loc {{username}} {{password}}")
-	public String login(@ContextValue("qqEntity")QqEntity qqEntity,
+	public String login(@ContextValue("qq")QqEntity qqEntity,
 	                  @FilterValue("username") String username,
 	                  @FilterValue("password") String password) throws IOException {
 		Result<String> result = hostLocLogic.login(username, password);
 		if (result.isFailure()) return result.getMessage();
 		HostLocEntity hostLocEntity = hostLocService.findByQqEntity(qqEntity);
 		if (hostLocEntity == null) hostLocEntity = new HostLocEntity(qqEntity);
-		hostLocEntity.setUsername(username);
-		hostLocEntity.setPassword(password);
 		hostLocEntity.setCookie(result.getData());
 		hostLocService.save(hostLocEntity);
 		return "绑定HostLoc成功！";
@@ -53,17 +51,20 @@ public class HostLocController {
 		boolean isLogin = hostLocLogic.isLogin(cookie);
 		if (isLogin) hostLocLogic.sign(cookie);
 		else {
-			Result<String> result = hostLocLogic.login(hostLocEntity.getUsername(), hostLocEntity.getPassword());
-			if (result.getCode() == 200){
-				hostLocEntity.setCookie(result.getData());
-				hostLocService.save(hostLocEntity);
-				hostLocLogic.sign(cookie);
-			}else return "loc签到失败，失败原因：" + result.getMessage();
+			return "loc签到失败，cookie失效，请重新登录！";
 		}
 		return "loc签到成功！";
 	}
 
-
-
-
+	@RegexFilter("loc{{type,签到|监控}}{{statusStr}}")
+	public String status(@ContextValue("hostLocEntity") HostLocEntity hostLocEntity,
+	                     @FilterValue("statusStr") String statusStr, @FilterValue("type") String type){
+		boolean status = statusStr.contains("开");
+		switch (type){
+			case "监控": hostLocEntity.setMonitor(status); break;
+			case "签到": hostLocEntity.setSign(status); break;
+		}
+		hostLocService.save(hostLocEntity);
+		return "loc" + type + (status ? "开启成功" : "关闭成功");
+	}
 }

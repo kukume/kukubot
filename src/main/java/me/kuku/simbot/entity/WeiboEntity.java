@@ -8,10 +8,10 @@ import javax.persistence.*;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @Entity
-@Table(name = "host_loc")
-public class HostLocEntity {
+@Table(name = "weibo")
+@NoArgsConstructor
+public class WeiboEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
@@ -19,15 +19,17 @@ public class HostLocEntity {
 	@JoinColumn(name = "qq")
 	private QqEntity qqEntity;
 	@Column(length = 2000)
-	private String cookie;
-	private Boolean sign = false;
+	private String pcCookie;
+	@Column(length = 2000)
+	private String mobileCookie;
 	private Boolean monitor = false;
 
-	public HostLocEntity(QqEntity qqEntity){
-		this.qqEntity = qqEntity;
+	public WeiboEntity(String pcCookie, String mobileCookie){
+		this.pcCookie = pcCookie;
+		this.mobileCookie = mobileCookie;
 	}
 
-	public HostLocEntity(String cookie){
-		this.cookie = cookie;
+	public WeiboEntity(QqEntity qqEntity){
+		this.qqEntity = qqEntity;
 	}
 }

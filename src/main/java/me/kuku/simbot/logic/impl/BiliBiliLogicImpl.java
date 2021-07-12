@@ -523,9 +523,13 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
 
 	@Override
 	public Result<List<Map<String, String>>> followed(BiliBiliEntity biliBiliEntity) throws IOException {
+		Map<String, String> headers = new HashMap<>();
+		headers.put("referer", "https://space.bilibili.com/" + biliBiliEntity.getUserid() + "/fans/follow");
+		headers.put("user-agent", UA.PC.getValue());
+		headers.put("cookie", biliBiliEntity.getCookie());
 		JSONObject jsonObject = OkHttpUtils.getJsonp(
 				String.format("https://api.bilibili.com/x/relation/followings?vmid=%s&pn=%s&ps=%s&order=desc&order_type=attention&jsonp=jsonp&callback=__jp5",
-						biliBiliEntity.getUserid(), "1", "20"), OkHttpUtils.addCookie(biliBiliEntity.getCookie()));
+						biliBiliEntity.getUserid(), "1", "20"), OkHttpUtils.addHeaders(headers));
 		if (jsonObject.getInteger("code") == 0){
 			JSONArray jsonArray = jsonObject.getJSONObject("data").getJSONArray("list");
 			List<Map<String, String>> list = new ArrayList<>();

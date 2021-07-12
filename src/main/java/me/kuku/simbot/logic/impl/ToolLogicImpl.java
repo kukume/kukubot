@@ -8,7 +8,6 @@ import me.kuku.pojo.UA;
 import me.kuku.simbot.logic.ToolLogic;
 import me.kuku.simbot.pojo.CodeType;
 import me.kuku.simbot.utils.BotUtils;
-import me.kuku.simbot.utils.ExecutorUtils;
 import me.kuku.utils.IOUtils;
 import me.kuku.utils.MyUtils;
 import me.kuku.utils.OkHttpUtils;
@@ -19,7 +18,9 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
@@ -44,12 +45,14 @@ public class ToolLogicImpl implements ToolLogic {
 	private final String appId = "ghpgtsokjvkjdmlk";
 	private final String appSecret = "N2hNMC93empxb0twUW1jd1FRbVVtQT09";
 	private final String params = "&app_id=" + appId + "&app_secret=" + appSecret;
-	@Value("me.kuku.simbot.api")
-	private String api;
+	private final String api = "https://api.kuku.me";
+	@Autowired
+	private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 	@Override
 	public String dogLicking() throws IOException {
 		// https://api.oick.cn/dog/api.php
-		return OkHttpUtils.getStr("https://v1.alapi.cn/api/dog?format=text");
+		JSONObject jsonObject = OkHttpUtils.postJson("https://fabiaoqing.com/jichou/randomrj.html", new HashMap<>());
+		return jsonObject.getString("today") + "\n" + jsonObject.getString("tgrj");
 	}
 
 	private Result<String> baiKeByUrl(String url) throws IOException {
@@ -357,7 +360,7 @@ public class ToolLogicImpl implements ToolLogic {
 		if (isR18) r18 = 1;
 		JSONObject jsonObject = OkHttpUtils.getJson("https://api.lolicon.app/setu/?apikey=" + apiKey + "&r18=" + r18 + "&num=10");
 		JSONArray dataJsonArray = jsonObject.getJSONArray("data");
-		ExecutorUtils.execute(() -> {
+		threadPoolTaskExecutor.execute(() -> {
 			for (int i = 0; i < dataJsonArray.size(); i++) {
 				JSONObject singleJsonObject = dataJsonArray.getJSONObject(0);
 				Map<String, String> paramMap = new HashMap<>();

@@ -12,6 +12,8 @@ import okhttp3.Response;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -23,6 +25,10 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 public class HostLocLogicImpl implements HostLocLogic {
+
+	@Autowired
+	private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
 	@Override
 	public Result<String> login(String username, String password) throws IOException {
 		String cookie = preventCookie();
@@ -55,7 +61,7 @@ public class HostLocLogicImpl implements HostLocLogic {
 	public void sign(String cookie) throws IOException {
 		String preventCookie = preventCookie();
 		String newCookie = cookie + preventCookie;
-		ExecutorUtils.execute(() -> {
+		threadPoolTaskExecutor.execute(() -> {
 			List<String> urlList = new ArrayList<>();
 			for (int i = 0; i < 12; i++){
 				int num = MyUtils.randomInt(10000, 50000);

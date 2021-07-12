@@ -19,6 +19,7 @@ public class GroupEntity {
 	private Integer id;
 	@Column(unique = true, name = "group_")
 	private Long group;
+	private Boolean status = false;
 	@ManyToMany(mappedBy = "groups")
 	private Set<QqEntity> qqEntities = new HashSet<>();
 

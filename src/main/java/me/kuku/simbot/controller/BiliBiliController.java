@@ -93,6 +93,7 @@ public class BiliBiliController {
 							biliBiliEntity.setUserid(newBiliBiliEntity.getUserid());
 							biliBiliService.save(biliBiliEntity);
 							msgSender.SENDER.sendGroupMsg(groupMsg, template.at(qq) + "绑定哔哩哔哩成功！");
+							return;
 					}
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -101,13 +102,14 @@ public class BiliBiliController {
 		});
 	}
 
-	@RegexFilter("哔哩哔哩{{type,监控|任务}}{{statusStr}}")
+	@RegexFilter("哔哩哔哩{{type,监控|任务|开播提醒}}{{statusStr}}")
 	public String status(@ContextValue("biliBiliEntity") BiliBiliEntity biliBiliEntity,
 	                   @FilterValue("statusStr") String statusStr, @FilterValue("type") String type){
 		boolean status = statusStr.contains("开");
 		switch (type){
 			case "监控": biliBiliEntity.setMonitor(status); break;
 			case "任务": biliBiliEntity.setTask(status); break;
+			case "开播提醒": biliBiliEntity.setLive(status); break;
 		}
 		biliBiliService.save(biliBiliEntity);
 		return "哔哩哔哩" + type + (status ? "开启成功" : "关闭成功");

@@ -105,10 +105,10 @@ public class HostLocLogicImpl implements HostLocLogic {
 			Element s = ele.getElementsByClass("s").first();
 			String title = s.text();
 			String url = "https://hostloc.com/" + s.attr("href");
-			String name = ele.select("cite a").first().text();
-			String time = null;
+			String time,name;
 			try {
 				time = ele.select("em a span").first().text();
+				name = ele.select("cite a").first().text();
 			} catch (Exception e) {
 //                e.printStackTrace();
 				return list;

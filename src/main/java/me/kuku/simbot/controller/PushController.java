@@ -5,10 +5,7 @@ import me.kuku.pojo.Result;
 import me.kuku.utils.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -44,6 +41,13 @@ public class PushController {
 		}finally {
 			IOUtils.close(fos);
 		}
+	}
+
+	@GetMapping("/size")
+	@ResponseBody
+	public Result<?> size(){
+		int size = botManager.getBots().size();
+		return Result.success("成功", Result.map("size", size));
 	}
 
 	@PostMapping("/sendPrivateMsg")

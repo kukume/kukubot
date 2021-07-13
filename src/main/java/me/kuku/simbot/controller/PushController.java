@@ -73,6 +73,7 @@ public class PushController {
 	}
 
 	@PostMapping("/sendTempMsg")
+	@ResponseBody
 	public Result<?> sendTempMsg(long qq, long group, @RequestParam("bot") long botQq, String catCode){
 		Bot bot = botManager.getBotOrNull(String.valueOf(botQq));
 		if (bot == null) return Result.failure("该bot不存在，请重试！");

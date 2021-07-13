@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.io.File;
@@ -23,8 +24,6 @@ public class PushController {
 	private BotRegistrar botRegistrar;
 	@Autowired
 	private BotManager botManager;
-	@Autowired
-	private BotDestroyer botDestroyer;
 
 	@PostMapping("/login")
 	@ResponseBody
@@ -49,11 +48,36 @@ public class PushController {
 
 	@PostMapping("/sendPrivateMsg")
 	@ResponseBody
-	public Result<?> sendPrivateMsg(long qq, long toQq, String catCode){
-		Bot bot = botManager.getBotOrNull(String.valueOf(qq));
+	public Result<?> sendPrivateMsg(@RequestParam("bot") long botQq, long qq, String catCode){
+		Bot bot = botManager.getBotOrNull(String.valueOf(botQq));
 		if (bot == null) return Result.failure("该bot不存在，请重试！");
 		try {
-			bot.getSender().SENDER.sendPrivateMsg(toQq, catCode);
+			bot.getSender().SENDER.sendPrivateMsg(qq, catCode);
+			return Result.success("应该是发送成功了！", null);
+		} catch (Exception e) {
+			return Result.failure("发送失败，异常信息：" + e.getMessage());
+		}
+	}
+
+	@PostMapping("/sendGroupMsg")
+	@ResponseBody
+	public Result<?> sendGroupMsg(long group, @RequestParam("bot") long botQq, String catCode){
+		Bot bot = botManager.getBotOrNull(String.valueOf(botQq));
+		if (bot == null) return Result.failure("该bot不存在，请重试！");
+		try {
+			bot.getSender().SENDER.sendGroupMsg(group, catCode);
+			return Result.success("应该是发送成功了！", null);
+		} catch (Exception e) {
+			return Result.failure("发送失败，异常信息：" + e.getMessage());
+		}
+	}
+
+	@PostMapping("/sendTempMsg")
+	public Result<?> sendTempMsg(long qq, long group, @RequestParam("bot") long botQq, String catCode){
+		Bot bot = botManager.getBotOrNull(String.valueOf(botQq));
+		if (bot == null) return Result.failure("该bot不存在，请重试！");
+		try {
+			bot.getSender().SENDER.sendPrivateMsg(qq, group, catCode);
 			return Result.success("应该是发送成功了！", null);
 		} catch (Exception e) {
 			return Result.failure("发送失败，异常信息：" + e.getMessage());

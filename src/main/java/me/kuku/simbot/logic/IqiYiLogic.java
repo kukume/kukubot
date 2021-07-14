@@ -10,4 +10,7 @@ public interface IqiYiLogic {
 	// IqiYi
 	IqiYiQrcode getQrcode() throws IOException;
 	Result<IqiYiEntity> checkQrcode(IqiYiQrcode iqiYiQrcode) throws IOException;
+	Result<Void> sign(IqiYiEntity iqiYiEntity) throws IOException;
+	Result<Void> task(IqiYiEntity iqiYiEntity) throws IOException;
+	Result<Void> draw(IqiYiEntity iqiYiEntity) throws IOException;
 }

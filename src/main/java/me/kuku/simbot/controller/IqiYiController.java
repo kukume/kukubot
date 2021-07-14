@@ -76,6 +76,16 @@ public class IqiYiController {
 		});
 	}
 
+	@Filter("爱奇艺签到")
+	public String sign(@ContextValue("qq") QqEntity qqEntity) throws IOException {
+		IqiYiEntity iqiYiEntity = iqiYiService.findByQqEntity(qqEntity);
+		if (iqiYiEntity == null) return "您还没有绑定爱奇艺账号，请发送<爱奇艺二维码>进行绑定";
+		Result<Void> result = iqiYiLogic.sign(iqiYiEntity);
+		if (result.isFailure()) return result.getMessage();
+		iqiYiLogic.task(iqiYiEntity);
+		iqiYiLogic.draw(iqiYiEntity);
+		return "爱奇艺签到成功！";
+	}
 
 
 }

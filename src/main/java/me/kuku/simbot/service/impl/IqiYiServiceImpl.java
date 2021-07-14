@@ -27,4 +27,9 @@ public class IqiYiServiceImpl implements IqiYiService {
 	public List<IqiYiEntity> findAll() {
 		return iqiYiRepository.findAll();
 	}
+
+	@Override
+	public void delete(IqiYiEntity entity) {
+		iqiYiRepository.delete(entity);
+	}
 }

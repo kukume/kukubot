@@ -818,8 +818,6 @@ public class QQLoginLogicImpl implements QqLoginLogic {
             Headers headers = OkHttpUtils.addHeaders(cookie, "https://v.qq.com/", UA.PC);
             JSONObject jsonObject = OkHttpUtils.getJsonp("https://vip.video.qq.com/fcgi-bin/comm_cgi?name=spp_MissionFaHuo&cmd=4&task_id=7&_=1582364733058&callback=video",
                     headers);
-            OkHttpUtils.getJsonp("https://vip.video.qq.com/fcgi-bin/comm_cgi?name=spp_MissionFaHuo&cmd=4&task_id=7&_=1582364733058&callback=video",
-                    headers);
             OkHttpUtils.getJsonp("https://vip.video.qq.com/fcgi-bin/comm_cgi?name=spp_MissionFaHuo&cmd=4&task_id=6&_=1582366326994&callback=video",
                     headers);
             OkHttpUtils.getJsonp("https://vip.video.qq.com/fcgi-bin/comm_cgi?name=hierarchical_task_system&cmd=2&_=1555060502385&callback=video",
@@ -827,8 +825,6 @@ public class QQLoginLogicImpl implements QqLoginLogic {
             OkHttpUtils.getJsonp("https://vip.video.qq.com/fcgi-bin/comm_cgi?name=spp_MissionFaHuo&cmd=4&task_id=3&_=1582368319252&callback=video",
                     headers);
             OkHttpUtils.getJsonp("https://vip.video.qq.com/fcgi-bin/comm_cgi?name=spp_MissionFaHuo&cmd=4&task_id=1&_=1582997048625&callback=video",
-                    headers);
-            OkHttpUtils.getJsonp("https://vip.video.qq.com/fcgi-bin/comm_cgi?name=payvip&cmd=1&otype=json&getannual=1&callback=video",
                     headers);
             return Result.success("腾讯视频签到成功！", null);
         }else return Result.failure("腾讯视频签到失败，cookie已失效，请重新登录！");

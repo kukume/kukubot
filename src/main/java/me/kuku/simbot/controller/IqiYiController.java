@@ -8,15 +8,12 @@ import love.forte.simbot.api.message.MessageContent;
 import love.forte.simbot.api.message.MessageContentBuilderFactory;
 import love.forte.simbot.api.message.events.GroupMsg;
 import love.forte.simbot.api.sender.MsgSender;
-import me.kuku.pojo.QqLoginPojo;
 import me.kuku.pojo.Result;
 import me.kuku.simbot.entity.IqiYiEntity;
 import me.kuku.simbot.entity.QqEntity;
-import me.kuku.simbot.entity.QqLoginEntity;
 import me.kuku.simbot.logic.IqiYiLogic;
 import me.kuku.simbot.pojo.IqiYiQrcode;
 import me.kuku.simbot.service.IqiYiService;
-import me.kuku.utils.QqQrCodeLoginUtils;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 

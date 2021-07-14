@@ -2,8 +2,10 @@ package me.kuku.simbot.scheduled;
 
 import me.kuku.simbot.entity.QqEntity;
 import me.kuku.simbot.entity.QqLoginEntity;
+import me.kuku.simbot.entity.QqVideoEntity;
 import me.kuku.simbot.logic.QqLoginLogic;
 import me.kuku.simbot.service.QqLoginService;
+import me.kuku.simbot.service.QqVideoService;
 import me.kuku.simbot.utils.BotUtils;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -20,7 +22,8 @@ public class QqLoginScheduled {
 	private QqLoginService qqLoginService;
 	@Resource
 	private QqLoginLogic qqLoginLogic;
-
+	@Resource
+	private QqVideoService qqVideoService;
 
 	@Scheduled(cron = "32 3 6 * * ?")
 	@Transactional
@@ -45,6 +48,18 @@ public class QqLoginScheduled {
 				qqLoginLogic.weiYunSign(qqLoginEntity);
 				qqLoginLogic.growthLike(qqLoginEntity);
 			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	@Scheduled(cron = "42 23 */1 * * ?")
+	public void videoSign(){
+		List<QqVideoEntity> list = qqVideoService.findAll();
+		for (QqVideoEntity qqVideoEntity : list) {
+			try {
+				qqLoginLogic.videoSign(qqVideoEntity);
+			}catch (Exception e){
 				e.printStackTrace();
 			}
 		}

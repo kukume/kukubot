@@ -2,6 +2,7 @@ package me.kuku.simbot.logic;
 
 import me.kuku.pojo.Result;
 import me.kuku.simbot.entity.QqLoginEntity;
+import me.kuku.simbot.entity.QqVideoEntity;
 import me.kuku.simbot.pojo.GroupMember;
 
 import java.io.IOException;
@@ -37,4 +38,5 @@ public interface QqLoginLogic {
 	String queryLevel(QqLoginEntity QqLoginEntity, Long qq, String psKey) throws IOException;
 	List<Map<String, String>> getGroupMsgList(QqLoginEntity QqLoginEntity) throws IOException;
 	String operatingGroupMsg(QqLoginEntity QqLoginEntity, String type, Map<String, String> map, String refuseMsg) throws IOException;
+	Result<String> videoSign(QqVideoEntity qqVideoEntity) throws IOException;
 }

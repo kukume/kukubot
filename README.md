@@ -1,6 +1,10 @@
 ## kukubot
 基于 [simbot](https://github.com/ForteScarlet/simpler-robot) 的机器人
 
-基于Spring-Boot了，然后机器人还没登呢，内存已经占用800M了，这谁带的起，不想移植了。。
-
-![](https://img.kuku.me/images/2021/07/05/6OmPG.png)
+### 功能
+* 自动签到（QQ、哔哩哔哩、HostLoc、网易云、腾讯视频）
+* 新帖推送（微博、哔哩哔哩、HostLoc）
+* 修改步数
+* ~~群管功能~~
+* ~~office自助注册~~
+* 一些小工具

@@ -6,8 +6,10 @@ import com.alibaba.fastjson.JSONObject;
 import me.kuku.pojo.Result;
 import me.kuku.pojo.UA;
 import me.kuku.simbot.entity.QqLoginEntity;
+import me.kuku.simbot.entity.QqVideoEntity;
 import me.kuku.simbot.logic.QqLoginLogic;
 import me.kuku.simbot.pojo.GroupMember;
+import me.kuku.simbot.service.QqVideoService;
 import me.kuku.simbot.utils.QqSuperLoginUtils;
 import me.kuku.utils.MyUtils;
 import me.kuku.utils.OkHttpUtils;
@@ -21,6 +23,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -29,6 +32,10 @@ import java.util.*;
 
 @Service
 public class QQLoginLogicImpl implements QqLoginLogic {
+
+    @Resource
+    private QqVideoService qqVideoService;
+
     @Override
     public Result<Map<String, String>> groupUploadImage(QqLoginEntity QqLoginEntity, String url) throws IOException {
         byte[] bytes = OkHttpUtils.getBytes(url);
@@ -675,26 +682,6 @@ public class QQLoginLogicImpl implements QqLoginLogic {
         }else return "修改失败，请更新QQ！！";
     }
 
-    private String removeGroupFile(QqLoginEntity QqLoginEntity, Long group, String busId, String id, String parentId) throws IOException {
-        Map<String, String> map = new HashMap<>();
-        map.put("src", "qpan");
-        map.put("gc", group.toString());
-        map.put("bkn", QqLoginEntity.getGtk());
-        map.put("bus_id", busId);
-        map.put("file_id", id);
-        map.put("app_id", "4");
-        map.put("parent_folder_id", parentId);
-        map.put("file_list", "{\"file_list\":[{\"gc\":" + group + ",\"app_id\":4,\"bus_id\":" + busId + ",\"file_id\":\"" + id + "\",\"parent_folder_id\":\"" + parentId + "\"}]}");
-        JSONObject jsonObject = OkHttpUtils.postJson("https://pan.qun.qq.com/cgi-bin/group_file/delete_file", map,
-                OkHttpUtils.addCookie(QqLoginEntity.getCookie()));
-        switch (jsonObject.getInteger("ec")){
-            case 0: return "删除群文件成功！！";
-            case 4: return "删除群文件失败，请更新QQ！！";
-            case -121: return "权限不够，删除失败！！";
-            default: return jsonObject.getString("em");
-        }
-    }
-
     @Override
     public String queryFriendVip(QqLoginEntity QqLoginEntity, Long qq, String psKey) throws IOException {
         if (psKey == null) {
@@ -814,5 +801,36 @@ public class QQLoginLogicImpl implements QqLoginLogic {
                 else return jsonObject.getString("em");
             default: return "类型不匹配！！";
         }
+    }
+
+    @Override
+    public Result<String> videoSign(QqVideoEntity qqVideoEntity) throws IOException {
+        Response response = OkHttpUtils.get("https://access.video.qq.com/user/auth_refresh?vappid=11059694&vsecret=fdf61a6be0aad57132bc5cdf78ac30145b6cd2c1470b0cfe&type=qq&g_tk=&g_vstk=" + QqUtils.getGTK(qqVideoEntity.getVuSession()) + "&g_actk=" + QqUtils.getGTK(qqVideoEntity.getAccessToken()) + "&callback=jQuery19107785201373825752_1626233689988&_=" + System.currentTimeMillis(),
+                OkHttpUtils.addHeaders(qqVideoEntity.getCookie(), "https://v.qq.com/", UA.PC));
+        response.close();
+        if (response.code() == 200){
+            String cookie = OkHttpUtils.getCookie(response);
+            String vuSession = OkHttpUtils.getCookie(cookie, "vqq_vusession");
+            String accessToken = OkHttpUtils.getCookie(cookie, "vqq_access_token");
+            qqVideoEntity.setVuSession(vuSession);
+            qqVideoEntity.setAccessToken(accessToken);
+            qqVideoService.save(qqVideoEntity);
+            Headers headers = OkHttpUtils.addHeaders(cookie, "https://v.qq.com/", UA.PC);
+            JSONObject jsonObject = OkHttpUtils.getJsonp("https://vip.video.qq.com/fcgi-bin/comm_cgi?name=spp_MissionFaHuo&cmd=4&task_id=7&_=1582364733058&callback=video",
+                    headers);
+            OkHttpUtils.getJsonp("https://vip.video.qq.com/fcgi-bin/comm_cgi?name=spp_MissionFaHuo&cmd=4&task_id=7&_=1582364733058&callback=video",
+                    headers);
+            OkHttpUtils.getJsonp("https://vip.video.qq.com/fcgi-bin/comm_cgi?name=spp_MissionFaHuo&cmd=4&task_id=6&_=1582366326994&callback=video",
+                    headers);
+            OkHttpUtils.getJsonp("https://vip.video.qq.com/fcgi-bin/comm_cgi?name=hierarchical_task_system&cmd=2&_=1555060502385&callback=video",
+                    headers);
+            OkHttpUtils.getJsonp("https://vip.video.qq.com/fcgi-bin/comm_cgi?name=spp_MissionFaHuo&cmd=4&task_id=3&_=1582368319252&callback=video",
+                    headers);
+            OkHttpUtils.getJsonp("https://vip.video.qq.com/fcgi-bin/comm_cgi?name=spp_MissionFaHuo&cmd=4&task_id=1&_=1582997048625&callback=video",
+                    headers);
+            OkHttpUtils.getJsonp("https://vip.video.qq.com/fcgi-bin/comm_cgi?name=payvip&cmd=1&otype=json&getannual=1&callback=video",
+                    headers);
+            return Result.success("腾讯视频签到成功！", null);
+        }else return Result.failure("腾讯视频签到失败，cookie已失效，请重新登录！");
     }
 }

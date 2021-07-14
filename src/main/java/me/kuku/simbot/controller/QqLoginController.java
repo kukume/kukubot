@@ -13,10 +13,15 @@ import me.kuku.simbot.annotation.RegexFilter;
 import me.kuku.simbot.annotation.SkipListenGroup;
 import me.kuku.simbot.entity.QqEntity;
 import me.kuku.simbot.entity.QqLoginEntity;
+import me.kuku.simbot.entity.QqVideoEntity;
 import me.kuku.simbot.logic.QqLoginLogic;
+import me.kuku.simbot.repository.QqVideoRepository;
 import me.kuku.simbot.service.QqLoginService;
 import me.kuku.simbot.service.QqService;
+import me.kuku.simbot.service.QqVideoService;
+import me.kuku.utils.OkHttpUtils;
 import me.kuku.utils.QqQrCodeLoginUtils;
+import okhttp3.Response;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
@@ -41,6 +46,8 @@ public class QqLoginController {
 	private QqService qqService;
 	@Resource
 	private QqLoginLogic qqLoginLogic;
+	@Resource
+	private QqVideoService qqVideoService;
 
 	@SkipListenGroup
 	@Filter("qq二维码")
@@ -150,6 +157,64 @@ public class QqLoginController {
 	                                @FilterValue("iMei") String iMei,
 	                                @FilterValue("name") String name) throws IOException {
 		return qqLoginLogic.changePhoneOnline(qqLoginEntity, iMei, name);
+	}
+
+	@SkipListenGroup
+	@Filter("腾讯视频二维码")
+	public void tencentVideoQr(GroupMsg groupMsg, MsgSender msgSender) throws IOException {
+		long qq = groupMsg.getAccountInfo().getAccountCodeNumber();
+		QqLoginQrcode qrcode = QqQrCodeLoginUtils.getQrCode(716027609L, 383, 101483052L);
+		MessageContent messageContent = messageContentBuilderFactory.getMessageContentBuilder()
+				.at(qq).image(qrcode.getBytes()).text("请使用QQ扫码登录腾讯视频").build();
+		msgSender.SENDER.sendGroupMsg(groupMsg, messageContent);
+		QqEntity qqEntity = qqService.findByQq(qq);
+		threadPoolTaskExecutor.execute(() -> {
+			String at = stringTemplate.at(qq);
+			String msg;
+			try {
+				while (true) {
+					TimeUnit.SECONDS.sleep(3);
+					Result<QqLoginPojo> result = QqQrCodeLoginUtils.checkQrCode(716027609L, 383, 101483052L,
+							"https://graph.qq.com/oauth2.0/login_jump", qrcode.getSig());
+					if (result.getCode() == 200) {
+						Result<String> authorizeResult = QqQrCodeLoginUtils.authorize(result.getData(), 101483052L, "",
+								"https://access.video.qq.com/user/auth_login?vappid=11059694&vsecret=fdf61a6be0aad57132bc5cdf78ac30145b6cd2c1470b0cfe&raw=1&type=qq&appid=101483052");
+						if (authorizeResult.isFailure()) {
+							msg = result.getMessage();
+						}else{
+							String url = authorizeResult.getData();
+							Response response = OkHttpUtils.get(url);
+							response.close();
+							String cookie = OkHttpUtils.getCookie(response);
+							String vuSession = OkHttpUtils.getCookie(cookie, "vqq_vusession");
+							String accessToken = OkHttpUtils.getCookie(cookie, "vqq_access_token");
+							QqVideoEntity qqVideoEntity = qqVideoService.findByQqEntity(qqEntity);
+							if (qqVideoEntity == null) qqVideoEntity = new QqVideoEntity(qqEntity);
+							qqVideoEntity.setCookie(cookie);
+							qqVideoEntity.setVuSession(vuSession);
+							qqVideoEntity.setAccessToken(accessToken);
+							qqVideoService.save(qqVideoEntity);
+							msg = "绑定腾讯视频成功！";
+						}
+						break;
+					} else if (result.getCode() == 500) {
+						msg = result.getMessage();
+						break;
+					}
+				}
+				msgSender.SENDER.sendGroupMsg(groupMsg, at + msg);
+			}catch (Exception e){
+
+			}
+		});
+	}
+
+	@SkipListenGroup
+	@Filter("腾讯视频签到")
+	public String tencentVideoSign(@ContextValue("qq") QqEntity qqEntity) throws IOException {
+		QqVideoEntity qqVideoEntity = qqVideoService.findByQqEntity(qqEntity);
+		if (qqVideoEntity == null) return "您没有绑定腾讯视频信息，请先发送<腾讯视频二维码>进行绑定";
+		return qqLoginLogic.videoSign(qqVideoEntity).getMessage();
 	}
 
 }

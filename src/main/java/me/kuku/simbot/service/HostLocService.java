@@ -11,4 +11,5 @@ public interface HostLocService {
 	List<HostLocEntity> findAll();
 	List<HostLocEntity> findByMonitor(Boolean monitor);
 	List<HostLocEntity> findBySign(Boolean sign);
+	void delete(HostLocEntity entity);
 }

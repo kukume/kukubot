@@ -11,7 +11,7 @@
         <relativePath/>
     </parent>
 
-    <groupId>me.kuku.simbot</groupId>
+    <groupId>me.kuku</groupId>
     <artifactId>kukubot</artifactId>
     <version>1.0-SNAPSHOT</version>
 

@@ -29,4 +29,9 @@ public class QqLoginServiceImpl implements QqLoginService {
 	public QqLoginEntity save(QqLoginEntity entity) {
 		return qqLoginRepository.save(entity);
 	}
+
+	@Override
+	public void delete(QqLoginEntity entity) {
+		qqLoginRepository.delete(entity);
+	}
 }

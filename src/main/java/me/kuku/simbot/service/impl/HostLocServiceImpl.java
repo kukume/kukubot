@@ -39,4 +39,9 @@ public class HostLocServiceImpl implements HostLocService {
 	public List<HostLocEntity> findBySign(Boolean sign) {
 		return hostLocRepository.findBySign(sign);
 	}
+
+	@Override
+	public void delete(HostLocEntity entity) {
+		hostLocRepository.delete(entity);
+	}
 }

@@ -9,4 +9,5 @@ public interface QqLoginService {
 	QqLoginEntity findByQqEntity(QqEntity qqEntity);
 	List<QqLoginEntity> findAll();
 	QqLoginEntity save(QqLoginEntity entity);
+	void delete(QqLoginEntity entity);
 }

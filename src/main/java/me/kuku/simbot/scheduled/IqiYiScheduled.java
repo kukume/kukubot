@@ -2,8 +2,10 @@ package me.kuku.simbot.scheduled;
 
 import me.kuku.pojo.Result;
 import me.kuku.simbot.entity.IqiYiEntity;
+import me.kuku.simbot.entity.QqEntity;
 import me.kuku.simbot.logic.IqiYiLogic;
 import me.kuku.simbot.service.IqiYiService;
+import me.kuku.simbot.utils.BotUtils;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -26,6 +28,8 @@ public class IqiYiScheduled {
 			try {
 				Result<Void> result = iqiYiLogic.sign(iqiYiEntity);
 				if (result.isFailure()) {
+					QqEntity qqEntity = iqiYiEntity.getQqEntity();
+					BotUtils.sendPrivateMsg(qqEntity.getGroups(), qqEntity.getQq(), "您的爱奇艺cookie已失效，请重新绑定！");
 					iqiYiService.delete(iqiYiEntity);
 					continue;
 				}

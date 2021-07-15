@@ -37,6 +37,7 @@ public class HostLocScheduled {
 					QqEntity qqEntity = hostLocEntity.getQqEntity();
 					BotUtils.sendPrivateMsg(qqEntity.getGroups(), qqEntity.getQq(),
 							"loc签到失败，cookie已失效，请重新绑定，并在群中发送<loc签到>进行手动签到！");
+					hostLocService.delete(hostLocEntity);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();

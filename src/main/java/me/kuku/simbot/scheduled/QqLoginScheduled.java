@@ -35,6 +35,7 @@ public class QqLoginScheduled {
 				if (str.contains("更新QQ")){
 					QqEntity qqEntity = qqLoginEntity.getQqEntity();
 					BotUtils.sendPrivateMsg(qqEntity.getGroups(), qqEntity.getQq(), "您的QQ已失效，如需自动签到，请重新绑定！");
+
 					continue;
 				}
 				qqLoginLogic.yellowSign(qqLoginEntity);

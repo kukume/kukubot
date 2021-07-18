@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class KeyTapQrcode {
+public class HeyTapQrcode {
 	private String url;
 	private String deviceId;
 	private String qid;

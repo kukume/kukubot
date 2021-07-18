@@ -12,8 +12,8 @@ import javax.persistence.*;
 @NoArgsConstructor
 @Entity
 @ToString(exclude = "qqEntity")
-@Table(name = "key_tap")
-public class KeyTapEntity {
+@Table(name = "hey_tap")
+public class HeyTapEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
@@ -21,11 +21,11 @@ public class KeyTapEntity {
 	@JoinColumn(name = "qq")
 	private QqEntity qqEntity;
 	@Column(length = 1000)
-	private String keyTapCookie;
-	private String deviceId;
+	private String cookie;
+	@Column(length = 1000)
+	private String heyTapCookie;
 
-	public KeyTapEntity(String keyTapCookie, String deviceId){
-		this.keyTapCookie = keyTapCookie;
-		this.deviceId = deviceId;
+	public HeyTapEntity(QqEntity qqEntity){
+		this.qqEntity = qqEntity;
 	}
 }

@@ -7,6 +7,7 @@ import love.forte.simbot.annotation.Listen;
 import love.forte.simbot.api.message.MessageContent;
 import love.forte.simbot.api.message.MessageContentBuilderFactory;
 import love.forte.simbot.api.message.events.GroupMsg;
+import love.forte.simbot.api.sender.MsgSender;
 import love.forte.simbot.filter.MatchType;
 import me.kuku.pojo.Result;
 import me.kuku.simbot.logic.ToolLogic;
@@ -214,5 +215,11 @@ public class ToolController {
 		JSONArray jsonArray = toolLogic.loLiConQuickly(null);
 		String url = jsonArray.getJSONObject(0).getString("quickUrl");
 		return OkHttpUtils.getBytes(url);
+	}
+
+	@Filter("test{{name}}")
+	public String haha(String name, MsgSender msgSender){
+		BotUtils.getBotQqLoginEntity(msgSender);
+		return name;
 	}
 }

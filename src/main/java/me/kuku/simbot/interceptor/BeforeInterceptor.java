@@ -32,6 +32,7 @@ public class BeforeInterceptor implements MsgInterceptor {
 		QqEntity qqEntity = qqService.findByQq(qq);
 		if (qqEntity != null) {
 			scopeContext.set("qq", qqEntity);
+			scopeContext.set("qqEntity", qqEntity);
 			if (msgGet instanceof GroupMsg) {
 				GroupMsg groupMsg = (GroupMsg) msgGet;
 				long group = groupMsg.getGroupInfo().getGroupCodeNumber();

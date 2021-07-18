@@ -4,6 +4,8 @@ import catcode.StringTemplate;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.alibaba.fastjson.support.config.FastJsonConfig;
 import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
+import love.forte.simbot.api.message.MessageContentBuilder;
+import love.forte.simbot.api.message.MessageContentBuilderFactory;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +21,11 @@ public class Beans {
 	@Bean
 	public StringTemplate stringTemplate(){
 		return StringTemplate.getInstance();
+	}
+
+	@Bean
+	public MessageContentBuilder messageContentBuilder(MessageContentBuilderFactory messageContentBuilderFactory){
+		return messageContentBuilderFactory.getMessageContentBuilder();
 	}
 
 	@Bean

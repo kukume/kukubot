@@ -1,8 +1,10 @@
 package me.kuku.simbot.utils;
 
 import com.alibaba.fastjson.JSONObject;
+import love.forte.simbot.api.message.results.AuthInfo;
 import love.forte.simbot.api.message.results.GroupList;
 import love.forte.simbot.api.message.results.SimpleGroupInfo;
+import love.forte.simbot.api.sender.MsgSender;
 import love.forte.simbot.bot.Bot;
 import love.forte.simbot.bot.BotManager;
 import me.kuku.simbot.entity.GroupEntity;
@@ -46,5 +48,10 @@ public class BotUtils {
 
 	public static void sendGroupMsg(){
 
+	}
+
+	public static void getBotQqLoginEntity(MsgSender msgSender){
+		AuthInfo.Auths auths = msgSender.GETTER.getAuthInfo().getAuths();
+		System.out.println(auths);
 	}
 }

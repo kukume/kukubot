@@ -6,6 +6,8 @@ import com.alibaba.fastjson.support.config.FastJsonConfig;
 import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
 import love.forte.simbot.api.message.MessageContentBuilder;
 import love.forte.simbot.api.message.MessageContentBuilderFactory;
+import love.forte.simbot.component.mirai.message.MiraiMessageContentBuilder;
+import love.forte.simbot.component.mirai.message.MiraiMessageContentBuilderFactory;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,6 +28,12 @@ public class Beans {
 	@Bean
 	public MessageContentBuilder messageContentBuilder(MessageContentBuilderFactory messageContentBuilderFactory){
 		return messageContentBuilderFactory.getMessageContentBuilder();
+	}
+
+	@Bean
+	public MiraiMessageContentBuilder miraiMessageContentBuilder(MessageContentBuilderFactory messageContentBuilderFactory){
+		MiraiMessageContentBuilderFactory miraiMessageContentBuilderFactory = (MiraiMessageContentBuilderFactory) messageContentBuilderFactory;
+		return miraiMessageContentBuilderFactory.getMessageContentBuilder();
 	}
 
 	@Bean

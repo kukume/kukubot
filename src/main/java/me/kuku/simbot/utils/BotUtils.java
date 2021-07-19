@@ -4,11 +4,15 @@ import com.alibaba.fastjson.JSONObject;
 import love.forte.simbot.api.message.results.AuthInfo;
 import love.forte.simbot.api.message.results.GroupList;
 import love.forte.simbot.api.message.results.SimpleGroupInfo;
+import love.forte.simbot.api.sender.Getter;
 import love.forte.simbot.api.sender.MsgSender;
 import love.forte.simbot.bot.Bot;
 import love.forte.simbot.bot.BotManager;
 import me.kuku.simbot.entity.GroupEntity;
+import me.kuku.simbot.entity.QqEntity;
+import me.kuku.simbot.entity.QqLoginEntity;
 import me.kuku.utils.OkHttpUtils;
+import me.kuku.utils.QqUtils;
 
 import java.util.List;
 import java.util.Set;
@@ -50,8 +54,14 @@ public class BotUtils {
 
 	}
 
-	public static void getBotQqLoginEntity(MsgSender msgSender){
-		AuthInfo.Auths auths = msgSender.GETTER.getAuthInfo().getAuths();
-		System.out.println(auths);
+	public static QqLoginEntity getBotQqLoginEntity(Getter getter){
+		AuthInfo.Auths auths = getter.getAuthInfo().getAuths();
+		String qq = auths.get("uin");
+		String sKey = auths.get("sKey");
+		String groupPsKey = auths.get("psKey:qun.qq.com");
+		String psKey = auths.get("psKey:qzone.qq.com");
+		String superKey = auths.get("superKey");
+		Long superToken = QqUtils.getToken(superKey);
+		return new QqLoginEntity(new QqEntity(Long.parseLong(qq)), sKey, psKey, superKey, superToken, groupPsKey);
 	}
 }

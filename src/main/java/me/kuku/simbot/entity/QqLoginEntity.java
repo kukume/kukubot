@@ -26,9 +26,20 @@ public class QqLoginEntity {
 	private String superKey;
 	private String superToken;
 	private String pt4Token;
+	@Transient
+	private String groupPsKey;
 
 	public QqLoginEntity(QqEntity qqEntity){
 		this.qqEntity = qqEntity;
+	}
+
+	public QqLoginEntity(QqEntity qqEntity, String sKey, String psKey, String superKey, Long superToken, String groupPsKey){
+		this.qqEntity = qqEntity;
+		this.sKey = sKey;
+		this.psKey = psKey;
+		this.superKey = superKey;
+		this.superToken = superToken.toString();
+		this.groupPsKey = groupPsKey;
 	}
 
 	@JSONField(serialize = false)

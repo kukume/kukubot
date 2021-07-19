@@ -1,6 +1,8 @@
 package me.kuku.simbot.controller;
 
+import catcode.StringTemplate;
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import love.forte.simbot.annotation.Filter;
 import love.forte.simbot.annotation.FilterValue;
 import love.forte.simbot.annotation.Listen;
@@ -23,7 +25,6 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
-@SuppressWarnings("unused")
 @Service
 @Listen(GroupMsg.class)
 public class ToolController {
@@ -32,6 +33,8 @@ public class ToolController {
 	private ToolLogic toolLogic;
 	@Autowired
 	private MessageContentBuilderFactory messageContentBuilderFactory;
+	@Autowired
+	private StringTemplate stringTemplate;
 
 	@Filter(value = "{{type,百度|谷歌|bing|搜狗}}{{content}}", matchType = MatchType.REGEX_MATCHES)
 	public String teachYou(@FilterValue("content") String content, @FilterValue("type") String type) throws IOException {
@@ -211,15 +214,15 @@ public class ToolController {
 	}
 
 	@Filter("色图")
-	public byte[] seTu() throws IOException {
+	@Filter("色图十连")
+	public void seTu(GroupMsg groupMsg, MsgSender msgSender) throws IOException {
+		String msg = groupMsg.getMsg();
+		int num = "色图十连".equals(msg) ? 10 : 1;
 		JSONArray jsonArray = toolLogic.loLiConQuickly(null);
-		String url = jsonArray.getJSONObject(0).getString("quickUrl");
-		return OkHttpUtils.getBytes(url);
-	}
-
-	@Filter("test{{name}}")
-	public String haha(String name, MsgSender msgSender){
-		BotUtils.getBotQqLoginEntity(msgSender);
-		return name;
+		for (int i = 0 ; i < num; i++) {
+			JSONObject jsonObject = jsonArray.getJSONObject(i);
+			String url = jsonObject.getString("quickUrl");
+			msgSender.SENDER.sendGroupMsg(groupMsg, stringTemplate.image(url));
+		}
 	}
 }

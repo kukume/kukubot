@@ -34,7 +34,6 @@ public interface QqLoginLogic {
 	String growthLike(QqLoginEntity QqLoginEntity) throws IOException;
 	Result<List<GroupMember>> groupMemberInfo(QqLoginEntity QqLoginEntity, Long group) throws IOException;
 	String changePhoneOnline(QqLoginEntity QqLoginEntity, String iMei, String phone) throws IOException;
-	String queryFriendVip(QqLoginEntity QqLoginEntity, Long qq, String psKey) throws IOException;
 	String queryLevel(QqLoginEntity QqLoginEntity, Long qq, String psKey) throws IOException;
 	List<Map<String, String>> getGroupMsgList(QqLoginEntity QqLoginEntity) throws IOException;
 	String operatingGroupMsg(QqLoginEntity QqLoginEntity, String type, Map<String, String> map, String refuseMsg) throws IOException;

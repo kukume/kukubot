@@ -29,4 +29,9 @@ public class HeyTapServiceImpl implements HeyTapService {
 	public List<HeyTapEntity> findAll() {
 		return heyTapRepository.findAll();
 	}
+
+	@Override
+	public void delete(HeyTapEntity heyTapEntity) {
+		heyTapRepository.delete(heyTapEntity);
+	}
 }

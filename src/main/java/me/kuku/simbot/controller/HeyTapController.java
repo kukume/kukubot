@@ -72,8 +72,10 @@ public class HeyTapController {
 
 	@Filter("欢太签到")
 	public String sign(HeyTapEntity heyTapEntity) throws IOException {
-		heyTapLogic.sign(heyTapEntity);
-		return "签到成功！";
+		Result<Void> result = heyTapLogic.sign(heyTapEntity);
+		if (result.isSuccess())
+			return "签到成功！";
+		else return "签到失败：" + result.getMessage();
 	}
 
 

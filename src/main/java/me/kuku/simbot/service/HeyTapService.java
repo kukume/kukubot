@@ -9,4 +9,5 @@ public interface HeyTapService {
 	HeyTapEntity findByQqEntity(QqEntity qqEntity);
 	HeyTapEntity save(HeyTapEntity entity);
 	List<HeyTapEntity> findAll();
+	void delete(HeyTapEntity heyTapEntity);
 }

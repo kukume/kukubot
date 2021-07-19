@@ -683,23 +683,6 @@ public class QQLoginLogicImpl implements QqLoginLogic {
     }
 
     @Override
-    public String queryFriendVip(QqLoginEntity QqLoginEntity, Long qq, String psKey) throws IOException {
-        if (psKey == null) {
-            Result<String> result = QqSuperLoginUtils.vipLogin(QqLoginEntity);
-            if (result.getCode() == 200) psKey = result.getData();
-            else return result.getMessage();
-        }
-        String html = OkHttpUtils.getStr("https://h5.vip.qq.com/p/mc/privilegelist/other?friend=" + qq,
-                OkHttpUtils.addCookie(QqLoginEntity.getCookie(psKey)));
-        Elements elements = Jsoup.parse(html).select(".guest .grade .icon-level span");
-        StringBuilder sb = new StringBuilder().append("qq（").append(qq).append("）的开通业务如下：").append("\n");
-        for (Element ele: elements){
-            sb.append(ele.text()).append("\n");
-        }
-        return sb.deleteCharAt(sb.length() - 1).toString();
-    }
-
-    @Override
     public String queryLevel(QqLoginEntity QqLoginEntity, Long qq, String psKey) throws IOException {
         if (psKey == null){
             Result<String> result = QqSuperLoginUtils.vipLogin(QqLoginEntity);

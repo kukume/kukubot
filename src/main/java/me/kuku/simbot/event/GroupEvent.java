@@ -1,8 +1,10 @@
 package me.kuku.simbot.event;
 
 import love.forte.simbot.annotation.Listen;
+import love.forte.simbot.annotation.Priority;
 import love.forte.simbot.api.message.events.GroupMsg;
 import love.forte.simbot.api.sender.Sender;
+import love.forte.simbot.constant.PriorityConstant;
 import me.kuku.utils.MyUtils;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,7 @@ public class GroupEvent {
 	private final Map<Long, String> lastRepeatMessage = new ConcurrentHashMap<>();
 
 	@Listen(GroupMsg.class)
+	@Priority(PriorityConstant.LAST)
 	public void repeat(GroupMsg groupMsg, Sender sender){
 		long qq = groupMsg.getAccountInfo().getAccountCodeNumber();
 		long group = groupMsg.getGroupInfo().getGroupCodeNumber();

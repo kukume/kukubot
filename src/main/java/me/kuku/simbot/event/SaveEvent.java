@@ -4,9 +4,11 @@ import catcode.CatCodeUtil;
 import catcode.CodeTemplate;
 import love.forte.simbot.annotation.OnGroup;
 import love.forte.simbot.annotation.OnGroupMsgRecall;
+import love.forte.simbot.annotation.Priority;
 import love.forte.simbot.api.message.events.GroupMsg;
 import love.forte.simbot.api.message.events.GroupMsgRecall;
 import love.forte.simbot.api.sender.MsgSender;
+import love.forte.simbot.constant.PriorityConstant;
 import me.kuku.simbot.entity.GroupEntity;
 import me.kuku.simbot.entity.MessageEntity;
 import me.kuku.simbot.entity.QqEntity;
@@ -35,6 +37,7 @@ public class SaveEvent {
 
 	@OnGroup
 	@Transactional
+	@Priority(PriorityConstant.LAST)
 	public void saveMessage(GroupMsg groupMsg){
 		QqEntity qqEntity = qqService.findByQq(groupMsg.getAccountInfo().getAccountCodeNumber());
 		if (qqEntity == null) return;
@@ -45,6 +48,7 @@ public class SaveEvent {
 
 	@OnGroupMsgRecall
 	@Transactional
+	@Priority(PriorityConstant.LAST)
 	public void saveRecall(GroupMsgRecall groupMsgRecall, MsgSender msgSender){
 		String id = groupMsgRecall.getId().replace("REC-", "");
 		GroupEntity groupEntity = groupService.findByGroup(groupMsgRecall.getGroupInfo().getGroupCodeNumber());

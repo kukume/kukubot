@@ -8,3 +8,6 @@
 * ~~群管功能~~
 * ~~office自助注册~~
 * 一些小工具
+
+
+部署教程：https://www.kuku.me/archives/16/

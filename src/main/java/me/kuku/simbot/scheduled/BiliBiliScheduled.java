@@ -103,11 +103,11 @@ public class BiliBiliScheduled {
 				biliBiliLogic.report(biliBiliEntity, firstRank.get("aid"), firstRank.get("cid"), 300);
 				biliBiliLogic.share(biliBiliEntity, firstRank.get("aid"));
 				biliBiliLogic.liveSign(biliBiliEntity);
-				int[] arr = {2, 2, 1};
-				for (int i = 0; i < 3; i++){
-					Map<String, String> randomMap = ranking.get((int) (Math.random() * ranking.size()));
-					biliBiliLogic.tossCoin(biliBiliEntity, randomMap.get("aid"), arr[i]);
-				}
+//				int[] arr = {2, 2, 1};
+//				for (int i = 0; i < 3; i++){
+//					Map<String, String> randomMap = ranking.get((int) (Math.random() * ranking.size()));
+//					biliBiliLogic.tossCoin(biliBiliEntity, randomMap.get("aid"), arr[i]);
+//				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

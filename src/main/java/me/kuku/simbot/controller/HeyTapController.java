@@ -5,6 +5,7 @@ import love.forte.simbot.annotation.Filter;
 import love.forte.simbot.annotation.ListenGroup;
 import love.forte.simbot.annotation.OnGroup;
 import love.forte.simbot.api.message.MessageContentBuilder;
+import love.forte.simbot.api.message.MessageContentBuilderFactory;
 import love.forte.simbot.api.message.events.GroupMsg;
 import love.forte.simbot.api.sender.MsgSender;
 import me.kuku.pojo.Result;
@@ -30,7 +31,7 @@ public class HeyTapController {
 	@Resource
 	private StringTemplate stringTemplate;
 	@Resource
-	private MessageContentBuilder messageContentBuilder;
+	private MessageContentBuilderFactory messageContentBuilderFactory;
 	@Resource
 	private HeyTapService heyTapService;
 	@Resource
@@ -42,7 +43,7 @@ public class HeyTapController {
 		long qq = groupMsg.getAccountInfo().getAccountCodeNumber();
 		HeyTapQrcode qrcode = heyTapLogic.getQrcode();
 		String url = qrcode.getUrl();
-		msgSender.SENDER.sendGroupMsg(groupMsg, messageContentBuilder.at(qq).image(url).text("请使用oppo手机打开设置->我的->右上角扫码登录").build());
+		msgSender.SENDER.sendGroupMsg(groupMsg, messageContentBuilderFactory.getMessageContentBuilder().at(qq).image(url).text("请使用oppo手机打开设置->我的->右上角扫码登录").build());
 		threadPoolTaskExecutor.execute(() -> {
 			String msg;
 			try {

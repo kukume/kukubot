@@ -1,10 +1,14 @@
 package me.kuku.simbot.scheduled;
 
+import me.kuku.pojo.Result;
 import me.kuku.simbot.entity.QqEntity;
 import me.kuku.simbot.entity.QqLoginEntity;
+import me.kuku.simbot.entity.QqMusicEntity;
 import me.kuku.simbot.entity.QqVideoEntity;
 import me.kuku.simbot.logic.QqLoginLogic;
+import me.kuku.simbot.logic.QqMusicLogic;
 import me.kuku.simbot.service.QqLoginService;
+import me.kuku.simbot.service.QqMusicService;
 import me.kuku.simbot.service.QqVideoService;
 import me.kuku.simbot.utils.BotUtils;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -24,6 +28,10 @@ public class QqLoginScheduled {
 	private QqLoginLogic qqLoginLogic;
 	@Resource
 	private QqVideoService qqVideoService;
+	@Resource
+	private QqMusicService qqMusicService;
+	@Resource
+	private QqMusicLogic qqMusicLogic;
 
 	@Scheduled(cron = "32 3 6 * * ?")
 	@Transactional
@@ -35,7 +43,7 @@ public class QqLoginScheduled {
 				if (str.contains("更新QQ")){
 					QqEntity qqEntity = qqLoginEntity.getQqEntity();
 					BotUtils.sendPrivateMsg(qqEntity.getGroups(), qqEntity.getQq(), "您的QQ已失效，如需自动签到，请重新绑定！");
-
+					qqLoginService.delete(qqLoginEntity);
 					continue;
 				}
 				qqLoginLogic.yellowSign(qqLoginEntity);
@@ -60,6 +68,23 @@ public class QqLoginScheduled {
 		for (QqVideoEntity qqVideoEntity : list) {
 			try {
 				qqLoginLogic.videoSign(qqVideoEntity);
+			}catch (Exception e){
+				e.printStackTrace();
+			}
+		}
+	}
+
+	@Scheduled(cron = "41 15 5 * * ?")
+	public void musicSign(){
+		List<QqMusicEntity> list = qqMusicService.findAll();
+		for (QqMusicEntity qqMusicEntity : list) {
+			try {
+				Result<Void> result = qqMusicLogic.sign(qqMusicEntity);
+				if (result.isFailure()){
+					QqEntity qqEntity = qqMusicEntity.getQqEntity();
+					BotUtils.sendPrivateMsg(qqEntity.getGroups(), qqEntity.getQq(), "您的QQ已失效，如需自动签到，请重新绑定！");
+					qqMusicService.delete(qqMusicEntity);
+				}
 			}catch (Exception e){
 				e.printStackTrace();
 			}

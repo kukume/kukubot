@@ -22,6 +22,9 @@ public class QqEntity {
 			inverseJoinColumns = {@JoinColumn(name = "group_id")})
 	private Set<GroupEntity> groups = new HashSet<>();
 
+	public Long getQq(){
+		return qq;
+	}
 
 	public QqEntity(Long qq){
 		this.qq = qq;

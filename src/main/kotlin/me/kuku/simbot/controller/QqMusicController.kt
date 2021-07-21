@@ -43,7 +43,7 @@ class QqMusicController {
             .at(qq).image(qrcode.bytes).text("请使用qq扫码登录qq音乐").build()
         msgSender.SENDER.sendGroupMsg(groupMsg, messageContent)
         GlobalScope.launch {
-            var msg = ""
+            val msg: String
             while (true){
                 delay(3000)
                 val result = qqMusicLogic.checkQrcode(qrcode)
@@ -64,7 +64,7 @@ class QqMusicController {
     }
 
     @Filter("qq音乐签到")
-    fun qqMusicSign(qqEntity: QqEntity, qqMusicEntity: QqMusicEntity): String{
+    fun qqMusicSign(qqMusicEntity: QqMusicEntity): String{
         val result = qqMusicLogic.sign(qqMusicEntity)
         return result.message
     }

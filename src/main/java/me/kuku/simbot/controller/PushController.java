@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
@@ -21,6 +22,8 @@ public class PushController {
 	private BotRegistrar botRegistrar;
 	@Autowired
 	private BotManager botManager;
+	@Autowired
+	private BotDestroyer botDestroyer;
 
 	@PostMapping("/login")
 	@ResponseBody
@@ -89,5 +92,41 @@ public class PushController {
 		}
 	}
 
+	@PostMapping("/logout")
+	@ResponseBody
+	public Result<?> logout(String qq){
+		Bot bot = botManager.getBotOrNull(qq);
+		if (bot != null){
+			botDestroyer.destroyBot(qq);
+			return Result.success();
+		}else return Result.failure("没有找到这个bot");
+	}
+
+	@PostMapping("/reLogin")
+	@ResponseBody
+	public Result<?> reLogin(long qq){
+		String qqStr = String.valueOf(qq);
+		Bot bot = botManager.getBotOrNull(qqStr);
+		if (bot != null){
+			FileInputStream fis = null;
+			try {
+				fis = new FileInputStream("simbot-bots" + File.separator + qq + ".bot");
+				Properties properties = new Properties();
+				properties.load(fis);
+				Object password = properties.get("verification");
+				if (password == null) password = properties.get("password");
+				botDestroyer.destroyBot(qqStr);
+				PairBotVerifyInfo.BasicBotVerifyInfo basicBotVerifyInfo = new PairBotVerifyInfo.BasicBotVerifyInfo(qqStr, password.toString());
+				CompletableFuture<Bot> future = CompletableFuture.supplyAsync(() -> botRegistrar.registerBot(basicBotVerifyInfo));
+				Bot loginBot = future.get(30, TimeUnit.SECONDS);
+				return Result.success();
+			}catch (Exception e){
+				e.printStackTrace();
+				return Result.failure("登录失败，错误信息：" + e.getMessage());
+			}finally {
+				IOUtils.close(fis);
+			}
+		}else return Result.failure("没有找到这个bot");
+	}
 
 }

@@ -7,23 +7,36 @@ import love.forte.simbot.annotation.Filter;
 import love.forte.simbot.annotation.FilterValue;
 import love.forte.simbot.annotation.Listen;
 import love.forte.simbot.api.message.MessageContent;
-import love.forte.simbot.api.message.MessageContentBuilderFactory;
 import love.forte.simbot.api.message.events.GroupMsg;
+import love.forte.simbot.api.sender.Getter;
 import love.forte.simbot.api.sender.MsgSender;
+import love.forte.simbot.component.mirai.message.MiraiMessageContent;
+import love.forte.simbot.component.mirai.message.MiraiMessageContentBuilder;
+import love.forte.simbot.component.mirai.message.MiraiMessageContentBuilderFactory;
 import love.forte.simbot.filter.MatchType;
 import me.kuku.pojo.Result;
+import me.kuku.simbot.annotation.RegexFilter;
+import me.kuku.simbot.entity.GroupEntity;
 import me.kuku.simbot.logic.ToolLogic;
+import me.kuku.simbot.service.GroupService;
+import me.kuku.simbot.service.MessageService;
 import me.kuku.simbot.utils.BotUtils;
+import me.kuku.utils.DateTimeFormatterUtils;
 import me.kuku.utils.IOUtils;
 import me.kuku.utils.MyUtils;
 import me.kuku.utils.OkHttpUtils;
+import net.mamoe.mirai.message.data.LightApp;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ScheduledFuture;
 
 @Service
 @Listen(GroupMsg.class)
@@ -32,9 +45,15 @@ public class ToolController {
 	@Autowired
 	private ToolLogic toolLogic;
 	@Autowired
-	private MessageContentBuilderFactory messageContentBuilderFactory;
+	private MiraiMessageContentBuilderFactory messageContentBuilderFactory;
 	@Autowired
 	private StringTemplate stringTemplate;
+	@Autowired
+	private MessageService messageService;
+	@Autowired
+	private GroupService groupService;
+	@Autowired
+	private ThreadPoolTaskScheduler threadPoolTaskScheduler;
 
 	@Filter(value = "{{type,百度|谷歌|bing|搜狗}}{{content}}", matchType = MatchType.REGEX_MATCHES)
 	public String teachYou(@FilterValue("content") String content, @FilterValue("type") String type) throws IOException {
@@ -62,6 +81,16 @@ public class ToolController {
 	@Filter("毒鸡汤")
 	public String poisonousChickenSoup() throws IOException {
 		return toolLogic.poisonousChickenSoup();
+	}
+
+	@Filter("名言")
+	public String saying() throws IOException {
+		return toolLogic.saying();
+	}
+
+	@Filter("一言")
+	public String hiToKoTo() throws IOException {
+		return toolLogic.hiToKoTo().get("text");
 	}
 
 	@Filter(value = "缩短{{url}}", matchType = MatchType.REGEX_MATCHES)
@@ -178,6 +207,11 @@ public class ToolController {
 		return messageContentBuilderFactory.getMessageContentBuilder().imageUrl(toolLogic.acgPic()).build();
 	}
 
+	@RegexFilter("分词{{word}}")
+	public String wordSegmentation(long qq, String word) throws IOException {
+		return toolLogic.wordSegmentation(word);
+	}
+
 	@Filter(value = "抽象话{{word}}", matchType = MatchType.REGEX_MATCHES)
 	public String abstractWords(@FilterValue("word") String word){
 		return "抽象话如下：\n" + toolLogic.abstractWords(word);
@@ -225,4 +259,72 @@ public class ToolController {
 			msgSender.SENDER.sendGroupMsg(groupMsg, stringTemplate.image(url));
 		}
 	}
+
+	@Filter("查发言数")
+	public String queryMessage(GroupMsg groupMsg, MsgSender msgSender){
+		long group = groupMsg.getGroupInfo().getGroupCodeNumber();
+		GroupEntity groupEntity = groupService.findByGroup(group);
+		Getter getter = msgSender.GETTER;
+		String today = DateTimeFormatterUtils.format(System.currentTimeMillis(), "yyyy-MM-dd");
+		long time = DateTimeFormatterUtils.parseDate(today, "yyyy-MM-dd");
+		Map<Long, Long> map = messageService.findByGroupEntityAndDateAfter(groupEntity, new Date(time));
+		StringBuilder sb = new StringBuilder().append("本群今日发言数统计如下：").append("\n");
+		for (Map.Entry<Long, Long> entry: map.entrySet()){
+			sb.append("@");
+			try {
+				sb.append(getter.getMemberInfo(group, entry.getKey()).getAccountRemarkOrNickname());
+			}catch (Exception e){
+				sb.append("未在本群");
+			}
+			sb.append("（").append(entry.getKey()).append("）").append("：")
+					.append(entry.getValue()).append("条").append("\n");
+		}
+		return sb.deleteCharAt(sb.length() - 1).toString();
+	}
+
+	@Filter("窥屏检测")
+	public void checkPeeping(GroupMsg groupMsg, MsgSender msgSender){
+		String api = "https://api.kuku.me";
+		String random = MyUtils.randomNum(4);
+		String jsonStr = "{\"app\":\"com.tencent.miniapp\",\"desc\":\"\",\"view\":\"notification\",\"ver\":\"1.0.0.11\",\"prompt\":\"QQ程序\",\"appID\":\"\",\"sourceName\":\"\",\"actionData\":\"\",\"actionData_A\":\"\",\"sourceUrl\":\"\",\"meta\":{\"notification\":{\"appInfo\":{\"appName\":\"三楼有只猫\",\"appType\":4,\"appid\":1109659848,\"iconUrl\":\"" + api + "\\/tool\\/peeping\\/check\\/" + random + "\"},\"button\":[],\"data\":[],\"emphasis_keyword\":\"\",\"title\":\"请等待15s\"}},\"text\":\"\",\"extraApps\":[],\"sourceAd\":\"\",\"extra\":\"\"}";
+		MiraiMessageContentBuilder build = messageContentBuilderFactory.getMessageContentBuilder();
+		MiraiMessageContent content = build.singleMessage(new LightApp(jsonStr)).build();
+		msgSender.SENDER.sendGroupMsg(groupMsg, content);
+		ScheduledFuture<?> schedule = threadPoolTaskScheduler.schedule(() -> {
+			String msg;
+			try {
+				JSONObject jsonObject = OkHttpUtils.getJson(api + "/tool/peeping/result/" + random);
+				if (jsonObject.getInteger("code") == 200) {
+					StringBuilder sb = new StringBuilder();
+					JSONArray jsonArray = jsonObject.getJSONObject("data").getJSONArray("list");
+					sb.append("检测到共有").append(jsonArray.size()).append("位小伙伴在窥屏").append("\n");
+					for (int i = 0; i < jsonArray.size(); i++) {
+						JSONObject singleJsonObject = jsonArray.getJSONObject(i);
+						sb.append(singleJsonObject.getString("ip"))
+								.append("-").append(singleJsonObject.getString("address"))
+								/*.append("-").append(singleJsonObject.getString("simpleUserAgent"))*/.append("\n");
+					}
+					msg = MyUtils.removeLastLine(sb);
+				} else msg = jsonObject.getString("message");
+			} catch (IOException e) {
+				e.printStackTrace();
+				msg = "查询失败，请重试！！";
+			}
+			msgSender.SENDER.sendGroupMsg(groupMsg, msg);
+		}, Instant.now().plusSeconds(15));
+	}
+
+	@Filter("妹子图")
+	public Object girlImage(long qq){
+		byte[] bytes = toolLogic.girlImageGaNk();
+		if (bytes != null){
+			return bytes;
+		}else return "图片获取失败，请重试！！";
+	}
+
+	@Filter("妹子")
+	public byte[] girls() throws IOException {
+		return OkHttpUtils.getBytes(toolLogic.girl());
+	}
+
 }

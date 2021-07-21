@@ -7,6 +7,11 @@ import me.kuku.simbot.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Service
 public class MessageServiceImpl implements MessageService {
 	@Autowired
@@ -20,5 +25,16 @@ public class MessageServiceImpl implements MessageService {
 	@Override
 	public MessageEntity save(MessageEntity entity) {
 		return messageRepository.save(entity);
+	}
+
+	@Override
+	public Map<Long, Long> findByGroupEntityAndDateAfter(GroupEntity groupEntity, Date date) {
+		List<MessageEntity> list = messageRepository.findByGroupEntityAndDateAfter(groupEntity, date);
+		Map<Long, Long> map = new HashMap<>();
+		for (MessageEntity messageEntity : list) {
+			Long qq = messageEntity.getQqEntity().getQq();
+			map.put(qq, map.getOrDefault(qq, 0L) + 1);
+		}
+		return map;
 	}
 }

@@ -4,7 +4,11 @@ import catcode.StringTemplate;
 import love.forte.simbot.annotation.Filter;
 import love.forte.simbot.annotation.ListenGroup;
 import love.forte.simbot.annotation.OnGroup;
+import love.forte.simbot.api.message.MessageContent;
+import love.forte.simbot.api.message.MessageContentBuilder;
+import love.forte.simbot.api.message.MessageContentBuilderFactory;
 import love.forte.simbot.api.message.events.GroupMsg;
+import love.forte.simbot.api.sender.MsgSender;
 import me.kuku.pojo.Result;
 import me.kuku.simbot.annotation.RegexFilter;
 import me.kuku.simbot.entity.QqLoginEntity;
@@ -35,6 +39,8 @@ public class BotController {
 	private ToolLogic toolLogic;
 	@Resource
 	private StringTemplate stringTemplate;
+	@Resource
+	private MessageContentBuilderFactory messageContentBuilderFactory;
 
 //	private List<Long> notSpeakByDay = null;
 
@@ -83,16 +89,22 @@ public class BotController {
 	}
 
 	@Filter("龙王")
-	public String dragonKing(QqLoginEntity qqLoginEntity, GroupMsg groupMsg) throws IOException {
+	public void dragonKing(QqLoginEntity qqLoginEntity, GroupMsg groupMsg, MsgSender msgSender) throws IOException {
+		MessageContentBuilder build = messageContentBuilderFactory.getMessageContentBuilder();
 		long group = groupMsg.getGroupInfo().getGroupCodeNumber();
+		long qq = groupMsg.getAccountInfo().getAccountCodeNumber();
 		long botQq = groupMsg.getBotInfo().getBotCodeNumber();
 		List<Map<String, String>> list = qqGroupLogic.groupHonor(qqLoginEntity, group, "talkAtIve");
-		if (list.size() == 0) return "昨天没有龙王！！";
+		if (list.size() == 0) {
+			msgSender.SENDER.sendGroupMsg(group, build.at(qq).text("昨天没有龙王！！").build());
+			return;
+		}
 		Map<String, String> map = list.get(0);
 		long resultQQ = Long.parseLong(map.get("qq"));
 		if (botQq == resultQQ){
 			String[] arr = {"呼风唤雨", "84消毒", "巨星排面"};
-			return arr[(int) (Math.random() * arr.length)];
+			msgSender.SENDER.sendGroupMsg(group, build.at(qq).text(arr[(int) (Math.random() * arr.length)]).build());
+			return;
 		}
 		String[] urlArr = {
 				"https://vkceyugu.cdn.bspapp.com/VKCEYUGU-ba222f61-ee83-431d-bf9f-7e6216a8cf41/0bd0d4c6-0ebb-4811-ba06-a0d65c3a8ed3.png",
@@ -125,7 +137,8 @@ public class BotController {
 				"https://vkceyugu.cdn.bspapp.com/VKCEYUGU-ba222f61-ee83-431d-bf9f-7e6216a8cf41/bb768136-d96d-451d-891a-5f409f7fbff1.jpg"
 		};
 		String url = urlArr[(int) (Math.random() * urlArr.length)];
-		return stringTemplate.at(resultQQ) + stringTemplate.image(url) + "龙王，已蝉联" + map.get("desc") + "，快喷水！！";
+		MessageContent messageContent = build.at(resultQQ).image(url).text("龙王，已蝉联" + map.get("desc") + "，快喷水！！").build();
+		msgSender.SENDER.sendGroupMsg(groupMsg, messageContent);
 	}
 
 }

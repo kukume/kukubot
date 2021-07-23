@@ -21,7 +21,7 @@ public class ManagerController {
 
 	@RegexFilter("kukubot{{statusStr}}")
 	public String openOrOff(@ContextValue("groupEntity") GroupEntity groupEntity,
-	                      @FilterValue("statusStr") String statusStr){
+	                        @FilterValue("statusStr") String statusStr){
 		boolean status = statusStr.contains("开");
 		groupEntity.setStatus(status);
 		groupService.save(groupEntity);

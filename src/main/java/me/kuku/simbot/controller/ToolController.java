@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 
+@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Service
 @Listen(GroupMsg.class)
 public class ToolController {
@@ -325,6 +326,11 @@ public class ToolController {
 	@Filter("妹子")
 	public byte[] girls() throws IOException {
 		return OkHttpUtils.getBytes(toolLogic.girl());
+	}
+
+	@RegexFilter(value = "{{ms,.*}}", atBot = true)
+	public String talk(String ms) throws IOException {
+		return toolLogic.qinYunKeChat(ms);
 	}
 
 }

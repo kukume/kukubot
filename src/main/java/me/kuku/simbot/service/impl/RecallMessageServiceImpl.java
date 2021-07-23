@@ -25,4 +25,9 @@ public class RecallMessageServiceImpl implements RecallMessageService {
 	public RecallMessageEntity save(RecallMessageEntity entity) {
 		return recallMessageRepository.save(entity);
 	}
+
+	@Override
+	public List<RecallMessageEntity> findByQqEntity(QqEntity qqEntity) {
+		return recallMessageRepository.findByQqEntity(qqEntity);
+	}
 }

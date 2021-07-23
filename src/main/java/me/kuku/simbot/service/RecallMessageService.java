@@ -9,4 +9,5 @@ import java.util.List;
 public interface RecallMessageService {
 	List<RecallMessageEntity> findByQqEntityAndGroupEntityOrderByDateDesc(QqEntity qqEntity, GroupEntity groupEntity);
 	RecallMessageEntity save(RecallMessageEntity entity);
+	List<RecallMessageEntity> findByQqEntity(QqEntity qqEntity);
 }

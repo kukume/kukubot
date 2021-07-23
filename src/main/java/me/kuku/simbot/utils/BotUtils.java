@@ -1,6 +1,7 @@
 package me.kuku.simbot.utils;
 
 import com.alibaba.fastjson.JSONObject;
+import love.forte.simbot.api.message.MessageContent;
 import love.forte.simbot.api.message.results.AuthInfo;
 import love.forte.simbot.api.message.results.GroupList;
 import love.forte.simbot.api.message.results.SimpleGroupInfo;
@@ -63,5 +64,11 @@ public class BotUtils {
 		String superKey = auths.get("superKey");
 		Long superToken = QqUtils.getToken(superKey);
 		return new QqLoginEntity(new QqEntity(Long.parseLong(qq)), sKey, psKey, superKey, superToken, groupPsKey);
+	}
+
+	public static Long getAt(MessageContent messageContent){
+		String s = messageContent.getCats("at").get(0).get("code");
+		if (s == null) return null;
+		return Long.parseLong(s);
 	}
 }

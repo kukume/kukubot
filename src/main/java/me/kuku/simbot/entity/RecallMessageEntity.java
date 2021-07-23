@@ -29,4 +29,12 @@ public class RecallMessageEntity {
 	private MessageEntity messageEntity;
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date date;
+
+	public MessageEntity getMessageEntity() {
+		return messageEntity;
+	}
+
+	public Date getDate() {
+		return date;
+	}
 }

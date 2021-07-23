@@ -9,4 +9,5 @@ import java.util.List;
 
 public interface RecallMessageRepository extends JpaRepository<RecallMessageEntity, Integer> {
 	List<RecallMessageEntity> findByQqEntityAndGroupEntityOrderByDateDesc(QqEntity qqEntity, GroupEntity groupEntity);
+	List<RecallMessageEntity> findByQqEntity(QqEntity qqEntity);
 }

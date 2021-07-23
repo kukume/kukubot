@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import love.forte.simbot.annotation.*
 import love.forte.simbot.api.message.events.GroupMsg
+import love.forte.simbot.api.message.events.MsgGet
 import love.forte.simbot.api.message.events.PrivateMsg
 import me.kuku.simbot.annotation.RegexFilter
 import me.kuku.simbot.exception.WaitNextMessageTimeoutException
@@ -44,7 +45,21 @@ class ContextSessionController constructor(cacheManager: CacheManager){
 
 }
 
-fun waitNextMessageCommon(code: String, botCode: String, maxTime: Long): String{
+class ContextSession constructor(private val msgGet: MsgGet){
+
+    fun waitNextMessage(maxTime: Long): String{
+        val code = msgGet.accountInfo.accountCode
+        val botCode = msgGet.botInfo.accountCode
+        return waitNextMessageCommon(code, botCode, maxTime)
+    }
+
+    fun waitNextMessage(): String{
+        return waitNextMessage(30000L)
+    }
+
+}
+
+private fun waitNextMessageCommon(code: String, botCode: String, maxTime: Long): String{
     if (cacheManager == null){
         synchronized(ContextSessionController::class.java){
             if (cacheManager == null){

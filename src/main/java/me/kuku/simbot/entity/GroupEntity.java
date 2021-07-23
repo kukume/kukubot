@@ -2,6 +2,7 @@ package me.kuku.simbot.entity;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -65,7 +66,6 @@ public class GroupEntity {
 	private Boolean leaveGroupBlack = false;
 	private Boolean autoReview = false;
 	private Boolean onTimeAlarm = false;
-	private Integer maxViolationCount = -1;
 	private Integer maxCommandCountOnTime = -1;
 	private Boolean locMonitor = false;
 	private Boolean flashNotify = false;
@@ -90,6 +90,86 @@ public class GroupEntity {
 
 	public void setBlackJson(JSONArray json){
 		this.black = json.toJSONString();
+	}
+
+	public JSONArray getWhiteJson(){
+		return white == null ? new JSONArray() : JSON.parseArray(white);
+	}
+
+	public void setWhiteJson(JSONArray json){
+		this.white = json.toJSONString();
+	}
+
+	public JSONArray getViolationJson(){
+		return violation == null ? new JSONArray() : JSON.parseArray(violation);
+	}
+
+	public void setViolationJson(JSONArray json){
+		this.violation = json.toJSONString();
+	}
+
+	public JSONArray getQaJson(){
+		return qa == null ? new JSONArray() : JSON.parseArray(qa);
+	}
+
+	public void setQaJson(JSONArray json){
+		this.qa = json.toJSONString();
+	}
+
+	public JSONArray getAdminJson(){
+		return admin == null ? new JSONArray() : JSON.parseArray(admin);
+	}
+
+	public void setAdminJson(JSONArray json){
+		this.admin = json.toJSONString();
+	}
+
+	public JSONArray getWeiboJson(){
+		return weibo == null ? new JSONArray() : JSON.parseArray(weibo);
+	}
+
+	public void setWeiboJson(JSONArray json){
+		this.weibo = json.toJSONString();
+	}
+
+	public JSONArray getBiliBiliJson(){
+		return biliBili == null ? new JSONArray() : JSON.parseArray(biliBili);
+	}
+
+	public void setBiliBiliJson(JSONArray json){
+		this.biliBili = json.toJSONString();
+	}
+
+	public JSONArray getBiliBiliLiveJson(){
+		return biliBiliLive == null ? new JSONArray() : JSON.parseArray(biliBiliLive);
+	}
+
+	public void setBiliBiliLiveJson(JSONArray json){
+		this.biliBiliLive = json.toJSONString();
+	}
+
+	public JSONArray getInterceptJson(){
+		return intercept == null ? new JSONArray() : JSON.parseArray(intercept);
+	}
+
+	public void setInterceptJson(JSONArray json){
+		this.intercept = json.toJSONString();
+	}
+
+	public JSONObject getCommandLimitJson(){
+		return commandLimit == null ? new JSONObject() : JSON.parseObject(commandLimit);
+	}
+
+	public void setCommandLimitJson(JSONObject json){
+		this.commandLimit = json.toJSONString();
+	}
+
+	public JSONArray getShellCommandJson(){
+		return shellCommand == null ? new JSONArray() : JSON.parseArray(shellCommand);
+	}
+
+	public void setShellCommandJson(JSONArray json){
+		this.shellCommand = json.toJSONString();
 	}
 }
 

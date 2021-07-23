@@ -1,5 +1,6 @@
 package me.kuku.simbot.config;
 
+import catcode.StringTemplate;
 import love.forte.simbot.api.message.MessageContent;
 import love.forte.simbot.api.message.MessageContentBuilder;
 import love.forte.simbot.api.message.MessageContentBuilderFactory;
@@ -17,11 +18,14 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+@SuppressWarnings("DuplicatedCode")
 @Service
 public class QuickReplyProcessor implements ListenResultProcessor {
 
 	@Autowired
 	private MessageContentBuilderFactory messageContentBuilderFactory;
+	@Autowired
+	private StringTemplate stringTemplate;
 
 	@Override
 	public int getPriority() {
@@ -45,9 +49,9 @@ public class QuickReplyProcessor implements ListenResultProcessor {
 			MessageContentBuilder builder = messageContentBuilderFactory.getMessageContentBuilder();
 			if (result instanceof String){
 				// 发送文字
-				MessageContent messageContent = builder
-						.at(msgGet.getAccountInfo()).text("\n").text(result.toString()).build();
-				sendMessage(messageGet, sender, messageContent);
+				String msg = stringTemplate.at(messageGet.getAccountInfo().getAccountCodeNumber()) + "\n" +
+						result;
+				sendMessage(messageGet, sender, msg);
 			}else if (result instanceof byte[]){
 				MessageContent messageContent = builder.image((byte[]) result).build();
 				sendMessage(messageGet, sender, messageContent);
@@ -66,6 +70,19 @@ public class QuickReplyProcessor implements ListenResultProcessor {
 			}
 		}else if (messageGet instanceof GroupMsg){
 			sender.sendGroupMsg(((GroupMsg) messageGet).getGroupInfo(), messageContent);
+		}
+	}
+
+	private void sendMessage(MessageGet messageGet, Sender sender, String msg){
+		if (messageGet instanceof PrivateMsg){
+			if (messageGet instanceof GroupContainer){
+				sender.sendPrivateMsg(messageGet.getAccountInfo(), ((GroupContainer) messageGet).getGroupInfo(),
+						msg);
+			}else {
+				sender.sendPrivateMsg(messageGet, msg);
+			}
+		}else if (messageGet instanceof GroupMsg){
+			sender.sendGroupMsg(((GroupMsg) messageGet).getGroupInfo(), msg);
 		}
 	}
 }

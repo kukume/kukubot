@@ -27,7 +27,7 @@ public class RecallMessageServiceImpl implements RecallMessageService {
 	}
 
 	@Override
-	public List<RecallMessageEntity> findByQqEntity(QqEntity qqEntity) {
-		return recallMessageRepository.findByQqEntity(qqEntity);
+	public List<RecallMessageEntity> findByQqEntityOrderByDateDesc(QqEntity qqEntity) {
+		return recallMessageRepository.findByQqEntityOrderByDateDesc(qqEntity);
 	}
 }

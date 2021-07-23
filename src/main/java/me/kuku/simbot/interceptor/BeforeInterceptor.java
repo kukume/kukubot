@@ -9,6 +9,7 @@ import love.forte.simbot.listener.ListenerContext;
 import love.forte.simbot.listener.MsgInterceptContext;
 import love.forte.simbot.listener.MsgInterceptor;
 import love.forte.simbot.listener.ScopeContext;
+import me.kuku.simbot.controller.ContextSession;
 import me.kuku.simbot.entity.GroupEntity;
 import me.kuku.simbot.entity.QqEntity;
 import me.kuku.simbot.service.QqService;
@@ -29,19 +30,23 @@ public class BeforeInterceptor implements MsgInterceptor {
 	public InterceptionType intercept(@NotNull MsgInterceptContext context) {
 		ScopeContext scopeContext = context.getListenerContext().getContext(ListenerContext.Scope.EVENT_INSTANT);
 		MsgGet msgGet = context.getMsgGet();
+		ContextSession contextSession = new ContextSession(msgGet);
+		scopeContext.set("session", contextSession);
 		long qq = msgGet.getAccountInfo().getAccountCodeNumber();
 		QqEntity qqEntity = qqService.findByQq(qq);
 		if (qqEntity != null) {
-			scopeContext.set("qq", qqEntity);
+			scopeContext.set("qq", qqEntity.getQq());
 			scopeContext.set("qqEntity", qqEntity);
 			if (msgGet instanceof GroupMsg) {
 				GroupMsg groupMsg = (GroupMsg) msgGet;
 				long group = groupMsg.getGroupInfo().getGroupCodeNumber();
 				GroupEntity groupEntity = qqEntity.getGroup(group);
+				scopeContext.set("group", groupEntity.getGroup());
 				scopeContext.set("groupEntity", groupEntity);
 			} else if (msgGet instanceof MiraiTempMsg) {
 				long group = ((MiraiTempMsg) msgGet).getGroupInfo().getGroupCodeNumber();
 				GroupEntity groupEntity = qqEntity.getGroup(group);
+				scopeContext.set("group", groupEntity.getGroup());
 				scopeContext.set("groupEntity", groupEntity);
 			}
 		}

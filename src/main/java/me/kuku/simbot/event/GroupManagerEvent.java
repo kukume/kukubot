@@ -9,6 +9,7 @@ import love.forte.simbot.api.message.events.GroupMemberIncrease;
 import love.forte.simbot.api.message.events.GroupMemberReduce;
 import love.forte.simbot.api.message.events.GroupMsg;
 import love.forte.simbot.api.sender.MsgSender;
+import love.forte.simbot.component.mirai.message.event.MiraiBotLeaveEvent;
 import me.kuku.simbot.entity.GroupEntity;
 import me.kuku.simbot.entity.MessageEntity;
 import me.kuku.simbot.entity.QqEntity;
@@ -165,6 +166,7 @@ public class GroupManagerEvent {
 		long qq = groupMemberIncrease.getAccountInfo().getAccountCodeNumber();
 		GroupEntity groupEntity = groupService.findByGroup(group);
 		QqEntity qqEntity = groupEntity.getQq(qq);
+
 		if (Boolean.valueOf(true).equals(groupEntity.getKickWithoutSpeaking())){
 			msgSender.SENDER.sendGroupMsg(group, stringTemplate.at(qq) + "欢迎进群，请尽快发言哦，进群5分钟未发言将会被移出本群。");
 			threadPoolTaskScheduler.schedule(() -> {
@@ -175,6 +177,12 @@ public class GroupManagerEvent {
 				}
 			}, Instant.now().plusMillis(5));
 		}
+	}
+
+	@Listen(value = MiraiBotLeaveEvent.class)
+	public void botLeave(MiraiBotLeaveEvent miraiBotLeaveEvent){
+		long group = miraiBotLeaveEvent.getGroupInfo().getGroupCodeNumber();
+		groupService.deleteByGroup(group);
 	}
 
 

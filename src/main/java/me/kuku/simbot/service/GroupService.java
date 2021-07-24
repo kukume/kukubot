@@ -8,4 +8,6 @@ public interface GroupService {
 	GroupEntity findByGroup(Long group);
 	GroupEntity save(GroupEntity groupEntity);
 	List<GroupEntity> findAll();
+	void deleteByGroup(Long group);
+	void delete(GroupEntity groupEntity);
 }

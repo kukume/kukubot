@@ -28,4 +28,14 @@ public class GroupServiceImpl implements GroupService {
 	public List<GroupEntity> findAll() {
 		return groupRepository.findAll();
 	}
+
+	@Override
+	public void deleteByGroup(Long group) {
+		groupRepository.deleteByGroup(group);
+	}
+
+	@Override
+	public void delete(GroupEntity groupEntity) {
+		groupRepository.delete(groupEntity);
+	}
 }

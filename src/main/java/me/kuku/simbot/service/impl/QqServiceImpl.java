@@ -20,4 +20,9 @@ public class QqServiceImpl implements QqService {
 	public QqEntity save(QqEntity entity) {
 		return qqRepository.save(entity);
 	}
+
+	@Override
+	public void delete(QqEntity entity) {
+		qqRepository.delete(entity);
+	}
 }

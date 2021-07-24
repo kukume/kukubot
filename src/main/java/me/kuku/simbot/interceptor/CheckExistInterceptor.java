@@ -12,7 +12,7 @@ import me.kuku.simbot.utils.SpringUtils;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 
-public abstract class CheckExistInterceptor<T> extends GroupMessageInterceptor{
+public abstract class CheckExistInterceptor<T> extends GroupMsgGroupedInterceptor {
 	@Override
 	protected InterceptionType doIntercept(GroupMsg groupMsg, BotSender botSender, ScopeContext scopeContext) {
 		ParameterizedType parameterizedType = (ParameterizedType) getClass().getGenericSuperclass();

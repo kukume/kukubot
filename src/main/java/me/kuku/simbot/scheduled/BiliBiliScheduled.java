@@ -1,12 +1,15 @@
 package me.kuku.simbot.scheduled;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import me.kuku.pojo.Result;
 import me.kuku.simbot.entity.BiliBiliEntity;
+import me.kuku.simbot.entity.GroupEntity;
 import me.kuku.simbot.entity.QqEntity;
 import me.kuku.simbot.logic.BiliBiliLogic;
 import me.kuku.simbot.pojo.BiliBiliPojo;
 import me.kuku.simbot.service.BiliBiliService;
+import me.kuku.simbot.service.GroupService;
 import me.kuku.simbot.utils.BotUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -22,9 +25,13 @@ public class BiliBiliScheduled {
 	private BiliBiliService biliBiliService;
 	@Autowired
 	private BiliBiliLogic biliBiliLogic;
+	@Autowired
+	private GroupService groupService;
 
 	private final Map<Long, Map<Long, Boolean>> liveMap = new HashMap<>();
+	private final Map<Long, Map<Long, Boolean>> groupLiveMap = new HashMap<>();
 	private final Map<Long, Long> userMap = new HashMap<>();
+	private final Map<Long, Map<Long, Long>> groupMap = new HashMap<>();
 
 	@Scheduled(cron = "0 */1 * * * ?")
 	@Transactional
@@ -63,6 +70,41 @@ public class BiliBiliScheduled {
 		}
 	}
 
+	@Scheduled(cron = "13 */1 * * * ?")
+	@Transactional
+	public void groupLiveMonitor(){
+		List<GroupEntity> groupList = groupService.findAll();
+		for (GroupEntity groupEntity : groupList) {
+			try {
+				long group = groupEntity.getGroup();
+				JSONArray liveJsonArray = groupEntity.getBiliBiliLiveJson();
+				if (!liveMap.containsKey(group)) liveMap.put(group, new HashMap<>());
+				Map<Long, Boolean> map = liveMap.get(group);
+				for (Object o : liveJsonArray) {
+					JSONObject jsonObject = (JSONObject) o;
+					Long id = jsonObject.getLong("id");
+					JSONObject liveJsonObject = biliBiliLogic.live(id.toString());
+					Boolean b = liveJsonObject.getBoolean("status");
+					if (map.containsKey(id)){
+						if (map.get(id) != b){
+							map.put(id, b);
+							String msg;
+							if (b) msg = "直播啦！！";
+							else msg = "下播了！！";
+							BotUtils.sendGroupMsg(group, "哔哩哔哩开播提醒：\n" +
+											jsonObject.getString("name") + msg + "\n" +
+											"标题：" + liveJsonObject.getString("title") + "\n" +
+											"链接：" + liveJsonObject.getString("url")
+							);
+						}
+					}else map.put(id, b);
+				}
+			}catch (Exception e){
+				e.printStackTrace();
+			}
+		}
+	}
+
 	@Scheduled(cron = "0 */1 * * * ?")
 	@Transactional
 	public void qqMonitor(){
@@ -86,6 +128,47 @@ public class BiliBiliScheduled {
 					}
 				}
 				userMap.put(qq, Long.valueOf(list.get(0).getId()));
+			}catch (Exception e){
+				e.printStackTrace();
+			}
+		}
+	}
+
+	@Scheduled(cron = "51 */1 * * * ?")
+	@Transactional
+	public void groupMonitor(){
+		List<GroupEntity> groupList = groupService.findAll();
+		for (GroupEntity groupEntity: groupList){
+			try {
+				JSONArray biliBiliJsonArray = groupEntity.getBiliBiliJson();
+				Long group = groupEntity.getGroup();
+				if (biliBiliJsonArray.size() == 0) continue;
+				if (!groupMap.containsKey(group)) {
+					groupMap.put(group, new HashMap<>());
+				}
+				Map<Long, Long> biMap = groupMap.get(group);
+				for (Object obj : biliBiliJsonArray) {
+					JSONObject jsonObject = (JSONObject) obj;
+					Long userId = jsonObject.getLong("id");
+					Result<List<BiliBiliPojo>> result = biliBiliLogic.getDynamicById(userId.toString());
+					List<BiliBiliPojo> list = result.getData();
+					if (list == null) continue;
+					if (biMap.containsKey(userId)) {
+						List<BiliBiliPojo> newList = new ArrayList<>();
+						for (BiliBiliPojo biliBiliPojo : list) {
+							if (Long.parseLong(biliBiliPojo.getId()) <= biMap.get(userId)) break;
+							newList.add(biliBiliPojo);
+						}
+						for (BiliBiliPojo biliBiliPojo : newList) {
+							BotUtils.sendGroupMsg(group, "哔哩哔哩有新动态了\n" +
+									biliBiliLogic.convertStr(biliBiliPojo));
+						}
+					}
+					long newId = Long.parseLong(list.get(0).getId());
+					if (!biMap.containsKey(userId) || newId > biMap.get(userId)) {
+						biMap.put(userId, newId);
+					}
+				}
 			}catch (Exception e){
 				e.printStackTrace();
 			}

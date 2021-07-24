@@ -13,9 +13,9 @@ import love.forte.simbot.api.sender.MsgSender
 import me.kuku.simbot.annotation.SkipListenGroup
 import me.kuku.simbot.entity.QqEntity
 import me.kuku.simbot.entity.QqMusicEntity
+import me.kuku.simbot.entity.QqMusicService
 import me.kuku.simbot.interceptor.CheckExistInterceptor
 import me.kuku.simbot.logic.QqMusicLogic
-import me.kuku.simbot.service.QqMusicService
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import javax.annotation.Resource

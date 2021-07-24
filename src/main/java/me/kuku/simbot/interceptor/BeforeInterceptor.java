@@ -13,6 +13,7 @@ import me.kuku.simbot.controller.ContextSession;
 import me.kuku.simbot.entity.GroupEntity;
 import me.kuku.simbot.entity.QqEntity;
 import me.kuku.simbot.service.QqService;
+import me.kuku.simbot.utils.BotUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,8 @@ public class BeforeInterceptor implements MsgInterceptor {
 				GroupEntity groupEntity = qqEntity.getGroup(group);
 				scopeContext.set("group", groupEntity.getGroup());
 				scopeContext.set("groupEntity", groupEntity);
+				Long at = BotUtils.getAt(groupMsg.getMsgContent());
+				if (at != null) scopeContext.set("at", at);
 			} else if (msgGet instanceof MiraiTempMsg) {
 				long group = ((MiraiTempMsg) msgGet).getGroupInfo().getGroupCodeNumber();
 				GroupEntity groupEntity = qqEntity.getGroup(group);

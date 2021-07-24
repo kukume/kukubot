@@ -2,6 +2,7 @@ package me.kuku.simbot.service.impl;
 
 import me.kuku.simbot.entity.GroupEntity;
 import me.kuku.simbot.entity.MessageEntity;
+import me.kuku.simbot.entity.QqEntity;
 import me.kuku.simbot.repository.MessageRepository;
 import me.kuku.simbot.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,5 +37,10 @@ public class MessageServiceImpl implements MessageService {
 			map.put(qq, map.getOrDefault(qq, 0L) + 1);
 		}
 		return map;
+	}
+
+	@Override
+	public List<MessageEntity> findByQqEntityAndGroupEntityOrderByDateDesc(QqEntity qqEntity, GroupEntity groupEntity) {
+		return null;
 	}
 }

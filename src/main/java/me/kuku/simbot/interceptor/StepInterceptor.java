@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class StepInterceptor extends GroupMessageInterceptor {
+public class StepInterceptor extends GroupMsgGroupedInterceptor {
 
 	@Autowired
 	private StepService stepService;

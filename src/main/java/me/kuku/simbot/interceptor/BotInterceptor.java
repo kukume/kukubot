@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 @Component
-public class BotInterceptor extends GroupMessageInterceptor{
+public class BotInterceptor extends GroupMsgGroupedInterceptor {
 
 
 	@Override

@@ -7,4 +7,5 @@ import java.util.Optional;
 public interface QqService {
 	QqEntity findByQq(Long qq);
 	QqEntity save(QqEntity entity);
+	void delete(QqEntity entity);
 }

@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class WeiboInterceptor extends GroupMessageInterceptor {
+public class WeiboInterceptor extends GroupMsgGroupedInterceptor {
 
 	@Autowired
 	private WeiboService weiboService;

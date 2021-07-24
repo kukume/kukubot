@@ -32,9 +32,6 @@ public class GroupEntity {
 	private String black;
 	@Lob
 	@Column(columnDefinition = "text")
-	private String white;
-	@Lob
-	@Column(columnDefinition = "text")
 	private String violation;
 	@Lob
 	@Column(columnDefinition = "text")
@@ -70,7 +67,7 @@ public class GroupEntity {
 	private Boolean locMonitor = false;
 	private Boolean flashNotify = false;
 	private Boolean repeat = true;
-	private Boolean groupAdminAuth;
+	private Boolean groupAdminAuth = false;
 	private Boolean kickWithoutSpeaking = false;
 
 	public GroupEntity(Long group){
@@ -90,14 +87,6 @@ public class GroupEntity {
 
 	public void setBlackJson(JSONArray json){
 		this.black = json.toJSONString();
-	}
-
-	public JSONArray getWhiteJson(){
-		return white == null ? new JSONArray() : JSON.parseArray(white);
-	}
-
-	public void setWhiteJson(JSONArray json){
-		this.white = json.toJSONString();
 	}
 
 	public JSONArray getViolationJson(){

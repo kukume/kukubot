@@ -1,5 +1,6 @@
 package me.kuku.simbot.utils;
 
+import catcode.Neko;
 import com.alibaba.fastjson.JSONObject;
 import love.forte.simbot.api.message.MessageContent;
 import love.forte.simbot.api.message.results.AuthInfo;
@@ -51,8 +52,19 @@ public class BotUtils {
 		}
 	}
 
-	public static void sendGroupMsg(){
-
+	public static void sendGroupMsg(long group, String msg){
+		BotManager botManager = SpringUtils.getBean(BotManager.class);
+		List<Bot> botList = botManager.getBots();
+		out:for (Bot bot : botList) {
+			GroupList groupList = bot.getSender().GETTER.getGroupList();
+			for (SimpleGroupInfo simpleGroupInfo : groupList) {
+				long joinGroup = simpleGroupInfo.getGroupCodeNumber();
+				if (joinGroup == group){
+					bot.getSender().SENDER.sendGroupMsg(group, msg);
+					break out;
+				}
+			}
+		}
 	}
 
 	public static QqLoginEntity getBotQqLoginEntity(Getter getter){
@@ -67,7 +79,9 @@ public class BotUtils {
 	}
 
 	public static Long getAt(MessageContent messageContent){
-		String s = messageContent.getCats("at").get(0).get("code");
+		List<Neko> atList = messageContent.getCats("at");
+		if (atList.size() == 0) return null;
+		String s = atList.get(0).get("code");
 		if (s == null) return null;
 		return Long.parseLong(s);
 	}

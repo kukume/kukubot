@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 
 @Service
-public class ManagerInterceptor extends GroupMessageInterceptor{
+public class ManagerInterceptor extends GroupMsgGroupedInterceptor {
 
 	@Value("${kukubot.master}")
 	private Long master;

@@ -6,6 +6,8 @@ import me.kuku.simbot.service.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class GroupServiceImpl implements GroupService {
 
@@ -20,5 +22,10 @@ public class GroupServiceImpl implements GroupService {
 	@Override
 	public GroupEntity save(GroupEntity groupEntity) {
 		return groupRepository.save(groupEntity);
+	}
+
+	@Override
+	public List<GroupEntity> findAll() {
+		return groupRepository.findAll();
 	}
 }

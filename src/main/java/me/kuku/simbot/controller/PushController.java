@@ -25,7 +25,7 @@ public class PushController {
 	@Autowired
 	private BotDestroyer botDestroyer;
 
-	@PostMapping("/login")
+	@RequestMapping(value = "/login", method = {RequestMethod.GET, RequestMethod.POST})
 	@ResponseBody
 	public Result<?> login(String qq, String password){
 		PairBotVerifyInfo.BasicBotVerifyInfo basicBotVerifyInfo = new PairBotVerifyInfo.BasicBotVerifyInfo(qq, password);
@@ -53,7 +53,7 @@ public class PushController {
 		return Result.success("成功", Result.map("size", size));
 	}
 
-	@PostMapping("/sendPrivateMsg")
+	@RequestMapping(value = "/sendPrivateMsg", method = {RequestMethod.GET, RequestMethod.POST})
 	@ResponseBody
 	public Result<?> sendPrivateMsg(@RequestParam("bot") long botQq, long qq, String catCode){
 		Bot bot = botManager.getBotOrNull(String.valueOf(botQq));
@@ -66,7 +66,7 @@ public class PushController {
 		}
 	}
 
-	@PostMapping("/sendGroupMsg")
+	@RequestMapping(value = "/sendGroupMsg", method = {RequestMethod.GET, RequestMethod.POST})
 	@ResponseBody
 	public Result<?> sendGroupMsg(long group, @RequestParam("bot") long botQq, String catCode){
 		Bot bot = botManager.getBotOrNull(String.valueOf(botQq));
@@ -79,7 +79,7 @@ public class PushController {
 		}
 	}
 
-	@PostMapping("/sendTempMsg")
+	@RequestMapping(value = "/sendTempMsg", method = {RequestMethod.GET, RequestMethod.POST})
 	@ResponseBody
 	public Result<?> sendTempMsg(long qq, long group, @RequestParam("bot") long botQq, String catCode){
 		Bot bot = botManager.getBotOrNull(String.valueOf(botQq));
@@ -92,7 +92,7 @@ public class PushController {
 		}
 	}
 
-	@PostMapping("/logout")
+	@RequestMapping(value = "/logout", method = {RequestMethod.GET, RequestMethod.POST})
 	@ResponseBody
 	public Result<?> logout(String qq){
 		Bot bot = botManager.getBotOrNull(qq);
@@ -102,7 +102,7 @@ public class PushController {
 		}else return Result.failure("没有找到这个bot");
 	}
 
-	@PostMapping("/reLogin")
+	@RequestMapping(value = "/reLogin", method = {RequestMethod.GET, RequestMethod.POST})
 	@ResponseBody
 	public Result<?> reLogin(long qq){
 		String qqStr = String.valueOf(qq);

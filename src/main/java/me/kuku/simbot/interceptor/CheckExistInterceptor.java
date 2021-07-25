@@ -6,7 +6,7 @@ import love.forte.simbot.api.sender.BotSender;
 import love.forte.simbot.intercept.InterceptionType;
 import love.forte.simbot.listener.ScopeContext;
 import me.kuku.simbot.entity.QqEntity;
-import me.kuku.simbot.service.QqService;
+import me.kuku.simbot.entity.QqService;
 import me.kuku.simbot.utils.SpringUtils;
 
 import java.lang.reflect.Method;

@@ -50,7 +50,7 @@ public class XiaomiStepLogicImpl implements StepLogic {
 		map.put("source", "com.xiaomi.hm.health:4.5.0:50340");
 		JSONObject jsonObject = OkHttpUtils.postJson("https://account.huami.com/v2/client/login", map, OkHttpUtils.addUA(ua));
 		String token = jsonObject.getJSONObject("token_info").getString("login_token");
-		return Result.success(new StepEntity(phone, password, token));
+		return Result.success(StepEntity.Companion.getInstance(phone, password, token));
 	}
 
 	private Result<Map<String, String>> getInfo(String token) throws IOException {

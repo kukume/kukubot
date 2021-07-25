@@ -1,9 +1,9 @@
 package me.kuku.simbot.scheduled;
 
 import me.kuku.simbot.entity.HostLocEntity;
+import me.kuku.simbot.entity.HostLocService;
 import me.kuku.simbot.entity.QqEntity;
 import me.kuku.simbot.logic.HostLocLogic;
-import me.kuku.simbot.service.HostLocService;
 import me.kuku.simbot.utils.BotUtils;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;

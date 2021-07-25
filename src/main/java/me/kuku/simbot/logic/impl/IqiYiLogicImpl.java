@@ -59,7 +59,7 @@ public class IqiYiLogicImpl implements IqiYiLogic {
 				String cookie = OkHttpUtils.getCookie(response);
 				String pOne = OkHttpUtils.getCookie(cookie, "P00001");
 				String pThree = OkHttpUtils.getCookie(cookie, "P00003");
-				IqiYiEntity iqiYiEntity = new IqiYiEntity(cookie, pOne, pThree);
+				IqiYiEntity iqiYiEntity = IqiYiEntity.Companion.getInstance(cookie, pOne, pThree);
 				return Result.success(iqiYiEntity);
 			case "A00001":
 			case "P01006":

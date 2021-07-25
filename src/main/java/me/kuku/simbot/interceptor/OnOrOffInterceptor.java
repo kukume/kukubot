@@ -6,7 +6,7 @@ import love.forte.simbot.intercept.InterceptionType;
 import love.forte.simbot.listener.MsgInterceptContext;
 import love.forte.simbot.listener.MsgInterceptor;
 import me.kuku.simbot.entity.GroupEntity;
-import me.kuku.simbot.service.GroupService;
+import me.kuku.simbot.entity.GroupService;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 

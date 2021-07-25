@@ -1,6 +1,6 @@
 package me.kuku.simbot.interceptor;
 
-import me.kuku.simbot.service.HeyTapService;
+import me.kuku.simbot.entity.HeyTapService;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 

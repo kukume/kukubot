@@ -9,9 +9,9 @@ import me.kuku.simbot.annotation.RegexFilter;
 import me.kuku.simbot.annotation.SkipListenGroup;
 import me.kuku.simbot.entity.QqEntity;
 import me.kuku.simbot.entity.WeiboEntity;
+import me.kuku.simbot.entity.WeiboService;
 import me.kuku.simbot.logic.WeiboLogic;
 import me.kuku.simbot.pojo.WeiboPojo;
-import me.kuku.simbot.service.WeiboService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
@@ -71,7 +71,7 @@ public class WeiboController {
 					if (result.getCode() == 200){
 						WeiboEntity newWeiboEntity = result.getData();
 						WeiboEntity weiboEntity = weiboService.findByQqEntity(qqEntity);
-						if (weiboEntity == null) weiboEntity = new WeiboEntity(qqEntity);
+						if (weiboEntity == null) weiboEntity = WeiboEntity.Companion.getInstance(qqEntity);
 						weiboEntity.setPcCookie(newWeiboEntity.getPcCookie());
 						weiboEntity.setMobileCookie(newWeiboEntity.getMobileCookie());
 						weiboService.save(weiboEntity);
@@ -91,7 +91,7 @@ public class WeiboController {
 
 	@RegexFilter("微博监控{{statusStr}}")
 	public String weiboMonitor(@FilterValue("statusStr") String statusStr, @ContextValue("weiboEntity") WeiboEntity weiboEntity){
-		Boolean status = statusStr.contains("开");
+		boolean status = statusStr.contains("开");
 		weiboEntity.setMonitor(status);
 		weiboService.save(weiboEntity);
 		return status ? "微博监控开启成功！" : "微博监控关闭成功！";

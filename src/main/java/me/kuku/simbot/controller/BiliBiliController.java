@@ -11,10 +11,10 @@ import love.forte.simbot.api.sender.MsgSender;
 import me.kuku.pojo.Result;
 import me.kuku.simbot.annotation.RegexFilter;
 import me.kuku.simbot.entity.BiliBiliEntity;
+import me.kuku.simbot.entity.BiliBiliService;
 import me.kuku.simbot.entity.QqEntity;
 import me.kuku.simbot.logic.BiliBiliLogic;
 import me.kuku.simbot.logic.ToolLogic;
-import me.kuku.simbot.service.BiliBiliService;
 import me.kuku.utils.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -48,7 +48,7 @@ public class BiliBiliController {
 	@Filter("哔哩哔哩二维码")
 	@ListenGroup(value = "", append = false)
 	public void biliBiliLoginQr(MsgSender msgSender, GroupMsg groupMsg,
-	                            @ContextValue("qq") QqEntity qqEntity) throws IOException {
+	                            @ContextValue("qq") QqEntity qqEntity) {
 		long qq = groupMsg.getAccountInfo().getAccountCodeNumber();
 		CodeTemplate<String> template = CatCodeUtil.getInstance().getStringTemplate();
 		InputStream is = null;
@@ -86,7 +86,7 @@ public class BiliBiliController {
 							return;
 						case 200:
 							BiliBiliEntity biliBiliEntity = biliBiliService.findByQqEntity(qqEntity);
-							if (biliBiliEntity == null) biliBiliEntity = new BiliBiliEntity(qqEntity);
+							if (biliBiliEntity == null) biliBiliEntity = BiliBiliEntity.Companion.getInstance(qqEntity);
 							BiliBiliEntity newBiliBiliEntity = res.getData();
 							biliBiliEntity.setCookie(newBiliBiliEntity.getCookie());
 							biliBiliEntity.setToken(newBiliBiliEntity.getToken());

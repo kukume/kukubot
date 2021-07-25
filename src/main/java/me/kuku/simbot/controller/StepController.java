@@ -5,8 +5,8 @@ import me.kuku.pojo.Result;
 import me.kuku.simbot.annotation.RegexFilter;
 import me.kuku.simbot.entity.QqEntity;
 import me.kuku.simbot.entity.StepEntity;
+import me.kuku.simbot.entity.StepService;
 import me.kuku.simbot.logic.StepLogic;
-import me.kuku.simbot.service.StepService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -33,7 +33,7 @@ public class StepController {
 	public String login(@FilterValue("phone") String phone, @FilterValue("password") String password,
 	                    @ContextValue("qq") QqEntity qqEntity) throws IOException {
 		StepEntity stepEntity = stepService.findByQqEntity(qqEntity);
-		if (stepEntity == null) stepEntity = new StepEntity(qqEntity);
+		if (stepEntity == null) stepEntity = StepEntity.Companion.getInstance(qqEntity);
 		Result<StepEntity> result = leXinStepLogic.login(phone, password);
 		if (result.isSuccess()) {
 			StepEntity newStepEntity = result.getData();
@@ -53,7 +53,7 @@ public class StepController {
 	public String miLogin(@FilterValue("phone") String phone, @FilterValue("password") String password,
 	                      @ContextValue("qq") QqEntity qqEntity) throws IOException {
 		StepEntity stepEntity = stepService.findByQqEntity(qqEntity);
-		if (stepEntity == null) stepEntity = new StepEntity(qqEntity);
+		if (stepEntity == null) stepEntity = StepEntity.Companion.getInstance(qqEntity);
 		Result<StepEntity> result = xiaomiStepLogic.login(phone, password);
 		if (result.isSuccess()){
 			stepEntity.setMiPhone(phone);

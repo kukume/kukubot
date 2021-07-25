@@ -1,8 +1,8 @@
 package me.kuku.simbot.scheduled;
 
 import me.kuku.simbot.entity.NetEaseEntity;
+import me.kuku.simbot.entity.NetEaseService;
 import me.kuku.simbot.logic.NetEaseLogic;
-import me.kuku.simbot.service.NetEaseService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 

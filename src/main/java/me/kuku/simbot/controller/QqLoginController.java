@@ -11,14 +11,8 @@ import me.kuku.pojo.QqLoginQrcode;
 import me.kuku.pojo.Result;
 import me.kuku.simbot.annotation.RegexFilter;
 import me.kuku.simbot.annotation.SkipListenGroup;
-import me.kuku.simbot.entity.QqEntity;
-import me.kuku.simbot.entity.QqLoginEntity;
-import me.kuku.simbot.entity.QqVideoEntity;
+import me.kuku.simbot.entity.*;
 import me.kuku.simbot.logic.QqLoginLogic;
-import me.kuku.simbot.repository.QqVideoRepository;
-import me.kuku.simbot.service.QqLoginService;
-import me.kuku.simbot.service.QqService;
-import me.kuku.simbot.service.QqVideoService;
 import me.kuku.utils.OkHttpUtils;
 import me.kuku.utils.QqQrCodeLoginUtils;
 import okhttp3.Response;
@@ -76,7 +70,7 @@ public class QqLoginController {
 					}while (result.getCode() == 0);
 					if (result.getCode() == 200){
 						QqLoginEntity qqLoginEntity = qqLoginService.findByQqEntity(qqEntity);
-						if (qqLoginEntity == null) qqLoginEntity = new QqLoginEntity(qqEntity);
+						if (qqLoginEntity == null) qqLoginEntity = QqLoginEntity.Companion.getInstance(qqEntity);
 						QqLoginPojo pojo = result.getData();
 						qqLoginEntity.setSKey(pojo.getSKey());
 						qqLoginEntity.setPsKey(pojo.getPsKey());
@@ -189,7 +183,7 @@ public class QqLoginController {
 							String vuSession = OkHttpUtils.getCookie(cookie, "vqq_vusession");
 							String accessToken = OkHttpUtils.getCookie(cookie, "vqq_access_token");
 							QqVideoEntity qqVideoEntity = qqVideoService.findByQqEntity(qqEntity);
-							if (qqVideoEntity == null) qqVideoEntity = new QqVideoEntity(qqEntity);
+							if (qqVideoEntity == null) qqVideoEntity = QqVideoEntity.Companion.getInstance(qqEntity);
 							qqVideoEntity.setCookie(cookie);
 							qqVideoEntity.setVuSession(vuSession);
 							qqVideoEntity.setAccessToken(accessToken);

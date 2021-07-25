@@ -20,7 +20,7 @@ public class LeXinStepLogicImpl implements StepLogic {
 				OkHttpUtils.addJson(String.format("{\"password\":\"%s\",\"clientId\":\"%s\",\"appType\":6,\"loginName\":\"%s\",\"roleType\":0}", password, MyUtils.randomNum(32), phone)));
 		JSONObject jsonObject = OkHttpUtils.getJson(response);
 		if (jsonObject.getInteger("code").equals(200)){
-			return Result.success(new StepEntity(phone, password, OkHttpUtils.getCookie(response), jsonObject.getJSONObject("data").getString("userId"),
+			return Result.success(StepEntity.Companion.getInstance(phone, password, OkHttpUtils.getCookie(response), jsonObject.getJSONObject("data").getString("userId"),
 					jsonObject.getJSONObject("data").getString("accessToken")
 			));
 		}else return Result.failure(jsonObject.getString("msg"), null);

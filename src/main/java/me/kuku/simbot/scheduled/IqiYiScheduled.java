@@ -2,9 +2,9 @@ package me.kuku.simbot.scheduled;
 
 import me.kuku.pojo.Result;
 import me.kuku.simbot.entity.IqiYiEntity;
+import me.kuku.simbot.entity.IqiYiService;
 import me.kuku.simbot.entity.QqEntity;
 import me.kuku.simbot.logic.IqiYiLogic;
-import me.kuku.simbot.service.IqiYiService;
 import me.kuku.simbot.utils.BotUtils;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;

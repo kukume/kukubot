@@ -336,7 +336,7 @@ public class WeiboLogicImpl implements WeiboLogic {
 		Response forthResponse = OkHttpUtils.get(forthUrl);
 		forthResponse.close();
 		String mobileCookie = OkHttpUtils.getCookie(forthResponse);
-		return new WeiboEntity(pcCookie, mobileCookie);
+		return WeiboEntity.Companion.getInstance(pcCookie, mobileCookie);
 	}
 
 	@Override
@@ -368,7 +368,7 @@ public class WeiboLogicImpl implements WeiboLogic {
 				finallyResponse.close();
 				String pcCookie = OkHttpUtils.getCookie(finallyResponse);
 				String mobileCookie = getMobileCookie(cookie);
-				return Result.success(new WeiboEntity(pcCookie, mobileCookie));
+				return Result.success(WeiboEntity.Companion.getInstance(pcCookie, mobileCookie));
 			case 50114001: return Result.failure(201, "未扫码！！");
 			case 50114003: return Result.failure("您的微博登录二维码已失效！！", null);
 			case 50114002: return Result.failure(202, "已扫码！！");

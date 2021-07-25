@@ -4,8 +4,6 @@ import me.kuku.pojo.Result;
 import me.kuku.simbot.entity.*;
 import me.kuku.simbot.logic.QqLoginLogic;
 import me.kuku.simbot.logic.QqMusicLogic;
-import me.kuku.simbot.service.QqLoginService;
-import me.kuku.simbot.service.QqVideoService;
 import me.kuku.simbot.utils.BotUtils;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;

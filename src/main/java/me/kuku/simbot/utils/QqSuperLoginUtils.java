@@ -14,7 +14,7 @@ public class QqSuperLoginUtils {
                 OkHttpUtils.addHeaders(qqLoginEntity.getCookieWithSuper(), "https://ui.ptlogin2.qq.com/cgi-bin/login"));
         Result<String> result = QqUtils.getPtToken(str);
         if (result.getCode() == 200){
-            Map<String, String> map = QqUtils.getKey(result.getData(), qqLoginEntity.getQqEntity().getQq().toString(), prefixUrl, suffixUrl);
+            Map<String, String> map = QqUtils.getKey(result.getData(), String.valueOf(qqLoginEntity.getQqEntity().getQq()), prefixUrl, suffixUrl);
             return Result.success(map.get("p_skey"));
         }else return Result.failure(result.getMessage(), null);
     }

@@ -9,17 +9,12 @@ import love.forte.simbot.api.sender.MsgSender;
 import me.kuku.pojo.Result;
 import me.kuku.simbot.annotation.RegexFilter;
 import me.kuku.simbot.annotation.SkipListenGroup;
-import me.kuku.simbot.entity.GroupEntity;
-import me.kuku.simbot.entity.QqEntity;
-import me.kuku.simbot.entity.RecallMessageEntity;
+import me.kuku.simbot.entity.*;
 import me.kuku.simbot.logic.BiliBiliLogic;
 import me.kuku.simbot.logic.QqLoginLogic;
 import me.kuku.simbot.logic.WeiboLogic;
 import me.kuku.simbot.pojo.BiliBiliPojo;
 import me.kuku.simbot.pojo.WeiboPojo;
-import me.kuku.simbot.service.GroupService;
-import me.kuku.simbot.service.QqService;
-import me.kuku.simbot.service.RecallMessageService;
 import me.kuku.simbot.utils.BotUtils;
 import me.kuku.utils.DateTimeFormatterUtils;
 import org.springframework.stereotype.Service;
@@ -338,19 +333,19 @@ public class ManagerController {
 	public String query(GroupEntity groupEntity, String type){
 		StringBuilder sb = new StringBuilder();
 		switch (type){
-			case "查黑名单":
+			case "黑名单":
 				sb.append("本群黑名单列表如下：").append("\n");
 				groupEntity.getBlackJson().forEach(obj -> sb.append(obj).append("\n"));
 				break;
-			case "查违规词":
+			case "违规词":
 				sb.append("本群违规词列表如下：").append("\n");
 				groupEntity.getViolationJson().forEach(obj -> sb.append(obj).append("\n"));
 				break;
-			case "查拦截":
+			case "拦截":
 				sb.append("本群被拦截的指令列表如下：").append("\n");
 				groupEntity.getInterceptJson().forEach(obj -> sb.append(obj).append("\n"));
 				break;
-			case "查微博监控":
+			case "微博监控":
 				sb.append("本群微博监控列表如下：").append("\n");
 				groupEntity.getWeiboJson().forEach( obj -> {
 					JSONObject weiboJsonObject = (JSONObject) obj;
@@ -358,7 +353,7 @@ public class ManagerController {
 							.append(weiboJsonObject.getString("name")).append("\n");
 				});
 				break;
-			case "查哔哩哔哩监控":
+			case "哔哩哔哩监控":
 				sb.append("本群哔哩哔哩监控列表如下：").append("\n");
 				groupEntity.getBiliBiliJson().forEach( obj -> {
 					JSONObject biliBiliJsonObject = (JSONObject) obj;
@@ -374,19 +369,19 @@ public class ManagerController {
 							.append(biliBiliJsonObject.getString("name")).append("\n");
 				});
 				break;
-			case "查问答":
+			case "问答":
 				sb.append("本群问答列表如下：").append("\n");
 				groupEntity.getQaJson().forEach(obj -> {
 					JSONObject jsonObject = (JSONObject) obj;
 					sb.append(jsonObject.getString("q")).append("-").append(jsonObject.getString("type")).append("\n");
 				});
 				break;
-			case "查指令限制":
+			case "指令限制":
 				sb.append("本群的指令限制列表如下：").append("\n");
 				groupEntity.getCommandLimitJson().forEach((k, v) ->
 						sb.append(k).append("->").append(v).append("次").append("\n"));
 				break;
-			case "查shell":
+			case "shell":
 				sb.append("本群的shell命令存储如下").append("\n");
 				groupEntity.getShellCommandJson().forEach(obj -> {
 					JSONObject shellCommandJsonObject = (JSONObject) obj;

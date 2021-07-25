@@ -4,17 +4,16 @@ import catcode.StringTemplate;
 import love.forte.simbot.annotation.Filter;
 import love.forte.simbot.annotation.ListenGroup;
 import love.forte.simbot.annotation.OnGroup;
-import love.forte.simbot.api.message.MessageContentBuilder;
 import love.forte.simbot.api.message.MessageContentBuilderFactory;
 import love.forte.simbot.api.message.events.GroupMsg;
 import love.forte.simbot.api.sender.MsgSender;
 import me.kuku.pojo.Result;
 import me.kuku.simbot.annotation.SkipListenGroup;
 import me.kuku.simbot.entity.HeyTapEntity;
+import me.kuku.simbot.entity.HeyTapService;
 import me.kuku.simbot.entity.QqEntity;
 import me.kuku.simbot.logic.HeyTapLogic;
 import me.kuku.simbot.pojo.HeyTapQrcode;
-import me.kuku.simbot.service.HeyTapService;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
@@ -51,7 +50,7 @@ public class HeyTapController {
 					Result<HeyTapEntity> result = heyTapLogic.checkQrcode(qrcode);
 					if (result.isSuccess()){
 						HeyTapEntity entity = heyTapService.findByQqEntity(qqEntity);
-						if (entity == null) entity = new HeyTapEntity(qqEntity);
+						if (entity == null) entity = HeyTapEntity.Companion.getInstance(qqEntity);
 						HeyTapEntity newEntity = result.getData();
 						entity.setCookie(newEntity.getCookie());
 						entity.setHeyTapCookie(newEntity.getHeyTapCookie());

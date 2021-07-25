@@ -7,9 +7,9 @@ import love.forte.simbot.api.sender.MsgSender;
 import me.kuku.pojo.Result;
 import me.kuku.simbot.annotation.RegexFilter;
 import me.kuku.simbot.entity.HostLocEntity;
+import me.kuku.simbot.entity.HostLocService;
 import me.kuku.simbot.entity.QqEntity;
 import me.kuku.simbot.logic.HostLocLogic;
-import me.kuku.simbot.service.HostLocService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,13 +30,13 @@ public class HostLocController {
 	@OnPrivate
 	@ListenGroup(value = "", append = false)
 	@RegexFilter("loc {{username}} {{password}}")
-	public String login(@ContextValue("qq")QqEntity qqEntity,
+	public String login(@ContextValue("qq") QqEntity qqEntity,
 	                  @FilterValue("username") String username,
 	                  @FilterValue("password") String password) throws IOException {
 		Result<String> result = hostLocLogic.login(username, password);
 		if (result.isFailure()) return result.getMessage();
 		HostLocEntity hostLocEntity = hostLocService.findByQqEntity(qqEntity);
-		if (hostLocEntity == null) hostLocEntity = new HostLocEntity(qqEntity);
+		if (hostLocEntity == null) hostLocEntity = HostLocEntity.Companion.getInstance(qqEntity);
 		hostLocEntity.setCookie(result.getData());
 		hostLocService.save(hostLocEntity);
 		return "绑定HostLoc成功！";

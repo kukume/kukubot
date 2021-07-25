@@ -44,7 +44,7 @@ public class NetEaseLogicImpl implements NetEaseLogic {
 	private NetEaseEntity getEntityByResponse(Response response){
 		String cookie = OkHttpUtils.getCookie(response);
 		Map<String, String> cookieMap = OkHttpUtils.getCookie(cookie, "MUSIC_U", "__csrf");
-		return new NetEaseEntity(
+		return NetEaseEntity.Companion.getInstance(
 				cookieMap.get("MUSIC_U"), cookieMap.get("__csrf")
 		);
 	}

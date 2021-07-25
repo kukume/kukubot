@@ -9,5 +9,6 @@
 * ~~office自助注册~~
 * 一些小工具
 
+自动过滑块
 
 部署教程：https://www.kuku.me/archives/16/

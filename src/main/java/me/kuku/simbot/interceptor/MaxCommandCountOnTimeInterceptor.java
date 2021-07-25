@@ -8,7 +8,7 @@ import love.forte.simbot.intercept.InterceptionType;
 import love.forte.simbot.listener.ListenerInterceptContext;
 import love.forte.simbot.listener.ListenerInterceptor;
 import me.kuku.simbot.entity.GroupEntity;
-import me.kuku.simbot.service.GroupService;
+import me.kuku.simbot.entity.GroupService;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;

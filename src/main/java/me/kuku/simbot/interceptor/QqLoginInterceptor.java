@@ -1,6 +1,6 @@
 package me.kuku.simbot.interceptor;
 
-import me.kuku.simbot.service.QqLoginService;
+import me.kuku.simbot.entity.QqLoginService;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 

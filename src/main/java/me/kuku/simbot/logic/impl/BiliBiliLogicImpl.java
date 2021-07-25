@@ -252,7 +252,7 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
 		if (token == null) return null;
 		String locationUrl = response.header("location");
 		String userId = MyUtils.regex("DedeUserID=", "&", locationUrl);
-		return new BiliBiliEntity(cookie, userId, token);
+		return BiliBiliEntity.Companion.getInstance(cookie, userId, token);
 	}
 
 	@Override

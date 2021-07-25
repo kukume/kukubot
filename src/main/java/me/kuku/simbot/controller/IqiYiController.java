@@ -10,10 +10,10 @@ import love.forte.simbot.api.message.events.GroupMsg;
 import love.forte.simbot.api.sender.MsgSender;
 import me.kuku.pojo.Result;
 import me.kuku.simbot.entity.IqiYiEntity;
+import me.kuku.simbot.entity.IqiYiService;
 import me.kuku.simbot.entity.QqEntity;
 import me.kuku.simbot.logic.IqiYiLogic;
 import me.kuku.simbot.pojo.IqiYiQrcode;
-import me.kuku.simbot.service.IqiYiService;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
@@ -57,7 +57,7 @@ public class IqiYiController {
 					if (code == 200){
 						IqiYiEntity newIqiYiEntity = result.getData();
 						IqiYiEntity iqiYiEntity = iqiYiService.findByQqEntity(qqEntity);
-						if (iqiYiEntity == null) iqiYiEntity = new IqiYiEntity(qqEntity);
+						if (iqiYiEntity == null) iqiYiEntity = IqiYiEntity.Companion.getInstance(qqEntity);
 						iqiYiEntity.setCookie(newIqiYiEntity.getCookie());
 						iqiYiEntity.setPOne(newIqiYiEntity.getPOne());
 						iqiYiEntity.setPThree(newIqiYiEntity.getPThree());

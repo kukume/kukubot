@@ -7,7 +7,6 @@ import love.forte.simbot.api.message.results.AuthInfo;
 import love.forte.simbot.api.message.results.GroupList;
 import love.forte.simbot.api.message.results.SimpleGroupInfo;
 import love.forte.simbot.api.sender.Getter;
-import love.forte.simbot.api.sender.MsgSender;
 import love.forte.simbot.bot.Bot;
 import love.forte.simbot.bot.BotManager;
 import me.kuku.simbot.entity.GroupEntity;
@@ -43,7 +42,7 @@ public class BotUtils {
 			for (SimpleGroupInfo simpleGroupInfo : groupList) {
 				long group = simpleGroupInfo.getGroupCodeNumber();
 				for (GroupEntity groupEntity : groupSet) {
-					if (groupEntity.getGroup().equals(group)){
+					if (groupEntity.getGroup() == group){
 						bot.getSender().SENDER.sendPrivateMsg(qq, group, msg);
 						break out;
 					}
@@ -75,7 +74,7 @@ public class BotUtils {
 		String psKey = auths.get("psKey:qzone.qq.com");
 		String superKey = auths.get("superKey");
 		Long superToken = QqUtils.getToken(superKey);
-		return new QqLoginEntity(new QqEntity(Long.parseLong(qq)), sKey, psKey, superKey, superToken, groupPsKey);
+		return QqLoginEntity.Companion.getInstance(QqEntity.Companion.getInstance(Long.parseLong(qq)), sKey, psKey, superKey, superToken, groupPsKey);
 	}
 
 	public static Long getAt(MessageContent messageContent){

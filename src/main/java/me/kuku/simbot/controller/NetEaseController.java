@@ -4,9 +4,9 @@ import love.forte.simbot.annotation.*;
 import me.kuku.pojo.Result;
 import me.kuku.simbot.annotation.RegexFilter;
 import me.kuku.simbot.entity.NetEaseEntity;
+import me.kuku.simbot.entity.NetEaseService;
 import me.kuku.simbot.entity.QqEntity;
 import me.kuku.simbot.logic.NetEaseLogic;
-import me.kuku.simbot.service.NetEaseService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -27,7 +27,7 @@ public class NetEaseController {
 		Result<NetEaseEntity> result = netEaseLogic.loginByPhone(phone, password);
 		if (result.isSuccess()){
 			NetEaseEntity netEaseEntity = netEaseService.findByQqEntity(qqEntity);
-			if (netEaseEntity == null) netEaseEntity = new NetEaseEntity(qqEntity);
+			if (netEaseEntity == null) netEaseEntity = NetEaseEntity.Companion.getInstance(qqEntity);
 			NetEaseEntity newNetEaseEntity = result.getData();
 			netEaseEntity.setMusicU(newNetEaseEntity.getMusicU());
 			netEaseEntity.setCsrf(newNetEaseEntity.getCsrf());

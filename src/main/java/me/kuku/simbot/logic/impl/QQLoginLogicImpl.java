@@ -7,9 +7,9 @@ import me.kuku.pojo.Result;
 import me.kuku.pojo.UA;
 import me.kuku.simbot.entity.QqLoginEntity;
 import me.kuku.simbot.entity.QqVideoEntity;
+import me.kuku.simbot.entity.QqVideoService;
 import me.kuku.simbot.logic.QqLoginLogic;
 import me.kuku.simbot.pojo.GroupMember;
-import me.kuku.simbot.service.QqVideoService;
 import me.kuku.simbot.utils.QqSuperLoginUtils;
 import me.kuku.utils.MyUtils;
 import me.kuku.utils.OkHttpUtils;
@@ -114,7 +114,7 @@ public class QQLoginLogicImpl implements QqLoginLogic {
         StringBuilder sb = new StringBuilder();
         String gtkP = QqLoginEntity.getGtkP();
         Map<String, String> map = new HashMap<>();
-        map.put("uin", QqLoginEntity.getQqEntity().getQq().toString());
+        map.put("uin", String.valueOf(QqLoginEntity.getQqEntity().getQq()));
         map.put("format", "json");
         JSONObject jsonObject = OkHttpUtils.postJson(String.format("https://vip.qzone.qq.com/fcg-bin/v2/fcg_mobile_vip_site_checkin?t=0.89457%d&g_tk=%s&qzonetoken=423659183", System.currentTimeMillis(), gtkP),
                 map, OkHttpUtils.addCookie(QqLoginEntity.getCookieWithPs()));
@@ -125,7 +125,7 @@ public class QQLoginLogicImpl implements QqLoginLogic {
         }
         map.clear();
         map.put("option", "sign");
-        map.put("uin", QqLoginEntity.getQqEntity().getQq().toString());
+        map.put("uin", String.valueOf(QqLoginEntity.getQqEntity().getQq()));
         map.put("format", "json");
         jsonObject = OkHttpUtils.postJson(String.format("https://activity.qzone.qq.com/fcg-bin/fcg_huangzuan_daily_signing?t=0.%s906035&g_tk=%s&qzonetoken=-1", System.currentTimeMillis(), gtkP),
                 map, OkHttpUtils.addCookie(QqLoginEntity.getCookieWithPs()));
@@ -173,15 +173,15 @@ public class QQLoginLogicImpl implements QqLoginLogic {
         map.put("llTime", String.valueOf(System.currentTimeMillis()));
         map.put("format", "json");
         map.put("iActionType", "6");
-        map.put("strUid", QqLoginEntity.getQqEntity().getQq().toString());
-        map.put("uin", QqLoginEntity.getQqEntity().getQq().toString());
+        map.put("strUid", String.valueOf(QqLoginEntity.getQqEntity().getQq()));
+        map.put("uin", String.valueOf(QqLoginEntity.getQqEntity().getQq()));
         map.put("inCharset", "utf-8");
         JSONObject jsonObject1 = OkHttpUtils.postJson("https://h5.qzone.qq.com/webapp/json/QQBigVipTask/CompleteTask?t=0." + System.currentTimeMillis() + "906319&g_tk=" + QqLoginEntity.getGtkP(),
                 map, OkHttpUtils.addCookie(QqLoginEntity.getCookieWithSuper()));
         map.clear();
         map.put("appid", "qq_big_vip");
         map.put("op", "CheckIn");
-        map.put("uin", QqLoginEntity.getQqEntity().getQq().toString());
+        map.put("uin", String.valueOf(QqLoginEntity.getQqEntity().getQq()));
         map.put("format", "json");
         map.put("inCharset", "utf-8");
         map.put("outCharset", "utf-8");
@@ -264,7 +264,7 @@ public class QQLoginLogicImpl implements QqLoginLogic {
     public String gameSign(QqLoginEntity QqLoginEntity) throws IOException {
         String gtk = QqLoginEntity.getGtk();
         StringBuilder sb = new StringBuilder();
-        String qq = QqLoginEntity.getQqEntity().getQq().toString();
+        String qq = String.valueOf(QqLoginEntity.getQqEntity().getQq());
         JSONObject jsonObject = OkHttpUtils.getJson(String.format("http://social.minigame.qq.com/cgi-bin/social/welcome_panel_operate?format=json&cmd=2&uin=%s&g_tk=%s", qq, gtk),
                 OkHttpUtils.addHeaders(QqLoginEntity.getCookie(), "http://minigame.qq.com/appdir/social/cloudHall/src/index/welcome.html"));
         switch (jsonObject.getInteger("result")){
@@ -627,7 +627,7 @@ public class QQLoginLogicImpl implements QqLoginLogic {
                 Elements elements = Jsoup.parse(html).getElementsByClass("f-uin");
                 for (Element ele: elements){
                     String toUin = ele.text();
-                    if (QqLoginEntity.getQqEntity().getQq().toString().equals(toUin)) continue;
+                    if (String.valueOf(QqLoginEntity.getQqEntity().getQq()).equals(toUin)) continue;
                     JSONObject jsonObject = OkHttpUtils.getJson(String.format("https://mq.vip.qq.com/m/growth/doPraise?method=0&toUin=%s&g_tk=%s&ps_tk=%s",
                             toUin, QqUtils.getGTK2(QqLoginEntity.getSKey()), QqLoginEntity.getGtk(psKey)),
                             OkHttpUtils.addHeaders(QqLoginEntity.getCookie(psKey), url));
@@ -763,7 +763,7 @@ public class QQLoginLogicImpl implements QqLoginLogic {
                 .add("seq", map.get("seq"))
                 .add("t", map.get("typeInt"))
                 .add("gc", map.get("group"))
-                .add("uin", QqLoginEntity.getQqEntity().getQq().toString())
+                .add("uin", String.valueOf(QqLoginEntity.getQqEntity().getQq()))
                 .add("ver", "false")
                 .add("from", "2")
                 .add("bkn", QqLoginEntity.getGtk());

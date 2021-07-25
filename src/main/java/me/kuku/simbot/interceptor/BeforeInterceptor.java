@@ -12,7 +12,7 @@ import love.forte.simbot.listener.ScopeContext;
 import me.kuku.simbot.controller.ContextSession;
 import me.kuku.simbot.entity.GroupEntity;
 import me.kuku.simbot.entity.QqEntity;
-import me.kuku.simbot.service.QqService;
+import me.kuku.simbot.entity.QqService;
 import me.kuku.simbot.utils.BotUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;

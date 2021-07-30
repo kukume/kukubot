@@ -6,6 +6,7 @@ import love.forte.simbot.api.message.MessageContentBuilderFactory;
 import love.forte.simbot.api.sender.MsgSender;
 import me.kuku.pojo.Result;
 import me.kuku.simbot.annotation.RegexFilter;
+import me.kuku.simbot.annotation.SkipListenGroup;
 import me.kuku.simbot.entity.NetEaseEntity;
 import me.kuku.simbot.entity.NetEaseService;
 import me.kuku.simbot.entity.QqEntity;
@@ -19,6 +20,8 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 @Service
+@ListenGroup("netEase")
+@OnGroup
 public class NetEaseController {
 
 	@Resource
@@ -32,9 +35,10 @@ public class NetEaseController {
 
 	@OnPrivate
 	@RegexFilter("网易 {{phone}} {{password}}")
+	@SkipListenGroup
 	public String login(String phone, String password, QqEntity qqEntity) throws IOException {
 		Result<NetEaseEntity> result = netEaseLogic.loginByPhone(phone, password);
-		if (result.isSuccess()){
+		if (result.isSuccess()) {
 			NetEaseEntity netEaseEntity = netEaseService.findByQqEntity(qqEntity);
 			if (netEaseEntity == null) netEaseEntity = NetEaseEntity.Companion.getInstance(qqEntity);
 			NetEaseEntity newNetEaseEntity = result.getData();
@@ -42,11 +46,11 @@ public class NetEaseController {
 			netEaseEntity.setCsrf(newNetEaseEntity.getCsrf());
 			netEaseService.save(netEaseEntity);
 			return "绑定网易成功！";
-		}else return result.getMessage();
+		} else return result.getMessage();
 	}
 
 	@RegexFilter("网易二维码")
-	@OnGroup
+	@SkipListenGroup
 	public void qrcode(MsgSender msgSender, long group, QqEntity qqEntity) throws IOException {
 		NetEaseQrcode netEaseQrcode = netEaseLogic.loginByQrcode();
 		long qq = qqEntity.getQq();
@@ -59,7 +63,7 @@ public class NetEaseController {
 				while (true) {
 					TimeUnit.SECONDS.sleep(3);
 					Result<NetEaseEntity> result = netEaseLogic.checkQrcode(netEaseQrcode);
-					if (result.isSuccess()){
+					if (result.isSuccess()) {
 						NetEaseEntity netEaseEntity = netEaseService.findByQqEntity(qqEntity);
 						if (netEaseEntity == null) netEaseEntity = NetEaseEntity.Companion.getInstance(qqEntity);
 						NetEaseEntity newEntity = result.getData();
@@ -68,7 +72,7 @@ public class NetEaseController {
 						netEaseService.save(netEaseEntity);
 						msg = "绑定网易云音乐成功！";
 						break;
-					}else if (result.getCode() == 500){
+					} else if (result.getCode() == 500) {
 						msg = result.getMessage();
 						break;
 					}
@@ -81,14 +85,17 @@ public class NetEaseController {
 		});
 	}
 
-	@OnGroup
-	@Filter("网易")
-	public String sign(QqEntity qqEntity) throws IOException {
-		NetEaseEntity netEaseEntity = netEaseService.findByQqEntity(qqEntity);
-		if (netEaseEntity == null) return "您还没有绑定网易账号，请私聊机器人进行绑定！";
+	@Filter("网易签到")
+	public String sign(NetEaseEntity netEaseEntity) throws IOException {
 		Result<?> result = netEaseLogic.sign(netEaseEntity);
 		if (result.isFailure()) return "网易云音乐签到失败！失败原因：" + result.getMessage();
 		netEaseLogic.listeningVolume(netEaseEntity);
 		return "网易云音乐签到成功！";
+	}
+
+	@Filter("网易音乐人签到")
+	public String musicianSign(NetEaseEntity netEaseEntity) throws IOException {
+		Result<Void> result = netEaseLogic.musicianSign(netEaseEntity);
+		return result.getMessage();
 	}
 }

@@ -24,6 +24,7 @@ public class NetEaseScheduled {
 			try {
 				netEaseLogic.sign(netEaseEntity);
 				netEaseLogic.listeningVolume(netEaseEntity);
+				netEaseLogic.musicianSign(netEaseEntity);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

@@ -17,10 +17,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class NetEaseLogicImpl implements NetEaseLogic {
@@ -28,7 +25,7 @@ public class NetEaseLogicImpl implements NetEaseLogic {
 	@Resource
 	private ToolLogic toolLogic;
 
-	private final String api = "https://netease.kuku.me";
+	private final String api = "https://netease.kukuqaq.com";
 	private final String referer = "https://music.163.com/";
 	private final String UA = me.kuku.pojo.UA.PC.getValue();
 
@@ -77,9 +74,9 @@ public class NetEaseLogicImpl implements NetEaseLogic {
 
 	@Override
 	public NetEaseQrcode loginByQrcode() throws IOException {
-		JSONObject jsonObject = OkHttpUtils.getJson(api + "/login/qr/key");
+		JSONObject jsonObject = OkHttpUtils.getJson(api + "/login/qr/key?_=" + System.currentTimeMillis());
 		String key = jsonObject.getJSONObject("data").getString("unikey");
-		JSONObject resultJsonObject = OkHttpUtils.getJson(api + "/login/qr/create?key=" + key);
+		JSONObject resultJsonObject = OkHttpUtils.getJson(api + "/login/qr/create?key=" + key + "&_=" + System.currentTimeMillis());
 		String url = resultJsonObject.getJSONObject("data").getString("qrurl");
 		InputStream is = toolLogic.creatQr(url);
 		byte[] bytes = IOUtils.read(is);
@@ -88,7 +85,7 @@ public class NetEaseLogicImpl implements NetEaseLogic {
 
 	@Override
 	public Result<NetEaseEntity> checkQrcode(NetEaseQrcode netEaseQrcode) throws IOException {
-		Response response = OkHttpUtils.get(api + "/login/qr/check?key=" + netEaseQrcode.getKey());
+		Response response = OkHttpUtils.get(api + "/login/qr/check?key=" + netEaseQrcode.getKey() + "&_=" + System.currentTimeMillis());
 		JSONObject jsonObject = OkHttpUtils.getJson(response);
 		Integer code = jsonObject.getInteger("code");
 		switch (code){
@@ -174,5 +171,29 @@ public class NetEaseLogicImpl implements NetEaseLogic {
 			if (jsonObject.getInteger("code").equals(200)) return Result.success("刷每日300听歌量成功！！", null);
 			else return Result.failure(jsonObject.getString("message"));
 		}else return Result.failure(recommend.getMessage());
+	}
+
+	@Override
+	public Result<Void> musicianSign(NetEaseEntity netEaseEntity) throws IOException {
+		JSONObject jsonObject = OkHttpUtils.getJson(api + "/musician/tasks",
+				OkHttpUtils.addCookie(netEaseEntity.getCookie()));
+		if (jsonObject.getInteger("code") != 200) return Result.failure(jsonObject.getString("message"));
+		JSONArray jsonArray = jsonObject.getJSONObject("data").getJSONArray("list");
+		for (Object o : jsonArray) {
+			JSONObject singleJsonObject = (JSONObject) o;
+			if (Objects.equals("登录音乐人中心", singleJsonObject.getString("description"))){
+				String userMissionId = singleJsonObject.getString("userMissionId");
+				String period = singleJsonObject.getString("period");
+				JSONObject signJsonObject = OkHttpUtils.getJson(api + "/musician/sign",
+						OkHttpUtils.addCookie(netEaseEntity.getCookie()));
+				if (signJsonObject.getInteger("code") != 200) return Result.failure("音乐人每日签到失败！" +
+						signJsonObject.getString("message"));
+				JSONObject obJsonObject = OkHttpUtils.getJson(api + "/musician/cloudbean/obtain?id=" + userMissionId +
+						"&period=" + period, OkHttpUtils.addCookie(netEaseEntity.getCookie()));
+				if (obJsonObject.getInteger("code") == 200) return Result.success("网易云音乐人签到成功！", null);
+				else return Result.failure("网易云音乐人签到失败！" + obJsonObject.getString("message"));
+			}
+		}
+		return Result.failure("没有找到音乐人签到任务！");
 	}
 }

@@ -73,7 +73,7 @@ public class ToolLogicImpl implements ToolLogic {
 			String result = doc.select(".lemma-summary .para").first().text();
 			return Result.success(result);
 		}catch (NullPointerException e){
-			return Result.failure(210, "https://baike.baidu.com" + doc.select("li[class=list-dot list-dot-paddingleft]").first().getElementsByTag("a").first().attr("href"));
+			return Result.failure(210, "", "https://baike.baidu.com" + doc.select("li[class=list-dot list-dot-paddingleft]").first().getElementsByTag("a").first().attr("href"));
 		}
 	}
 

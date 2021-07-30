@@ -795,6 +795,7 @@ public class QQLoginLogicImpl implements QqLoginLogic {
             String cookie = OkHttpUtils.getCookie(response);
             String vuSession = OkHttpUtils.getCookie(cookie, "vqq_vusession");
             String accessToken = OkHttpUtils.getCookie(cookie, "vqq_access_token");
+            qqVideoEntity.setCookie(cookie);
             qqVideoEntity.setVuSession(vuSession);
             qqVideoEntity.setAccessToken(accessToken);
             qqVideoService.save(qqVideoEntity);

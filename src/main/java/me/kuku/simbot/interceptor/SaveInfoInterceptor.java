@@ -31,7 +31,7 @@ public class SaveInfoInterceptor implements MsgInterceptor {
 	@NotNull
 	@Override
 	@Transactional
-	public InterceptionType intercept(@NotNull MsgInterceptContext context) {
+	public synchronized InterceptionType intercept(@NotNull MsgInterceptContext context) {
 		MsgGet msgGet = context.getMsgGet();
 		if (msgGet instanceof GroupMsg){
 			GroupMsg groupMsg = (GroupMsg) msgGet;

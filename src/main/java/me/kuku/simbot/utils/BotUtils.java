@@ -67,6 +67,7 @@ public class BotUtils {
 	}
 
 	public static QqLoginEntity getBotQqLoginEntity(Getter getter){
+		getter.getGroupNoteList(getter.getGroupList().getResults().get(0).getGroupCodeNumber());
 		AuthInfo.Auths auths = getter.getAuthInfo().getAuths();
 		String qq = auths.get("uin");
 		String sKey = auths.get("sKey");

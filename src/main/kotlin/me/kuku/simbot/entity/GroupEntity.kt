@@ -45,7 +45,7 @@ data class GroupEntity(
     var intercept: String? = "[]",
     @Lob
     @Column(columnDefinition = "text")
-    var commandLimit: String? = "[]",
+    var commandLimit: String? = "{}",
     @Lob
     @Column(columnDefinition = "text")
     var shellCommand: String? = "[]",

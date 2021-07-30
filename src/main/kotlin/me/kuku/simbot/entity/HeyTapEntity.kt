@@ -14,10 +14,8 @@ data class HeyTapEntity (
     @OneToOne
     @JoinColumn(name = "qq")
     var qqEntity: QqEntity? = null,
-    @Column(length = 1000)
+    @Column(length = 2000)
     var cookie: String = "",
-    @Column(length = 1000)
-    var heyTapCookie: String = ""
 ){
     companion object{
         fun getInstance(qqEntity: QqEntity): HeyTapEntity{

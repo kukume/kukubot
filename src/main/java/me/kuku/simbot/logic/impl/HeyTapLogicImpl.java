@@ -22,9 +22,6 @@ import java.util.concurrent.TimeUnit;
 @Lazy
 public class HeyTapLogicImpl implements HeyTapLogic {
 
-	private final String SIGN_KEY = "&key=FdjydGAAKasmht1nFnR4MS5itFeh4R1Lk";
-	private final String RSA_KEY = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCf5viGpYn1duRt9wzwca1SEuL+wwnBfBfza0nTuLPYR5uZyheUoFI+cudN9eB4jlvXij4yAxH59ML8BhVUab/j+TmeDsCe+OLpswdHWEXtY1HacLpw/wpsKQHBQZYhAARZRx/4J5/fiz/pJcH5qVGYK0Yu8c9CNl9/eHDQkj9LoQIDAQAB";
-
 	private final String AES_KEY;
 	private String ticket = null;
 
@@ -57,7 +54,8 @@ public class HeyTapLogicImpl implements HeyTapLogic {
 		}
 		Collections.sort(signList);
 		String sign = StringUtils.join(signList, '&');
-		sign += SIGN_KEY;
+		String signKey = "&key=FdjydGAAKasmht1nFnR4MS5itFeh4R1Lk";
+		sign += signKey;
 		params.put("sign", MD5Utils.toMD5(sign));
 		Map<String, String> headers = new HashMap<>();
 		headers.put("Accept", "application/encrypted-json;charset=UTF-8");
@@ -70,7 +68,8 @@ public class HeyTapLogicImpl implements HeyTapLogic {
 		headers.put("X-Timezone", "GMT+8");
 		headers.put("fromPackageName", "");
 		try {
-			headers.put("X-Key", RSAUtils.encrypt(AES_KEY, RSAUtils.getPublicKey(RSA_KEY)));
+			String rsaKey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCf5viGpYn1duRt9wzwca1SEuL+wwnBfBfza0nTuLPYR5uZyheUoFI+cudN9eB4jlvXij4yAxH59ML8BhVUab/j+TmeDsCe+OLpswdHWEXtY1HacLpw/wpsKQHBQZYhAARZRx/4J5/fiz/pJcH5qVGYK0Yu8c9CNl9/eHDQkj9LoQIDAQAB";
+			headers.put("X-Key", RSAUtils.encrypt(AES_KEY, RSAUtils.getPublicKey(rsaKey)));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -152,7 +151,7 @@ public class HeyTapLogicImpl implements HeyTapLogic {
 							put("key", key);
 						}}, headers);
 						resp.close();
-						entity.setHeyTapCookie(OkHttpUtils.getCookie(resp));
+						entity.setCookie(OkHttpUtils.getCookie(resp));
 					} catch (IOException ignore) {
 					}
 				}
@@ -168,7 +167,7 @@ public class HeyTapLogicImpl implements HeyTapLogic {
 
 	private JSONObject taskCenter(HeyTapEntity heyTapEntity) throws IOException {
 		return OkHttpUtils.getJson("https://store.oppo.com/cn/oapi/credits/web/credits/show",
-				OkHttpUtils.addHeaders(heyTapEntity.getHeyTapCookie(), "https://store.oppo.com/cn/app/taskCenter/index",
+				OkHttpUtils.addHeaders(heyTapEntity.getCookie(), "https://store.oppo.com/cn/app/taskCenter/index",
 						UA.OPPO));
 	}
 
@@ -199,7 +198,7 @@ public class HeyTapLogicImpl implements HeyTapLogic {
 				}
 			}
 			JSONObject resultJsonObject = OkHttpUtils.postJson("https://store.oppo.com/cn/oapi/credits/web/report/immediately", params,
-					OkHttpUtils.addHeaders(heyTapEntity.getHeyTapCookie(), "https://store.oppo.com/cn/app/taskCenter/index",
+					OkHttpUtils.addHeaders(heyTapEntity.getCookie(), "https://store.oppo.com/cn/app/taskCenter/index",
 							UA.OPPO));
 			if (resultJsonObject.getInteger("code") == 200) return Result.success("签到成功", null);
 			else return Result.failure("签到失败，" + resultJsonObject.getString("errorMessage"));
@@ -212,7 +211,7 @@ public class HeyTapLogicImpl implements HeyTapLogic {
 		params.put("type", infoType);
 		params.put("amount", infoCredits);
 		Response response = OkHttpUtils.post("https://store.oppo.com/cn/oapi/credits/web/credits/cashingCredits", params,
-				OkHttpUtils.addHeaders(heyTapEntity.getHeyTapCookie(), "https://store.oppo.com/cn/app/taskCenter/index?us=gerenzhongxin&um=hudongleyuan&uc=renwuzhongxin", UA.OPPO));
+				OkHttpUtils.addHeaders(heyTapEntity.getCookie(), "https://store.oppo.com/cn/app/taskCenter/index?us=gerenzhongxin&um=hudongleyuan&uc=renwuzhongxin", UA.OPPO));
 		response.close();
 		return response.code() == 200;
 	}
@@ -238,7 +237,7 @@ public class HeyTapLogicImpl implements HeyTapLogic {
 					JSONObject it = (JSONObject) o;
 					String skuId = it.getString("skuid");
 					OkHttpUtils.get("https://msec.opposhop.cn/goods/v1/info/sku?skuId=" + skuId,
-							OkHttpUtils.addHeaders(heyTapEntity.getHeyTapCookie(), "", UA.OPPO)).close();
+							OkHttpUtils.addHeaders(heyTapEntity.getCookie(), "", UA.OPPO)).close();
 					try {
 						TimeUnit.SECONDS.sleep(3);
 					} catch (InterruptedException e) {
@@ -274,7 +273,7 @@ public class HeyTapLogicImpl implements HeyTapLogic {
 			Integer endCount = qd.getInteger("times");
 			while (readCount < endCount){
 				OkHttpUtils.get("https://msec.opposhop.cn/users/vi/creditsTask/pushTask?marking=daily_sharegoods",
-						OkHttpUtils.addCookie(heyTapEntity.getHeyTapCookie())).close();
+						OkHttpUtils.addCookie(heyTapEntity.getCookie())).close();
 				readCount++;
 			}
 		}else if (status == 2)
@@ -304,7 +303,7 @@ public class HeyTapLogicImpl implements HeyTapLogic {
 			Integer endCount = qd.getInteger("times");
 			while (readCount < endCount){
 				OkHttpUtils.get("https://msec.opposhop.cn/users/vi/creditsTask/pushTask?marking=daily_viewpush",
-						OkHttpUtils.addCookie(heyTapEntity.getHeyTapCookie())).close();
+						OkHttpUtils.addCookie(heyTapEntity.getCookie())).close();
 				readCount++;
 			}
 		}else if (status == 2)
@@ -318,7 +317,7 @@ public class HeyTapLogicImpl implements HeyTapLogic {
 	@Override
 	public Result<Void> earlyBedRegistration(HeyTapEntity heyTapEntity) throws IOException {
 		JSONObject jsonObject = OkHttpUtils.getJson("https://store.oppo.com/cn/oapi/credits/web/clockin/applyOrClockIn",
-				OkHttpUtils.addHeaders(heyTapEntity.getHeyTapCookie(), "https://store.oppo.com/cn/app/cardingActivities?us=gerenzhongxin&um=hudongleyuan&uc=zaoshuidaka",
+				OkHttpUtils.addHeaders(heyTapEntity.getCookie(), "https://store.oppo.com/cn/app/cardingActivities?us=gerenzhongxin&um=hudongleyuan&uc=zaoshuidaka",
 						UA.OPPO));
 		if (jsonObject.getInteger("code") == 200) return Result.success("报名成功", null);
 		else return Result.failure("报名失败：" + jsonObject.getString("errorMessage"));
@@ -339,7 +338,7 @@ public class HeyTapLogicImpl implements HeyTapLogic {
 		params.put("sku", "");
 		params.put("spu", "");
 		Map<String, String> headers = new HashMap<>();
-		headers.put("cookie", heyTapEntity.getHeyTapCookie());
+		headers.put("cookie", heyTapEntity.getCookie());
 		headers.put("clientPackage", "com.oppo.store");
 		headers.put("Origin", "https://hd.oppo.com");
 		headers.put("user-agent", UA.OPPO.getValue());
@@ -351,7 +350,7 @@ public class HeyTapLogicImpl implements HeyTapLogic {
 		params.put("aid", aid);
 		params.put("t_index", tIndex);
 		return OkHttpUtils.postJson("https://hd.oppo.com/task/finish", params,
-				OkHttpUtils.addHeaders(heyTapEntity.getHeyTapCookie(), "", UA.OPPO));
+				OkHttpUtils.addHeaders(heyTapEntity.getCookie(), "", UA.OPPO));
 	}
 
 	private JSONObject taskAward(HeyTapEntity heyTapEntity, String aid, String tIndex) throws IOException {
@@ -359,7 +358,7 @@ public class HeyTapLogicImpl implements HeyTapLogic {
 		params.put("aid", aid);
 		params.put("t_index", tIndex);
 		return OkHttpUtils.postJson("https://hd.oppo.com/task/award", params,
-				OkHttpUtils.addHeaders(heyTapEntity.getHeyTapCookie(), "", UA.OPPO));
+				OkHttpUtils.addHeaders(heyTapEntity.getCookie(), "", UA.OPPO));
 	}
 
 	@Override
@@ -384,7 +383,7 @@ public class HeyTapLogicImpl implements HeyTapLogic {
 		if (jsonObject.getInteger("no") != 0)
 			return Result.failure(jsonObject.getString("msg"));
 		JSONObject listJsonObject = OkHttpUtils.getJson("https://hd.oppo.com/task/list?aid=1418",
-				OkHttpUtils.addHeaders(heyTapEntity.getHeyTapCookie(), "https://hd.oppo.com/act/m/2021/jifenzhuanpan/index.html?us=gerenzhongxin&um=hudongleyuan&uc=yingjifen",
+				OkHttpUtils.addHeaders(heyTapEntity.getCookie(), "https://hd.oppo.com/act/m/2021/jifenzhuanpan/index.html?us=gerenzhongxin&um=hudongleyuan&uc=yingjifen",
 						UA.OPPO));
 		JSONArray dataJsonArray = listJsonObject.getJSONArray("data");
 		for (Object o : dataJsonArray) {

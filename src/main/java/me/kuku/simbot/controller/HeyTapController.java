@@ -4,10 +4,12 @@ import catcode.StringTemplate;
 import love.forte.simbot.annotation.Filter;
 import love.forte.simbot.annotation.ListenGroup;
 import love.forte.simbot.annotation.OnGroup;
+import love.forte.simbot.annotation.OnPrivate;
 import love.forte.simbot.api.message.MessageContentBuilderFactory;
 import love.forte.simbot.api.message.events.GroupMsg;
 import love.forte.simbot.api.sender.MsgSender;
 import me.kuku.pojo.Result;
+import me.kuku.simbot.annotation.RegexFilter;
 import me.kuku.simbot.annotation.SkipListenGroup;
 import me.kuku.simbot.entity.HeyTapEntity;
 import me.kuku.simbot.entity.HeyTapService;
@@ -37,6 +39,17 @@ public class HeyTapController {
 	private HeyTapLogic heyTapLogic;
 
 	@SkipListenGroup
+	@OnPrivate
+	@RegexFilter("欢太{{cookie}}")
+	public String bindCookie(String cookie, QqEntity qqEntity){
+		HeyTapEntity heyTapEntity = heyTapService.findByQqEntity(qqEntity);
+		if (heyTapEntity == null) heyTapEntity = HeyTapEntity.Companion.getInstance(qqEntity);
+		heyTapEntity.setCookie(cookie);
+		heyTapService.save(heyTapEntity);
+		return "绑定欢太成功！";
+	}
+
+	@SkipListenGroup
 	@Filter("欢太二维码")
 	public void getQrcode(QqEntity qqEntity, MsgSender msgSender, GroupMsg groupMsg) throws IOException {
 		long qq = groupMsg.getAccountInfo().getAccountCodeNumber();
@@ -53,7 +66,6 @@ public class HeyTapController {
 						if (entity == null) entity = HeyTapEntity.Companion.getInstance(qqEntity);
 						HeyTapEntity newEntity = result.getData();
 						entity.setCookie(newEntity.getCookie());
-						entity.setHeyTapCookie(newEntity.getHeyTapCookie());
 						heyTapService.save(entity);
 						msg = "绑定欢太账号成功！";
 						break;

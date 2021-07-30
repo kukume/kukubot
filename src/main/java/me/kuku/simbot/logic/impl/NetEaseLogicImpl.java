@@ -6,12 +6,17 @@ import com.alibaba.fastjson.JSONObject;
 import me.kuku.pojo.Result;
 import me.kuku.simbot.entity.NetEaseEntity;
 import me.kuku.simbot.logic.NetEaseLogic;
+import me.kuku.simbot.logic.ToolLogic;
+import me.kuku.simbot.pojo.NetEaseQrcode;
 import me.kuku.utils.AESUtils;
+import me.kuku.utils.IOUtils;
 import me.kuku.utils.OkHttpUtils;
 import okhttp3.Response;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +24,9 @@ import java.util.Map;
 
 @Service
 public class NetEaseLogicImpl implements NetEaseLogic {
+
+	@Resource
+	private ToolLogic toolLogic;
 
 	private final String api = "https://netease.kuku.me";
 	private final String referer = "https://music.163.com/";
@@ -65,6 +73,34 @@ public class NetEaseLogicImpl implements NetEaseLogic {
 		if (jsonObject.getInteger("code") == 200){
 			return Result.success(getEntityByResponse(response));
 		}else return Result.failure(jsonObject.getString("msg"), null);
+	}
+
+	@Override
+	public NetEaseQrcode loginByQrcode() throws IOException {
+		JSONObject jsonObject = OkHttpUtils.getJson(api + "/login/qr/key");
+		String key = jsonObject.getJSONObject("data").getString("unikey");
+		JSONObject resultJsonObject = OkHttpUtils.getJson(api + "/login/qr/create?key=" + key);
+		String url = resultJsonObject.getJSONObject("data").getString("qrurl");
+		InputStream is = toolLogic.creatQr(url);
+		byte[] bytes = IOUtils.read(is);
+		return new NetEaseQrcode(bytes, key);
+	}
+
+	@Override
+	public Result<NetEaseEntity> checkQrcode(NetEaseQrcode netEaseQrcode) throws IOException {
+		Response response = OkHttpUtils.get(api + "/login/qr/check?key=" + netEaseQrcode.getKey());
+		JSONObject jsonObject = OkHttpUtils.getJson(response);
+		Integer code = jsonObject.getInteger("code");
+		switch (code){
+			case 801:
+			case 802:
+				return Result.failure(0, "未扫码或正在验证中");
+			case 800:
+				return Result.failure("二维码已失效！");
+			case 803:
+				return Result.success(getEntityByResponse(response));
+		}
+		return Result.failure("未知的错误代码，错误代码为" + code + "，" + jsonObject.getString("message"));
 	}
 
 	@Override

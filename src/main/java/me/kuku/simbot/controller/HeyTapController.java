@@ -90,5 +90,13 @@ public class HeyTapController {
 		else return "签到失败：" + result.getMessage();
 	}
 
+	@RegexFilter("早睡打卡{{statusStr}}")
+	public String earlyToBed(HeyTapEntity heyTapEntity, String statusStr){
+		boolean status = statusStr.contains("开");
+		heyTapEntity.setEarlyToBedClock(status);
+		heyTapService.save(heyTapEntity);
+		return "欢太商城自动早睡打卡" + (status ? "开启" : "关闭") + "成功！如晚上打卡失败将会私聊提醒！";
+	}
+
 
 }

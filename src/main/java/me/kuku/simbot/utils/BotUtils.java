@@ -15,7 +15,9 @@ import me.kuku.simbot.entity.QqLoginEntity;
 import me.kuku.utils.OkHttpUtils;
 import me.kuku.utils.QqUtils;
 
+import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class BotUtils {
@@ -68,14 +70,24 @@ public class BotUtils {
 
 	public static QqLoginEntity getBotQqLoginEntity(Getter getter){
 		getter.getGroupNoteList(getter.getGroupList().getResults().get(0).getGroupCodeNumber());
-		AuthInfo.Auths auths = getter.getAuthInfo().getAuths();
-		String qq = auths.get("uin");
-		String sKey = auths.get("sKey");
-		String groupPsKey = auths.get("psKey:qun.qq.com");
-		String psKey = auths.get("psKey:qzone.qq.com");
-		String superKey = auths.get("superKey");
+		Map<String, String> map = getter.getAuthInfo().getAuths().toMap();
+		String qq = map.get("uin");
+		String sKey = cookieDecode(map.get("sKey:data"));
+		String groupPsKey = cookieDecode(map.get("psKey:qun.qq.com:data"));
+		String psKey = cookieDecode(map.get("psKey:qzone.qq.com:data"));
+		String superKey = cookieDecode(map.get("superKey"));
 		Long superToken = QqUtils.getToken(superKey);
 		return QqLoginEntity.Companion.getInstance(QqEntity.Companion.getInstance(Long.parseLong(qq)), sKey, psKey, superKey, superToken, groupPsKey);
+	}
+
+	private static String cookieDecode(String str){
+		String[] arr = str.split(",");
+		int len = arr.length;
+		byte[] bytes = new byte[len];
+		for (int i = 0; i < len; i++){
+			bytes[i] = (byte) Integer.parseInt(arr[i]);
+		}
+		return new String(bytes);
 	}
 
 	public static Long getAt(MessageContent messageContent){

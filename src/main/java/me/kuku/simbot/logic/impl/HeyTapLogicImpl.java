@@ -323,11 +323,6 @@ public class HeyTapLogicImpl implements HeyTapLogic {
 		else return Result.failure("报名失败：" + jsonObject.getString("errorMessage"));
 	}
 
-	@Override
-	public Result<Void> earlyBedPunchCard(HeyTapEntity heyTapEntity) {
-		return null;
-	}
-
 	private JSONObject lottery(HeyTapEntity heyTapEntity, Map<String, String> params) throws IOException {
 		params.put("mobile", "");
 		params.put("authcode", "");

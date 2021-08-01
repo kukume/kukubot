@@ -4,6 +4,8 @@ import catcode.CatCodeUtil;
 import catcode.CodeTemplate;
 import catcode.Neko;
 import catcode.StringTemplate;
+import lombok.extern.slf4j.Slf4j;
+import love.forte.simbot.annotation.Listen;
 import love.forte.simbot.annotation.OnGroup;
 import love.forte.simbot.annotation.OnGroupMsgRecall;
 import love.forte.simbot.annotation.Priority;
@@ -20,6 +22,7 @@ import java.util.Date;
 import java.util.List;
 
 @Service
+@Slf4j
 public class SaveEvent {
 
 	@Autowired
@@ -52,6 +55,15 @@ public class SaveEvent {
 					template.at(qqEntity.getQq()) + "：妄图撤回一条消息，消息内容为：");
 			msgSender.SENDER.sendGroupMsg(groupMsgRecall.getGroupInfo(), messageEntity.getContent());
 		}
+	}
+
+	@Listen(MiraiMessagePostSendEvent.class)
+	public void listen(MiraiMessagePostSendEvent miraiMessagePostSendEvent){
+		long group = miraiMessagePostSendEvent.getGroupInfo().getGroupCodeNumber();
+		String groupName = miraiMessagePostSendEvent.getGroupInfo().getGroupName();
+		String msg = miraiMessagePostSendEvent.getMsg();
+		log.info(String.format("%s(%s) <- ([ %s ])", groupName, group, msg));
+		// (734669014) <- ([ "请输入网易云音乐账号！！" ])
 	}
 
 	@OnGroup

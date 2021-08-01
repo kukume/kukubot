@@ -6,7 +6,6 @@ import love.forte.simbot.annotation.*
 import love.forte.simbot.api.message.events.GroupMsg
 import love.forte.simbot.api.message.events.MsgGet
 import love.forte.simbot.api.message.events.PrivateMsg
-import me.kuku.simbot.annotation.RegexFilter
 import me.kuku.simbot.exception.WaitNextMessageTimeoutException
 import me.kuku.simbot.utils.SpringUtils
 import org.springframework.cache.CacheManager
@@ -24,7 +23,6 @@ class ContextSessionController constructor(cacheManager: CacheManager){
     private val cache = cacheManager.getCache("ContextSession")!!
 
     @OnGroup
-    @RegexFilter(".*") // 使用正则匹配截取手机号信息.
     fun GroupMsg.getNextMessage(groupMsg: GroupMsg) {
         val botCode = botInfo.accountCode
         val map = (cache.get(botCode)?.get() as? MutableMap<String, Continuation<String>>) ?: return
@@ -34,7 +32,6 @@ class ContextSessionController constructor(cacheManager: CacheManager){
     }
 
     @OnPrivate
-    @RegexFilter(".*")
     fun PrivateMsg.getNextMessage(privateMsg: PrivateMsg){
         val botCode = botInfo.accountCode
         val map = (cache.get(botCode)?.get() as? MutableMap<String, Continuation<String>>) ?: return

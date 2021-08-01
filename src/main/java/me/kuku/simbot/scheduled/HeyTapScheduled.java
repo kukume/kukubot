@@ -45,5 +45,36 @@ public class HeyTapScheduled {
 		}
 	}
 
+	@Scheduled(cron = "54 1 0 * * ?")
+	@Transactional
+	public void heyTapEarlyRe(){
+		List<HeyTapEntity> list = heyTapService.findByEarlyToBedClock(true);
+		for (HeyTapEntity heyTapEntity : list) {
+			try {
+				heyTapLogic.earlyBedRegistration(heyTapEntity);
+			}catch (Exception e){
+				e.printStackTrace();
+			}
+		}
+	}
+
+	@Scheduled(cron = "10 30 19 * * ?")
+	@Transactional
+	public void heyTapEarlySign(){
+		List<HeyTapEntity> list = heyTapService.findByEarlyToBedClock(true);
+		for (HeyTapEntity heyTapEntity : list) {
+			try {
+				Result<Void> result = heyTapLogic.earlyBedRegistration(heyTapEntity);
+				if (result.isFailure()){
+					QqEntity qqEntity = heyTapEntity.getQqEntity();
+					BotUtils.sendPrivateMsg(qqEntity.getGroups(), qqEntity.getQq(),
+							"您的欢太商城早睡打卡失败，请去手动打卡，24点之前未打卡将损失500积分！");
+				}
+			}catch (Exception e){
+				e.printStackTrace();
+			}
+		}
+	}
+
 
 }

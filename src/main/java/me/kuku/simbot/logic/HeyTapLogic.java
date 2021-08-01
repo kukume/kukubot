@@ -15,7 +15,6 @@ public interface HeyTapLogic {
 	Result<Void> shareGoods(HeyTapEntity heyTapEntity) throws IOException;
 	Result<Void> viewPush(HeyTapEntity heyTapEntity) throws IOException;
 	Result<Void> earlyBedRegistration(HeyTapEntity heyTapEntity) throws IOException;
-	Result<Void> earlyBedPunchCard(HeyTapEntity heyTapEntity);
 	Result<Void> pointsEveryDay(HeyTapEntity heyTapEntity) throws IOException;
 	Result<Void> transferPoints(HeyTapEntity heyTapEntity) throws IOException;
 	Result<Void> smartLifeLottery(HeyTapEntity heyTapEntity) throws IOException;

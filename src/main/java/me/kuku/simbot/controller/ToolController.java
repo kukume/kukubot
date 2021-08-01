@@ -27,6 +27,7 @@ import me.kuku.utils.MyUtils;
 import me.kuku.utils.OkHttpUtils;
 import net.mamoe.mirai.message.data.LightApp;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 
@@ -34,9 +35,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Service
@@ -55,6 +58,8 @@ public class ToolController {
 	private GroupService groupService;
 	@Autowired
 	private ThreadPoolTaskScheduler threadPoolTaskScheduler;
+	@Autowired
+	private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
 	@Filter(value = "{{type,百度|谷歌|bing|搜狗}}{{content}}", matchType = MatchType.REGEX_MATCHES)
 	public String teachYou(@FilterValue("content") String content, @FilterValue("type") String type) throws IOException {
@@ -331,6 +336,48 @@ public class ToolController {
 	@RegexFilter(value = "{{ms,.*}}", atBot = true)
 	public String talk(String ms) throws IOException {
 		return toolLogic.qinYunKeChat(ms);
+	}
+
+	@Filter("京东代挂")
+	public void jd(MsgSender msgSender, GroupMsg groupMsg) throws IOException {
+		long qq = groupMsg.getAccountInfo().getAccountCodeNumber();
+		String url = "https://api.kuku.me";
+		JSONObject jsonObject = OkHttpUtils.postJson(url + "/jd/qrcode", new HashMap<>());
+		if (jsonObject.getInteger("code") != 200) {
+			msgSender.SENDER.sendGroupMsg(groupMsg, stringTemplate.at(qq) + jsonObject.getString("message"));
+			return;
+		}
+		JSONObject dataJsonObject = jsonObject.getJSONObject("data");
+		dataJsonObject.put("type", "0");
+		String qrcodeUrl = dataJsonObject.getString("qrcodeUrl");
+		MessageContent content = messageContentBuilderFactory.getMessageContentBuilder()
+				.at(qq).image(toolLogic.creatQr(qrcodeUrl)).text("请使用京东app扫码登录！").build();
+		msgSender.SENDER.sendGroupMsg(groupMsg, content);
+		threadPoolTaskExecutor.execute(() -> {
+			String msg;
+			while (true){
+				try {
+					TimeUnit.SECONDS.sleep(3);
+					JSONObject cookieJsonObject = OkHttpUtils.postJson(url + "/jd/cookie", dataJsonObject.toJavaObject(Map.class));
+					Integer code = cookieJsonObject.getInteger("code");
+					if (code == 200){
+						msg = "添加京东至青龙面板成功！";
+						break;
+					}else if (code == 505){
+						msg = "二维码已失效！";
+						break;
+					}else if (code == 506){
+						msg = "未配置配置文件信息！";
+						break;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+					msg = "出现异常了，异常信息为：" + e.getMessage();
+					break;
+				}
+			}
+			msgSender.SENDER.sendGroupMsg(groupMsg, stringTemplate.at(qq) + msg);
+		});
 	}
 
 }

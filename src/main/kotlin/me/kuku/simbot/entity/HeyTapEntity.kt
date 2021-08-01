@@ -16,6 +16,7 @@ data class HeyTapEntity (
     var qqEntity: QqEntity? = null,
     @Column(length = 2000)
     var cookie: String = "",
+    var earlyToBedClock: Boolean? = false
 ){
     companion object{
         fun getInstance(qqEntity: QqEntity): HeyTapEntity{
@@ -26,6 +27,7 @@ data class HeyTapEntity (
 
 interface HeyTapRepository: JpaRepository<HeyTapEntity, Int>{
     fun findByQqEntity(qqEntity: QqEntity): HeyTapEntity?
+    fun findByEarlyToBedClock(earlyToBedClock: Boolean): List<HeyTapEntity>
 }
 
 interface HeyTapService{
@@ -33,6 +35,7 @@ interface HeyTapService{
     fun save(heyTapEntity: HeyTapEntity): HeyTapEntity
     fun findAll(): List<HeyTapEntity>
     fun delete(heyTapEntity: HeyTapEntity)
+    fun findByEarlyToBedClock(earlyToBedClock: Boolean): List<HeyTapEntity>
 }
 
 @Service
@@ -56,4 +59,6 @@ class HeyTapServiceImpl: HeyTapService{
     override fun delete(heyTapEntity: HeyTapEntity) {
         return heyTapRepository.delete(heyTapEntity)
     }
+
+    override fun findByEarlyToBedClock(earlyToBedClock: Boolean) = heyTapRepository.findByEarlyToBedClock(earlyToBedClock)
 }

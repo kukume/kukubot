@@ -17,6 +17,7 @@ import me.kuku.simbot.pojo.BiliBiliPojo;
 import me.kuku.simbot.pojo.WeiboPojo;
 import me.kuku.simbot.utils.BotUtils;
 import me.kuku.utils.DateTimeFormatterUtils;
+import me.kuku.utils.MyUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -233,7 +234,8 @@ public class ManagerController {
 	}
 
 	@RegexFilter("加{{type,违规词|黑名单|拦截|微博监控|哔哩哔哩监控|哔哩哔哩开播提醒}}{{content}}")
-	public String add(GroupEntity groupEntity, String type, String content, ContextSession session, long qq) throws IOException {
+	public String add(GroupEntity groupEntity, String type, String content, ContextSession session, long qq,
+	                  MsgSender msgSender, long group) throws IOException {
 		switch (type){
 			case "违规词":
 				groupEntity.setViolationJson(groupEntity.getViolationJson().fluentAdd(content));
@@ -247,7 +249,19 @@ public class ManagerController {
 			case "微博监控":
 				Result<List<WeiboPojo>> result = weiboLogic.getIdByName(content);
 				if (result.getCode() != 200) return "该用户不存在！！";
-				WeiboPojo weiboPojo = result.getData().get(0);
+				List<WeiboPojo> wbList = result.getData();
+				StringBuilder weiboSb = new StringBuilder().append("请输入序号：").append("\n");
+				for (int i = 0; i < wbList.size(); i++) {
+					WeiboPojo pojo = wbList.get(i);
+					weiboSb.append(i + 1).append("、").append(pojo.getUserId()).append("-").append(pojo.getName())
+							.append("\n");
+				}
+				msgSender.SENDER.sendGroupMsg(group, stringTemplate.at(qq) + MyUtils.removeLastLine(weiboSb));
+				String wbNum = session.waitNextMessage();
+				if (!wbNum.matches("[0-9]+")) return "您输入的参数不正确！";
+				int wbN = Integer.parseInt(wbNum);
+				if (wbN < 1 || wbN > wbList.size()) return "您输入的参数不正确！";
+				WeiboPojo weiboPojo = wbList.get(wbN - 1);
 				JSONObject jsonObject = new JSONObject();
 				jsonObject.put("id", weiboPojo.getUserId());
 				jsonObject.put("name", weiboPojo.getName());
@@ -257,7 +271,19 @@ public class ManagerController {
 			case "哔哩哔哩开播提醒":
 				Result<List<BiliBiliPojo>> blResult = biliBiliLogic.getIdByName(content);
 				if (blResult.getCode() != 200) return "该用户不存在";
-				BiliBiliPojo biliBiliPojo = blResult.getData().get(0);
+				List<BiliBiliPojo> biList = blResult.getData();
+				StringBuilder biSb = new StringBuilder().append("请输入序号：").append("\n");
+				for (int i = 0; i < biList.size(); i++) {
+					BiliBiliPojo pojo = biList.get(i);
+					biSb.append(i + 1).append("、").append(pojo.getUserId()).append("-").append(pojo.getName())
+							.append("\n");
+				}
+				msgSender.SENDER.sendGroupMsg(group, stringTemplate.at(qq) + MyUtils.removeLastLine(biSb));
+				String biNum = session.waitNextMessage();
+				if (!biNum.matches("[0-9]+")) return "您输入的参数不正确！";
+				int biN = Integer.parseInt(biNum);
+				if (biN < 1 || biN > biList.size()) return "您输入的参数不正确！";
+				BiliBiliPojo biliBiliPojo = biList.get(biN - 1);
 				JSONObject blJsonObject = new JSONObject();
 				blJsonObject.put("id", biliBiliPojo.getUserId());
 				blJsonObject.put("name", biliBiliPojo.getName());
@@ -306,7 +332,7 @@ public class ManagerController {
 				break;
 		}
 		groupService.save(groupEntity);
-		return type + "成功！！";
+		return "删" + type + "成功！！";
 	}
 
 	private void delManager(JSONArray jsonArray, String content){

@@ -57,7 +57,8 @@ public class SaveEvent {
 		}
 	}
 
-	@Listen(MiraiMessagePostSendEvent.class)
+	@Listen(MiraiUserMessagePostSendEvent.class)
+	@Listen(MiraiGroupMessagePostSendEvent.class)
 	public void listen(MiraiMessagePostSendEvent miraiMessagePostSendEvent){
 		String msg = miraiMessagePostSendEvent.getMsg();
 		if (miraiMessagePostSendEvent instanceof MiraiGroupMessagePostSendEvent) {
@@ -66,7 +67,13 @@ public class SaveEvent {
 			String groupName = miraiGroupMessagePostSendEvent.getGroupInfo().getGroupName();
 			log.info(String.format("%s(%s) <- ([ %s ])", groupName, group, msg));
 		}else if (miraiMessagePostSendEvent instanceof MiraiTempMessagePostSendEvent){
-
+			MiraiTempMessagePostSendEvent miraiTempMessagePostSendEvent = (MiraiTempMessagePostSendEvent) miraiMessagePostSendEvent;
+			long qq = miraiTempMessagePostSendEvent.getQq();
+			long group = miraiTempMessagePostSendEvent.getGroupInfo().getGroupCodeNumber();
+			String name = miraiTempMessagePostSendEvent.getAccountInfo().getAccountRemarkOrNickname();
+			String groupName = miraiTempMessagePostSendEvent.getGroupInfo().getGroupName();
+			log.info(String.format("%s(%s)[%s(%s)] <- ([ %s ])", name, qq, groupName,
+					group, msg));
 		}else if (miraiMessagePostSendEvent instanceof MiraiFriendMessagePostSendEvent){
 			MiraiFriendMessagePostSendEvent miraiFriendMessagePostSendEvent = (MiraiFriendMessagePostSendEvent) miraiMessagePostSendEvent;
 			long qq = miraiFriendMessagePostSendEvent.getQq();

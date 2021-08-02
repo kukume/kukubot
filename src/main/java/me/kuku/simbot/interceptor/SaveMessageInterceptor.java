@@ -1,9 +1,11 @@
 package me.kuku.simbot.interceptor;
 
 import lombok.extern.slf4j.Slf4j;
+import love.forte.simbot.api.message.events.FriendMsg;
 import love.forte.simbot.api.message.events.GroupMsg;
 import love.forte.simbot.api.message.events.MsgGet;
 import love.forte.simbot.api.message.events.PrivateMsg;
+import love.forte.simbot.component.mirai.message.event.MiraiTempMsg;
 import love.forte.simbot.constant.PriorityConstant;
 import love.forte.simbot.intercept.InterceptionType;
 import love.forte.simbot.listener.MsgInterceptContext;
@@ -47,13 +49,22 @@ public class SaveMessageInterceptor implements MsgInterceptor {
 			MessageEntity messageEntity = new MessageEntity(null, groupMsg.getId(), qqEntity,
 					qqEntity.getGroup(groupMsg.getGroupInfo().getGroupCodeNumber()), msg, new Date());
 			messageService.save(messageEntity);
-		}else if (msgGet instanceof PrivateMsg){
+		}else if (msgGet instanceof FriendMsg){
 			PrivateMsg privateMsg = (PrivateMsg) msgGet;
 			long qq = privateMsg.getAccountInfo().getAccountCodeNumber();
 			String name = privateMsg.getAccountInfo().getAccountRemarkOrNickname();
 			String msg = privateMsg.getMsg();
 			log.info(String.format("%s(%s) -> ([ %s ])",
 					name, qq, msg));
+		}else if (msgGet instanceof MiraiTempMsg){
+			MiraiTempMsg miraiTempMsg = (MiraiTempMsg) msgGet;
+			long qq = miraiTempMsg.getAccountInfo().getAccountCodeNumber();
+			long group = miraiTempMsg.getGroupInfo().getGroupCodeNumber();
+			String name = miraiTempMsg.getAccountInfo().getAccountRemarkOrNickname();
+			String groupName = miraiTempMsg.getGroupInfo().getGroupName();
+			String msg = miraiTempMsg.getMsg();
+			log.info(String.format("%s(%s)[%s(%s)] -> ([ %s ])", name, qq, groupName,
+					group, msg));
 		}
 		return InterceptionType.PASS;
 	}

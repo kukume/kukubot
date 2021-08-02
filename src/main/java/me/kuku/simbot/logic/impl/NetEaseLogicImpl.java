@@ -60,7 +60,7 @@ public class NetEaseLogicImpl implements NetEaseLogic {
 		JSONObject jsonObject = OkHttpUtils.getJson(response);
 		if (jsonObject.getInteger("code") == 200){
 			return Result.success(getEntityByResponse(response));
-		}else return Result.failure(jsonObject.getString("msg"), null);
+		}else return Result.failure("登录失败，请重试！", null);
 	}
 
 	@Override

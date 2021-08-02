@@ -31,7 +31,7 @@ open class QqLoginEntity(
         }
 
         fun getInstance(qqEntity: QqEntity, sKey: String, psKey: String, superKey: String, superToken: Long, groupPsKey: String): QqLoginEntity{
-            return QqLoginEntity(null, qqEntity, sKey, psKey, superKey, superToken.toString(), groupPsKey)
+            return QqLoginEntity(null, qqEntity, sKey, psKey, superKey, superToken.toString(), "", groupPsKey)
         }
     }
 

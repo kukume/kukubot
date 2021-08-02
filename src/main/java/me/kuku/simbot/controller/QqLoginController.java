@@ -205,7 +205,7 @@ public class QqLoginController {
 
 	@SkipListenGroup
 	@Filter("腾讯视频签到")
-	public String tencentVideoSign(@ContextValue("qq") QqEntity qqEntity) throws IOException {
+	public String tencentVideoSign(QqEntity qqEntity) throws IOException {
 		QqVideoEntity qqVideoEntity = qqVideoService.findByQqEntity(qqEntity);
 		if (qqVideoEntity == null) return "您没有绑定腾讯视频信息，请先发送<腾讯视频二维码>进行绑定";
 		return qqLoginLogic.videoSign(qqVideoEntity).getMessage();

@@ -9,6 +9,7 @@ import me.kuku.simbot.logic.QqGroupLogic;
 import me.kuku.simbot.pojo.GroupMember;
 import me.kuku.utils.MyUtils;
 import me.kuku.utils.OkHttpUtils;
+import me.kuku.utils.QqUtils;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -168,7 +169,7 @@ public class QqGroupLogicImpl implements QqGroupLogic {
 		map.put("end", "20");
 		map.put("sort", "0");
 		map.put("key", qq.toString());
-		map.put("bkn", qqLoginEntity.getCookie(qqLoginEntity.getGroupPsKey()));
+		map.put("bkn", qqLoginEntity.getGtk());
 		JSONObject jsonObject = OkHttpUtils.postJson("https://qun.qq.com/cgi-bin/qun_mgr/search_group_members", map,
 				OkHttpUtils.addCookie(qqLoginEntity.getCookie(qqLoginEntity.getGroupPsKey())));
 		switch (jsonObject.getInteger("ec")){

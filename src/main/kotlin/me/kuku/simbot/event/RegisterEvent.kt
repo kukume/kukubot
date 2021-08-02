@@ -2,7 +2,6 @@
 
 package me.kuku.simbot.event
 
-import love.forte.simbot.api.message.containers.AccountInfo
 import love.forte.simbot.api.message.events.MsgGet
 import love.forte.simbot.component.mirai.MiraiBotAccountInfo
 import love.forte.simbot.component.mirai.message.MiraiFriendAccountInfo

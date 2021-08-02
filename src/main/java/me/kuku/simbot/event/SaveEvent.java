@@ -59,10 +59,19 @@ public class SaveEvent {
 
 	@Listen(MiraiMessagePostSendEvent.class)
 	public void listen(MiraiMessagePostSendEvent miraiMessagePostSendEvent){
-		long group = miraiMessagePostSendEvent.getGroupInfo().getGroupCodeNumber();
-		String groupName = miraiMessagePostSendEvent.getGroupInfo().getGroupName();
 		String msg = miraiMessagePostSendEvent.getMsg();
-		log.info(String.format("%s(%s) <- ([ %s ])", groupName, group, msg));
+		if (miraiMessagePostSendEvent instanceof MiraiGroupMessagePostSendEvent) {
+			MiraiGroupMessagePostSendEvent miraiGroupMessagePostSendEvent = (MiraiGroupMessagePostSendEvent) miraiMessagePostSendEvent;
+			long group = miraiGroupMessagePostSendEvent.getGroupInfo().getGroupCodeNumber();
+			String groupName = miraiGroupMessagePostSendEvent.getGroupInfo().getGroupName();
+			log.info(String.format("%s(%s) <- ([ %s ])", groupName, group, msg));
+		}else if (miraiMessagePostSendEvent instanceof MiraiTempMessagePostSendEvent){
+
+		}else if (miraiMessagePostSendEvent instanceof MiraiFriendMessagePostSendEvent){
+			MiraiFriendMessagePostSendEvent miraiFriendMessagePostSendEvent = (MiraiFriendMessagePostSendEvent) miraiMessagePostSendEvent;
+			long qq = miraiFriendMessagePostSendEvent.getQq();
+			log.info(String.format("(%s) <- ([ %s ])", qq, msg));
+		}
 		// (734669014) <- ([ "请输入网易云音乐账号！！" ])
 	}
 

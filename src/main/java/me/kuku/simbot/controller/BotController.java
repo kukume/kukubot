@@ -63,7 +63,7 @@ public class BotController {
 		}else return result.getMessage();
 	}
 
-	@Filter(value = "查询", anyAt = true)
+	@Filter(value = "查询", anyAt = true, trim = true)
 	public String queryInfo(QqLoginEntity qqLoginEntity, GroupMsg groupMsg) throws IOException {
 		String qqq = groupMsg.getMsgContent().getCats("at").get(0).get("code");
 		Result<GroupMember> result = qqGroupLogic.queryMemberInfo(qqLoginEntity,
@@ -137,7 +137,7 @@ public class BotController {
 				"https://vkceyugu.cdn.bspapp.com/VKCEYUGU-ba222f61-ee83-431d-bf9f-7e6216a8cf41/bb768136-d96d-451d-891a-5f409f7fbff1.jpg"
 		};
 		String url = urlArr[(int) (Math.random() * urlArr.length)];
-		MessageContent messageContent = build.at(resultQQ).image(url).text("龙王，已蝉联" + map.get("desc") + "，快喷水！！").build();
+		MessageContent messageContent = build.at(resultQQ).image(url).text("龙王，已上位" + map.get("desc") + "，快喷水！！").build();
 		msgSender.SENDER.sendGroupMsg(groupMsg, messageContent);
 	}
 

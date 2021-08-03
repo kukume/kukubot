@@ -19,18 +19,12 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
-import javax.imageio.ImageIO;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import java.awt.*;
-import java.awt.geom.Ellipse2D;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
@@ -626,7 +620,6 @@ public class ToolLogicImpl implements ToolLogic {
 	@Override
 	public String urlToPic(String url) throws IOException {
 		Response response = OkHttpUtils.get("https://www.iloveimg.com/zh-cn/html-to-image", OkHttpUtils.addUA(UA.PC));
-		String cookie = OkHttpUtils.getCookie(response);
 		String str = OkHttpUtils.getStr(response);
 		String token = "Bearer " + MyUtils.regex("\"token\":\"", "\"", str);
 		String taskId = MyUtils.regex("ilovepdfConfig.taskId = '", "';", str);
@@ -694,60 +687,6 @@ public class ToolLogicImpl implements ToolLogic {
 			}
 		}
 		return luckJson.getJSONObject(index-1);
-	}
-
-	@Override
-	public byte[] diu(String url){
-		return drawImages(url, "images/diu.png");
-	}
-
-	@Override
-	public byte[] pa(String url){
-		return drawImages(url, "images/pa.jpg");
-	}
-
-	@SuppressWarnings({"IntegerDivisionInFloatingPointContext", "ConstantConditions"})
-	public byte[] drawImages(String url, String resourceUrl) {
-		int hdW = 146;
-		InputStream is = null;
-		try {
-			is = OkHttpUtils.getByteStream(url);
-			BufferedImage headImage = ImageIO.read(is);
-			BufferedImage bgImage = ImageIO.read(getClass().getClassLoader().getResource(resourceUrl));
-
-			//处理头像
-			BufferedImage formatAvatarImage = new BufferedImage(hdW, hdW, BufferedImage.TYPE_4BYTE_ABGR);
-			Graphics2D graphics = formatAvatarImage.createGraphics();
-			graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);//抗锯齿
-			//图片是一个圆型
-			Ellipse2D.Double shape = new Ellipse2D.Double(0, 0, hdW, hdW);
-			//需要保留的区域
-			graphics.setClip(shape);
-			if ("images/diu.png".equals(resourceUrl)) {
-				graphics.rotate(Math.toRadians(-50), hdW / 2, hdW / 2);
-			}
-			graphics.drawImage(headImage.getScaledInstance(hdW, hdW, Image.SCALE_SMOOTH), 0, 0, hdW, hdW, null);
-			graphics.dispose();
-
-			//重合图片
-			Graphics2D graphics2D = bgImage.createGraphics();
-			graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);//抗锯齿
-			if ("images/diu.png".equals(resourceUrl)) {
-				graphics2D.drawImage(formatAvatarImage, 110 - hdW / 2, 275 - hdW / 2, hdW, hdW, null);//头画背景上
-			} else if ("images/pa.jpg".equals(resourceUrl)) {
-				graphics2D.drawImage(formatAvatarImage, 2, 240, 56, 56, null);//头画背景上
-			}
-			graphics2D.dispose();
-
-			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-			ImageIO.write(bgImage, "PNG", bos);
-			return bos.toByteArray();
-		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
-		} finally {
-			IOUtils.close(is);
-		}
 	}
 
 	@Override

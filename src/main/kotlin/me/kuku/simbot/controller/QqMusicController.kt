@@ -68,6 +68,12 @@ class QqMusicController {
         val result = qqMusicLogic.sign(qqMusicEntity)
         return result.message
     }
+
+    @Filter("qq音乐人签到")
+    fun qqMusicianSign(qqMusicEntity: QqMusicEntity): String{
+        val result = qqMusicLogic.musicianSign(qqMusicEntity)
+        return result.message
+    }
 }
 
 

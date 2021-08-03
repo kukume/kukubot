@@ -18,6 +18,7 @@ import javax.annotation.Resource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class NetEaseLogicImpl implements NetEaseLogic {
@@ -188,6 +189,11 @@ public class NetEaseLogicImpl implements NetEaseLogic {
 						OkHttpUtils.addCookie(netEaseEntity.getCookie()));
 				if (signJsonObject.getInteger("code") != 200) return Result.failure("音乐人每日签到失败！" +
 						signJsonObject.getString("message"));
+				try {
+					TimeUnit.SECONDS.sleep(1);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 				JSONObject obJsonObject = OkHttpUtils.getJson(api + "/musician/cloudbean/obtain?id=" + userMissionId +
 						"&period=" + period, OkHttpUtils.addCookie(netEaseEntity.getCookie()));
 				if (obJsonObject.getInteger("code") == 200) return Result.success("网易云音乐人签到成功！", null);

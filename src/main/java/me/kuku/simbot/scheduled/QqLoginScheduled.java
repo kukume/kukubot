@@ -76,9 +76,10 @@ public class QqLoginScheduled {
 				Result<Void> result = qqMusicLogic.sign(qqMusicEntity);
 				if (result.isFailure()){
 					QqEntity qqEntity = qqMusicEntity.getQqEntity();
-					BotUtils.sendPrivateMsg(qqEntity.getGroups(), qqEntity.getQq(), "您的QQ已失效，如需自动签到，请重新绑定！");
+					BotUtils.sendPrivateMsg(qqEntity.getGroups(), qqEntity.getQq(), "您的QQ音乐的cookie已失效，如需自动签到，请重新绑定！");
 					qqMusicService.delete(qqMusicEntity);
 				}
+				qqMusicLogic.musicianSign(qqMusicEntity);
 			}catch (Exception e){
 				e.printStackTrace();
 			}

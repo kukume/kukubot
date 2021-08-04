@@ -35,10 +35,10 @@ public class ImageController {
 		return getDiu(acatarUrl(qq));
 	}
 
-	@Filter("丢")
-	public MessageContent diu(GroupMsg groupMsg){
-		return getDiu(groupMsg.getAccountInfo().getAccountAvatar());
-	}
+//	@Filter("丢")
+//	public MessageContent diu(GroupMsg groupMsg){
+//		return getDiu(groupMsg.getAccountInfo().getAccountAvatar());
+//	}
 
 	@Filter(value = "爬", trim = true, anyAt = true)
 	public MessageContent paAt(GroupMsg groupMsg){
@@ -49,13 +49,13 @@ public class ImageController {
 		else return getSuperPa(url);
 	}
 
-	@Filter(value = "爬", trim = true, anyAt = true)
-	public MessageContent pa(GroupMsg groupMsg){
-		String url = groupMsg.getAccountInfo().getAccountAvatar();
-		if (MyUtils.randomInt(0, 100) > 50)
-			return getPa(url);
-		else return getSuperPa(url);
-	}
+//	@Filter(value = "爬")
+//	public MessageContent pa(GroupMsg groupMsg){
+//		String url = groupMsg.getAccountInfo().getAccountAvatar();
+//		if (MyUtils.randomInt(0, 100) > 50)
+//			return getPa(url);
+//		else return getSuperPa(url);
+//	}
 
 	@Filter(value = "嚼", trim = true, anyAt = true)
 	@Filter(value = "恰", trim = true, anyAt = true)

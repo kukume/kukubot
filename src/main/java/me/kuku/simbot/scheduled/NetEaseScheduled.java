@@ -17,7 +17,7 @@ public class NetEaseScheduled {
 	@Resource
 	private NetEaseLogic netEaseLogic;
 
-	@Scheduled(cron = "32 6 6 * * ?")
+	@Scheduled(cron = "32 6 8 * * ?")
 	public void sign(){
 		List<NetEaseEntity> list = netEaseService.findAll();
 		for (NetEaseEntity netEaseEntity : list) {

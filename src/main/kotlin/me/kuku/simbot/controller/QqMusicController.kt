@@ -10,6 +10,7 @@ import love.forte.simbot.annotation.OnGroup
 import love.forte.simbot.api.message.MessageContentBuilderFactory
 import love.forte.simbot.api.message.events.GroupMsg
 import love.forte.simbot.api.sender.MsgSender
+import me.kuku.simbot.annotation.RegexFilter
 import me.kuku.simbot.annotation.SkipListenGroup
 import me.kuku.simbot.entity.QqEntity
 import me.kuku.simbot.entity.QqMusicEntity
@@ -51,6 +52,7 @@ class QqMusicController {
                     val newQqMusicEntity = result.data
                     val qqMusicEntity = qqMusicService.findByQqEntity(qqEntity) ?: QqMusicEntity(qqEntity = qqEntity)
                     qqMusicEntity.cookie = newQqMusicEntity.cookie
+                    qqMusicEntity.qqMusicKey = newQqMusicEntity.qqMusicKey
                     qqMusicService.save(qqMusicEntity)
                     msg = stringTemplate.at(qq) + "绑定qq音乐成功"
                     break
@@ -73,6 +75,16 @@ class QqMusicController {
     fun qqMusicianSign(qqMusicEntity: QqMusicEntity): String{
         val result = qqMusicLogic.musicianSign(qqMusicEntity)
         return result.message
+    }
+
+    @RegexFilter("qq音乐发布动态{{content}}")
+    fun qqMusicPublishNews(qqMusicEntity: QqMusicEntity, content: String): String{
+        return qqMusicLogic.publishNews(qqMusicEntity, content).message
+    }
+
+    @RegexFilter("qq音乐随机回复评论{{content}}")
+    fun qqMusicRandomComment(qqMusicEntity: QqMusicEntity, content: String): String{
+        return qqMusicLogic.randomReplyComment(qqMusicEntity, content).message
     }
 }
 

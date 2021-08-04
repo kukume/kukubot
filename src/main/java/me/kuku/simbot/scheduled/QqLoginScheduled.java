@@ -4,6 +4,7 @@ import me.kuku.pojo.Result;
 import me.kuku.simbot.entity.*;
 import me.kuku.simbot.logic.QqLoginLogic;
 import me.kuku.simbot.logic.QqMusicLogic;
+import me.kuku.simbot.logic.ToolLogic;
 import me.kuku.simbot.utils.BotUtils;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class QqLoginScheduled {
@@ -26,6 +28,8 @@ public class QqLoginScheduled {
 	private QqMusicService qqMusicService;
 	@Resource
 	private QqMusicLogic qqMusicLogic;
+	@Resource
+	private ToolLogic toolLogic;
 
 	@Scheduled(cron = "32 3 6 * * ?")
 	@Transactional
@@ -78,9 +82,34 @@ public class QqLoginScheduled {
 					QqEntity qqEntity = qqMusicEntity.getQqEntity();
 					BotUtils.sendPrivateMsg(qqEntity.getGroups(), qqEntity.getQq(), "您的QQ音乐的cookie已失效，如需自动签到，请重新绑定！");
 					qqMusicService.delete(qqMusicEntity);
+					continue;
 				}
 				qqMusicLogic.musicianSign(qqMusicEntity);
+				for (int i = 0; i < 3; i++){
+					TimeUnit.SECONDS.sleep(3);
+					qqMusicLogic.randomReplyComment(qqMusicEntity, "太好听了把！");
+				}
 			}catch (Exception e){
+				e.printStackTrace();
+			}
+		}
+	}
+
+	@Scheduled(cron = "21 12 3 1 */1 ?")
+	public void musicianTask(){
+		List<QqMusicEntity> list = qqMusicService.findAll();
+		for (QqMusicEntity qqMusicEntity : list) {
+			try {
+				for (int i = 0; i < 3; i++) {
+					TimeUnit.SECONDS.sleep(3);
+					Result<Void> result = qqMusicLogic.publishNews(qqMusicEntity, toolLogic.hiToKoTo().get("text"));
+					if (result.isFailure()){
+						QqEntity qqEntity = qqMusicEntity.getQqEntity();
+						BotUtils.sendPrivateMsg(qqEntity.getGroups(), qqEntity.getQq(), "您的QQ音乐发布新动态失败，请手动发布新动态完成任务~");
+						break;
+					}
+				}
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}

@@ -15,7 +15,8 @@ data class QqMusicEntity (
     @JoinColumn(name = "qq")
     var qqEntity: QqEntity? = null,
     @Column(length = 1000)
-    var cookie: String = ""
+    var cookie: String = "",
+    var qqMusicKey: String? = ""
 )
 
 interface QqMusicRepository: JpaRepository<QqMusicEntity, Int>{

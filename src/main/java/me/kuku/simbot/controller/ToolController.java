@@ -255,15 +255,17 @@ public class ToolController {
 
 	@Filter("色图")
 	@Filter("色图十连")
-	public void seTu(GroupMsg groupMsg, MsgSender msgSender) throws IOException {
-		String msg = groupMsg.getMsg();
-		int num = "色图十连".equals(msg) ? 10 : 1;
-		JSONArray jsonArray = toolLogic.loLiConQuickly(null);
-		for (int i = 0 ; i < num; i++) {
-			JSONObject jsonObject = jsonArray.getJSONObject(i);
-			String url = jsonObject.getString("quickUrl");
-			msgSender.SENDER.sendGroupMsg(groupMsg, stringTemplate.image(url));
-		}
+	public void seTu(GroupMsg groupMsg, MsgSender msgSender, GroupEntity groupEntity) throws IOException {
+		if (Boolean.TRUE.equals(groupEntity.getColorPic())) {
+			String msg = groupMsg.getMsg();
+			int num = "色图十连".equals(msg) ? 10 : 1;
+			JSONArray jsonArray = toolLogic.loLiConQuickly(null);
+			for (int i = 0; i < num; i++) {
+				JSONObject jsonObject = jsonArray.getJSONObject(i);
+				String url = jsonObject.getString("quickUrl");
+				msgSender.SENDER.sendGroupMsg(groupMsg, stringTemplate.image(url));
+			}
+		}else msgSender.SENDER.sendGroupMsg(groupMsg, stringTemplate.at(groupMsg.getAccountInfo().getAccountCodeNumber()) + "色图功能已关闭！");
 	}
 
 	@Filter("查发言数")
@@ -378,6 +380,12 @@ public class ToolController {
 			}
 			msgSender.SENDER.sendGroupMsg(groupMsg, stringTemplate.at(qq) + msg);
 		});
+	}
+
+	@Filter("读懂世界")
+	public String readWorld() throws IOException {
+		return OkHttpUtils.getJson("https://api.kuku.me/tool/readWorld").getJSONObject("data")
+				.getString("data");
 	}
 
 }

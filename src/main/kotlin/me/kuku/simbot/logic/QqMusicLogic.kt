@@ -128,8 +128,14 @@ class QqMusicLogicImpl: QqMusicLogic{
             val resultJsonObject = OkHttpUtils.postJson("https://u.y.qq.com/cgi-bin/musicu.fcg?_webcgikey=AddComment&_=${System.currentTimeMillis()}",
                 OkHttpUtils.addJson("{\"comm\":{\"cv\":4747474,\"ct\":24,\"format\":\"json\",\"inCharset\":\"utf-8\",\"outCharset\":\"utf-8\",\"notice\":0,\"platform\":\"yqq.json\",\"needNewCode\":1,\"uin\":$qq,\"g_tk_new_20200303\":$gtk,\"g_tk\":$gtk},\"req_1\":{\"module\":\"music.globalComment.CommentWriteServer\",\"method\":\"AddComment\",\"param\":{\"BizType\":1,\"BizId\":\"$songId\",\"Content\":\"$content\",\"RepliedCmId\":\"$cmId\"}}}"),
                 OkHttpUtils.addHeaders(qqMusicEntity.cookie, "https://y.qq.com", UA.PC))
-            if (resultJsonObject.getInteger("code") == 0 && resultJsonObject.getJSONObject("req_1").getInteger("code") == 0)
-                Result.success("qq音乐随机歌曲评论成功！", null)
+            if (resultJsonObject.getInteger("code") == 0) {
+                val code = resultJsonObject.getJSONObject("req_1").getInteger("code")
+                if (code == 0)
+                    Result.success("qq音乐随机歌曲评论成功！", null)
+                else if (code == 10009)
+                    Result.failure("需要验证验证码，请打开该链接进行验证并重新发送该指令：${resultJsonObject.getJSONObject("req_1").getJSONObject("data").getString("VerifyUrl")}")
+                else Result.failure("qq音乐随机歌曲评论失败！${resultJsonObject.getJSONObject("req_1").getJSONObject("data").getString("Msg")}")
+            }
             else Result.failure("qq音乐随机歌曲评论失败！")
         }else Result.failure("qq音乐随机歌曲评论失败！获取评论列表失败！")
     }

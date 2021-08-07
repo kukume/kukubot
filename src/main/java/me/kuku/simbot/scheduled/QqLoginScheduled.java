@@ -73,6 +73,7 @@ public class QqLoginScheduled {
 	}
 
 	@Scheduled(cron = "41 15 5 * * ?")
+	@Transactional
 	public void musicSign(){
 		List<QqMusicEntity> list = qqMusicService.findAll();
 		for (QqMusicEntity qqMusicEntity : list) {

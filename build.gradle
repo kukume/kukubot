@@ -1,0 +1,41 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.5.21'
+    id 'java'
+}
+
+apply plugin: 'application'
+mainClassName = 'me.kuku.yuq.Start'
+
+group 'me.kuku'
+version '1.0-SNAPSHOT'
+
+repositories {
+    maven{ url "https://maven.icecreamqaq.com/repository/maven-releases/" }
+    maven{ url "https://nexus.kuku.me/repository/maven-public/" }
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.5.21'
+    implementation 'me.kuku:utils:0.0.15'
+    implementation 'com.IceCreamQAQ.YuQ:YuQ-Mirai:0.1.0.0-DEV15'
+    implementation 'com.IceCreamQAQ:Yu-Core:0.2.0.0-DEV11'
+    implementation 'com.IceCreamQAQ.Yu:Yu-DB:0.0.2.0-DEV11'
+    implementation 'com.h2database:h2:1.4.200'
+    compileOnly 'org.projectlombok:lombok:1.18.20'
+    annotationProcessor 'org.projectlombok:lombok:1.18.20'
+    //noinspection GradlePackageUpdate
+    implementation 'org.jsoup:jsoup:1.13.1'
+//    implementation 'net.qqkit.rain:DevTools:0.1.4'
+//    implementation 'net.qqkit.rain:sdk:0.1.0'
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+
+jar{
+    from {
+        configurations.runtime.collect{zipTree(it)}
+    }
+}

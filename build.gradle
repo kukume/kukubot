@@ -33,9 +33,3 @@ dependencies {
 tasks.withType(JavaCompile) {
     options.encoding = "UTF-8"
 }
-
-jar{
-    from {
-        configurations.runtime.collect{zipTree(it)}
-    }
-}

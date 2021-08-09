@@ -23,6 +23,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import javax.annotation.Resource;
+import javax.inject.Inject;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -31,7 +32,7 @@ import java.util.*;
 
 public class QQLoginLogicImpl implements QqLoginLogic {
 
-    @Resource
+    @Inject
     private QqVideoService qqVideoService;
 
     @Override

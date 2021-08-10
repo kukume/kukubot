@@ -34,6 +34,8 @@ public class XiaomiStepLogicImpl implements StepLogic {
 				map, OkHttpUtils.addUA(ua));
 		response.close();
 		String locationUrl = response.header("Location");
+		if (locationUrl == null)
+			return Result.failure("登录失败！");
 		String access = MyUtils.regex("access=", "&", locationUrl);
 		if (access == null) return Result.failure("账号或者密码错误！！", null);
 		map.clear();

@@ -26,6 +26,7 @@ data class StepEntity(
 
     var miPhone: String = "",
     var miPassword: String = "",
+    @Column(length = 1000)
     var miLoginToken: String = "",
 
     var step: Int = -1

@@ -5,6 +5,7 @@ import com.IceCreamQAQ.Yu.annotation.Before;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.annotation.GroupController;
 import com.icecreamqaq.yuq.annotation.PrivateController;
+import com.icecreamqaq.yuq.annotation.QMsg;
 import me.kuku.pojo.Result;
 import me.kuku.yuq.entity.QqEntity;
 import me.kuku.yuq.entity.StepEntity;
@@ -68,20 +69,23 @@ public class StepController {
 	}
 
 	@Action("lexin步数 {step}")
+	@QMsg(at = true)
 	public String leXinStep(StepEntity stepEntity, Integer step) throws IOException {
 		Result<String> result = leXinStepLogic.modifyStepCount(stepEntity, step);
 		if (result.isSuccess()) return "修改步数成功！";
 		else return result.getMessage();
 	}
 
-	@Action("mi步数{{step}}")
+	@Action("mi步数 {step}")
+	@QMsg(at = true)
 	public String miStep(StepEntity stepEntity, Integer step) throws IOException {
 		Result<String> result = xiaomiStepLogic.modifyStepCount(stepEntity, step);
 		if (result.isSuccess()) return "修改步数成功！";
 		else return result.getMessage();
 	}
 
-	@Action("步数{{step}}")
+	@Action("步数 {step}")
+	@QMsg(at = true)
 	public String cronStep(StepEntity stepEntity, Integer step){
 		stepEntity.setStep(step);
 		stepService.save(stepEntity);

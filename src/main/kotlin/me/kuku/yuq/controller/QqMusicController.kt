@@ -7,6 +7,7 @@ import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.entity.Group
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.mif
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -28,6 +29,7 @@ class QqMusicController {
         ?: throw mif.at(qq).plus("你还没有绑定qq音乐信息，请发送<qq音乐二维码>进行绑定").toThrowable()
 
     @Action("qq音乐二维码")
+    @DelicateCoroutinesApi
     fun getQrcode(group: Group, qq: Long, qqEntity: QqEntity){
         val qrcode = qqMusicLogic.getQrcode()
         group.sendMessage(mif.at(qq).plus(mif.imageByByteArray(qrcode.bytes)).plus(

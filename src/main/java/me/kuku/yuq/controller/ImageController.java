@@ -25,7 +25,7 @@ public class ImageController {
 	private MessageItemFactory mif;
 
 
-	@Action("丢{qqStr}")
+	@Action("丢 {qqStr}")
 	public Message diuAt(long qqStr){
 		return getDiu(acatarUrl(qqStr));
 	}
@@ -35,7 +35,7 @@ public class ImageController {
 		return getDiu(acatarUrl(qq));
 	}
 
-	@Action("爬{qqStr}")
+	@Action("爬 {qqStr}")
 	public Message paAt(long qqStr){
 		String url = acatarUrl(qqStr);
 		if (MyUtils.randomInt(0, 100) > 50)
@@ -51,21 +51,21 @@ public class ImageController {
 		else return getSuperPa(url);
 	}
 
-	@Action("嚼{qqStr}")
-	@Synonym("恰{qqStr}")
+	@Action("嚼 {qqStr}")
+	@Synonym("恰 {qqStr}")
 	public Message jiAo(long qqStr){
 		String url = acatarUrl(qqStr);
 		return getJiao(url);
 	}
 
-	@Action("mua{qqStr}")
+	@Action("mua {qqStr}")
 	public Message mua(long qqStr){
 		String url = acatarUrl(qqStr);
 		return getMuaGif(url);
 	}
 
-	@Action("摸{qqStr}")
-	@Synonym("rua{qqStr}")
+	@Action("摸 {qqStr}")
+	@Synonym("rua {qqStr}")
 	public Message mo(long qqStr){
 		String url = acatarUrl(qqStr);
 		return getRua(url);

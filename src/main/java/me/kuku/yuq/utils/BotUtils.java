@@ -60,12 +60,15 @@ public class BotUtils {
 	}
 
 	public static void sendMessage(QqEntity qqEntity, Message message){
+		long qq = qqEntity.getQq();
 		Set<GroupEntity> set = qqEntity.getGroups();
-		for (GroupEntity groupEntity : set) {
-			long group = groupEntity.getGroup();
-			FunKt.getYuq().getGroups().get(group).sendMessage(message);
-			break;
-		}
+		if (set.size() != 0) {
+			for (GroupEntity groupEntity : set) {
+				long group = groupEntity.getGroup();
+				FunKt.getYuq().getGroups().get(group).get(qq).sendMessage(message);
+				break;
+			}
+		}else FunKt.getYuq().getFriends().get(qq).sendMessage(message);
 	}
 
 	public static void sendMessage(QqEntity qqEntity, String message){

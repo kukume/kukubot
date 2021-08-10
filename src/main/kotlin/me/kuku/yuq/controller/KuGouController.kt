@@ -7,6 +7,7 @@ import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.entity.Group
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.mif
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -27,6 +28,7 @@ class KuGouController @Inject constructor(
     fun before(qqEntity: QqEntity, qq: Long) = kuGouService.findByQqEntity(qqEntity)
         ?: throw mif.at(qq).plus("您没有绑定酷狗账号，请发送<酷狗二维码>进行绑定").toThrowable()
 
+    @DelicateCoroutinesApi
     @Action("酷狗二维码")
     @QMsg(at = true)
     fun qrcode(group: Group, qqEntity: QqEntity, qq: Long){

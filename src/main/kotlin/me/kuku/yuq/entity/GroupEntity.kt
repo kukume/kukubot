@@ -62,6 +62,7 @@ data class GroupEntity(
     var repeat: Boolean? = true,
     var groupAdminAuth: Boolean? = false,
     var kickWithoutSpeaking: Boolean? = false,
+    var githubPush: Boolean? = false
 ){
     companion object{
         fun getInstance(group: Long): GroupEntity{
@@ -141,6 +142,7 @@ data class GroupEntity(
 
 interface GroupDao: JPADao<GroupEntity, Int>{
     fun findByGroup(group: Long): GroupEntity?
+    fun findByGithubPush(githubPush: Boolean): List<GroupEntity>
 }
 
 @AutoBind
@@ -149,6 +151,7 @@ interface GroupService{
     fun save(groupEntity: GroupEntity)
     fun delete(id: Int)
     fun findAll(): List<GroupEntity>
+    fun findByGithubPush(githubPush: Boolean): List<GroupEntity>
 }
 
 class GroupServiceImpl: GroupService{
@@ -173,5 +176,10 @@ class GroupServiceImpl: GroupService{
     @Transactional
     override fun findAll(): List<GroupEntity> {
         return groupDao.findAll()
+    }
+
+    @Transactional
+    override fun findByGithubPush(githubPush: Boolean): List<GroupEntity> {
+        return groupDao.findByGithubPush(githubPush)
     }
 }

@@ -1,10 +1,8 @@
 plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.5.21'
     id 'java'
+    id 'application'
 }
-
-apply plugin: 'application'
-mainClassName = 'me.kuku.yuq.Start'
 
 group 'me.kuku'
 version '1.0-SNAPSHOT'
@@ -32,4 +30,12 @@ dependencies {
 
 tasks.withType(JavaCompile) {
     options.encoding = "UTF-8"
+}
+
+application {
+    mainClass = 'me.kuku.yuq.Start'
+}
+
+applicationDistribution.from("src/main/resources/conf/YuQ.properties") {
+    into "bin/conf"
 }

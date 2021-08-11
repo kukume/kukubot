@@ -17,6 +17,7 @@ import com.icecreamqaq.yuq.message.Message;
 import me.kuku.pojo.Result;
 import me.kuku.utils.MyUtils;
 import me.kuku.yuq.entity.*;
+import me.kuku.yuq.logic.BaiduAiPojo;
 import me.kuku.yuq.logic.OfficeGlobalLogic;
 
 import javax.inject.Inject;
@@ -50,9 +51,9 @@ public class SettingController extends QQController {
 	public String groupOpenOrClose(@PathVar(0) String op, Long groupNo){
 		GroupEntity groupEntity = groupService.findByGroup(groupNo);
 		if (groupEntity == null) return "机器人可能没有加入这个群，如果确定加入了，请在该群随便发送一条消息";
-		groupEntity.setStatus(op.equals("开启"));
+		groupEntity.setStatus(op.equals("群开启"));
 		groupService.save(groupEntity);
-		return "机器人" + op + "成功！";
+		return op + "成功！";
 	}
 
 	@Action("退群 {groupNo}")
@@ -170,6 +171,32 @@ public class SettingController extends QQController {
 			configService.save(configEntity);
 			return "绑定图灵信息成功！";
 		}
+	}
 
+	@Action("百度ocr")
+	@Synonym({"百度内容审核"})
+	public String settingBaiduAI(ContextSession session, @PathVar(0) String type){
+		reply("请输入apiKey");
+		Message apiKeyMessage = session.waitNextMessage();
+		String apiKey = Message.Companion.firstString(apiKeyMessage);
+		reply("请输入secretKey");
+		Message secretKeyMessage = session.waitNextMessage();
+		String secretKey = Message.Companion.firstString(secretKeyMessage);
+		ConfigEntity configEntity = configService.findByType("baiduAi");
+		if (configEntity == null) configEntity = ConfigEntity.Companion.getInstance("baiduAi");
+		BaiduAiPojo baiduAiPojo = configEntity.getConfigParse(BaiduAiPojo.class);
+		switch (type){
+			case "百度ocr":
+				baiduAiPojo.setOcrApiKey(apiKey);
+				baiduAiPojo.setOcrSecretKey(secretKey);
+				break;
+			case "百度内容审核":
+				baiduAiPojo.setAntiPornApiKey(apiKey);
+				baiduAiPojo.setAntiPornSecretKey(secretKey);
+				break;
+		}
+		configEntity.setConfigParse(baiduAiPojo);
+		configService.save(configEntity);
+		return "绑定百度AI的信息成功！！";
 	}
 }

@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'me.kuku'
-version '1.0-SNAPSHOT'
+version ''
 
 repositories {
     maven{ url "https://maven.icecreamqaq.com/repository/maven-releases/" }

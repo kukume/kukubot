@@ -8,13 +8,19 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.event.*;
-import com.icecreamqaq.yuq.message.Message;
+import com.icecreamqaq.yuq.message.*;
+import me.kuku.pojo.Result;
 import me.kuku.utils.DateTimeFormatterUtils;
+import me.kuku.utils.OkHttpUtils;
 import me.kuku.yuq.entity.*;
+import me.kuku.yuq.logic.BaiduAiLogic;
+import me.kuku.yuq.logic.BaiduAiPojo;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Random;
 
@@ -31,6 +37,10 @@ public class GroupManagerEvent {
 	@Inject
 	@Named("CommandCountOnTime")
 	public EhcacheHelp<Integer> eh;
+	@Inject
+	private BaiduAiLogic baiduAiLogic;
+	@Inject
+	private ConfigService configService;
 
 	@Event(weight = Event.Weight.high)
 	public void status(com.IceCreamQAQ.Yu.event.events.Event e){
@@ -171,4 +181,93 @@ public class GroupManagerEvent {
 			}, 1000 * 60 * 1000);
 		}
 	}
+
+	@Event
+	public void inter(GroupMessageEvent e) {
+		GroupEntity groupEntity = groupService.findByGroup(e.getGroup().getId());
+		if (groupEntity == null) return;
+		Message message = e.getMessage();
+		String str;
+		try {
+			str = Message.Companion.firstString(message);
+		}catch (IllegalStateException ex){
+			str = null;
+		}
+		if (str != null){
+			JSONArray interceptJsonArray = groupEntity.getInterceptJson();
+			for (int i = 0; i < interceptJsonArray.size(); i++){
+				String intercept = interceptJsonArray.getString(i);
+				if (str.contains(intercept)){
+					e.cancel = true;
+					break;
+				}
+			}
+		}
+		if (!e.getGroup().getBot().isAdmin()) return;
+		ConfigEntity configEntity = configService.findByType(ConfigType.BAIDU_AI);
+		BaiduAiPojo baiduAiPojo = null;
+		if (configEntity != null) baiduAiPojo = configEntity.getConfigParse(BaiduAiPojo.class);
+		JSONArray violationJsonArray = groupEntity.getViolationJson();
+		int code = 0;
+		String vio = null;
+		List<Image> images = new ArrayList<>();
+		out:for (int i = 0; i < violationJsonArray.size(); i++){
+			String violation = violationJsonArray.getString(i);
+			String nameCard = e.getSender().getNameCard();
+			if (nameCard.contains(violation)) {
+				code = 3;
+				vio = violation;
+				break;
+			}
+			for (MessageItem item: message.getBody()){
+				if (item instanceof Text){
+					Text text = (Text) item;
+					if (text.getText().contains(violation)) code = 1;
+				}else if (item instanceof Image){
+					if (baiduAiPojo != null) {
+						try {
+							Image image = (Image) item;
+							images.add(image);
+							Result<String> result = baiduAiLogic.ocrGeneralBasic(baiduAiPojo, Base64.getEncoder().encodeToString(OkHttpUtils.getBytes(image.getUrl())));
+							if (result.isSuccess()) {
+								if (result.getData().contains(violation)) code = 1;
+							}
+						} catch (Exception ignore) {
+						}
+					}
+				}else if (item instanceof XmlEx){
+					XmlEx xmlEx = (XmlEx) item;
+					if (xmlEx.getValue().contains(violation)) code = 1;
+				}else if (item instanceof JsonEx){
+					JsonEx jsonEx = (JsonEx) item;
+					if (jsonEx.getValue().contains(violation)) code = 1;
+				}
+				if (code != 0){
+					vio = violation;
+					break out;
+				}
+			}
+		}
+
+		if (baiduAiPojo != null && Boolean.TRUE.equals(groupEntity.getPornImage())) {
+			for (Image image : images) {
+				boolean b = false;
+				try {
+					b = baiduAiLogic.antiPornImage(baiduAiPojo, Base64.getEncoder().encodeToString(OkHttpUtils.getBytes(image.getUrl())));
+					if (b) code = 2;
+				} catch (IOException ignore) {
+				}
+			}
+		}
+		if (code != 0){
+			StringBuilder sb = new StringBuilder();
+			if (code == 2) sb.append("检测到色情图片。").append("\n");
+			else if (code == 1) sb.append("检测到违规词\"").append(vio).append("\"。").append("\n");
+			else sb.append("检测到违规去群名片\"").append(vio).append("\"。").append("\n");
+			sb.append("您已被禁言！");
+			e.getSender().ban(60 * 30);
+			e.getGroup().sendMessage(FunKt.getMif().at(e.getSender().getId()).plus(sb.toString()));
+		}
+	}
+
 }

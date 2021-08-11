@@ -17,11 +17,13 @@ data class QqMusicEntity (
     var qqEntity: QqEntity? = null,
     @Column(length = 1000)
     var cookie: String = "",
-    var qqMusicKey: String? = ""
+    var qqMusicKey: String? = "",
+    var convertGreenDiamond: Boolean? = false
 )
 
 interface QqMusicDao: JPADao<QqMusicEntity, Int>{
     fun findByQqEntity(qqEntity: QqEntity): QqMusicEntity?
+    fun findByConvertGreenDiamond(convertGreenDiamond: Boolean): List<QqMusicEntity>
 }
 
 @AutoBind
@@ -30,6 +32,7 @@ interface QqMusicService {
     fun save(qqMusicEntity: QqMusicEntity)
     fun delete(qqMusicEntity: QqMusicEntity)
     fun findAll(): List<QqMusicEntity>
+    fun findByConvertGreenDiamond(convertGreenDiamond: Boolean): List<QqMusicEntity>
 }
 
 class QqMusicServiceImpl: QqMusicService{
@@ -55,5 +58,10 @@ class QqMusicServiceImpl: QqMusicService{
     @Transactional
     override fun findAll(): List<QqMusicEntity> {
         return qqMusicDao.findAll()
+    }
+
+    @Transactional
+    override fun findByConvertGreenDiamond(convertGreenDiamond: Boolean): List<QqMusicEntity> {
+        return qqMusicDao.findByConvertGreenDiamond(convertGreenDiamond)
     }
 }

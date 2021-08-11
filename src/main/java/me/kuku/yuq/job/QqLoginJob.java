@@ -88,7 +88,7 @@ public class QqLoginJob {
 				}
 				qqMusicLogic.musicianSign(qqMusicEntity);
 				for (int i = 0; i < 3; i++){
-					TimeUnit.SECONDS.sleep(3);
+					TimeUnit.SECONDS.sleep(5);
 					qqMusicLogic.randomReplyComment(qqMusicEntity, "太好听了把！");
 				}
 			}catch (Exception e){
@@ -113,6 +113,19 @@ public class QqLoginJob {
 					}
 				}
 			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	@Cron("At::d::00:00:02")
+	@Transactional
+	public void musicianConvert(){
+		List<QqMusicEntity> list = qqMusicService.findByConvertGreenDiamond(Boolean.TRUE);
+		for (QqMusicEntity qqMusicEntity : list) {
+			try {
+				qqMusicLogic.convertGreenDiamond(qqMusicEntity);
+			} catch (Exception e){
 				e.printStackTrace();
 			}
 		}

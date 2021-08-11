@@ -23,6 +23,8 @@ import me.kuku.utils.IOUtils;
 import me.kuku.utils.MyUtils;
 import me.kuku.utils.OkHttpUtils;
 import me.kuku.yuq.entity.*;
+import me.kuku.yuq.logic.BaiduAiLogic;
+import me.kuku.yuq.logic.BaiduAiPojo;
 import me.kuku.yuq.logic.ToolLogic;
 import me.kuku.yuq.pojo.CodeType;
 import me.kuku.yuq.utils.BotUtils;
@@ -31,10 +33,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("unchecked")
@@ -56,6 +55,8 @@ public class ToolController {
 	private String master;
 	@Inject
 	private ConfigService configService;
+	@Inject
+	private BaiduAiLogic baiduAiLogic;
 
 	@Action("百度 {content}")
 	@Synonym({"谷歌 {content}", "bing {content}", "搜狗 {content}"})
@@ -473,5 +474,21 @@ public class ToolController {
 			}
 		}
 		return errorMsg;
+	}
+
+	@Action("ocr {img}")
+	@QMsg(at = true, atNewLine = true)
+	public String ocr(Image img){
+		try {
+			ConfigEntity configEntity = configService.findByType(ConfigType.BAIDU_AI);
+			if (configEntity == null) return "管理员未绑定百度ai的信息！";
+			byte[] bytes = OkHttpUtils.getBytes(img.getUrl());
+			String base = Base64.getEncoder().encodeToString(bytes);
+			Result<String> result = baiduAiLogic.ocrGeneralBasic(configEntity.getConfigParse(BaiduAiPojo.class), base);
+			if (result.isSuccess()) return result.getData();
+			else return result.getMessage();
+		}catch (Exception e){
+			return e.getMessage();
+		}
 	}
 }

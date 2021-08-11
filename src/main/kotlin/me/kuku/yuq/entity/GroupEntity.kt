@@ -52,7 +52,7 @@ data class GroupEntity(
     var shellCommand: String? = "[]",
     var colorPic: Boolean? = false,
     var recall: Boolean? = false,
-    var pic: Boolean? = false,
+    var pornImage: Boolean? = false,
     var leaveGroupBlack: Boolean? = false,
     var autoReview: Boolean? = false,
     var onTimeAlarm: Boolean? = false,

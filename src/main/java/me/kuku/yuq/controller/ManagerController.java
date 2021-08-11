@@ -47,14 +47,14 @@ public class ManagerController {
 	@Config("YuQ.Mirai.bot.master")
 	private String master;
 
-	@Before(except = {""})
+	@Before(except = {"query", "queryRecall"})
 	public void before(long qq){
 		if (!String.valueOf(qq).equals(master))
 			throw mif.at(qq).plus("您不为机器人主人，无法执行！").toThrowable();
 	}
 
 	@Action("kukubot {status}")
-	@Synonym({"loc监控 {status}", "整点报时 {status}", "自动审核 {status}", "退群拉黑 {status}", "鉴黄 {status}",
+	@Synonym({"loc监控 {status}", "整点报时 {status}", "自动审核 {status}", "退群拉黑 {status}", "图片审核 {status}",
 			"色图 {status}", "撤回通知 {status}", "闪照通知 {status}", "复读 {status}", "进群未发言踢出 {status}",
 			"群管理权限 {status}", "github推送 {status}"})
 	@QMsg(at = true)
@@ -65,7 +65,7 @@ public class ManagerController {
 			case "整点报时": groupEntity.setOnTimeAlarm(status); break;
 			case "自动审核": groupEntity.setAutoReview(status); break;
 			case "退群拉黑": groupEntity.setLeaveGroupBlack(status); break;
-			case "鉴黄": groupEntity.setPic(status); break;
+			case "图片审核": groupEntity.setPornImage(status); break;
 			case "色图": groupEntity.setColorPic(status); break;
 			case "撤回通知": groupEntity.setRecall(status); break;
 			case "闪照通知": groupEntity.setFlashNotify(status); break;

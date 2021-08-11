@@ -3,6 +3,7 @@ package me.kuku.yuq.controller
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Before
 import com.icecreamqaq.yuq.annotation.GroupController
+import com.icecreamqaq.yuq.annotation.PrivateController
 import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.entity.Group
 import com.icecreamqaq.yuq.message.Message
@@ -11,6 +12,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import me.kuku.utils.OkHttpUtils
 import me.kuku.yuq.entity.QqEntity
 import me.kuku.yuq.entity.QqMusicEntity
 import me.kuku.yuq.entity.QqMusicService
@@ -18,15 +20,27 @@ import me.kuku.yuq.logic.QqMusicLogic
 import javax.inject.Inject
 
 @GroupController
+@PrivateController
 class QqMusicController {
     @Inject
     private lateinit var qqMusicService: QqMusicService
     @Inject
     private lateinit var qqMusicLogic: QqMusicLogic
 
-    @Before(except = ["getQrcode"])
+    @Before(except = ["getQrcode", "bindCookie"])
     fun before(qqEntity: QqEntity, qq: Long) = qqMusicService.findByQqEntity(qqEntity)
         ?: throw mif.at(qq).plus("你还没有绑定qq音乐信息，请发送<qq音乐二维码>进行绑定").toThrowable()
+
+    @Action("qq音乐 {cookie}")
+    fun bindCookie(qqEntity: QqEntity, cookie: String): String{
+        val qqMusicEntity = qqMusicService.findByQqEntity(qqEntity)
+            ?: QqMusicEntity(qqEntity = qqEntity)
+        val qqMusicKey = OkHttpUtils.getCookie(cookie, "qqmusic_key") ?: ""
+        qqMusicEntity.cookie = cookie
+        qqMusicEntity.qqMusicKey = qqMusicKey
+        qqMusicService.save(qqMusicEntity)
+        return "绑定qq音乐成功！"
+    }
 
     @Action("qq音乐二维码")
     @DelicateCoroutinesApi
@@ -82,4 +96,15 @@ class QqMusicController {
         return qqMusicLogic.randomReplyComment(qqMusicEntity, content).message
     }
 
+    @Action("qq音乐人兑换绿钻")
+    @QMsg(at = true)
+    fun qqMusicConvert(qqMusicEntity: QqMusicEntity): String = qqMusicLogic.convertGreenDiamond(qqMusicEntity).message
+
+    @Action("qq音乐人兑换绿钻 {status}")
+    @QMsg(at = true)
+    fun qqMusicConvertAuto(qqMusicEntity: QqMusicEntity, status: Boolean): String{
+        qqMusicEntity.convertGreenDiamond = status
+        qqMusicService.save(qqMusicEntity)
+        return "qq音乐人每日自动兑换绿钻${if (status) "开启" else "关闭"}成功"
+    }
 }

@@ -6,10 +6,7 @@ import com.alibaba.fastjson.JSONObject
 import me.kuku.pojo.QqLoginQrcode
 import me.kuku.pojo.Result
 import me.kuku.pojo.UA
-import me.kuku.utils.MyUtils
-import me.kuku.utils.OkHttpUtils
-import me.kuku.utils.QqQrCodeLoginUtils
-import me.kuku.utils.QqUtils
+import me.kuku.utils.*
 import me.kuku.yuq.entity.QqMusicEntity
 
 @AutoBind
@@ -21,6 +18,7 @@ interface QqMusicLogic {
     fun publishNews(qqMusicEntity: QqMusicEntity, content: String): Result<Void>
     fun comment(qqMusicEntity: QqMusicEntity, id: Int, content: String): Result<Void>
     fun randomReplyComment(qqMusicEntity: QqMusicEntity, content: String): Result<Void>
+    fun convertGreenDiamond(qqMusicEntity: QqMusicEntity): Result<Void>
 }
 
 class QqMusicLogicImpl: QqMusicLogic{
@@ -28,6 +26,10 @@ class QqMusicLogicImpl: QqMusicLogic{
     private val appId = 716027609L
     private val daId = 383
     private val ptAid = 100497308L
+
+    private fun getSign(params: String): String{
+        return "zza${MyUtils.randomStr(MyUtils.randomInt(10, 16))}${MD5Utils.toMD5("CJBPACrRuNy7$params")}"
+    }
 
     override fun getQrcode(): QqLoginQrcode {
         return QqQrCodeLoginUtils.getQrCode(appId, daId, ptAid)
@@ -138,5 +140,14 @@ class QqMusicLogicImpl: QqMusicLogic{
             }
             else Result.failure("qq音乐随机歌曲评论失败！")
         }else Result.failure("qq音乐随机歌曲评论失败！获取评论列表失败！")
+    }
+
+    override fun convertGreenDiamond(qqMusicEntity: QqMusicEntity): Result<Void> {
+        val params = "{\"req_0\":{\"module\":\"music.sociality.KolUserRight\",\"method\":\"getOrderId\",\"param\":{\"userRedeemType\":3,\"greenVipNum\":1,\"greenVipType\":0,\"creditType\":0}},\"comm\":{\"g_tk\":${QqUtils.getGTK(qqMusicEntity.qqMusicKey)},\"uin\":${qqMusicEntity.qqEntity?.qq},\"format\":\"json\",\"platform\":\"h5\",\"ct\":23,\"cv\":0}}"
+        val jsonObject = OkHttpUtils.postJson("https://u.y.qq.com/cgi-bin/musics.fcg?sign=${getSign(params)}&_=" + System.currentTimeMillis(),
+            OkHttpUtils.addJson(params), OkHttpUtils.addHeaders(qqMusicEntity.cookie, "https://y.qq.com", UA.PC))
+        return if (jsonObject.getInteger("code") == 0 && jsonObject.getJSONObject("req_0").getInteger("code") == 0)
+            Result.success("兑换绿钻一个月成功！", null)
+        else Result.failure("兑换绿钻失败：${jsonObject?.getJSONObject("req_0")?.getJSONObject("data")?.getString("retMsg") ?: "可能cookie已失效"}")
     }
 }

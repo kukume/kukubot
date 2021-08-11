@@ -38,6 +38,16 @@ data class ConfigEntity(
         set(value) {
             content = value.toJSONString()
         }
+
+    fun <T> getConfigParse(clazz: Class<T>): T {
+        return if (content.isEmpty()) {
+            clazz.newInstance()
+        } else JSON.parseObject<T>(content, clazz)
+    }
+
+    fun <T> setConfigParse(t: T) {
+        content = JSON.toJSONString(t)
+    }
 }
 
 interface ConfigDao: JPADao<ConfigEntity, Int>{
@@ -49,6 +59,9 @@ interface ConfigDao: JPADao<ConfigEntity, Int>{
 @AutoBind
 interface ConfigService{
     fun findByType(type: String): ConfigEntity?
+    fun findByType(type: ConfigType): ConfigEntity?{
+        return findByType(type.type)
+    }
     fun save(configEntity: ConfigEntity)
     fun delete(configEntity: ConfigEntity)
     fun deleteByType(type: String)
@@ -67,4 +80,9 @@ class ConfigServiceImpl @Inject constructor(private val configDao: ConfigDao): C
 
     @Transactional
     override fun deleteByType(type: String) = configDao.deleteByType(type)
+}
+
+enum class ConfigType(val type: String){
+    BAIDU_AI("baiduAi"),
+    TU_LING("tuLing")
 }

@@ -44,6 +44,8 @@ class KuGouController @Inject constructor(
                     val kuGouEntity = kuGouService.findByQqEntity(qqEntity) ?: KuGouEntity(qqEntity = qqEntity)
                     kuGouEntity.token = newKuGouEntity.token
                     kuGouEntity.userid = newKuGouEntity.userid
+                    kuGouEntity.mid = newKuGouEntity.mid
+                    kuGouEntity.kuGoo = newKuGouEntity.kuGoo
                     kuGouService.save(kuGouEntity)
                     msg = mif.at(qq).plus("绑定酷狗音乐成功")
                     break
@@ -58,5 +60,10 @@ class KuGouController @Inject constructor(
 
     @Action("酷狗音乐人签到")
     @QMsg(at = true)
-    fun musicianSign(kuGouEntity: KuGouEntity): String = kuGouLogic.musicianSign(kuGouEntity).message
+    fun musicianSign(kuGouEntity: KuGouEntity): String {
+        val refresh = kuGouLogic.refresh(kuGouEntity)
+        if (refresh.isFailure) return refresh.message
+        kuGouService.save(refresh.data)
+        return kuGouLogic.musicianSign(kuGouEntity).message
+    }
 }

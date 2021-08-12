@@ -3,6 +3,8 @@ package me.kuku.yuq.controller;
 import com.IceCreamQAQ.Yu.annotation.Action;
 import com.icecreamqaq.yuq.annotation.PrivateController;
 import com.icecreamqaq.yuq.controller.ContextSession;
+import com.icecreamqaq.yuq.controller.QQController;
+import com.icecreamqaq.yuq.entity.Contact;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.pojo.Result;
 import me.kuku.utils.MyUtils;
@@ -10,14 +12,13 @@ import me.kuku.yuq.entity.OfficeGlobalEntity;
 import me.kuku.yuq.entity.OfficeGlobalService;
 import me.kuku.yuq.entity.Sku;
 import me.kuku.yuq.logic.OfficeGlobalLogic;
-import net.mamoe.mirai.contact.Contact;
 
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.List;
 
 @PrivateController
-public class OfficeGlobalController {
+public class OfficeGlobalController extends QQController {
 
 	@Inject
 	private OfficeGlobalService officeGlobalService;
@@ -25,7 +26,7 @@ public class OfficeGlobalController {
 	private OfficeGlobalLogic officeGlobalLogic;
 
 	@Action("office创建用户")
-	public String createUser(ContextSession session, Contact qq) throws IOException {
+	public String createUser(ContextSession session) throws IOException {
 		List<OfficeGlobalEntity> officeList = officeGlobalService.findAll();
 		if (officeList.size() == 0) return "管理员还没有绑定office信息，创建失败！";
 		int officeIndex = 0;
@@ -34,7 +35,7 @@ public class OfficeGlobalController {
 			for (int i = 0; i < officeList.size(); i++){
 				sb.append(i).append("、").append(officeList.get(i).getName()).append("\n");
 			}
-			qq.sendMessage(MyUtils.removeLastLine(sb));
+			reply(MyUtils.removeLastLine(sb));
 			Message numStrMessage = session.waitNextMessage();
 			String numStr = Message.Companion.firstString(numStrMessage);
 			if (!numStr.matches("[0-9]+")) return "回复的不为数字！";
@@ -43,7 +44,7 @@ public class OfficeGlobalController {
 			officeIndex = num;
 		}
 		OfficeGlobalEntity officeGlobalEntity = officeList.get(officeIndex);
-		qq.sendMessage("请输入你需要创建的用户名");
+		reply("请输入你需要创建的用户名");
 		String username = Message.Companion.firstString(session.waitNextMessage());
 		List<Sku> skuList = officeGlobalEntity.getSKuJson();
 		int index = 0;
@@ -52,7 +53,7 @@ public class OfficeGlobalController {
 			for (int i = 0; i < skuList.size(); i++){
 				sb.append(i).append("、").append(skuList.get(i).getName()).append("\n");
 			}
-			qq.sendMessage(MyUtils.removeLastLine(sb));
+			reply(MyUtils.removeLastLine(sb));
 			String numStr = Message.Companion.firstString(session.waitNextMessage());
 			if (!numStr.matches("[0-9]+")) return "回复的不为数字！";
 			int num = Integer.parseInt(numStr);

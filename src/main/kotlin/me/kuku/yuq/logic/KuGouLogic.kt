@@ -19,6 +19,7 @@ interface KuGouLogic{
     fun getQrcode(): KuGouQrcode
     fun checkQrcode(kuGouQrcode: KuGouQrcode): Result<KuGouEntity>
     fun musicianSign(kuGouEntity: KuGouEntity): Result<Void>
+    fun refresh(kuGouEntity: KuGouEntity): Result<KuGouEntity>
 }
 
 class KuGouLogicImpl: KuGouLogic{
@@ -90,11 +91,17 @@ class KuGouLogicImpl: KuGouLogic{
             Result.failure(0, "二维码未被扫描或已被扫描")
         else if (dataStatus == 0)
             Result.failure("二维码已失效！")
-        else if (dataStatus == 4)
-            Result.success(KuGouEntity(
-                token = jsonObject.getJSONObject("data").getString("token"),
-                userid = jsonObject.getJSONObject("data").getLong("userid")))
-        else Result.failure("未知的错误代码：$dataStatus")
+        else if (dataStatus == 4) {
+            val token = jsonObject.getJSONObject("data").getString("token")
+            val userid = jsonObject.getJSONObject("data").getLong("userid")
+            var kuGouEntity = KuGouEntity(
+                token = token,
+                userid = userid,
+                mid = kuGouQrcode.mid
+            )
+            kuGouEntity = refresh(kuGouEntity).data
+            Result.success(kuGouEntity)
+        } else Result.failure("未知的错误代码：$dataStatus")
     }
 
     override fun musicianSign(kuGouEntity: KuGouEntity): Result<Void> {
@@ -107,5 +114,14 @@ class KuGouLogicImpl: KuGouLogic{
             OkHttpUtils.postJson("https://h5activity.kugou.com/v1/musician/do_signed?${signature2(map)}", mapOf())
         if (jsonObject.getInteger("errcode") == 0) return Result.success("酷狗音乐人签到成功！", null)
         else return Result.failure("酷狗音乐人签到失败！" + jsonObject.getString("errmsg"))
+    }
+
+    override fun refresh(kuGouEntity: KuGouEntity): Result<KuGouEntity> {
+        val response =
+            OkHttpUtils.get("https://login-user.kugou.com/v1/autologin?a_id=1014&userid=${kuGouEntity.userid}&t=${kuGouEntity.token}&ct=${clientTime()}&callback=qrcodeLoginCallback&domain=kugou.com&uuid=${kuGouEntity.mid}&mid=${kuGouEntity.mid}&plat=4&dfid=-&kguser_jv=180925")
+        val cookie = OkHttpUtils.getCookie(response)
+        val kuGoo = OkHttpUtils.getCookie(cookie, "KuGoo") ?: return Result.failure("token已失效！")
+        kuGouEntity.kuGoo = kuGoo
+        return Result.success(kuGouEntity)
     }
 }

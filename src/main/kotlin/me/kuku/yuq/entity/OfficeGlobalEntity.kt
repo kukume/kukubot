@@ -3,6 +3,7 @@ package me.kuku.yuq.entity
 import com.IceCreamQAQ.Yu.annotation.AutoBind
 import com.alibaba.fastjson.JSON
 import com.icecreamqaq.yudb.jpa.JPADao
+import com.icecreamqaq.yudb.jpa.annotation.Execute
 import com.icecreamqaq.yudb.jpa.annotation.Transactional
 import javax.inject.Inject
 import javax.persistence.*
@@ -36,6 +37,8 @@ data class Sku(
 
 interface OfficeGlobalDao: JPADao<OfficeGlobalEntity, Int>{
     fun findByName(name: String): OfficeGlobalEntity?
+    @Execute("delete form OfficeGlobalEntity where name = ?0")
+    fun deleteByName(name: String)
 }
 
 @AutoBind
@@ -44,6 +47,7 @@ interface OfficeGlobalService{
     fun delete(officeGlobalEntity: OfficeGlobalEntity)
     fun save(officeGlobalEntity: OfficeGlobalEntity)
     fun findByName(name: String): OfficeGlobalEntity?
+    fun deleteByName(name: String)
 }
 
 class OfficeGlobalServiceImpl @Inject constructor(private val officeGlobalDao: OfficeGlobalDao): OfficeGlobalService{
@@ -65,6 +69,11 @@ class OfficeGlobalServiceImpl @Inject constructor(private val officeGlobalDao: O
     @Transactional
     override fun findByName(name: String): OfficeGlobalEntity? {
         return officeGlobalDao.findByName(name)
+    }
+
+    @Transactional
+    override fun deleteByName(name: String) {
+        return officeGlobalDao.deleteByName(name)
     }
 }
 

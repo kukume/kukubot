@@ -16,7 +16,10 @@ data class KuGouEntity(
     @JoinColumn(name = "qq")
     var qqEntity: QqEntity? = null,
     var token: String = "",
-    var userid: Long = 0
+    var userid: Long = 0,
+    @Column(length = 2000)
+    var kuGoo: String? = "",
+    var mid: String? = ""
 )
 
 

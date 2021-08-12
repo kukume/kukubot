@@ -11,7 +11,6 @@ import com.icecreamqaq.yuq.annotation.PathVar;
 import com.icecreamqaq.yuq.annotation.PrivateController;
 import com.icecreamqaq.yuq.controller.ContextSession;
 import com.icecreamqaq.yuq.controller.QQController;
-import com.icecreamqaq.yuq.entity.Contact;
 import com.icecreamqaq.yuq.entity.Group;
 import com.icecreamqaq.yuq.message.Message;
 import me.kuku.pojo.Result;
@@ -67,7 +66,7 @@ public class SettingController extends QQController {
 	}
 
 	@Action("绑全局")
-	public String bindOfficeGlobal(ContextSession session, Contact qq){
+	public String bindOfficeGlobal(ContextSession session){
 		reply("请输入该全局显示的名称");
 		String name = Message.Companion.firstString(session.waitNextMessage());
 		OfficeGlobalEntity officeGlobalEntity = officeGlobalService.findByName(name);
@@ -102,6 +101,20 @@ public class SettingController extends QQController {
 		officeGlobalEntity.setSKuJson(list);
 		officeGlobalService.save(officeGlobalEntity);
 		return "绑定全局信息成功！";
+	}
+
+	@Action("删全局 {name}")
+	public String deleteOffice(String name){
+		officeGlobalService.deleteByName(name);
+		return "删除全局成功！";
+	}
+
+	@Action("查全局")
+	public String queryOffice(){
+		List<OfficeGlobalEntity> list = officeGlobalService.findAll();
+		StringBuilder sb = new StringBuilder().append("您绑定的office全局如下：").append("\n");
+		list.forEach(it -> sb.append(it.getName()).append("\n"));
+		return MyUtils.removeLastLine(sb);
 	}
 
 	@Action("office提权 {mail}")

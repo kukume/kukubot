@@ -19,7 +19,7 @@
 
 ## 教程文章
 
-待定
+https://www.kuku.me/archives/6/
 
 ## 鸣谢
 

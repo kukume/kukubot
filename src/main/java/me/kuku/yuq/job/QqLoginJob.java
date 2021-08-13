@@ -89,7 +89,11 @@ public class QqLoginJob {
 				qqMusicLogic.musicianSign(qqMusicEntity);
 				for (int i = 0; i < 3; i++){
 					TimeUnit.SECONDS.sleep(5);
-					qqMusicLogic.randomReplyComment(qqMusicEntity, "太好听了把！");
+					Result<Void> replyResult = qqMusicLogic.randomReplyComment(qqMusicEntity, toolLogic.hiToKoTo().get("text"));
+					if (replyResult.isFailure()){
+						QqEntity qqEntity = qqMusicEntity.getQqEntity();
+						BotUtils.sendMessage(qqEntity, "您的qq音乐随机回复评论失败，错误信息为：" + replyResult.getMessage());
+					}
 				}
 			}catch (Exception e){
 				e.printStackTrace();
@@ -103,14 +107,11 @@ public class QqLoginJob {
 		List<QqMusicEntity> list = qqMusicService.findAll();
 		for (QqMusicEntity qqMusicEntity : list) {
 			try {
-				for (int i = 0; i < 3; i++) {
-					TimeUnit.SECONDS.sleep(3);
-					Result<Void> result = qqMusicLogic.publishNews(qqMusicEntity, toolLogic.hiToKoTo().get("text"));
-					if (result.isFailure()){
-						QqEntity qqEntity = qqMusicEntity.getQqEntity();
-						BotUtils.sendMessage(qqEntity, "您的QQ音乐发布新动态失败，请手动发布新动态完成任务~");
-						break;
-					}
+				Result<Void> result = qqMusicLogic.publishNews(qqMusicEntity, toolLogic.hiToKoTo().get("text"));
+				if (result.isFailure()){
+					QqEntity qqEntity = qqMusicEntity.getQqEntity();
+					BotUtils.sendMessage(qqEntity, "您的QQ音乐发布新动态失败，请手动发布新动态完成任务~");
+					break;
 				}
 			} catch (Exception e) {
 				e.printStackTrace();

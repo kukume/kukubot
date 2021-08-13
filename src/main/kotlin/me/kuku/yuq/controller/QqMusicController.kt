@@ -3,6 +3,7 @@ package me.kuku.yuq.controller
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Before
 import com.icecreamqaq.yuq.annotation.GroupController
+import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.annotation.PrivateController
 import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.entity.Group
@@ -17,6 +18,7 @@ import me.kuku.yuq.entity.QqEntity
 import me.kuku.yuq.entity.QqMusicEntity
 import me.kuku.yuq.entity.QqMusicService
 import me.kuku.yuq.logic.QqMusicLogic
+import me.kuku.yuq.logic.ToolLogic
 import javax.inject.Inject
 
 @GroupController
@@ -26,6 +28,8 @@ class QqMusicController {
     private lateinit var qqMusicService: QqMusicService
     @Inject
     private lateinit var qqMusicLogic: QqMusicLogic
+    @Inject
+    private lateinit var toolLogic: ToolLogic
 
     @Before(except = ["getQrcode", "bindCookie"])
     fun before(qqEntity: QqEntity, qq: Long) = qqMusicService.findByQqEntity(qqEntity)
@@ -90,10 +94,10 @@ class QqMusicController {
         return qqMusicLogic.publishNews(qqMusicEntity, content).message
     }
 
-    @Action("qq音乐随机回复评论 {content}")
+    @Action("qq音乐随机回复评论}")
     @QMsg(at = true)
-    fun qqMusicRandomComment(qqMusicEntity: QqMusicEntity, content: String): String{
-        return qqMusicLogic.randomReplyComment(qqMusicEntity, content).message
+    fun qqMusicRandomComment(qqMusicEntity: QqMusicEntity, @PathVar(1) content: String?): String{
+        return qqMusicLogic.randomReplyComment(qqMusicEntity, content ?: toolLogic.hiToKoTo()?.get("text") ?: "这也太好听了把！").message
     }
 
     @Action("qq音乐人兑换绿钻")
@@ -106,5 +110,12 @@ class QqMusicController {
         qqMusicEntity.convertGreenDiamond = status
         qqMusicService.save(qqMusicEntity)
         return "qq音乐人每日自动兑换绿钻${if (status) "开启" else "关闭"}成功"
+    }
+
+    @Action("删除qq音乐")
+    @QMsg(at = true)
+    fun delete(qqMusicEntity: QqMusicEntity): String{
+        qqMusicService.delete(qqMusicEntity)
+        return "删除qq音乐信息成功！"
     }
 }

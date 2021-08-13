@@ -154,7 +154,7 @@ public class SettingController extends QQController {
 		if ("1".equals(typeMsg)) type = "ALL";
 		else type = "PARTIAL";
 		reply("请输入回答语句！！");
-		String msg = Message.Companion.firstString(session.waitNextMessage());
+		String msg = Message.Companion.toCodeString(session.waitNextMessage());
 		JSONObject jsonObject = new JSONObject();
 		jsonObject.put("q", q);
 		jsonObject.put("a", msg);

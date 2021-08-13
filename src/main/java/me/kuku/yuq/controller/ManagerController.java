@@ -54,14 +54,14 @@ public class ManagerController {
 	}
 
 	@Action("kukubot {status}")
-	@Synonym({"loc监控 {status}", "整点报时 {status}", "自动审核 {status}", "退群拉黑 {status}", "图片审核 {status}",
+	@Synonym({"loc群监控 {status}", "整点报时 {status}", "自动审核 {status}", "退群拉黑 {status}", "图片审核 {status}",
 			"色图 {status}", "撤回通知 {status}", "闪照通知 {status}", "复读 {status}", "进群未发言踢出 {status}",
 			"群管理权限 {status}", "github推送 {status}"})
 	@QMsg(at = true)
 	public String openOrOff(GroupEntity groupEntity, boolean status, @PathVar(0) String op){
 		switch (op){
 			case "kukubot": groupEntity.setStatus(status); break;
-			case "loc监控": groupEntity.setLocMonitor(status); break;
+			case "loc群监控": groupEntity.setLocMonitor(status); break;
 			case "整点报时": groupEntity.setOnTimeAlarm(status); break;
 			case "自动审核": groupEntity.setAutoReview(status); break;
 			case "退群拉黑": groupEntity.setLeaveGroupBlack(status); break;
@@ -153,7 +153,7 @@ public class ManagerController {
 		if ("1".equals(typeMsg)) type = "ALL";
 		else type = "PARTIAL";
 		group.sendMessage(mif.at(qq).plus("请输入回答语句！！"));
-		String msg = Message.Companion.firstString(session.waitNextMessage());
+		String msg = Message.Companion.toCodeString(session.waitNextMessage());
 		JSONObject jsonObject = new JSONObject();
 		jsonObject.put("q", q);
 		jsonObject.put("a", msg);

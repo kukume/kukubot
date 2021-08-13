@@ -18,6 +18,7 @@ public class GithubController {
 
 	@Action("github-webhook")
 	public String webhook(JSONObject jsonObject){
+		if (jsonObject == null) return "error!";
 		JSONObject repository = jsonObject.getJSONObject("repository");
 		String name = repository.getString("full_name");
 		JSONObject headCommit = jsonObject.getJSONObject("headcommit");

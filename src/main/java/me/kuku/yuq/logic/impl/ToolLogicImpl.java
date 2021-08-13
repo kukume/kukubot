@@ -143,8 +143,10 @@ public class ToolLogicImpl implements ToolLogic {
 	@Override
 	public String queryIcp(String domain) throws IOException {
 		JSONObject jsonObject = OkHttpUtils.getJson(api + "/tool/icp?keyword=" + domain);
-		if (jsonObject.getInteger("code") != 200) return "未找到该域名的备案信息";
-		JSONObject data = jsonObject.getJSONArray("data").getJSONObject(0);
+		if (jsonObject.getInteger("code") != 200) return jsonObject.getString("message");
+		JSONArray dataJsonObject = jsonObject.getJSONArray("data");
+		if (dataJsonObject.size() == 0) return "未找到该域名的备案信息";
+		JSONObject data = dataJsonObject.getJSONObject(0);
 		return "主办单位名称：" + data.getString("unitName") + "\n" +
 				"网站备案/许可证号：" + data.getString("licence") + "\n" +
 				"网站名称：" + data.getString("name") + "\n" +

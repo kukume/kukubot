@@ -63,6 +63,7 @@ public class HostLocController {
 
 	@Action("loc签到 {status}")
 	@Synonym({"loc监控 {status}"})
+	@QMsg(at = true)
 	public String status(HostLocEntity hostLocEntity, boolean status, @PathVar(0) String type){
 		switch (type){
 			case "loc监控": hostLocEntity.setMonitor(status); break;

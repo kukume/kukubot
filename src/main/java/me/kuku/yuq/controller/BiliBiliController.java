@@ -139,4 +139,11 @@ public class BiliBiliController {
 		}
 		return msg;
 	}
+
+	@Action("删除哔哩哔哩")
+	@QMsg(at = true)
+	public String delete(BiliBiliEntity biliBiliEntity){
+		biliBiliService.delete(biliBiliEntity);
+		return "删除哔哩哔哩信息成功！";
+	}
 }

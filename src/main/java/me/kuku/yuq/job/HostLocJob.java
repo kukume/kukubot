@@ -58,6 +58,7 @@ public class HostLocJob {
 		}
 		locId = Integer.parseInt(list.get(0).get("id"));
 		List<HostLocEntity> qqList = hostLocService.findByMonitor(true);
+		List<GroupEntity> groupList = groupService.findByLocMonitor(true);
 		for (Map<String, String> map : newList) {
 			String str = "Loc有新帖了！！" + "\n" +
 					"标题：" + map.get("title") + "\n" +
@@ -66,6 +67,9 @@ public class HostLocJob {
 			for (HostLocEntity hostLocEntity : qqList) {
 				QqEntity qqEntity = hostLocEntity.getQqEntity();
 				BotUtils.sendMessage(qqEntity, str);
+			}
+			for (GroupEntity groupEntity : groupList) {
+				BotUtils.sendMessage(groupEntity.getGroup(), str);
 			}
 		}
 	}

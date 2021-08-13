@@ -143,6 +143,7 @@ data class GroupEntity(
 interface GroupDao: JPADao<GroupEntity, Int>{
     fun findByGroup(group: Long): GroupEntity?
     fun findByGithubPush(githubPush: Boolean): List<GroupEntity>
+    fun findByLocMonitor(locMonitor: Boolean): List<GroupEntity>
 }
 
 @AutoBind
@@ -152,6 +153,7 @@ interface GroupService{
     fun delete(id: Int)
     fun findAll(): List<GroupEntity>
     fun findByGithubPush(githubPush: Boolean): List<GroupEntity>
+    fun findByLocMonitor(locMonitor: Boolean): List<GroupEntity>
 }
 
 class GroupServiceImpl: GroupService{
@@ -181,5 +183,9 @@ class GroupServiceImpl: GroupService{
     @Transactional
     override fun findByGithubPush(githubPush: Boolean): List<GroupEntity> {
         return groupDao.findByGithubPush(githubPush)
+    }
+
+    override fun findByLocMonitor(locMonitor: Boolean): List<GroupEntity> {
+        return groupDao.findByLocMonitor(locMonitor)
     }
 }

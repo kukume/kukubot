@@ -50,6 +50,7 @@ interface BiliBiliService {
     fun findByMonitor(monitor: Boolean): List<BiliBiliEntity>
     fun findByTask(task: Boolean): List<BiliBiliEntity>
     fun findByLive(live: Boolean): List<BiliBiliEntity>
+    fun delete(biliEntity: BiliBiliEntity)
 }
 
 class BiliBiliServiceImpl: BiliBiliService{
@@ -85,5 +86,9 @@ class BiliBiliServiceImpl: BiliBiliService{
     @Transactional
     override fun findByLive(live: Boolean): List<BiliBiliEntity> {
         return biliBiliDao.findByLive(live)
+    }
+
+    override fun delete(biliEntity: BiliBiliEntity) {
+        biliBiliDao.delete(biliEntity.id!!)
     }
 }

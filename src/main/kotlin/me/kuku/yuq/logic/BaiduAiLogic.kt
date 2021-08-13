@@ -59,8 +59,7 @@ class BaiduAiLogicImpl: BaiduAiLogic{
             if (jsonObject.getInteger("conclusionType") == 1) false
             else {
                 val jsonArray = jsonObject.getJSONArray("data")
-                if (jsonArray.isEmpty()) false
-                else {
+                if (!jsonArray.isEmpty()) {
                     for (i in jsonArray.indices){
                         val singleJsonObject = jsonArray.getJSONObject(i)
                         val type = singleJsonObject.getInteger("type")

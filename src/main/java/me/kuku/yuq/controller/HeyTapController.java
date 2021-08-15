@@ -7,6 +7,7 @@ import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.annotation.GroupController;
 import com.icecreamqaq.yuq.annotation.PrivateController;
 import com.icecreamqaq.yuq.annotation.QMsg;
+import com.icecreamqaq.yuq.entity.Contact;
 import com.icecreamqaq.yuq.entity.Group;
 import com.icecreamqaq.yuq.message.MessageItemFactory;
 import me.kuku.pojo.Result;
@@ -82,11 +83,17 @@ public class HeyTapController {
 
 	@Action("欢太签到")
 	@QMsg(at = true)
-	public String sign(HeyTapEntity heyTapEntity) throws IOException {
+	public String sign(HeyTapEntity heyTapEntity, Contact qq) throws IOException {
+		qq.sendMessage(mif.at(qq.getId()).plus("正在为您签到中！"));
 		Result<Void> result = heyTapLogic.sign(heyTapEntity);
-		if (result.isSuccess())
-			return "签到成功！";
-		else return "签到失败：" + result.getMessage();
+		if (result.isSuccess()) {
+			heyTapLogic.viewGoods(heyTapEntity);
+			heyTapLogic.shareGoods(heyTapEntity);
+			heyTapLogic.viewPush(heyTapEntity);
+			heyTapLogic.transferPoints(heyTapEntity);
+			return "欢太签到成功！";
+		}
+		else return "欢太签到失败：" + result.getMessage();
 	}
 
 	@Action("早睡打卡 {status}")

@@ -27,15 +27,11 @@ public class KuGouJob {
 		List<KuGouEntity> list = kuGouService.findAll();
 		for (KuGouEntity kuGouEntity : list) {
 			try {
-				Result<KuGouEntity> refresh = kuGouLogic.refresh(kuGouEntity);
-				if (refresh.isFailure()){
+				Result<Void> result = kuGouLogic.musicianSign(kuGouEntity);
+				if (result.isFailure()){
 					QqEntity qqEntity = kuGouEntity.getQqEntity();
 					BotUtils.sendMessage(qqEntity, "您的酷狗音乐人自动签到失败，可能为cookie已失效，如需自动签到，请重新绑定！");
 					kuGouService.delete(kuGouEntity);
-				}else {
-					KuGouEntity newEntity = refresh.getData();
-					kuGouService.save(newEntity);
-					kuGouLogic.musicianSign(kuGouEntity);
 				}
 			}catch (Exception e){
 				e.printStackTrace();

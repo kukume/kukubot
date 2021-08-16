@@ -16,7 +16,7 @@ data class KuGouQrcode (
 @AutoBind
 interface KuGouLogic{
     fun mid(): String
-    fun getQrcode(): KuGouQrcode
+    fun getQrcode(mid: String? = null): KuGouQrcode
     fun checkQrcode(kuGouQrcode: KuGouQrcode): Result<KuGouEntity>
     fun sendMobileCode(phone: String, mid: String): Result<Void>
     fun verifyCode(phone: String, code: String, mid: String): Result<KuGouEntity>
@@ -71,16 +71,16 @@ class KuGouLogicImpl: KuGouLogic{
         return sb.toString()
     }
 
-    override fun getQrcode(): KuGouQrcode {
-        val mid = mid()
+    override fun getQrcode(mid: String?): KuGouQrcode {
+        val newMid = mid ?: mid()
         val map = mutableMapOf(
             "appid" to "1014", "clientver" to "8131", "clienttime" to clientTime().toString(),
-            "uuid" to mid, "mid" to mid, "type" to "1"
+            "uuid" to newMid, "mid" to newMid, "type" to "1"
         )
         val jsonObject = OkHttpUtils.getJson("https://login-user.kugou.com/v1/qrcode?${signature(map)}")
         val qrcode = jsonObject.getJSONObject("data").getString("qrcode")
         return KuGouQrcode("https://h5.kugou.com/apps/loginQRCode/html/index.html?qrcode=$qrcode&appid=1014",
-            qrcode, mid)
+            qrcode, newMid)
     }
 
     override fun checkQrcode(kuGouQrcode: KuGouQrcode): Result<KuGouEntity> {
@@ -97,10 +97,15 @@ class KuGouLogicImpl: KuGouLogic{
             4 -> {
                 val token = jsonObject.getJSONObject("data").getString("token")
                 val userid = jsonObject.getJSONObject("data").getLong("userid")
+                val response =
+                    OkHttpUtils.get("https://login-user.kugou.com/v1/autologin?a_id=1014&userid=$userid&t=$token&ct=${clientTime()}&callback=qrcodeLoginCallback&domain=kugou.com&uuid=${kuGouQrcode.mid}&mid=$${kuGouQrcode.mid}&plat=4&dfid=-&kguser_jv=180925")
+                val cookie = OkHttpUtils.getCookie(response)
+                val kuGoo = OkHttpUtils.getCookie(cookie, "KuGoo")
                 val kuGouEntity = KuGouEntity(
                     token = token,
                     userid = userid,
-                    mid = kuGouQrcode.mid
+                    mid = kuGouQrcode.mid,
+                    kuGoo = kuGoo
                 )
                 Result.success(kuGouEntity)
             }
@@ -120,7 +125,7 @@ class KuGouLogicImpl: KuGouLogic{
             "srcappid" to "2919"
         )
         val preJsonObject = OkHttpUtils.postJson(
-            "https://api.kuku.me/tool/kuGou",
+            "https://apicf.kuku.me/tool/kuGou",
             mutableMapOf("phone" to phone, "time" to time.toString())
         )
         val params = preJsonObject.getString("params")
@@ -211,8 +216,12 @@ class KuGouLogicImpl: KuGouLogic{
     }
 
     override fun musicianSign(kuGouEntity: KuGouEntity): Result<Void> {
+        // 1014
+        // 1058
+        val kuGoo = kuGouEntity.kuGoo ?: return Result.failure("请重新登陆酷狗！")
+        val aId = MyUtils.regex("a_id=", "&", kuGoo)
         val time = System.currentTimeMillis().toString()
-        val map = mutableMapOf("appid" to "1014", "token" to kuGouEntity.token,
+        val map = mutableMapOf("appid" to aId, "token" to kuGouEntity.token,
             "kugouid" to kuGouEntity.userid.toString(), "srcappid" to "2919", "clientver" to "20000",
             "clienttime" to time, "dfid" to "-",
             "mid" to time, "uuid" to time)

@@ -18,11 +18,15 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import me.kuku.utils.MyUtils
+import me.kuku.utils.OkHttpUtils
+import me.kuku.utils.QqQrCodeLoginUtils
 import me.kuku.yuq.entity.KuGouEntity
 import me.kuku.yuq.entity.KuGouService
 import me.kuku.yuq.entity.QqEntity
 import me.kuku.yuq.logic.KuGouLogic
 import me.kuku.yuq.logic.ToolLogic
+import java.net.URLDecoder
 import javax.inject.Inject
 
 @GroupController
@@ -32,7 +36,7 @@ class KuGouController @Inject constructor(
     private val kuGouLogic: KuGouLogic,
     private val toolLogic: ToolLogic
 ) {
-    @Before(except = ["qrcode"])
+    @Before(except = ["qrcode", "loginByCode", "loginByPassword", "qrcodeQq"])
     fun before(qqEntity: QqEntity, qq: Long) = kuGouService.findByQqEntity(qqEntity)
         ?: throw mif.at(qq).plus("您没有绑定酷狗账号，请发送<酷狗二维码>进行绑定").toThrowable()
 
@@ -77,10 +81,70 @@ class KuGouController @Inject constructor(
     }
 
     @DelicateCoroutinesApi
+    @Action("酷狗qq二维码")
+    fun qrcodeQq(qqEntity: QqEntity, qq: Long, group: Group){
+        var kuGouEntity = kuGouService.findByQqEntity(qqEntity)
+        val mid = kuGouEntity?.mid ?: kuGouLogic.mid()
+        val response =
+            OkHttpUtils.get("https://openplat-user.kugou.com/qq/?appid=1058&dfid=-&platid=4&mid=$mid&force_login=0&callbackurl=https://activity.kugou.com/vipOrgVerify/v-a9193800/mobile.html")
+        response.close()
+        val redUrl = response.header("location")
+        val redirectUrlEn = MyUtils.regex("redirect_uri=", "&", redUrl)
+        val redirectUrl = URLDecoder.decode(redirectUrlEn, "utf-8")
+        val appid = 716027609L
+        val daId = 383
+        val aid = 205141L
+        val qrCode = QqQrCodeLoginUtils.getQrCode(appid, daId, aid)
+        group.sendMessage(mif.at(qq).plus(mif.imageByByteArray(qrCode.bytes)).plus("请使用手机QQ扫码登录！"))
+        GlobalScope.launch {
+            val msg: Message
+            val at = mif.at(qq)
+            while (true) {
+                delay(3000)
+                val result = QqQrCodeLoginUtils.checkQrCode(
+                    appid,
+                    daId,
+                    aid,
+                    "https://graph.qq.com/oauth2.0/login_jump",
+                    qrCode.sig
+                )
+                if (result.code == 500) {
+                    msg = at.plus(result.message)
+                    break;
+                }
+                if (result.code == 200) {
+                    val qqLoginPojo = result.data
+                    val res = QqQrCodeLoginUtils.authorize(qqLoginPojo, aid, "state", redirectUrl)
+                    if (res.isFailure){
+                        msg = at.plus(res.message)
+                        break
+                    }
+                    val url = res.data
+                    val resp = OkHttpUtils.get(url)
+                    resp.close()
+                    val cookie = OkHttpUtils.getCookie(resp)
+                    if (kuGouEntity == null) kuGouEntity = KuGouEntity(qqEntity = qqEntity)
+                    kuGouEntity!!.token = OkHttpUtils.getCookie(cookie, "t")
+                    kuGouEntity!!.mid = mid
+                    kuGouEntity!!.kuGoo = OkHttpUtils.getCookie(cookie, "KuGoo")
+                    kuGouEntity!!.userid = OkHttpUtils.getCookie(cookie, "KugooID")?.toLong() ?: 0
+                    kuGouService.save(kuGouEntity!!)
+                    msg = at.plus("绑定酷狗音乐成功！")
+                    break
+                }
+            }
+            group.sendMessage(msg)
+        }
+    }
+
+
+    @DelicateCoroutinesApi
     @Action("酷狗二维码")
     @QMsg(at = true)
     fun qrcode(group: Group, qqEntity: QqEntity, qq: Long){
-        val qrcode = kuGouLogic.getQrcode()
+        var kuGouEntity = kuGouService.findByQqEntity(qqEntity)
+        val mid = kuGouEntity?.mid ?: kuGouLogic.mid()
+        val qrcode = kuGouLogic.getQrcode(mid)
         group.sendMessage(mif.at(qq).plus(mif.imageByInputStream(toolLogic.creatQr(qrcode.url)).plus("请使用酷狗音乐APP扫码登录")))
         GlobalScope.launch {
             val msg: Message
@@ -88,13 +152,13 @@ class KuGouController @Inject constructor(
                 delay(3000)
                 val result = kuGouLogic.checkQrcode(qrcode)
                 if (result.code == 200){
+                    if (kuGouEntity == null) kuGouEntity = KuGouEntity(qqEntity = qqEntity)
                     val newKuGouEntity = result.data
-                    val kuGouEntity = kuGouService.findByQqEntity(qqEntity) ?: KuGouEntity(qqEntity = qqEntity)
-                    kuGouEntity.token = newKuGouEntity.token
-                    kuGouEntity.userid = newKuGouEntity.userid
-                    kuGouEntity.mid = newKuGouEntity.mid
-                    kuGouEntity.kuGoo = newKuGouEntity.kuGoo
-                    kuGouService.save(kuGouEntity)
+                    kuGouEntity!!.token = newKuGouEntity.token
+                    kuGouEntity!!.userid = newKuGouEntity.userid
+                    kuGouEntity!!.mid = newKuGouEntity.mid
+                    kuGouEntity!!.kuGoo = newKuGouEntity.kuGoo
+                    kuGouService.save(kuGouEntity!!)
                     msg = mif.at(qq).plus("绑定酷狗音乐成功")
                     break
                 }else if (result.code == 500) {

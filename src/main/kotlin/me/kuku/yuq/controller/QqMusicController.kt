@@ -13,7 +13,9 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import me.kuku.utils.MyUtils
 import me.kuku.utils.OkHttpUtils
+import me.kuku.utils.QqPasswordConnectLoginUtils
 import me.kuku.yuq.entity.QqEntity
 import me.kuku.yuq.entity.QqMusicEntity
 import me.kuku.yuq.entity.QqMusicService
@@ -45,6 +47,34 @@ class QqMusicController {
         qqMusicService.save(qqMusicEntity)
         return "绑定qq音乐成功！"
     }
+
+    @Action("qq音乐登录 {password}")
+    fun loginByPassword(password: String, qq: Long, qqEntity: QqEntity): String{
+        val result = QqPasswordConnectLoginUtils.login(
+            qq,
+            password,
+            100497308L,
+            "https://y.qq.com/portal/wx_redirect.html?login_type=1&surl=https://y.qq.com/"
+        )
+        return if (result.isFailure) result.message
+        else {
+            val url = result.data
+            val code = MyUtils.regex("code=", "&", url)
+            val response = OkHttpUtils.post(
+                "https://u.y.qq.com/cgi-bin/musicu.fcg",
+                OkHttpUtils.addJson("{\"comm\":{\"g_tk\":5381,\"platform\":\"yqq\",\"ct\":24,\"cv\":0},\"req\":{\"module\":\"QQConnectLogin.LoginServer\",\"method\":\"QQLogin\",\"param\":{\"code\":\"$code\"}}}")
+            )
+            response.close()
+            val cookie = OkHttpUtils.getCookie(response)
+            val key = OkHttpUtils.getCookie(cookie, "qqmusic_key")
+            val qqMusicEntity = qqMusicService.findByQqEntity(qqEntity) ?: QqMusicEntity(qqEntity = qqEntity)
+            qqMusicEntity.cookie = cookie
+            qqMusicEntity.qqMusicKey = key
+            qqMusicService.save(qqMusicEntity)
+            "绑定qq音乐成功！"
+        }
+    }
+
 
     @Action("qq音乐二维码")
     @DelicateCoroutinesApi

@@ -33,7 +33,7 @@ class QqMusicController {
     @Inject
     private lateinit var toolLogic: ToolLogic
 
-    @Before(except = ["getQrcode", "bindCookie"])
+    @Before(except = ["getQrcode", "bindCookie", "loginByPassword"])
     fun before(qqEntity: QqEntity, qq: Long) = qqMusicService.findByQqEntity(qqEntity)
         ?: throw mif.at(qq).plus("你还没有绑定qq音乐信息，请发送<qq音乐二维码>进行绑定").toThrowable()
 

@@ -59,7 +59,7 @@ class QqMusicController {
         return if (result.isFailure) result.message
         else {
             val url = result.data
-            val code = MyUtils.regex("code=", "&", url)
+            val code = MyUtils.regex("(?<=code\\=).*", url)
             val response = OkHttpUtils.post(
                 "https://u.y.qq.com/cgi-bin/musicu.fcg",
                 OkHttpUtils.addJson("{\"comm\":{\"g_tk\":5381,\"platform\":\"yqq\",\"ct\":24,\"cv\":0},\"req\":{\"module\":\"QQConnectLogin.LoginServer\",\"method\":\"QQLogin\",\"param\":{\"code\":\"$code\"}}}")

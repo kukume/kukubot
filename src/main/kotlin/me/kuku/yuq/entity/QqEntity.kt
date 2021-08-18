@@ -17,7 +17,8 @@ data class QqEntity(
     @ManyToMany(cascade = [CascadeType.ALL])
     @JoinTable(name = "qq_group", joinColumns = [JoinColumn(name = "qq_id")],
         inverseJoinColumns = [JoinColumn(name = "group_id")])
-    var groups: Set<GroupEntity> = hashSetOf()
+    var groups: Set<GroupEntity> = hashSetOf(),
+    var password: String? = null
 ){
     companion object{
         fun getInstance(qq: Long): QqEntity{

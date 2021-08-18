@@ -82,9 +82,20 @@ public class QqLoginJob {
 				Result<Void> result = qqMusicLogic.sign(qqMusicEntity);
 				if (result.isFailure()){
 					QqEntity qqEntity = qqMusicEntity.getQqEntity();
-					BotUtils.sendMessage(qqEntity, "您的QQ音乐的cookie已失效，如需自动签到，请重新绑定！");
-					qqMusicService.delete(qqMusicEntity);
-					continue;
+					if (qqEntity.getPassword() != null && !"".equals(qqEntity.getPassword())){
+						Result<QqMusicEntity> loginResult = qqMusicLogic.loginByPassword(qqEntity.getQq(), qqEntity.getPassword());
+						if (loginResult.isFailure()){
+							BotUtils.sendMessage(qqEntity, "您的QQ音乐的cookie已失效，如需自动签到，请重新绑定！");
+							qqMusicService.delete(qqMusicEntity);
+							continue;
+						}else {
+							QqMusicEntity newQqMusicEntity = loginResult.getData();
+							qqMusicEntity.setCookie(newQqMusicEntity.getCookie());
+							qqMusicEntity.setQqMusicKey(newQqMusicEntity.getQqMusicKey());
+							qqMusicService.save(qqMusicEntity);
+							qqMusicLogic.sign(qqMusicEntity);
+						}
+					}
 				}
 				qqMusicLogic.musicianSign(qqMusicEntity);
 				for (int i = 0; i < 3; i++){
@@ -93,6 +104,7 @@ public class QqLoginJob {
 					if (replyResult.isFailure()){
 						QqEntity qqEntity = qqMusicEntity.getQqEntity();
 						BotUtils.sendMessage(qqEntity, "您的qq音乐随机回复评论失败，错误信息为：" + replyResult.getMessage());
+						break;
 					}
 				}
 			}catch (Exception e){

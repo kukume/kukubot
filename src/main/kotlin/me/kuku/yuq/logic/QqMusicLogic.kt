@@ -13,6 +13,7 @@ import me.kuku.yuq.entity.QqMusicEntity
 interface QqMusicLogic {
     fun getQrcode(): QqLoginQrcode
     fun checkQrcode(qqLoginQrcode: QqLoginQrcode): Result<QqMusicEntity>
+    fun loginByPassword(qq: Long, password: String): Result<QqMusicEntity>
     fun sign(qqMusicEntity: QqMusicEntity): Result<Void>
     fun musicianSign(qqMusicEntity: QqMusicEntity): Result<Void>
     fun publishNews(qqMusicEntity: QqMusicEntity, content: String): Result<Void>
@@ -54,6 +55,28 @@ class QqMusicLogicImpl: QqMusicLogic{
         val cookie = OkHttpUtils.getCookie(response)
         val key = OkHttpUtils.getCookie(cookie, "qqmusic_key")
         return Result.success(QqMusicEntity(cookie = cookie, qqMusicKey = key))
+    }
+
+    override fun loginByPassword(qq: Long, password: String): Result<QqMusicEntity> {
+        val result = QqPasswordConnectLoginUtils.login(
+            qq,
+            password,
+            100497308L,
+            "https://y.qq.com/portal/wx_redirect.html?login_type=1&surl=https://y.qq.com/"
+        )
+        return if (result.isFailure) Result.failure(result.message)
+        else {
+            val url = result.data
+            val code = MyUtils.regex("(?<=code\\=).*", url)
+            val response = OkHttpUtils.post(
+                "https://u.y.qq.com/cgi-bin/musicu.fcg",
+                OkHttpUtils.addJson("{\"comm\":{\"g_tk\":5381,\"platform\":\"yqq\",\"ct\":24,\"cv\":0},\"req\":{\"module\":\"QQConnectLogin.LoginServer\",\"method\":\"QQLogin\",\"param\":{\"code\":\"$code\"}}}")
+            )
+            response.close()
+            val cookie = OkHttpUtils.getCookie(response)
+            val key = OkHttpUtils.getCookie(cookie, "qqmusic_key")
+            Result.success(QqMusicEntity(cookie = cookie, qqMusicKey = key))
+        }
     }
 
     override fun sign(qqMusicEntity: QqMusicEntity): Result<Void> {

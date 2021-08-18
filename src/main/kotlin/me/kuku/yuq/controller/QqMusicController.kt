@@ -2,6 +2,7 @@ package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Before
+import com.icecreamqaq.yudb.jpa.annotation.Transactional
 import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.annotation.PrivateController
@@ -13,12 +14,11 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import me.kuku.utils.MyUtils
 import me.kuku.utils.OkHttpUtils
-import me.kuku.utils.QqPasswordConnectLoginUtils
 import me.kuku.yuq.entity.QqEntity
 import me.kuku.yuq.entity.QqMusicEntity
 import me.kuku.yuq.entity.QqMusicService
+import me.kuku.yuq.entity.QqService
 import me.kuku.yuq.logic.QqMusicLogic
 import me.kuku.yuq.logic.ToolLogic
 import javax.inject.Inject
@@ -32,6 +32,8 @@ class QqMusicController {
     private lateinit var qqMusicLogic: QqMusicLogic
     @Inject
     private lateinit var toolLogic: ToolLogic
+    @Inject
+    private lateinit var qqService: QqService
 
     @Before(except = ["getQrcode", "bindCookie", "loginByPassword"])
     fun before(qqEntity: QqEntity, qq: Long) = qqMusicService.findByQqEntity(qqEntity)
@@ -49,32 +51,21 @@ class QqMusicController {
     }
 
     @Action("qq音乐登录 {password}")
+    @Transactional
     fun loginByPassword(password: String, qq: Long, qqEntity: QqEntity): String{
-        val result = QqPasswordConnectLoginUtils.login(
-            qq,
-            password,
-            100497308L,
-            "https://y.qq.com/portal/wx_redirect.html?login_type=1&surl=https://y.qq.com/"
-        )
+        val result = qqMusicLogic.loginByPassword(qq, password)
         return if (result.isFailure) result.message
         else {
-            val url = result.data
-            val code = MyUtils.regex("(?<=code\\=).*", url)
-            val response = OkHttpUtils.post(
-                "https://u.y.qq.com/cgi-bin/musicu.fcg",
-                OkHttpUtils.addJson("{\"comm\":{\"g_tk\":5381,\"platform\":\"yqq\",\"ct\":24,\"cv\":0},\"req\":{\"module\":\"QQConnectLogin.LoginServer\",\"method\":\"QQLogin\",\"param\":{\"code\":\"$code\"}}}")
-            )
-            response.close()
-            val cookie = OkHttpUtils.getCookie(response)
-            val key = OkHttpUtils.getCookie(cookie, "qqmusic_key")
             val qqMusicEntity = qqMusicService.findByQqEntity(qqEntity) ?: QqMusicEntity(qqEntity = qqEntity)
-            qqMusicEntity.cookie = cookie
-            qqMusicEntity.qqMusicKey = key
+            val newMusicEntity = result.data
+            qqMusicEntity.cookie = newMusicEntity.cookie
+            qqMusicEntity.qqMusicKey = newMusicEntity.qqMusicKey
             qqMusicService.save(qqMusicEntity)
+            qqEntity.password = password
+            qqService.save(qqEntity)
             "绑定qq音乐成功！"
         }
     }
-
 
     @Action("qq音乐二维码")
     @DelicateCoroutinesApi
@@ -124,7 +115,7 @@ class QqMusicController {
         return qqMusicLogic.publishNews(qqMusicEntity, content).message
     }
 
-    @Action("qq音乐随机回复评论}")
+    @Action("qq音乐随机回复评论")
     @QMsg(at = true)
     fun qqMusicRandomComment(qqMusicEntity: QqMusicEntity, @PathVar(1) content: String?): String{
         return qqMusicLogic.randomReplyComment(qqMusicEntity, content ?: toolLogic.hiToKoTo()?.get("text") ?: "这也太好听了把！").message

@@ -83,8 +83,8 @@ public class HeyTapController {
 
 	@Action("欢太签到")
 	@QMsg(at = true)
-	public String sign(HeyTapEntity heyTapEntity, Contact qq) throws IOException {
-		qq.sendMessage(mif.at(qq.getId()).plus("正在为您签到中！"));
+	public String sign(HeyTapEntity heyTapEntity, Group group, long qq) throws IOException {
+		group.sendMessage(mif.at(qq).plus("正在为您签到中！"));
 		Result<Void> result = heyTapLogic.sign(heyTapEntity);
 		if (result.isSuccess()) {
 			heyTapLogic.viewGoods(heyTapEntity);

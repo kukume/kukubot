@@ -198,7 +198,7 @@ public class HeyTapLogicImpl implements HeyTapLogic {
 							UA.OPPO));
 			if (resultJsonObject.getInteger("code") == 200) return Result.success("签到成功", null);
 			else return Result.failure("签到失败，" + resultJsonObject.getString("errorMessage"));
-		}else return Result.failure("今日已签到！");
+		}else return Result.success("今日已签到！", null);
 	}
 
 	private boolean cashingCredits(HeyTapEntity heyTapEntity, String infoMarking, String infoType, String infoCredits) throws IOException {
@@ -227,7 +227,8 @@ public class HeyTapLogicImpl implements HeyTapLogic {
 		assert qd != null;
 		Integer status = qd.getInteger("completeStatus");
 		if (status == 0){
-			JSONObject shopJsonObject = OkHttpUtils.getJson("https://msec.opposhop.cn/goods/v1/SeckillRound/goods/3016?pageSize=12&currentPage=1");
+			JSONObject shopJsonObject = OkHttpUtils.getJson("https://msec.opposhop.cn/goods/v1/SeckillRound/goods/115?pageSize=10&currentPage=1",
+					OkHttpUtils.addCookie(heyTapEntity.getCookie()));
 			if (shopJsonObject.getJSONObject("meta").getInteger("code") == 200){
 				for (Object o : shopJsonObject.getJSONArray("detail")) {
 					JSONObject it = (JSONObject) o;

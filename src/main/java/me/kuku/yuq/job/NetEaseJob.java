@@ -31,4 +31,16 @@ public class NetEaseJob {
 		}
 	}
 
+	@Cron("1h")
+	public void musicianSign(){
+		List<NetEaseEntity> list = netEaseService.findAll();
+		for (NetEaseEntity netEaseEntity : list) {
+			try {
+				netEaseLogic.musicianSign(netEaseEntity);
+			}catch (Exception e){
+				e.printStackTrace();
+			}
+		}
+	}
+
 }

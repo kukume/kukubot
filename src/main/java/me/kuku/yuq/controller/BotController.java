@@ -227,6 +227,6 @@ public class BotController {
 				"https://vkceyugu.cdn.bspapp.com/VKCEYUGU-ba222f61-ee83-431d-bf9f-7e6216a8cf41/bb768136-d96d-451d-891a-5f409f7fbff1.jpg"
 		};
 		String url = urlArr[(int) (Math.random() * urlArr.length)];
-		return FunKt.getMif().at(resultQQ).plus(FunKt.getMif().imageByUrl(url)).plus("龙王，已蝉联" + map.get("desc") + "，快喷水！！");
+		return FunKt.getMif().at(resultQQ).plus(FunKt.getMif().imageByUrl(url)).plus("龙王，已上位" + map.get("desc") + "，快喷水！！");
 	}
 }

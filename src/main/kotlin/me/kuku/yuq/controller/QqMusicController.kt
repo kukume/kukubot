@@ -2,7 +2,6 @@ package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Before
-import com.icecreamqaq.yudb.jpa.annotation.Transactional
 import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.annotation.PrivateController
@@ -133,7 +132,6 @@ class QqMusicPrivateController{
     }
 
     @Action("qq音乐 {password}")
-    @Transactional
     fun loginByPassword(password: String, qq: Long, qqEntity: QqEntity): String{
         val result = qqMusicLogic.loginByPassword(qq, password)
         return if (result.isFailure) result.message

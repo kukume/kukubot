@@ -32,40 +32,10 @@ class QqMusicController {
     private lateinit var qqMusicLogic: QqMusicLogic
     @Inject
     private lateinit var toolLogic: ToolLogic
-    @Inject
-    private lateinit var qqService: QqService
 
-    @Before(except = ["getQrcode", "bindCookie", "loginByPassword"])
+    @Before(except = ["getQrcode"])
     fun before(qqEntity: QqEntity, qq: Long) = qqMusicService.findByQqEntity(qqEntity)
         ?: throw mif.at(qq).plus("你还没有绑定qq音乐信息，请发送<qq音乐二维码>进行绑定").toThrowable()
-
-    @Action("qq音乐 {cookie}")
-    fun bindCookie(qqEntity: QqEntity, cookie: String): String{
-        val qqMusicEntity = qqMusicService.findByQqEntity(qqEntity)
-            ?: QqMusicEntity(qqEntity = qqEntity)
-        val qqMusicKey = OkHttpUtils.getCookie(cookie, "qqmusic_key") ?: ""
-        qqMusicEntity.cookie = cookie
-        qqMusicEntity.qqMusicKey = qqMusicKey
-        qqMusicService.save(qqMusicEntity)
-        return "绑定qq音乐成功！"
-    }
-
-    @Action("qq音乐登录 {password}")
-    @Transactional
-    fun loginByPassword(password: String, qq: Long, qqEntity: QqEntity): String{
-        val result = qqMusicLogic.loginByPassword(qq, password)
-        return if (result.isFailure) result.message
-        else {
-            val qqMusicEntity = qqMusicService.findByQqEntity(qqEntity) ?: QqMusicEntity(qqEntity = qqEntity)
-            val newMusicEntity = result.data
-            qqMusicEntity.cookie = newMusicEntity.cookie
-            qqMusicEntity.qqMusicKey = newMusicEntity.qqMusicKey
-            qqMusicService.save(qqMusicEntity)
-            qqEntity.password = password
-            qqService.save(qqEntity)
-            "绑定qq音乐成功！"
-        }
-    }
 
     @Action("qq音乐二维码")
     @DelicateCoroutinesApi
@@ -138,5 +108,44 @@ class QqMusicController {
     fun delete(qqMusicEntity: QqMusicEntity): String{
         qqMusicService.delete(qqMusicEntity)
         return "删除qq音乐信息成功！"
+    }
+}
+
+@PrivateController
+class QqMusicPrivateController{
+
+    @Inject
+    private lateinit var qqMusicService: QqMusicService
+    @Inject
+    private lateinit var qqMusicLogic: QqMusicLogic
+    @Inject
+    private lateinit var qqService: QqService
+
+    @Action("qq音乐绑定 {cookie}")
+    fun bindCookie(qqEntity: QqEntity, cookie: String): String{
+        val qqMusicEntity = qqMusicService.findByQqEntity(qqEntity)
+            ?: QqMusicEntity(qqEntity = qqEntity)
+        val qqMusicKey = OkHttpUtils.getCookie(cookie, "qqmusic_key") ?: ""
+        qqMusicEntity.cookie = cookie
+        qqMusicEntity.qqMusicKey = qqMusicKey
+        qqMusicService.save(qqMusicEntity)
+        return "绑定qq音乐成功！"
+    }
+
+    @Action("qq音乐 {password}")
+    @Transactional
+    fun loginByPassword(password: String, qq: Long, qqEntity: QqEntity): String{
+        val result = qqMusicLogic.loginByPassword(qq, password)
+        return if (result.isFailure) result.message
+        else {
+            val qqMusicEntity = qqMusicService.findByQqEntity(qqEntity) ?: QqMusicEntity(qqEntity = qqEntity)
+            val newMusicEntity = result.data
+            qqMusicEntity.cookie = newMusicEntity.cookie
+            qqMusicEntity.qqMusicKey = newMusicEntity.qqMusicKey
+            qqMusicService.save(qqMusicEntity)
+            qqEntity.password = password
+            qqService.save(qqEntity)
+            "绑定qq音乐成功！"
+        }
     }
 }

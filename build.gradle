@@ -17,7 +17,7 @@ repositories {
 dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib'
     implementation 'me.kuku:utils:0.0.21'
-    implementation 'com.IceCreamQAQ.YuQ:YuQ-Mirai:0.1.0.0-DEV18'
+    implementation 'com.IceCreamQAQ.YuQ:YuQ-Mirai:0.1.0.0-DEV19'
     implementation 'com.IceCreamQAQ.Yu:Yu-DB:0.0.2.0-DEV12'
     implementation 'com.IceCreamQAQ.Yu:WebCore:0.0.2.0-DEV13'
     implementation 'com.h2database:h2:1.4.200'

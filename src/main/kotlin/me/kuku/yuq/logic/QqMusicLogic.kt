@@ -159,7 +159,7 @@ class QqMusicLogicImpl: QqMusicLogic{
                     Result.success("qq音乐随机歌曲评论成功！", null)
                 else if (code == 10009)
                     Result.failure("需要验证验证码，请打开该链接进行验证并重新发送该指令：${resultJsonObject.getJSONObject("req_1").getJSONObject("data").getString("VerifyUrl")}")
-                else Result.failure("qq音乐随机歌曲评论失败！${resultJsonObject.getJSONObject("req_1").getJSONObject("data").getString("Msg")}")
+                else Result.failure("qq音乐随机歌曲评论失败！${resultJsonObject?.getJSONObject("req_1")?.getJSONObject("data")?.getString("Msg") ?: "可能cookie已失效！"}")
             }
             else Result.failure("qq音乐随机歌曲评论失败！")
         }else Result.failure("qq音乐随机歌曲评论失败！获取评论列表失败！")

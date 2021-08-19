@@ -3,6 +3,8 @@ package me.kuku.yuq.logic.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import me.kuku.pojo.QqLoginPojo;
+import me.kuku.pojo.QqLoginQrcode;
 import me.kuku.pojo.Result;
 import me.kuku.pojo.UA;
 import me.kuku.utils.*;
@@ -18,24 +20,16 @@ import java.util.concurrent.TimeUnit;
 
 public class HeyTapLogicImpl implements HeyTapLogic {
 
-	private final String AES_KEY;
-	private String ticket = null;
-
-	public HeyTapLogicImpl(){
-		this.AES_KEY = MyUtils.random(16);
-		try {
-			JSONObject jsonObject = new JSONObject();
-			jsonObject.put("callback", "https://www.heytap.com/cn/web/");
-			Response response = request("https://id.heytap.com/api/login/v1/auth", jsonObject);
-			response.close();
-			ticket = response.header("X-Session-Ticket");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
+	private final String AES_KEY = MyUtils.random(16);
+	private final Long APP_ID = 716027609L;
+	private final Integer DA_ID = 383;
+	private final Long PT_AID = 101860840L;
 
 	private Response request(String url, JSONObject params) throws IOException {
+		return request(url, params, "https://id.heytap.com/");
+	}
+
+	private Response request(String url, JSONObject params, String referer) throws IOException {
 		params.put("appKey", "CuGsbe6HdAe6vDBHFew2Di");
 		long time = System.currentTimeMillis();
 		params.put("nonce", String.valueOf(time));
@@ -55,7 +49,7 @@ public class HeyTapLogicImpl implements HeyTapLogic {
 		params.put("sign", MD5Utils.toMD5(sign));
 		Map<String, String> headers = new HashMap<>();
 		headers.put("Accept", "application/encrypted-json;charset=UTF-8");
-		headers.put("referer", "https://id.heytap.com/");
+		headers.put("referer", referer);
 		headers.put("Origin", "https://id.heytap.com/");
 		headers.put("user-agent", UA.PC.getValue());
 		headers.put("X-BusinessSystem", "HeyTap");
@@ -69,11 +63,14 @@ public class HeyTapLogicImpl implements HeyTapLogic {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		if (ticket != null)
-			headers.put("X-Session-Ticket", ticket);
 		return OkHttpUtils.post(url,
 				OkHttpUtils.addEncryptedJson(AESUtils.aesEncryptBase(AES_KEY, params.toJSONString())),
 				OkHttpUtils.addHeaders(headers));
+	}
+
+	private JSONObject requestJson(String url, JSONObject params, String refererUrl) throws IOException {
+		Response response = request(url, params, refererUrl);
+		return requestJson(response);
 	}
 
 	private JSONObject requestJson(String url, JSONObject params) throws IOException {
@@ -118,40 +115,8 @@ public class HeyTapLogicImpl implements HeyTapLogic {
 		JSONObject jsonObject = requestJson(response);
 		if (jsonObject.getBoolean("success")){
 			String cookie = OkHttpUtils.getCookie(response);
-			HeyTapEntity entity = new HeyTapEntity();
-			entity.setCookie(cookie);
-			Map<String, String> headers = new HashMap<>();
-			headers.put("Referer", "https://id.heytap.com/");
-			headers.put("Cookie", cookie);
-			headers.put("Origin", "https://id.heytap.com/");
-			headers.put("user-agent", UA.PC.getValue());
-			headers.put("Accept", "*/*");
-			headers.put("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
-			headers.put("Pragma", "no-cache");
-			headers.put("Connection", "keep-alive");
-			headers.put("Content-Length", "35");
-			headers.put("Cache-Control", "no-cache");
-			headers.put("Accept-Encoding", "gzip, deflate, br");
-			headers.put("Accept-Language", "zh,zh-CN;q=0.9,en;q=0.8");
 			JSONArray urlsJSONArray = jsonObject.getJSONObject("data").getJSONArray("encryptSessions");
-			for (Object o : urlsJSONArray) {
-				String longUrl = o.toString();
-				int index = longUrl.indexOf("=");
-				String url = longUrl.substring(0, index - 4);
-				String host = MyUtils.regex("https://", "/", url);
-				headers.put("Host", host);
-				if ("https://msec.heytap.com/security/web/login/setCookies".equals(url)) {
-					String key = longUrl.substring(index + 1);
-					try {
-						Response resp = OkHttpUtils.post(url, new HashMap<String, String>() {{
-							put("key", key);
-						}}, headers);
-						resp.close();
-						entity.setCookie(OkHttpUtils.getCookie(resp));
-					} catch (IOException ignore) {
-					}
-				}
-			}
+			HeyTapEntity entity = loginSuccess(cookie, urlsJSONArray);
 			return Result.success(entity);
 		}else {
 			Integer code = jsonObject.getJSONObject("error").getInteger("code");
@@ -159,6 +124,80 @@ public class HeyTapLogicImpl implements HeyTapLogic {
 			else if (code == 2310503) return Result.failure("已失效");
 			else return Result.failure("未知的代码");
 		}
+	}
+
+	@Override
+	public QqLoginQrcode getQqQrcode() throws IOException {
+		return QqQrCodeLoginUtils.getQrCode(APP_ID, DA_ID, PT_AID);
+	}
+
+	private HeyTapEntity loginSuccess(String cookie, JSONArray urlsJSONArray){
+		HeyTapEntity entity = new HeyTapEntity();
+		entity.setCookie(cookie);
+		Map<String, String> headers = new HashMap<>();
+		headers.put("Referer", "https://id.heytap.com/");
+		headers.put("Cookie", cookie);
+		headers.put("Origin", "https://id.heytap.com/");
+		headers.put("user-agent", UA.PC.getValue());
+		headers.put("Accept", "*/*");
+		headers.put("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+		headers.put("Pragma", "no-cache");
+		headers.put("Connection", "keep-alive");
+		headers.put("Content-Length", "35");
+		headers.put("Cache-Control", "no-cache");
+		headers.put("Accept-Encoding", "gzip, deflate, br");
+		headers.put("Accept-Language", "zh,zh-CN;q=0.9,en;q=0.8");
+		for (Object o : urlsJSONArray) {
+			String longUrl = o.toString();
+			int index = longUrl.indexOf("=");
+			String url = longUrl.substring(0, index - 4);
+			String host = MyUtils.regex("https://", "/", url);
+			headers.put("Host", host);
+			if ("https://msec.heytap.com/security/web/login/setCookies".equals(url)) {
+				String key = longUrl.substring(index + 1);
+				try {
+					Response resp = OkHttpUtils.post(url, new HashMap<String, String>() {{
+						put("key", key);
+					}}, headers);
+					resp.close();
+					entity.setCookie(OkHttpUtils.getCookie(resp));
+				} catch (IOException ignore) {
+				}
+			}
+		}
+		return entity;
+	}
+
+	@Override
+	public Result<HeyTapEntity> checkQqQrcode(QqLoginQrcode qqLoginQrcode) throws IOException {
+		Result<QqLoginPojo> result = QqQrCodeLoginUtils.checkQrCode(APP_ID, DA_ID, PT_AID, "https://graph.qq.com/oauth2.0/login_jump", qqLoginQrcode.getSig());
+		if (result.isSuccess()){
+			Result<String> res = QqQrCodeLoginUtils.authorize(result.getData(), PT_AID, MyUtils.randomNum(15),
+					"https://id.heytap.com/index.html?language=zh-CN&callback=https%3A%2F%2Fwww.heytap.com%2Fcn%2Fweb%2F&thirdPartyType=qq");
+			if (res.isFailure()) return Result.failure(res.getCode(), res.getMessage());
+			else {
+				String authUrl = res.getData();
+				String code = MyUtils.regex("code=", "&", authUrl);
+				JSONObject params = new JSONObject();
+				params.put("thirdPartyType", "qq");
+				params.put("code", code);
+				JSONObject jsonObject = requestJson("https://id.heytap.com/api/third-party/authorizationCode", params, authUrl);
+				String processToken = jsonObject.getJSONObject("data").getString("processToken");
+				JSONObject pa = new JSONObject();
+				pa.put("thirdPartyType", "qq");
+				pa.put("thirdPartyToken", "");
+				pa.put("processToken", processToken);
+				pa.put("code", code);
+				pa.put("callbackUrl", "https://www.heytap.com/");
+				pa.put("deviceId", MyUtils.randomStr(32));
+				Response response = request("https://id.heytap.com/api/third-party/login", pa, authUrl);
+				String cookie = OkHttpUtils.getCookie(response);
+				JSONObject loginJsonObject = requestJson(response);
+				JSONArray urlsJSONArray = loginJsonObject.getJSONObject("data").getJSONArray("encryptSessions");
+				HeyTapEntity entity = loginSuccess(cookie, urlsJSONArray);
+				return Result.success(entity);
+			}
+		}else return Result.failure(result.getCode(), result.getMessage());
 	}
 
 	private JSONObject taskCenter(HeyTapEntity heyTapEntity) throws IOException {

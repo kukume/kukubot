@@ -7,9 +7,9 @@ import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.annotation.GroupController;
 import com.icecreamqaq.yuq.annotation.PrivateController;
 import com.icecreamqaq.yuq.annotation.QMsg;
-import com.icecreamqaq.yuq.entity.Contact;
 import com.icecreamqaq.yuq.entity.Group;
 import com.icecreamqaq.yuq.message.MessageItemFactory;
+import me.kuku.pojo.QqLoginQrcode;
 import me.kuku.pojo.Result;
 import me.kuku.yuq.entity.HeyTapEntity;
 import me.kuku.yuq.entity.HeyTapService;
@@ -19,6 +19,7 @@ import me.kuku.yuq.pojo.HeyTapQrcode;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 @GroupController
 @PrivateController
@@ -42,7 +43,42 @@ public class HeyTapController {
 		return "绑定欢太成功！";
 	}
 
-	@Before(except = {"getQrcode", "bind"})
+	@Action("欢太qq二维码")
+	public void getQqQrcode(QqEntity qqEntity, long qq, Group group) throws IOException {
+		QqLoginQrcode qrcode = heyTapLogic.getQqQrcode();
+		group.sendMessage(mif.at(qq).plus(mif.imageByByteArray(qrcode.getBytes())).plus("请使用QQ扫码登录！"));
+		jobManager.registerTimer(() -> {
+			String msg;
+			try {
+				while (true){
+					try {
+						TimeUnit.SECONDS.sleep(3);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					Result<HeyTapEntity> result = heyTapLogic.checkQqQrcode(qrcode);
+					Integer code = result.getCode();
+					if (code == 200){
+						HeyTapEntity newHeyTapEntity = result.getData();
+						HeyTapEntity heyTapEntity = heyTapService.findByQqEntity(qqEntity);
+						if (heyTapEntity == null) heyTapEntity = HeyTapEntity.Companion.getInstance(qqEntity);
+						heyTapEntity.setCookie(newHeyTapEntity.getCookie());
+						heyTapService.save(heyTapEntity);
+						msg = "绑定欢太信息成功！";
+						break;
+					}else if (code == 500){
+						msg = result.getMessage();
+						break;
+					}
+				}
+			}catch (IOException e){
+				msg = "欢太登录出现异常了，异常信息为：" + e.getMessage();
+			}
+			group.sendMessage(mif.at(qq).plus(msg));
+		}, 0);
+	}
+
+	@Before(except = {"getQrcode", "bind", "getQqQrcode"})
 	public HeyTapEntity before(QqEntity qqEntity){
 		HeyTapEntity heyTapEntity = heyTapService.findByQqEntity(qqEntity);
 		if (heyTapEntity == null)

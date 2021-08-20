@@ -168,6 +168,28 @@ public class HeyTapLogicImpl implements HeyTapLogic {
 		return entity;
 	}
 
+	private HeyTapEntity qqLoginSuccess(String authUrl) throws IOException {
+		String code = MyUtils.regex("code=", "&", authUrl);
+		if (code == null) code = MyUtils.regex("(?<=code\\=).*", authUrl);
+		JSONObject params = new JSONObject();
+		params.put("thirdPartyType", "qq");
+		params.put("code", code);
+		JSONObject jsonObject = requestJson("https://id.heytap.com/api/third-party/authorizationCode", params, authUrl);
+		String processToken = jsonObject.getJSONObject("data").getString("processToken");
+		JSONObject pa = new JSONObject();
+		pa.put("thirdPartyType", "qq");
+		pa.put("thirdPartyToken", "");
+		pa.put("processToken", processToken);
+		pa.put("code", code);
+		pa.put("callbackUrl", "https://www.heytap.com/");
+		pa.put("deviceId", MyUtils.randomStr(32));
+		Response response = request("https://id.heytap.com/api/third-party/login", pa, authUrl);
+		String cookie = OkHttpUtils.getCookie(response);
+		JSONObject loginJsonObject = requestJson(response);
+		JSONArray urlsJSONArray = loginJsonObject.getJSONObject("data").getJSONArray("encryptSessions");
+		return loginSuccess(cookie, urlsJSONArray);
+	}
+
 	@Override
 	public Result<HeyTapEntity> checkQqQrcode(QqLoginQrcode qqLoginQrcode) throws IOException {
 		Result<QqLoginPojo> result = QqQrCodeLoginUtils.checkQrCode(APP_ID, DA_ID, PT_AID, "https://graph.qq.com/oauth2.0/login_jump", qqLoginQrcode.getSig());
@@ -177,27 +199,18 @@ public class HeyTapLogicImpl implements HeyTapLogic {
 			if (res.isFailure()) return Result.failure(res.getCode(), res.getMessage());
 			else {
 				String authUrl = res.getData();
-				String code = MyUtils.regex("code=", "&", authUrl);
-				JSONObject params = new JSONObject();
-				params.put("thirdPartyType", "qq");
-				params.put("code", code);
-				JSONObject jsonObject = requestJson("https://id.heytap.com/api/third-party/authorizationCode", params, authUrl);
-				String processToken = jsonObject.getJSONObject("data").getString("processToken");
-				JSONObject pa = new JSONObject();
-				pa.put("thirdPartyType", "qq");
-				pa.put("thirdPartyToken", "");
-				pa.put("processToken", processToken);
-				pa.put("code", code);
-				pa.put("callbackUrl", "https://www.heytap.com/");
-				pa.put("deviceId", MyUtils.randomStr(32));
-				Response response = request("https://id.heytap.com/api/third-party/login", pa, authUrl);
-				String cookie = OkHttpUtils.getCookie(response);
-				JSONObject loginJsonObject = requestJson(response);
-				JSONArray urlsJSONArray = loginJsonObject.getJSONObject("data").getJSONArray("encryptSessions");
-				HeyTapEntity entity = loginSuccess(cookie, urlsJSONArray);
-				return Result.success(entity);
+				return Result.success(qqLoginSuccess(authUrl));
 			}
 		}else return Result.failure(result.getCode(), result.getMessage());
+	}
+
+	@Override
+	public Result<HeyTapEntity> loginByQqPassword(Long qq, String password) throws IOException {
+		Result<String> result = QqPasswordConnectLoginUtils
+				.login(qq, password, PT_AID, "https://id.heytap.com/index.html?language=zh-CN&callback=https%3A%2F%2Fwww.heytap.com%2Fcn%2Fweb%2F&thirdPartyType=qq");
+		if (result.isFailure()) return Result.failure(result.getMessage());
+		String url = result.getData();
+		return Result.success(qqLoginSuccess(url));
 	}
 
 	private JSONObject taskCenter(HeyTapEntity heyTapEntity) throws IOException {

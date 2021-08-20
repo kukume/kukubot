@@ -7,6 +7,7 @@ import me.kuku.pojo.Result;
 import me.kuku.yuq.entity.HeyTapEntity;
 import me.kuku.yuq.entity.HeyTapService;
 import me.kuku.yuq.entity.QqEntity;
+import me.kuku.yuq.entity.QqMusicEntity;
 import me.kuku.yuq.logic.HeyTapLogic;
 import me.kuku.yuq.utils.BotUtils;
 
@@ -30,10 +31,21 @@ public class HeyTapJob {
 				Result<Void> result = heyTapLogic.sign(heyTapEntity);
 				if (result.isFailure()){
 					QqEntity qqEntity = heyTapEntity.getQqEntity();
-					BotUtils.sendMessage(qqEntity,
-							"您的欢太账号cookie已失效，请重新绑定！");
-					heyTapService.delete(heyTapEntity);
-					continue;
+					if (qqEntity.getPassword() != null && !"".equals(qqEntity.getPassword())){
+						Result<HeyTapEntity> loginResult = heyTapLogic.loginByQqPassword(qqEntity.getQq(), qqEntity.getPassword());
+						if (loginResult.isFailure()){
+							BotUtils.sendMessage(qqEntity,
+									"您的欢太账号cookie已失效，请重新绑定！");
+							heyTapService.delete(heyTapEntity);
+							continue;
+						}else {
+							HeyTapEntity newEntity = loginResult.getData();
+							heyTapEntity.setCookie(newEntity.getCookie());
+							heyTapService.save(heyTapEntity);
+							heyTapLogic.sign(heyTapEntity);
+						}
+					}
+
 				}
 				heyTapLogic.viewGoods(heyTapEntity);
 				heyTapLogic.shareGoods(heyTapEntity);

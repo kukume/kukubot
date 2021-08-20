@@ -15,6 +15,7 @@ public interface HeyTapLogic {
 	Result<HeyTapEntity> checkQrcode(HeyTapQrcode heyTapQrcode) throws IOException;
 	QqLoginQrcode getQqQrcode() throws IOException;
 	Result<HeyTapEntity> checkQqQrcode(QqLoginQrcode qqLoginQrcode) throws IOException;
+	Result<HeyTapEntity> loginByQqPassword(Long qq, String password) throws IOException;
 	Result<Void> sign(HeyTapEntity heyTapEntity) throws IOException;
 	Result<Void> viewGoods(HeyTapEntity heyTapEntity) throws IOException;
 	Result<Void> shareGoods(HeyTapEntity heyTapEntity) throws IOException;

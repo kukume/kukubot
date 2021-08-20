@@ -23,7 +23,6 @@ import me.kuku.yuq.logic.ToolLogic
 import javax.inject.Inject
 
 @GroupController
-@PrivateController
 class QqMusicController {
     @Inject
     private lateinit var qqMusicService: QqMusicService

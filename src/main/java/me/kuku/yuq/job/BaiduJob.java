@@ -8,6 +8,7 @@ import me.kuku.yuq.logic.BaiduLogic;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @JobCenter
 public class BaiduJob {
@@ -22,7 +23,22 @@ public class BaiduJob {
         List<BaiduEntity> list = baiduService.findAll();
         for (BaiduEntity baiduEntity : list) {
             try {
-                baiduLogic.ybbSign(baiduEntity);
+                for (int i = 0; i < 12; i++) {
+                    TimeUnit.SECONDS.sleep(30);
+                    baiduLogic.ybbSign(baiduEntity);
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Cron("At::d::04:12:51")
+    public void tieBaSign(){
+        List<BaiduEntity> list = baiduService.findAll();
+        for (BaiduEntity baiduEntity : list) {
+            try {
+                baiduLogic.tieBaSign(baiduEntity);
             }catch (Exception e){
                 e.printStackTrace();
             }

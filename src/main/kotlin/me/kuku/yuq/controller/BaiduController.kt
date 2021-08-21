@@ -48,7 +48,6 @@ class BaiduController {
                 if (result.code == 200){
                     val newBaiduEntity = result.data
                     val baiduEntity = baiduService.findByQqEntity(qqEntity) ?: BaiduEntity(qqEntity = qqEntity)
-                    baiduEntity.cookie = newBaiduEntity.cookie
                     baiduEntity.bdUss = newBaiduEntity.bdUss
                     baiduEntity.sToken = newBaiduEntity.sToken
                     baiduService.save(baiduEntity)
@@ -67,6 +66,9 @@ class BaiduController {
     @QMsg(at = true)
     fun ybbSign(baiduEntity: BaiduEntity): String = baiduLogic.ybbSign(baiduEntity).message
 
+    @Action("贴吧签到")
+    @QMsg(at = true)
+    fun tieBaSign(baiduEntity: BaiduEntity): String = baiduLogic.tieBaSign(baiduEntity).message
 }
 
 @PrivateController
@@ -83,7 +85,6 @@ class BaiduPrivateController{
             ?: return "没有从cookie中获取到STOKEN"
         val baiduEntity = baiduService.findByQqEntity(qqEntity)
             ?: BaiduEntity(qqEntity = qqEntity).apply {
-                this.cookie = cookie
                 this.bdUss = bdUss
                 this.sToken = sToken
             }

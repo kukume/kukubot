@@ -18,8 +18,19 @@ data class BaiduEntity(
     @Column(length = 2000)
     var cookie: String = "",
     var bdUss: String = "",
-    var sToken: String = ""
-)
+    var sToken: String = "",
+    var tieBaSToken: String? = ""
+){
+    @Transient
+    fun getOtherCookie(sToken: String): String{
+        return cookie.replace("STOKEN=${this.sToken}; ", "STOKEN=$sToken; ")
+    }
+
+    @Transient
+    fun getTieBaCookie(): String{
+        return getOtherCookie(tieBaSToken ?: "");
+    }
+}
 
 interface BaiduDao: JPADao<BaiduEntity, Int>{
     fun findByQqEntity(qqEntity: QqEntity): BaiduEntity?

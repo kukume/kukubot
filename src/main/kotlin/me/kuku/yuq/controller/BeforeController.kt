@@ -1,6 +1,5 @@
 package me.kuku.yuq.controller
 
-import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Before
 import com.IceCreamQAQ.Yu.annotation.Catch
 import com.IceCreamQAQ.Yu.annotation.Global
@@ -11,11 +10,9 @@ import com.icecreamqaq.yuq.annotation.PrivateController
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.mif
-import com.icecreamqaq.yuq.yuq
 import kotlinx.coroutines.TimeoutCancellationException
 import me.kuku.yuq.entity.GroupService
 import me.kuku.yuq.entity.QqService
-import me.kuku.yuq.exception.BaiduException
 import me.kuku.yuq.logic.ToolLogic
 import net.mamoe.mirai.contact.BotIsBeingMutedException
 import java.io.IOException
@@ -117,14 +114,4 @@ class ExBeforeController{
     fun interIO(iOException: IOException?, actionContext: BotActionContext, qq: Long) {
         actionContext.source.sendMessage(mif.at(qq).plus("出现io异常了，请重试！！"))
     }
-}
-
-@PrivateController
-@GroupController
-class ss(){
-    @Action("test")
-    fun test(){
-        throw BaiduException("异常异常！")
-    }
-
 }

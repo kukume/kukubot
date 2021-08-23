@@ -206,11 +206,11 @@ class KuGouLogicImpl: KuGouLogic{
             null -> {
                 val cookie = OkHttpUtils.getCookie(response)
                 val kuGoo = OkHttpUtils.getCookie(cookie, "KuGoo")
-                val token = jsonObject.getJSONObject("data").getString("token")
-                val userid = jsonObject.getJSONObject("data").getLong("userid")
+                val token = jsonObject.getString("token")
+                val userid = jsonObject.getLong("userid")
                 Result.success(KuGouEntity(token = token, userid = userid, kuGoo = kuGoo, mid = newMid))
             }
-            30768 -> Result.failure("需要短信验证码！请直接使用短信验证码登录！<酷狗 phone>")
+            30768 -> Result.failure("需要短信验证码！请直接使用短信验证码登录！<酷狗验证码 phone>")
             else -> Result.failure(jsonObject.getString("errorMsg"))
         }
     }

@@ -57,7 +57,7 @@ class KuGouController @Inject constructor(
         }else "绑定酷狗音乐失败：${result.message}"
     }
 
-    @Action("酷狗 {phone}")
+    @Action("酷狗验证码 {phone}")
     fun loginByCode(phone: String, session: ContextSession, qq: Contact, qqEntity: QqEntity): String{
         val mid = kuGouLogic.mid()
         val re = kuGouLogic.sendMobileCode(phone, mid)

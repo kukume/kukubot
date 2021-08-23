@@ -79,8 +79,7 @@ public class ManagerController {
 	}
 
 	@Action(value = "查撤回 {qqNo}")
-	@QMsg(at = true)
-	public String queryRecall(ContextSession session, long qq, long qqNo, Group group){
+	public Object queryRecall(ContextSession session, long qq, long qqNo, Group group){
 		QqEntity qqEntity = qqService.findByQq(qqNo);
 		List<RecallMessageEntity> list = recallMessageService.findByQqEntityOrderByDateDesc(qqEntity);
 		int size = list.size();
@@ -90,11 +89,11 @@ public class ManagerController {
 		if (!str.matches("[0-9]+")) return "您输入的不为数字!";
 		int num = Integer.parseInt(str);
 		if (num < 1 || num > size) return "您输入的数字越界了！";
-		RecallMessageEntity recallMessageEntity = list.get(size - 1);
+		RecallMessageEntity recallMessageEntity = list.get(num - 1);
 		group.sendMessage(mif.at(qq).plus("在" +
 				DateTimeFormatterUtils.format(recallMessageEntity.getDate().getTime(), "yyyy-MM-dd HH:mm:ss") +
 				"妄图撤回一条消息，消息内容为："));
-		return recallMessageEntity.getMessageEntity().getContent();
+		return Message.Companion.toMessageByRainCode(recallMessageEntity.getMessageEntity().getContent());
 	}
 
 	@Action("全体禁言 {status}")

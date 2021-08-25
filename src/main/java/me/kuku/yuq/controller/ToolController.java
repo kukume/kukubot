@@ -491,4 +491,10 @@ public class ToolController {
 			return e.getMessage();
 		}
 	}
+
+	@Action("菜单")
+	@QMsg(at = true)
+	public String menu(){
+		return "https://menu.kuku.moe";
+	}
 }

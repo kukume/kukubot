@@ -110,16 +110,6 @@ public class BiliBiliController {
 		return type + (status ? "开启成功" : "关闭成功");
 	}
 
-	@Action("哔哩哔哩任务 {status}")
-	@QMsg(at = true)
-	public String biliBiliTask(BiliBiliEntity biliBiliEntity, boolean status) {
-		biliBiliEntity.setTask(status);
-		biliBiliService.save(biliBiliEntity);
-		String ss = "关闭";
-		if (status) ss = "开启";
-		return "哔哩哔哩定时任务已" + ss;
-	}
-
 	@Action("哔哩哔哩举报 {bvId}")
 	@QMsg(at = true)
 	public String report(BiliBiliEntity biliBiliEntity, String bvId, long qq, Group group,

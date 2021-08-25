@@ -7,7 +7,6 @@ import me.kuku.pojo.Result;
 import me.kuku.yuq.entity.HeyTapEntity;
 import me.kuku.yuq.entity.HeyTapService;
 import me.kuku.yuq.entity.QqEntity;
-import me.kuku.yuq.entity.QqMusicEntity;
 import me.kuku.yuq.logic.HeyTapLogic;
 import me.kuku.yuq.utils.BotUtils;
 
@@ -44,6 +43,11 @@ public class HeyTapJob {
 							heyTapService.save(heyTapEntity);
 							heyTapLogic.sign(heyTapEntity);
 						}
+					}else {
+						BotUtils.sendMessage(qqEntity,
+								"您的欢太账号cookie已失效，请重新绑定！");
+						heyTapService.delete(heyTapEntity);
+						continue;
 					}
 
 				}

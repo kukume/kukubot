@@ -95,6 +95,10 @@ public class QqLoginJob {
 							qqMusicService.save(qqMusicEntity);
 							qqMusicLogic.sign(qqMusicEntity);
 						}
+					}else {
+						BotUtils.sendMessage(qqEntity, "您的QQ音乐的cookie已失效，如需自动签到，请重新绑定！");
+						qqMusicService.delete(qqMusicEntity);
+						continue;
 					}
 				}
 				qqMusicLogic.musicianSign(qqMusicEntity);

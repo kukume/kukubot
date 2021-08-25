@@ -17,8 +17,7 @@ data class HostLocEntity (
     var qqEntity: QqEntity? = null,
     @Column(length = 2000)
     var cookie: String = "",
-    var sign: Boolean = false,
-    var monitor: Boolean = false
+    var sign: Boolean = false
 ){
     companion object{
         fun getInstance(qqEntity: QqEntity): HostLocEntity{
@@ -33,7 +32,6 @@ data class HostLocEntity (
 
 interface HostLocDao: JPADao<HostLocEntity, Int>{
     fun findByQqEntity(qqEntity: QqEntity): HostLocEntity?
-    fun findByMonitor(monitor: Boolean): List<HostLocEntity>
     fun findBySign(sign: Boolean): List<HostLocEntity>
 }
 
@@ -42,7 +40,6 @@ interface HostLocService{
     fun findByQqEntity(qqEntity: QqEntity): HostLocEntity?
     fun save(hostLocEntity: HostLocEntity)
     fun findAll(): List<HostLocEntity>
-    fun findByMonitor(monitor: Boolean): List<HostLocEntity>
     fun findBySign(sign: Boolean): List<HostLocEntity>
     fun delete(entity: HostLocEntity)
 }
@@ -65,11 +62,6 @@ class HostLocServiceImpl: HostLocService{
     @Transactional
     override fun findAll(): List<HostLocEntity> {
         return hostLocDao.findAll()
-    }
-
-    @Transactional
-    override fun findByMonitor(monitor: Boolean): List<HostLocEntity> {
-        return hostLocDao.findByMonitor(monitor)
     }
 
     @Transactional

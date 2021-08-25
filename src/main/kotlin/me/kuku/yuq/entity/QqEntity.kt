@@ -18,7 +18,8 @@ data class QqEntity(
     @JoinTable(name = "qq_group", joinColumns = [JoinColumn(name = "qq_id")],
         inverseJoinColumns = [JoinColumn(name = "group_id")])
     var groups: Set<GroupEntity> = hashSetOf(),
-    var password: String? = null
+    var password: String? = null,
+    var locMonitor: Boolean? = false
 ){
     companion object{
         fun getInstance(qq: Long): QqEntity{
@@ -44,6 +45,7 @@ data class QqEntity(
 
 interface QqDao: JPADao<QqEntity, Int>{
     fun findByQq(qq: Long): QqEntity?
+    fun findByLocMonitor(locMonitor: Boolean): List<QqEntity>
 }
 
 @AutoBind
@@ -51,6 +53,7 @@ interface QqService{
     fun findByQq(qq: Long): QqEntity?
     fun save(qqEntity: QqEntity)
     fun delete(qqEntity: QqEntity)
+    fun findByLocMonitor(locMonitor: Boolean): List<QqEntity>
 }
 
 class QqServiceImpl: QqService{
@@ -66,4 +69,7 @@ class QqServiceImpl: QqService{
 
     @Transactional
     override fun delete(qqEntity: QqEntity) = qqDao.delete(qqEntity.id!!)
+
+    @Transactional
+    override fun findByLocMonitor(locMonitor: Boolean) = qqDao.findByLocMonitor(locMonitor)
 }

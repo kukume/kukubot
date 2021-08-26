@@ -74,17 +74,20 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
 		if (cardJsonObject != null){
 			JSONObject itemJsonObject = cardJsonObject.getJSONObject("item");
 			text = cardJsonObject.getString("dynamic");
+			List<String> picList = biliBiliPojo.getPicList();
+			if (biliBiliPojo.getBvId() != null){
+				String picUrl = cardJsonObject.getString("pic");
+				picList.add(picUrl);
+			}
 			if (itemJsonObject != null){
 				if (text == null) text = itemJsonObject.getString("description");
 				if (text == null) text = itemJsonObject.getString("content");
 				JSONArray picJsonArray = itemJsonObject.getJSONArray("pictures");
 				if (picJsonArray != null) {
-					List<String> picList = new ArrayList<>();
 					picJsonArray.forEach(obj -> {
 						JSONObject picJsonObject = (JSONObject) obj;
 						picList.add(picJsonObject.getString("img_src"));
 					});
-					biliBiliPojo.setPicList(picList);
 				}
 			}
 			if (text == null) {
@@ -98,7 +101,12 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
 			}
 			String originStr = cardJsonObject.getString("origin");
 			if (originStr != null){
+				List<String> forwardPicList = biliBiliPojo.getForwardPicList();
 				JSONObject forwardContentJsonObject = JSON.parseObject(originStr);
+				if (biliBiliPojo.getForwardBvId() != null){
+					String picUrl = forwardContentJsonObject.getString("pic");
+					forwardPicList.add(picUrl);
+				}
 				if (forwardContentJsonObject.containsKey("item")){
 					JSONObject forwardItemJsonObject = forwardContentJsonObject.getJSONObject("item");
 					biliBiliPojo.setForwardText(forwardItemJsonObject.getString("description"));
@@ -106,14 +114,12 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
 						biliBiliPojo.setForwardText(forwardItemJsonObject.getString("content"));
 					}
 					JSONArray forwardPicJsonArray = forwardItemJsonObject.getJSONArray("pictures");
-					List<String> forwardPicList = new ArrayList<>();
 					if (forwardPicJsonArray != null){
 						for (Object obj : forwardPicJsonArray) {
 							JSONObject picJsonObject = (JSONObject) obj;
 							forwardPicList.add(picJsonObject.getString("img_src"));
 						}
 					}
-					biliBiliPojo.setForwardPicList(forwardPicList);
 					JSONObject forwardUserJsonObject = forwardContentJsonObject.getJSONObject("user");
 					if (forwardUserJsonObject != null) {
 						biliBiliPojo.setForwardUserId(forwardUserJsonObject.getString("uid"));

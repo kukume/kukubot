@@ -5,6 +5,9 @@ import com.IceCreamQAQ.Yu.annotation.JobCenter;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
+import com.icecreamqaq.yuq.entity.Group;
+import com.icecreamqaq.yuq.message.Message;
+import com.icecreamqaq.yuq.message.MessageItemFactory;
 import me.kuku.pojo.Result;
 import me.kuku.yuq.entity.*;
 import me.kuku.yuq.logic.BiliBiliLogic;
@@ -26,10 +29,24 @@ public class BiliBiliJob {
 	private BiliBiliLogic biliBiliLogic;
 	@Inject
 	private BiliBiliService biliBiliService;
+	@Inject
+	private MessageItemFactory mif;
 
 	private final Map<Long, Map<Long, Long>> groupMap = new HashMap<>();
 	private final Map<Long, Long> userMap = new HashMap<>();
 	private final Map<Long, Map<Long, Boolean>> liveMap = new HashMap<>();
+
+	private Message pic(BiliBiliPojo biliBiliPojo){
+		List<String> picList = biliBiliPojo.getPicList();
+		List<String> forwardPicList = biliBiliPojo.getForwardPicList();
+		if (picList.isEmpty() && forwardPicList.isEmpty()) return null;
+		picList.addAll(forwardPicList);
+		Message message = mif.text("附图：").toMessage();
+		for (String s : picList) {
+			message = message.plus(mif.imageByUrl(s));
+		}
+		return message;
+	}
 
 	@Cron("2m")
 	public void biliBiliGroupMonitor() {
@@ -60,9 +77,12 @@ public class BiliBiliJob {
 						if (Long.parseLong(biliBiliPojo.getId()) <= biMap.get(userId)) break;
 						newList.add(biliBiliPojo);
 					}
+					Group groupObj = FunKt.getYuq().getGroups().get(group);
 					newList.forEach(biliBiliPojo -> {
 						try {
-							FunKt.getYuq().getGroups().get(group).sendMessage(
+							Message message = pic(biliBiliPojo);
+							if (message != null) groupObj.sendMessage(message);
+							groupObj.sendMessage(
 									FunKt.getMif().text("哔哩哔哩有新动态了\n")
 											.plus(biliBiliLogic.convertStr(biliBiliPojo))
 							);
@@ -138,7 +158,10 @@ public class BiliBiliJob {
 				}
 				for (BiliBiliPojo biliBiliPojo: newList){
 					try {
-						BotUtils.sendMessage(biliBiliEntity.getQqEntity(),
+						QqEntity qqEntity = biliBiliEntity.getQqEntity();
+						Message message = pic(biliBiliPojo);
+						if (message != null) BotUtils.sendMessage(qqEntity, message);
+						BotUtils.sendMessage(qqEntity,
 								FunKt.getMif().text("哔哩哔哩有新动态了！！\n").plus(biliBiliLogic.convertStr(biliBiliPojo)));
 					}catch (Exception e){
 						e.printStackTrace();

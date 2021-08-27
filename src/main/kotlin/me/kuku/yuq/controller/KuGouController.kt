@@ -64,7 +64,7 @@ class KuGouController @Inject constructor(
         return if (re.isFailure) "酷狗发送短信验证码失败：" + re.message
         else {
             qq.sendMessage("请输入验证码！".toMessage())
-            val nextMessage = session.waitNextMessage(1000 * 60 * 2)
+            val nextMessage = session.waitNextMessage(1000L * 60 * 2)
             val code = nextMessage.firstString()
             val result = kuGouLogic.verifyCode(phone, code, mid)
             if (result.isSuccess){

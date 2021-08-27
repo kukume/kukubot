@@ -140,7 +140,7 @@ public class SettingController extends QQController {
 	}
 
 	@Action("加问答 {q}")
-	public String qa(ContextSession session, String q, @PathVar(2) Long group){
+	public String qa(ContextSession session, String q, @PathVar(value = 2, type = PathVar.Type.Long) Long group){
 		List<GroupEntity> list = new ArrayList<>();
 		if (group == null) list = groupService.findAll();
 		else {

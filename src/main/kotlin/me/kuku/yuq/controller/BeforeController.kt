@@ -111,7 +111,7 @@ class ExBeforeController{
 
     @Global
     @Catch(error = IOException::class)
-    fun interIO(iOException: IOException?, actionContext: BotActionContext, qq: Long) {
+    fun interIO(actionContext: BotActionContext, qq: Long) {
         actionContext.source.sendMessage(mif.at(qq).plus("出现io异常了，请重试！！"))
     }
 }

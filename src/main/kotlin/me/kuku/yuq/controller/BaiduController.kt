@@ -31,7 +31,7 @@ class BaiduController {
     @Before(except = ["getQrcode"])
     fun before(qqEntity: QqEntity): BaiduEntity{
         return baiduService.findByQqEntity(qqEntity)
-            ?: throw mif.at(qqEntity.qq).plus("您没有绑定百度账号，请发送<百度qq二维码进行绑定>！").toThrowable()
+            ?: throw mif.at(qqEntity.qq).plus("您没有绑定百度账号，请发送<百度qq二维码>进行绑定！").toThrowable()
 
     }
 

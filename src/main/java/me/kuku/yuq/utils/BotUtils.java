@@ -76,6 +76,10 @@ public class BotUtils {
 	}
 
 	public static void sendMessage(long group, String msg){
-		FunKt.getYuq().getGroups().get(group).sendMessage(Message.Companion.toMessage(msg));
+		sendMessage(group, Message.Companion.toMessage(msg));
+	}
+
+	public static void sendMessage(long group, Message message){
+		FunKt.getYuq().getGroups().get(group).sendMessage(message);
 	}
 }

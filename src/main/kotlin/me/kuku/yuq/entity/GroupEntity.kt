@@ -62,7 +62,8 @@ data class GroupEntity(
     var repeat: Boolean? = true,
     var groupAdminAuth: Boolean? = false,
     var kickWithoutSpeaking: Boolean? = false,
-    var githubPush: Boolean? = false
+    var githubPush: Boolean? = false,
+    var biBiliBiliAtAll: Boolean? = false
 ){
     companion object{
         fun getInstance(group: Long): GroupEntity{

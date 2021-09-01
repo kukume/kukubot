@@ -56,7 +56,7 @@ public class ManagerController {
 	@Action("kukubot {status}")
 	@Synonym({"loc群监控 {status}", "整点报时 {status}", "自动审核 {status}", "退群拉黑 {status}", "图片审核 {status}",
 			"色图 {status}", "撤回通知 {status}", "闪照通知 {status}", "复读 {status}", "进群未发言踢出 {status}",
-			"群管理权限 {status}", "github推送 {status}"})
+			"群管理权限 {status}", "github推送 {status}", "哔哩哔哩推送艾特全体 {status}"})
 	@QMsg(at = true)
 	public String openOrOff(GroupEntity groupEntity, boolean status, @PathVar(0) String op){
 		switch (op){
@@ -73,6 +73,7 @@ public class ManagerController {
 			case "进群未发言踢出": groupEntity.setKickWithoutSpeaking(status); break;
 			case "群管理权限": groupEntity.setGroupAdminAuth(status); break;
 			case "github推送": groupEntity.setGithubPush(status); break;
+			case "哔哩哔哩推送艾特全体": groupEntity.setBiBiliBiliAtAll(status); break;
 		}
 		groupService.save(groupEntity);
 		return op + (status ? "开启" : "关闭") + "成功！";

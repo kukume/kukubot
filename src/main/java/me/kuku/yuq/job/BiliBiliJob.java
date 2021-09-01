@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.icecreamqaq.yuq.FunKt;
 import com.icecreamqaq.yuq.entity.Group;
+import com.icecreamqaq.yuq.message.At;
 import com.icecreamqaq.yuq.message.Message;
 import com.icecreamqaq.yuq.message.MessageItemFactory;
 import me.kuku.pojo.Result;
@@ -82,10 +83,13 @@ public class BiliBiliJob {
 						try {
 							Message message = pic(biliBiliPojo);
 							if (message != null) groupObj.sendMessage(message);
-							groupObj.sendMessage(
-									FunKt.getMif().text("哔哩哔哩有新动态了\n")
-											.plus(biliBiliLogic.convertStr(biliBiliPojo))
-							);
+							At at = FunKt.getMif().at(-1);
+							String str = "哔哩哔哩有新动态了\n" + biliBiliLogic.convertStr(biliBiliPojo);
+							Message secondMessage;
+							if (Boolean.TRUE.equals(groupEntity.getBiBiliBiliAtAll()))
+								secondMessage = at.plus("\n").plus(str);
+							else secondMessage = Message.Companion.toMessage(str);
+							groupObj.sendMessage(secondMessage);
 						}catch (Exception e){
 							e.printStackTrace();
 						}
@@ -192,11 +196,18 @@ public class BiliBiliJob {
 							String msg;
 							if (b) msg = "直播啦！！";
 							else msg = "下播了！！";
-							BotUtils.sendMessage(group, "哔哩哔哩开播提醒：\n" +
+//							BotUtils.sendMessage(group, )
+//							);
+							At at = FunKt.getMif().at(-1);
+							String str = "哔哩哔哩开播提醒：\n" +
 									jsonObject.getString("name") + msg + "\n" +
 									"标题：" + liveJsonObject.getString("title") + "\n" +
-									"链接：" + liveJsonObject.getString("url")
-							);
+									"链接：" + liveJsonObject.getString("url");
+							Message secondMessage;
+							if (Boolean.TRUE.equals(groupEntity.getBiBiliBiliAtAll()))
+								secondMessage = at.plus("\n").plus(str);
+							else secondMessage = Message.Companion.toMessage(str);
+							BotUtils.sendMessage(group, secondMessage);
 						}
 					}else map.put(id, b);
 				}

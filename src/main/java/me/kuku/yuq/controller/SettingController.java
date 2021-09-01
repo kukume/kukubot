@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@SuppressWarnings("DuplicatedCode")
 @PrivateController
 public class SettingController extends QQController {
 
@@ -166,6 +167,44 @@ public class SettingController extends QQController {
 			groupService.save(groupEntity);
 		}
 		return "添加问答成功！！";
+	}
+
+	@Action("删问答 {q} {group}")
+	public String deleteQa(String group, String q){
+		List<GroupEntity> list = new ArrayList<>();
+		if ("ALL".equals(group)) list = groupService.findAll();
+		else {
+			GroupEntity groupEntity = groupService.findByGroup(Long.parseLong(group));
+			if (groupEntity == null) return "没有找到这个群号，请检查后重试！";
+			list.add(groupEntity);
+		}
+		for (GroupEntity groupEntity : list) {
+			List<JSONObject> delList = new ArrayList<>();
+			JSONArray jsonArray = groupEntity.getQaJson();
+			for (int i = 0; i < jsonArray.size(); i++){
+				JSONObject jsonObject = jsonArray.getJSONObject(i);
+				if (q.equals(jsonObject.getString("q"))){
+					delList.add(jsonObject);
+				}
+			}
+			delList.forEach(jsonArray::remove);
+			groupEntity.setQaJson(jsonArray);
+			groupService.save(groupEntity);
+		}
+		return "删除问答成功！";
+	}
+
+	@Action("查问答 {group}")
+	public String queryQa(@PathVar(value = 2, type = PathVar.Type.Long) Long group){
+		GroupEntity groupEntity = groupService.findByGroup(group);
+		if (groupEntity == null) return "没有找到这个群号，请检查后重试！";
+		StringBuilder sb = new StringBuilder();
+		sb.append("本群问答列表如下：").append("\n");
+		groupEntity.getQaJson().forEach(obj -> {
+			JSONObject jsonObject = (JSONObject) obj;
+			sb.append(jsonObject.getString("q")).append("-").append(jsonObject.getString("type")).append("\n");
+		});
+		return sb.toString();
 	}
 
 	@Action("图灵 {apiKey} {userid}")

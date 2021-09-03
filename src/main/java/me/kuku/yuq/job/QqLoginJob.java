@@ -135,7 +135,7 @@ public class QqLoginJob {
 		}
 	}
 
-	@Cron("At::d::00:00:02")
+	@Cron("At::d::00:00:00")
 	@Transactional
 	public void musicianConvert(){
 		List<QqMusicEntity> list = qqMusicService.findByConvertGreenDiamond(Boolean.TRUE);

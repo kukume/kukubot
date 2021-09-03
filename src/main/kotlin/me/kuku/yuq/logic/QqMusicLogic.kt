@@ -170,8 +170,15 @@ class QqMusicLogicImpl: QqMusicLogic{
         val params = "{\"req_0\":{\"module\":\"music.sociality.KolUserRight\",\"method\":\"getOrderId\",\"param\":{\"userRedeemType\":3,\"greenVipNum\":1,\"greenVipType\":0,\"creditType\":0}},\"comm\":{\"g_tk\":${QqUtils.getGTK(qqMusicEntity.qqMusicKey)},\"uin\":${qqMusicEntity.qqEntity?.qq},\"format\":\"json\",\"platform\":\"h5\",\"ct\":23,\"cv\":0}}"
         val jsonObject = OkHttpUtils.postJson("https://u.y.qq.com/cgi-bin/musics.fcg?sign=${getSign(params)}&_=" + System.currentTimeMillis(),
             OkHttpUtils.addJson(params), OkHttpUtils.addHeaders(qqMusicEntity.cookie, "https://y.qq.com", UA.PC))
-        return if (jsonObject.getInteger("code") == 0 && jsonObject.getJSONObject("req_0").getInteger("code") == 0)
-            Result.success("兑换绿钻一个月成功！", null)
-        else Result.failure("兑换绿钻失败：${jsonObject?.getJSONObject("req_0")?.getJSONObject("data")?.getString("retMsg") ?: "可能cookie已失效"}")
+        val innerJsonObject = jsonObject.getJSONObject("req_0")
+        return if (jsonObject.getInteger("code") == 0 && innerJsonObject.getInteger("code") == 0) {
+            val orderId = innerJsonObject.getJSONObject("data").getString("orderId")
+            val getParams = "{\"req_0\":{\"module\":\"music.sociality.KolUserRight\",\"method\":\"redeemGreenVip\",\"param\":{\"num\":1,\"greenVipType\":0,\"creditType\":0,\"orderId\":\"$orderId\"}},\"comm\":{\"g_tk\":${QqUtils.getGTK(qqMusicEntity.qqMusicKey)},\"uin\":${qqMusicEntity.qqEntity?.qq},\"format\":\"json\",\"platform\":\"h5\",\"ct\":23,\"cv\":0}}";
+            val getJsonObject = OkHttpUtils.postJson("https://u.y.qq.com/cgi-bin/musics.fcg?sign=${getSign(getParams)}&_=" + System.currentTimeMillis(),
+                OkHttpUtils.addJson(getParams), OkHttpUtils.addHeaders(qqMusicEntity.cookie, "https://y.qq.com", UA.PC))
+            if (getJsonObject.getInteger("code") == 0 && getJsonObject.getJSONObject("req_0").getInteger("code") == 0)
+                Result.success("兑换绿钻一个月成功！", null)
+            else Result.failure("兑换绿钻失败：${getJsonObject?.getJSONObject("req_0")?.getJSONObject("data")?.getString("retMsg") ?: "可能cookie已失效"}")
+        }else Result.failure("兑换绿钻失败：${jsonObject?.getJSONObject("req_0")?.getJSONObject("data")?.getString("retMsg") ?: "可能cookie已失效"}")
     }
 }

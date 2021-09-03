@@ -189,7 +189,7 @@ public class GroupManagerEvent {
 		Message message = e.getMessage();
 		String str;
 		try {
-			str = Message.Companion.firstString(message);
+			str = message.toPath().get(0);
 		}catch (IllegalStateException ex){
 			str = null;
 		}

@@ -143,7 +143,7 @@ class QqMusicLogicImpl: QqMusicLogic{
         val qq = qqMusicEntity.qqEntity?.qq
         val gtk = QqUtils.getGTK(qqMusicEntity.qqMusicKey ?: "")
         val params = "{\"comm\":{\"cv\":4747474,\"ct\":24,\"format\":\"json\",\"inCharset\":\"utf-8\",\"outCharset\":\"utf-8\",\"notice\":0,\"platform\":\"yqq.json\",\"needNewCode\":1,\"uin\":$qq,\"g_tk_new_20200303\":$gtk,\"g_tk\":$gtk},\"req_1\":{\"method\":\"GetCommentCount\",\"module\":\"GlobalComment.GlobalCommentReadServer\",\"param\":{\"request_list\":[{\"biz_type\":1,\"biz_id\":\"$songId\",\"biz_sub_type\":0}]}},\"req_2\":{\"module\":\"music.musicasset.SongFavRead\",\"method\":\"IsSongFanByMid\",\"param\":{\"v_songMid\":[\"$albumMid\"]}},\"req_3\":{\"module\":\"music.globalComment.CommentReadServer\",\"method\":\"GetNewCommentList\",\"param\":{\"BizType\":1,\"BizId\":\"$songId\",\"LastCommentSeqNo\":\"\",\"PageSize\":25,\"PageNum\":0,\"FromCommentId\":\"\",\"WithHot\":1}},\"req_4\":{\"module\":\"music.globalComment.CommentReadServer\",\"method\":\"GetHotCommentList\",\"param\":{\"BizType\":1,\"BizId\":\"$songId\",\"LastCommentSeqNo\":\"\",\"PageSize\":15,\"PageNum\":0,\"HotType\":2,\"WithAirborne\":1}},\"req_5\":{\"module\":\"userInfo.VipQueryServer\",\"method\":\"SRFVipQuery_V2\",\"param\":{\"uin_list\":[\"$qq\"]}},\"req_6\":{\"module\":\"userInfo.BaseUserInfoServer\",\"method\":\"get_user_baseinfo_v2\",\"param\":{\"vec_uin\":[\"$qq\"]}},\"req_7\":{\"module\":\"MessageCenter.MessageCenterServer\",\"method\":\"GetMessage\",\"param\":{\"uin\":\"$qq\",\"red_dot\":[{\"msg_type\":1}]}},\"req_8\":{\"module\":\"GlobalComment.GlobalCommentMessageReadServer\",\"method\":\"GetMessage\",\"param\":{\"uin\":\"$qq\",\"page_num\":0,\"page_size\":1,\"last_msg_id\":\"\",\"type\":0}}}"
-        val commentsJsonObject = OkHttpUtils.postJson("https://u.y.qq.com/cgi-bin/musics.fcg?${getSign(params)}&_=${System.currentTimeMillis()}",
+        val commentsJsonObject = OkHttpUtils.postJson("https://u.y.qq.com/cgi-bin/musicu.fcg?_=${System.currentTimeMillis()}",
             OkHttpUtils.addJson(params),
             OkHttpUtils.addHeaders(qqMusicEntity.cookie, "https://y.qq.com", UA.PC))
         return if (commentsJsonObject.getInteger("code") == 0 && commentsJsonObject.getJSONObject("req_3").getInteger("code") == 0){
@@ -156,11 +156,11 @@ class QqMusicLogicImpl: QqMusicLogic{
                 OkHttpUtils.addHeaders(qqMusicEntity.cookie, "https://y.qq.com", UA.PC))
             if (resultJsonObject.getInteger("code") == 0) {
                 val code = resultJsonObject.getJSONObject("req_1").getInteger("code")
-                if (code == 0)
-                    Result.success("qq音乐随机歌曲评论成功！", null)
-                else if (code == 10009)
-                    Result.failure("需要验证验证码，请打开该链接进行验证并重新发送该指令：${resultJsonObject.getJSONObject("req_1").getJSONObject("data").getString("VerifyUrl")}")
-                else Result.failure("qq音乐随机歌曲评论失败！${resultJsonObject?.getJSONObject("req_1")?.getJSONObject("data")?.getString("Msg") ?: "可能cookie已失效！"}")
+                when (code) {
+                    0 -> Result.success("qq音乐随机歌曲评论成功！", null)
+                    10009 -> Result.failure("需要验证验证码，请打开该链接进行验证并重新发送该指令：${resultJsonObject.getJSONObject("req_1").getJSONObject("data").getString("VerifyUrl")}")
+                    else -> Result.failure("qq音乐随机歌曲评论失败！${resultJsonObject?.getJSONObject("req_1")?.getJSONObject("data")?.getString("Msg") ?: "可能cookie已失效！"}")
+                }
             }
             else Result.failure("qq音乐随机歌曲评论失败！")
         }else Result.failure("qq音乐随机歌曲评论失败！获取评论列表失败！")

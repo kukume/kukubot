@@ -77,10 +77,10 @@ class QqMusicController {
         return result.message
     }
 
-    @Action("qq音乐发布动态 {content}")
+    @Action("qq音乐发布动态")
     @QMsg(at = true)
-    fun qqMusicPublishNews(qqMusicEntity: QqMusicEntity, content: String): String{
-        return qqMusicLogic.publishNews(qqMusicEntity, content).message
+    fun qqMusicPublishNews(qqMusicEntity: QqMusicEntity, @PathVar(1) content: String?): String{
+        return qqMusicLogic.publishNews(qqMusicEntity, content ?: toolLogic.hiToKoTo()?.get("text") ?: "发送一个动态！").message
     }
 
     @Action("qq音乐随机回复评论")

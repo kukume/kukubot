@@ -47,7 +47,7 @@ public class ManagerController {
 	@Config("YuQ.Mirai.bot.master")
 	private String master;
 
-	@Before(except = {"query", "queryRecall"})
+	@Before(except = {"query", "queryRecall", "kai"})
 	public void before(long qq){
 		if (!String.valueOf(qq).equals(master))
 			throw mif.at(qq).plus("您不为机器人主人，无法执行！").toThrowable();
@@ -91,7 +91,24 @@ public class ManagerController {
 		int num = Integer.parseInt(str);
 		if (num < 1 || num > size) return "您输入的数字越界了！";
 		RecallMessageEntity recallMessageEntity = list.get(num - 1);
-		group.sendMessage(mif.at(qq).plus("在" +
+		group.sendMessage(mif.at(qqNo).plus("在" +
+				DateTimeFormatterUtils.format(recallMessageEntity.getDate().getTime(), "yyyy-MM-dd HH:mm:ss") +
+				"妄图撤回一条消息，消息内容为："));
+		return Message.Companion.toMessageByRainCode(recallMessageEntity.getMessageEntity().getContent());
+	}
+
+	@Action("查群撤回}")
+	public Object queryGroupRecall(ContextSession session, long qq, Group group, GroupEntity groupEntity){
+		List<RecallMessageEntity> list = recallMessageService.findByGroupEntityOrderByDateDesc(groupEntity);
+		int size = list.size();
+		if (size == 0) return "该群没有撤回消息哦！";
+		group.sendMessage(mif.at(qq).plus("该群有" + size + "条信息，您需要查看第几条？"));
+		String str = Message.Companion.firstString(session.waitNextMessage());
+		if (!str.matches("[0-9]+")) return "您输入的不为数字!";
+		int num = Integer.parseInt(str);
+		if (num < 1 || num > size) return "您输入的数字越界了！";
+		RecallMessageEntity recallMessageEntity = list.get(num - 1);
+		group.sendMessage(mif.at(recallMessageEntity.getQqEntity().getQq()).plus("在" +
 				DateTimeFormatterUtils.format(recallMessageEntity.getDate().getTime(), "yyyy-MM-dd HH:mm:ss") +
 				"妄图撤回一条消息，消息内容为："));
 		return Message.Companion.toMessageByRainCode(recallMessageEntity.getMessageEntity().getContent());
@@ -448,6 +465,36 @@ public class ManagerController {
 			default: return null;
 		}
 		return sb.deleteCharAt(sb.length() - 1).toString();
+	}
+
+	@Action("开关")
+	@QMsg(at = true, atNewLine = true)
+	public String kai(GroupEntity groupEntity){
+		StringBuilder sb = new StringBuilder("本群开关情况如下：\n");
+		sb.append("色图：").append(this.boolToStr(groupEntity.getColorPic())).append("\n");
+		sb.append("loc群监控：").append(this.boolToStr(groupEntity.getLocMonitor())).append("\n");
+		sb.append("整点报时：").append(this.boolToStr(groupEntity.getOnTimeAlarm())).append("\n");
+		sb.append("自动审核：").append(this.boolToStr(groupEntity.getAutoReview())).append("\n");
+		sb.append("退群拉黑：").append(this.boolToStr(groupEntity.getLeaveGroupBlack())).append("\n");
+		sb.append("图片审核：").append(this.boolToStr(groupEntity.getPornImage())).append("\n");
+		sb.append("撤回通知：").append(this.boolToStr(groupEntity.getRecall())).append("\n");
+		sb.append("闪照通知：").append(this.boolToStr(groupEntity.getFlashNotify())).append("\n");
+		sb.append("复读：").append(this.boolToStr(groupEntity.getRepeat())).append("\n");
+		sb.append("进群未发言踢出：").append(this.boolToStr(groupEntity.getKickWithoutSpeaking())).append("\n");
+		sb.append("群管理权限：").append(this.boolToStr(groupEntity.getGroupAdminAuth())).append("\n");
+		sb.append("github推送：").append(this.boolToStr(groupEntity.getGithubPush())).append("\n");
+		sb.append("哔哩哔哩推送艾特全体：").append(this.boolToStr(groupEntity.getBiBiliBiliAtAll())).append("\n");
+		Integer maxCommandCountOnTime = groupEntity.getMaxCommandCountOnTime();
+		if (maxCommandCountOnTime == null) maxCommandCountOnTime = -1;
+		String ss = maxCommandCountOnTime.toString();
+		if (maxCommandCountOnTime < 0) ss = "无限制";
+		sb.append("指令限制：").append(ss);
+		return sb.toString();
+	}
+
+	private String boolToStr(Boolean b){
+		if (b == null || !b) return "关";
+		else return "开";
 	}
 
 }

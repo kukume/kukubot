@@ -32,6 +32,8 @@ interface RecallMessageDao: JPADao<RecallMessageEntity, Int>{
     fun fByQqEntityAndGroupEntityOrderByDateDesc(qqEntity: QqEntity, groupEntity: GroupEntity): List<RecallMessageEntity>
     @Select("from RecallMessageEntity where qq = ?0 order by date desc")
     fun fByQqEntityOrderByDateDesc(qqEntity: QqEntity): List<RecallMessageEntity>
+    @Select("from RecallMessageEntity where group = ?0 order by date desc")
+    fun fByGroupEntityOrderByDateDesc(groupEntity: GroupEntity): List<RecallMessageEntity>
 }
 
 @AutoBind
@@ -39,6 +41,7 @@ interface RecallMessageService{
     fun findByQqEntityAndGroupEntityOrderByDateDesc(qqEntity: QqEntity, groupEntity: GroupEntity): List<RecallMessageEntity>
     fun findByQqEntityOrderByDateDesc(qqEntity: QqEntity): List<RecallMessageEntity>
     fun save(recallMessageEntity: RecallMessageEntity)
+    fun findByGroupEntityOrderByDateDesc(groupEntity: GroupEntity): List<RecallMessageEntity>
 }
 
 class RecallMessageServiceImpl @Inject constructor(private val recallMessageDao: RecallMessageDao): RecallMessageService{
@@ -58,5 +61,10 @@ class RecallMessageServiceImpl @Inject constructor(private val recallMessageDao:
     @Transactional
     override fun save(recallMessageEntity: RecallMessageEntity) {
         return recallMessageDao.saveOrUpdate(recallMessageEntity)
+    }
+
+    @Transactional
+    override fun findByGroupEntityOrderByDateDesc(groupEntity: GroupEntity): List<RecallMessageEntity> {
+        return recallMessageDao.fByGroupEntityOrderByDateDesc(groupEntity)
     }
 }

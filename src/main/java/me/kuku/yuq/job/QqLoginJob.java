@@ -80,33 +80,17 @@ public class QqLoginJob {
 		for (QqMusicEntity qqMusicEntity : list) {
 			try {
 				Result<Void> result = qqMusicLogic.sign(qqMusicEntity);
+				QqEntity qqEntity = qqMusicEntity.getQqEntity();
 				if (result.isFailure()){
-					QqEntity qqEntity = qqMusicEntity.getQqEntity();
-					if (qqEntity.getPassword() != null && !"".equals(qqEntity.getPassword())){
-						Result<QqMusicEntity> loginResult = qqMusicLogic.loginByPassword(qqEntity.getQq(), qqEntity.getPassword());
-						if (loginResult.isFailure()){
-							BotUtils.sendMessage(qqEntity, "您的QQ音乐的cookie已失效，如需自动签到，请重新绑定！");
-							qqMusicService.delete(qqMusicEntity);
-							continue;
-						}else {
-							QqMusicEntity newQqMusicEntity = loginResult.getData();
-							qqMusicEntity.setCookie(newQqMusicEntity.getCookie());
-							qqMusicEntity.setQqMusicKey(newQqMusicEntity.getQqMusicKey());
-							qqMusicService.save(qqMusicEntity);
-							qqMusicLogic.sign(qqMusicEntity);
-						}
-					}else {
-						BotUtils.sendMessage(qqEntity, "您的QQ音乐的cookie已失效，如需自动签到，请重新绑定！");
-						qqMusicService.delete(qqMusicEntity);
-						continue;
-					}
+					BotUtils.sendMessage(qqEntity, "您的QQ音乐的cookie已失效，如需自动签到，请重新绑定！");
+					qqMusicService.delete(qqMusicEntity);
+					continue;
 				}
 				qqMusicLogic.musicianSign(qqMusicEntity);
 				for (int i = 0; i < 3; i++){
 					TimeUnit.SECONDS.sleep(5);
 					Result<Void> replyResult = qqMusicLogic.randomReplyComment(qqMusicEntity, toolLogic.hiToKoTo().get("text"));
 					if (replyResult.isFailure()){
-						QqEntity qqEntity = qqMusicEntity.getQqEntity();
 						BotUtils.sendMessage(qqEntity, "您的qq音乐随机回复评论失败，错误信息为：" + replyResult.getMessage());
 						break;
 					}
@@ -135,7 +119,34 @@ public class QqLoginJob {
 		}
 	}
 
-	@Cron("At::d::00:00:00")
+	@Cron("At::d::23::50::13")
+	public void musicianUpdate(){
+		List<QqMusicEntity> list = qqMusicService.findAll();
+		for (QqMusicEntity qqMusicEntity : list) {
+			Result<Void> result = qqMusicLogic.sign(qqMusicEntity);
+			if (result.isFailure()){
+				QqEntity qqEntity = qqMusicEntity.getQqEntity();
+				if (qqEntity.getPassword() != null && !"".equals(qqEntity.getPassword())){
+					Result<QqMusicEntity> loginResult = qqMusicLogic.loginByPassword(qqEntity.getQq(), qqEntity.getPassword());
+					if (loginResult.isFailure()){
+						BotUtils.sendMessage(qqEntity, "您的QQ音乐的cookie已失效，如需自动签到，请重新绑定！");
+						qqMusicService.delete(qqMusicEntity);
+					}else {
+						QqMusicEntity newQqMusicEntity = loginResult.getData();
+						qqMusicEntity.setCookie(newQqMusicEntity.getCookie());
+						qqMusicEntity.setQqMusicKey(newQqMusicEntity.getQqMusicKey());
+						qqMusicService.save(qqMusicEntity);
+						qqMusicLogic.sign(qqMusicEntity);
+					}
+				}else {
+					BotUtils.sendMessage(qqEntity, "您的QQ音乐的cookie已失效，如需自动签到，请重新绑定！");
+					qqMusicService.delete(qqMusicEntity);
+				}
+			}
+		}
+	}
+
+	@Cron("At::d::00:00:01")
 	@Transactional
 	public void musicianConvert(){
 		List<QqMusicEntity> list = qqMusicService.findByConvertGreenDiamond(Boolean.TRUE);

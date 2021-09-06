@@ -97,11 +97,11 @@ public class ManagerController {
 		return Message.Companion.toMessageByRainCode(recallMessageEntity.getMessageEntity().getContent());
 	}
 
-	@Action("查群撤回}")
+	@Action("查群撤回")
 	public Object queryGroupRecall(ContextSession session, long qq, Group group, GroupEntity groupEntity){
 		List<RecallMessageEntity> list = recallMessageService.findByGroupEntityOrderByDateDesc(groupEntity);
 		int size = list.size();
-		if (size == 0) return "该群没有撤回消息哦！";
+		if (size == 0) return FunKt.getMif().at(qq).plus("该群没有撤回消息哦！");
 		group.sendMessage(mif.at(qq).plus("该群有" + size + "条信息，您需要查看第几条？"));
 		String str = Message.Companion.firstString(session.waitNextMessage());
 		if (!str.matches("[0-9]+")) return "您输入的不为数字!";

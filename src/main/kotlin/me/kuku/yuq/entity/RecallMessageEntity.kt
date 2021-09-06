@@ -32,7 +32,7 @@ interface RecallMessageDao: JPADao<RecallMessageEntity, Int>{
     fun fByQqEntityAndGroupEntityOrderByDateDesc(qqEntity: QqEntity, groupEntity: GroupEntity): List<RecallMessageEntity>
     @Select("from RecallMessageEntity where qq = ?0 order by date desc")
     fun fByQqEntityOrderByDateDesc(qqEntity: QqEntity): List<RecallMessageEntity>
-    @Select("from RecallMessageEntity where group = ?0 order by date desc")
+    @Select("from RecallMessageEntity where group_ = ?0 order by date desc")
     fun fByGroupEntityOrderByDateDesc(groupEntity: GroupEntity): List<RecallMessageEntity>
 }
 

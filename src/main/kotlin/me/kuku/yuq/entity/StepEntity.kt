@@ -54,6 +54,7 @@ interface StepDao: JPADao<StepEntity, Int>{
 interface StepService{
     fun findByQqEntity(qqEntity: QqEntity): StepEntity?
     fun save(stepEntity: StepEntity)
+    fun findAll(): List<StepEntity>
 }
 
 class StepServiceImpl: StepService{
@@ -69,5 +70,10 @@ class StepServiceImpl: StepService{
     @Transactional
     override fun save(stepEntity: StepEntity) {
         return stepDao.saveOrUpdate(stepEntity)
+    }
+
+    @Transactional
+    override fun findAll(): List<StepEntity> {
+        return stepDao.findAll()
     }
 }

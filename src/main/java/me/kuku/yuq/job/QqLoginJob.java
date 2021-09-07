@@ -87,7 +87,7 @@ public class QqLoginJob {
 					continue;
 				}
 				qqMusicLogic.musicianSign(qqMusicEntity);
-				for (int i = 0; i < 3; i++){
+				for (int i = 0; i < 5; i++){
 					TimeUnit.SECONDS.sleep(5);
 					Result<Void> replyResult = qqMusicLogic.randomReplyComment(qqMusicEntity, toolLogic.hiToKoTo().get("text"));
 					if (replyResult.isFailure()){
@@ -119,7 +119,7 @@ public class QqLoginJob {
 		}
 	}
 
-	@Cron("At::d::23::50::13")
+	@Cron("At::d::23:50:13")
 	public void musicianUpdate(){
 		List<QqMusicEntity> list = qqMusicService.findAll();
 		for (QqMusicEntity qqMusicEntity : list) {
@@ -146,13 +146,14 @@ public class QqLoginJob {
 		}
 	}
 
-	@Cron("At::d::00:00:01")
-	@Transactional
+	@Cron("At::d::00:00:00")
 	public void musicianConvert(){
 		List<QqMusicEntity> list = qqMusicService.findByConvertGreenDiamond(Boolean.TRUE);
 		for (QqMusicEntity qqMusicEntity : list) {
 			try {
-				qqMusicLogic.convertGreenDiamond(qqMusicEntity);
+				Result<Void> res = qqMusicLogic.convertGreenDiamond(qqMusicEntity);
+				String message = res.getMessage();
+				BotUtils.sendMessage(qqMusicEntity.getQqEntity(), "qq音乐人自动领取绿钻通知：\n" + message);
 			} catch (Exception e){
 				e.printStackTrace();
 			}

@@ -158,7 +158,14 @@ class QqMusicLogicImpl: QqMusicLogic{
                 val code = resultJsonObject.getJSONObject("req_1").getInteger("code")
                 when (code) {
                     0 -> Result.success("qq音乐随机歌曲评论成功！", null)
-                    10009 -> Result.failure("需要验证验证码，请打开该链接进行验证并重新发送该指令：${resultJsonObject.getJSONObject("req_1").getJSONObject("data").getString("VerifyUrl")}")
+                    10009 -> {
+                        val url =
+                            resultJsonObject.getJSONObject("req_1").getJSONObject("data").getString("VerifyUrl")
+                        val res = identifyCaptcha(qqMusicEntity, url)
+                        if (res.isFailure)
+                            Result.failure("需要验证验证码，请打开该链接进行验证并重新发送该指令：$url")
+                        else Result.failure("需要验证验证码，自动识别验证码成功！请重新发送该指令！")
+                    }
                     else -> Result.failure("qq音乐随机歌曲评论失败！${resultJsonObject?.getJSONObject("req_1")?.getJSONObject("data")?.getString("Msg") ?: "可能cookie已失效！"}")
                 }
             }
@@ -180,5 +187,31 @@ class QqMusicLogicImpl: QqMusicLogic{
                 Result.success("兑换绿钻一个月成功！", null)
             else Result.failure("兑换绿钻失败：${getJsonObject?.getJSONObject("req_0")?.getJSONObject("data")?.getString("retMsg") ?: "可能cookie已失效"}")
         }else Result.failure("兑换绿钻失败：${jsonObject?.getJSONObject("req_0")?.getJSONObject("data")?.getString("retMsg") ?: "可能cookie已失效"}")
+    }
+
+    private fun identifyCaptcha(qqMusicEntity: QqMusicEntity, url: String): Result<Any>{
+        val appId = MyUtils.regex("appid=", "&", url)
+        val msgId = MyUtils.regex("msgid=", "&", url)
+        val gtk = QqUtils.getGTK(qqMusicEntity.qqMusicKey)
+        val qq = qqMusicEntity.qqEntity?.qq ?: 0
+        val preJsonObject = OkHttpUtils.getJsonp(
+            "https://safety.music.qq.com/cgi/fcgi-bin/fcg_music_validate?iSubCmd=70&iAppid=$appId&iCaptchaType=8&msgid=$msgId&iDisturbLevel=2&clientid=10&g_tk=$gtk&g_tk_new_20200303=$gtk&uin=$qq&format=jsonp&inCharset=utf-8&outCharset=utf-8&notice=0&platform=h5&needNewCode=1&callback=MusicJsonCallback",
+            OkHttpUtils.addHeaders(qqMusicEntity.cookie, "https://y.qq.com", UA.QQ)
+        )
+        if (preJsonObject.getInteger("code") != 0) return Result.failure(preJsonObject.getString("message"))
+        val preDataJsonObject = preJsonObject.getJSONObject("data")
+        val strCode = preDataJsonObject.getString("strCode")
+        val strPic = preDataJsonObject.getString("strPic")
+        val position = preDataJsonObject.getString("position")
+        val identifyJsonObject = OkHttpUtils.postJson("https://api.kukuqaq.com/tool/qqMusicCaptchaByTt", mapOf("image" to strPic))
+        if (identifyJsonObject.getInteger("code") != 200) return Result.failure(identifyJsonObject.getString("message"))
+        val width = identifyJsonObject.getJSONObject("data").getInteger("data") + 26
+        val height = MyUtils.regex(",", "]", position).trim()
+        val a = "[$width,%20$height]]"
+        val resJsonObject = OkHttpUtils.getJsonp("https://safety.music.qq.com/cgi/fcgi-bin/fcg_music_validate?iSubCmd=71&iAppid=$appId&msgid=$msgId&strCode=$strCode&strSig=$a&clientid=10&g_tk=$gtk&g_tk_new_20200303=$gtk&uin=$qq&format=jsonp&inCharset=utf-8&outCharset=utf-8&notice=0&platform=h5&needNewCode=1&callback=MusicJsonCallback",
+            OkHttpUtils.addHeaders(qqMusicEntity.cookie, "https://y.qq.com", UA.QQ))
+        val b = resJsonObject.getInteger("code") == 0 && resJsonObject.getJSONObject("data").getInteger("iRet") == 0
+        return if (b) Result.success("识别成功！", null)
+        else Result.failure(resJsonObject.getJSONObject("data").getString("strErrMsg"))
     }
 }

@@ -13,7 +13,6 @@ import me.kuku.yuq.utils.BotUtils;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @JobCenter
 public class QqLoginJob {
@@ -83,34 +82,37 @@ public class QqLoginJob {
 				QqEntity qqEntity = qqMusicEntity.getQqEntity();
 				if (result.isFailure()){
 					BotUtils.sendMessage(qqEntity, "您的QQ音乐的cookie已失效，如需自动签到，请重新绑定！");
-					qqMusicService.delete(qqMusicEntity);
 					continue;
 				}
 				qqMusicLogic.musicianSign(qqMusicEntity);
-				for (int i = 0; i < 5; i++){
-					TimeUnit.SECONDS.sleep(5);
-					Result<Void> replyResult = qqMusicLogic.randomReplyComment(qqMusicEntity, toolLogic.hiToKoTo().get("text"));
-					if (replyResult.isFailure()){
-						BotUtils.sendMessage(qqEntity, "您的qq音乐随机回复评论失败，错误信息为：" + replyResult.getMessage());
-						break;
-					}
-				}
 			}catch (Exception e){
 				e.printStackTrace();
 			}
 		}
 	}
 
-	@Cron("At::d::06:03:32")
+	@Cron("1h")
+	public void comment() throws IOException {
+		List<QqMusicEntity> list = qqMusicService.findByAutoComment(Boolean.TRUE);
+		for (QqMusicEntity qqMusicEntity : list) {
+			Result<Void> replyResult = qqMusicLogic.randomReplyComment(qqMusicEntity, toolLogic.hiToKoTo().get("text"));
+			if (replyResult.isFailure()){
+				BotUtils.sendMessage(qqMusicEntity.getQqEntity(), "您的qq音乐随机回复评论失败，错误信息为：" + replyResult.getMessage());
+				break;
+			}
+		}
+	}
+
+	@Cron("1h")
 	@Transactional
 	public void musicianTask(){
-		List<QqMusicEntity> list = qqMusicService.findAll();
+		List<QqMusicEntity> list = qqMusicService.findByAutoPublishView(Boolean.TRUE);
 		for (QqMusicEntity qqMusicEntity : list) {
 			try {
 				Result<Void> result = qqMusicLogic.publishNews(qqMusicEntity, toolLogic.hiToKoTo().get("text"));
 				if (result.isFailure()){
 					QqEntity qqEntity = qqMusicEntity.getQqEntity();
-					BotUtils.sendMessage(qqEntity, "您的QQ音乐发布新动态失败，请手动发布新动态完成任务~");
+					BotUtils.sendMessage(qqEntity, "您的QQ音乐发布新动态失败，失败原因为" + result.getMessage());
 					break;
 				}
 			} catch (Exception e) {
@@ -130,7 +132,6 @@ public class QqLoginJob {
 					Result<QqMusicEntity> loginResult = qqMusicLogic.loginByPassword(qqEntity.getQq(), qqEntity.getPassword());
 					if (loginResult.isFailure()){
 						BotUtils.sendMessage(qqEntity, "您的QQ音乐的cookie已失效，如需自动签到，请重新绑定！");
-						qqMusicService.delete(qqMusicEntity);
 					}else {
 						QqMusicEntity newQqMusicEntity = loginResult.getData();
 						qqMusicEntity.setCookie(newQqMusicEntity.getCookie());

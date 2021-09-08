@@ -2,6 +2,7 @@ package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Before
+import com.IceCreamQAQ.Yu.annotation.Synonym
 import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.annotation.PrivateController
@@ -106,6 +107,18 @@ class QqMusicController {
     fun delete(qqMusicEntity: QqMusicEntity): String{
         qqMusicService.delete(qqMusicEntity)
         return "删除qq音乐信息成功！"
+    }
+
+    @Action("qq音乐自动评论 {status}")
+    @Synonym(["qq音乐自动发布动态 {status}"])
+    @QMsg(at = true)
+    fun sss(qqMusicEntity: QqMusicEntity, @PathVar(0) type: String, status: Boolean): String{
+        when (type){
+            "qq音乐自动评论" -> qqMusicEntity.autoComment = status
+            "qq音乐自动发布动态" -> qqMusicEntity.autoPublishView = status
+        }
+        qqMusicService.save(qqMusicEntity)
+        return "$type${if (status) "开启" else "关闭"}成功"
     }
 }
 

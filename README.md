@@ -3,11 +3,11 @@
 * [YuQ-Mirai-SuperDemo](https://github.com/YuQWorks/YuQ-SuperDemo)
 * [Mirai](https://github.com/mamoe/mirai)
 
-**首次登陆可能需要验证验证码，需要gui环境，如果是把挂在无ui环境的，可以在有ui环境（比如：windows系统）的机器上登录成功后，把`device.json`复制到`bin`文件夹下**
+**首次登陆教程：[https://www.kuku.me/archives/17/](https://www.kuku.me/archives/17/) ，把`device.json`复制到`bin`文件夹下**
 
-**环境：jdk8，其他环境均会异常，搭建教程中的压缩包已自带Oracle jdk8**
+**搭建教程：[https://www.kuku.me/archives/6/](https://www.kuku.me/archives/6/)**
 
-如出现`禁止登录当前上网环境异常，请更换网络环境或在常用设备上登录或稍后再试。`，可参考 https://www.kuku.me/archives/17/
+**环境：jdk8**
 
 ## 功能
 * 自动签到（QQ、哔哩哔哩、HostLoc、网易云、腾讯视频、爱奇艺、欢太商城、qq音乐、酷狗音乐、百度贴吧）
@@ -19,7 +19,6 @@
 
 ## 教程文章
 
-https://www.kuku.me/archives/6/
 
 ## 鸣谢
 

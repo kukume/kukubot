@@ -18,6 +18,7 @@ import com.icecreamqaq.yuq.message.Image;
 import com.icecreamqaq.yuq.message.Message;
 import com.icecreamqaq.yuq.message.MessageItemFactory;
 import me.kuku.pojo.Result;
+import me.kuku.pojo.UA;
 import me.kuku.utils.DateTimeFormatterUtils;
 import me.kuku.utils.IOUtils;
 import me.kuku.utils.MyUtils;
@@ -282,7 +283,19 @@ public class ToolController {
 			for (int i = 0; i < num; i++) {
 				JSONObject jsonObject = jsonArray.getJSONObject(i);
 				String url = jsonObject.getString("quickUrl");
-				group.sendMessage(mif.imageByUrl(url).toMessage());
+				try {
+					group.sendMessage(mif.imageByUrl(url).toMessage());
+				}catch (Exception e){
+					group.sendMessage("图片发送失败，请重试！");
+					jobManager.registerTimer(() -> {
+						try {
+							OkHttpUtils.get("https://api.kukuqaq.com/lolicon/reupload?id=" + jsonObject.getInteger("id"),
+									OkHttpUtils.addUA(UA.PC)).close();
+						} catch (IOException ex) {
+							ex.printStackTrace();
+						}
+					}, 0);
+				}
 			}
 		}else group.sendMessage(mif.at(qq).plus("色图功能已关闭！"));
 	}

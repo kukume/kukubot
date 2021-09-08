@@ -373,7 +373,7 @@ public class ToolLogicImpl implements ToolLogic {
 				}
 				paramMap.put("tags", tags.deleteCharAt(tags.length() - 1).toString());
 				try {
-					OkHttpUtils.post("https://api.kuku.me/lolicon", paramMap,
+					OkHttpUtils.post(api + "/lolicon", paramMap,
 							OkHttpUtils.addUA(UA.PC)).close();
 				} catch (IOException ioException) {
 					ioException.printStackTrace();
@@ -692,7 +692,7 @@ public class ToolLogicImpl implements ToolLogic {
 
 	@Override
 	public JSONArray loLiConQuickly(String tags) throws IOException {
-		String url = "https://api.kuku.me/lolicon/random?num=20";
+		String url = api + "/lolicon/random?num=20";
 		if (tags != null) url += "&tags=" + tags;
 		JSONObject jsonObject = OkHttpUtils.getJson(url,
 				OkHttpUtils.addSingleHeader("Accept", "application/json"));

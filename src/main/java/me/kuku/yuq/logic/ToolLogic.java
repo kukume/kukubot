@@ -23,7 +23,6 @@ public interface ToolLogic {
 	String queryIcp(String domain) throws IOException;
 	String zhiHuDaily() throws IOException;
 	String qqGodLock(Long qq) throws IOException;
-	String convertPinYin(String word) throws IOException;
 	String jokes() throws IOException;
 	String rubbish(String name) throws IOException;
 	String historyToday() throws IOException;

@@ -36,7 +36,7 @@ public class ToolLogicImpl implements ToolLogic {
 	private final String appId = "ghpgtsokjvkjdmlk";
 	private final String appSecret = "N2hNMC93empxb0twUW1jd1FRbVVtQT09";
 	private final String params = "&app_id=" + appId + "&app_secret=" + appSecret;
-	private final String api = "https://api.kuku.me";
+	private final String api = "https://api.kukuqaq.com";
 
 	@Inject
 	private JobManager jobManager;
@@ -181,13 +181,6 @@ public class ToolLogicImpl implements ToolLogic {
 					.append(element.getElementsByTag("dd").text()).append("\n");
 		}
 		return sb.toString();
-	}
-
-	@Override
-	public String convertPinYin(String word) throws IOException {
-		JSONObject jsonObject = OkHttpUtils.getJson("https://v1.alapi.cn/api/pinyin?word=" + word + "&tone=1");
-		if (jsonObject.getInteger("code") == 200) return jsonObject.getJSONObject("data").getString("pinyin");
-		else return "转换失败！！";
 	}
 
 	String convertUrl(String path){

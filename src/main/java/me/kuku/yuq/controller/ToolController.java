@@ -148,12 +148,6 @@ public class ToolController {
 		return toolLogic.qqGodLock(qq);
 	}
 
-	@Action("拼音 {params}")
-	@QMsg(at = true)
-	public String pingYing(String params) throws IOException {
-		return toolLogic.convertPinYin(params);
-	}
-
 	@Action("笑话")
 	@QMsg(at = true)
 	public String jokes() throws IOException {

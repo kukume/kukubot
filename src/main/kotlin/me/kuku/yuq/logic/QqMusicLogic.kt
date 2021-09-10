@@ -208,7 +208,7 @@ class QqMusicLogicImpl: QqMusicLogic{
         val width = identifyJsonObject.getJSONObject("data").getInteger("data") + 26
         val height = MyUtils.regex(",", "]", position).trim()
         val a = "[$width,%20$height]]"
-        val resJsonObject = OkHttpUtils.getJsonp("https://safety.music.qq.com/cgi/fcgi-bin/fcg_music_validate?iSubCmd=71&iAppid=$appId&msgid=$msgId&strCode=$strCode&strSig=$a&clientid=10&g_tk=$gtk&g_tk_new_20200303=$gtk&uin=$qq&format=jsonp&inCharset=utf-8&outCharset=utf-8&notice=0&platform=h5&needNewCode=1&callback=MusicJsonCallback",
+        val resJsonObject = OkHttpUtils.getJsonp("https://safety.music.qq.com/cgi/fcgi-bin/fcg_music_validate?iSubCmd=71&iAppid=$appId&msgid=$msgId&strCode=$strCode&strSig=$a&strTk={%22device%22:{%22screenWidth%22:400,%22screenHeight%22:700,%22devicePixelRatio%22:1},%22captcha%22:{%22isFullScreen%22:true}}&clientid=10&g_tk=$gtk&g_tk_new_20200303=$gtk&uin=$qq&format=jsonp&inCharset=utf-8&outCharset=utf-8&notice=0&platform=h5&needNewCode=1&callback=MusicJsonCallback",
             OkHttpUtils.addHeaders(qqMusicEntity.cookie, "https://y.qq.com", UA.QQ))
         val b = resJsonObject.getInteger("code") == 0 && resJsonObject.getJSONObject("data").getInteger("iRet") == 0
         return if (b) Result.success("识别成功！", null)

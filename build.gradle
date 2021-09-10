@@ -9,14 +9,14 @@ group 'me.kuku'
 version ''
 
 repositories {
-    maven{ url "https://maven.icecreamqaq.com/repository/maven-releases/" }
     maven{ url "https://nexus.kuku.me/repository/maven-public/" }
+//    maven{ url "https://maven.icecreamqaq.com/repository/maven-releases/" }
     mavenCentral()
 }
 
 dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib'
-    implementation 'me.kuku:utils:0.0.26'
+    implementation 'me.kuku:utils:0.0.27'
     implementation 'com.IceCreamQAQ.YuQ:YuQ-Mirai:0.1.0.0-DEV19'
     implementation 'com.IceCreamQAQ.Yu:Yu-DB:0.0.2.0-DEV12'
     implementation 'com.IceCreamQAQ.Yu:WebCore:0.0.2.0-DEV13'
@@ -26,6 +26,7 @@ dependencies {
     implementation 'org.jsoup:jsoup:1.13.1'
 //    implementation 'net.qqkit.rain:DevTools:0.1.4'
 //    implementation 'net.qqkit.rain:sdk:0.1.0'
+    implementation 'net.mamoe:mirai-core-jvm:2.7.1-dev-1'
 }
 
 tasks.withType(JavaCompile) {

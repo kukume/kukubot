@@ -106,7 +106,7 @@ class QqMusicJob {
         GlobalScope.launch {
             val list = qqMusicService.findByConvertGreenDiamond(true)
             for (qqMusicEntity in list) {
-                for (i in 0..30) {
+                for (i in 0..3) {
                     launch {
                         try {
                             val res = qqMusicLogic.convertGreenDiamond(qqMusicEntity)

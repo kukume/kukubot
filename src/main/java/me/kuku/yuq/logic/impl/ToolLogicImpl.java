@@ -645,9 +645,8 @@ public class ToolLogicImpl implements ToolLogic {
 		map.put("syntax", syntax);
 		map.put("content", content);
 		try {
-			Response response = OkHttpUtils.post("https://paste.ubuntu.com/", map, OkHttpUtils.addUA(UA.PC));
-			response.close();
-			return "https://paste.ubuntu.com" + response.header("location");
+			JSONObject jsonObject = OkHttpUtils.postJson("https://api.kukuqaq.com/tool/paste", map, OkHttpUtils.addUA(UA.PC));
+			return jsonObject.getJSONObject("data").getString("data");
 		} catch (IOException e) {
 			return "生成失败！！";
 		}

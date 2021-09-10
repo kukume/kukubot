@@ -504,4 +504,9 @@ public class ToolController {
 	public String menu(){
 		return "https://menu.kuku.moe";
 	}
+
+	@Action("来个异常")
+	public void ss(){
+		throw new RuntimeException("异常来了");
+	}
 }

@@ -18,14 +18,12 @@ data class QqMusicEntity (
     @Column(length = 1000)
     var cookie: String = "",
     var qqMusicKey: String? = "",
-    var convertGreenDiamond: Boolean? = false,
     var autoComment: Boolean? = false,
     var autoPublishView: Boolean? = false
 )
 
 interface QqMusicDao: JPADao<QqMusicEntity, Int>{
     fun findByQqEntity(qqEntity: QqEntity): QqMusicEntity?
-    fun findByConvertGreenDiamond(convertGreenDiamond: Boolean): List<QqMusicEntity>
     fun findByAutoComment(autoComment: Boolean): List<QqMusicEntity>
     fun findByAutoPublishView(autoPublishView: Boolean): List<QqMusicEntity>
 }
@@ -36,7 +34,6 @@ interface QqMusicService {
     fun save(qqMusicEntity: QqMusicEntity)
     fun delete(qqMusicEntity: QqMusicEntity)
     fun findAll(): List<QqMusicEntity>
-    fun findByConvertGreenDiamond(convertGreenDiamond: Boolean): List<QqMusicEntity>
     fun findByAutoComment(autoComment: Boolean): List<QqMusicEntity>
     fun findByAutoPublishView(autoPublishView: Boolean): List<QqMusicEntity>
 }
@@ -64,11 +61,6 @@ class QqMusicServiceImpl: QqMusicService{
     @Transactional
     override fun findAll(): List<QqMusicEntity> {
         return qqMusicDao.findAll()
-    }
-
-    @Transactional
-    override fun findByConvertGreenDiamond(convertGreenDiamond: Boolean): List<QqMusicEntity> {
-        return qqMusicDao.findByConvertGreenDiamond(convertGreenDiamond)
     }
 
     override fun findByAutoComment(autoComment: Boolean): List<QqMusicEntity> {

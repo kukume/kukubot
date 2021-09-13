@@ -1,5 +1,6 @@
 package me.kuku.yuq.job
 
+import com.IceCreamQAQ.Yu.annotation.Config
 import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
 import com.icecreamqaq.yudb.jpa.annotation.Transactional
@@ -9,6 +10,7 @@ import kotlinx.coroutines.launch
 import me.kuku.pojo.Result
 import me.kuku.yuq.entity.QqMusicEntity
 import me.kuku.yuq.entity.QqMusicService
+import me.kuku.yuq.entity.QqService
 import me.kuku.yuq.logic.QqMusicLogic
 import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.utils.BotUtils
@@ -24,6 +26,10 @@ class QqMusicJob {
     private lateinit var qqMusicLogic: QqMusicLogic
     @Inject
     private lateinit var toolLogic: ToolLogic
+    @Config("YuQ.Mirai.bot.master")
+    private lateinit var master: String
+    @Inject
+    private lateinit var qqService: QqService
 
     @Cron("At::d::05:15:41")
     @Transactional
@@ -48,6 +54,7 @@ class QqMusicJob {
     fun comment() {
         val list = qqMusicService.findByAutoComment(true)
         for (qqMusicEntity in list) {
+            qqMusicLogic.replyComment(qqMusicEntity, toolLogic.hiToKoTo()["text"] ?: "好听好听！")
             val replyResult = qqMusicLogic.randomReplyComment(qqMusicEntity, toolLogic.hiToKoTo()["text"] ?: "好听好听！")
             if (replyResult.isFailure) {
                 BotUtils.sendMessage(qqMusicEntity.qqEntity, "您的qq音乐随机回复评论失败，错误信息为：" + replyResult.message)
@@ -101,20 +108,20 @@ class QqMusicJob {
     }
 
     @DelicateCoroutinesApi
-    @Cron("At::d::00:00:00")
+//    @Cron("At::d::00:00:00")
+    @Cron("1s")
     fun musicianConvert() {
         GlobalScope.launch {
-            val list = qqMusicService.findByConvertGreenDiamond(true)
-            for (qqMusicEntity in list) {
-                for (i in 0..3) {
-                    launch {
-                        try {
-                            val res = qqMusicLogic.convertGreenDiamond(qqMusicEntity)
-                            val message = res.message
-                            BotUtils.sendMessage(qqMusicEntity.qqEntity, "qq音乐人自动领取绿钻通知：\n$message")
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
+            val qqEntity = qqService.findByQq(master.toLong()) ?: return@launch
+            val qqMusicEntity = qqMusicService.findByQqEntity(qqEntity)?: return@launch
+            for (i in 0..3) {
+                launch {
+                    try {
+                        val res = qqMusicLogic.convertGreenDiamond(qqMusicEntity)
+                        val message = res.message
+                        BotUtils.sendMessage(qqMusicEntity.qqEntity, "qq音乐人自动领取绿钻通知：\n$message")
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                     }
                 }
             }

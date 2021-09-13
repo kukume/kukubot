@@ -90,17 +90,15 @@ class QqMusicController {
         return qqMusicLogic.randomReplyComment(qqMusicEntity, content ?: toolLogic.hiToKoTo()?.get("text") ?: "这也太好听了把！").message
     }
 
+    @Action("qq音乐回复评论")
+    @QMsg(at = true)
+    fun qqMusicComment(qqMusicEntity: QqMusicEntity, @PathVar(1) content: String?): String{
+        return qqMusicLogic.replyComment(qqMusicEntity, content ?: toolLogic.hiToKoTo()?.get("text") ?: "这也太好听了把！").message
+    }
+
     @Action("qq音乐人兑换绿钻")
     @QMsg(at = true)
     fun qqMusicConvert(qqMusicEntity: QqMusicEntity): String = qqMusicLogic.convertGreenDiamond(qqMusicEntity).message
-
-    @Action("qq音乐人兑换绿钻 {status}")
-    @QMsg(at = true)
-    fun qqMusicConvertAuto(qqMusicEntity: QqMusicEntity, status: Boolean): String{
-        qqMusicEntity.convertGreenDiamond = status
-        qqMusicService.save(qqMusicEntity)
-        return "qq音乐人每日自动兑换绿钻${if (status) "开启" else "关闭"}成功"
-    }
 
     @Action("删除qq音乐")
     @QMsg(at = true)

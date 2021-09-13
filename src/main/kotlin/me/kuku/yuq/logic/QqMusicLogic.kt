@@ -8,6 +8,7 @@ import me.kuku.pojo.Result
 import me.kuku.pojo.UA
 import me.kuku.utils.*
 import me.kuku.yuq.entity.QqMusicEntity
+import javax.inject.Inject
 
 @AutoBind
 interface QqMusicLogic {
@@ -17,18 +18,22 @@ interface QqMusicLogic {
     fun sign(qqMusicEntity: QqMusicEntity): Result<Void>
     fun musicianSign(qqMusicEntity: QqMusicEntity): Result<Void>
     fun publishNews(qqMusicEntity: QqMusicEntity, content: String): Result<Void>
-    fun comment(qqMusicEntity: QqMusicEntity, id: Int, content: String): Result<Void>
+    fun comment(qqMusicEntity: QqMusicEntity, id: Int, content: String): Result<String>
+    fun replyComment(qqMusicEntity: QqMusicEntity, content: String): Result<Void>
     fun randomReplyComment(qqMusicEntity: QqMusicEntity, content: String): Result<Void>
     fun convertGreenDiamond(qqMusicEntity: QqMusicEntity): Result<Void>
 }
 
 class QqMusicLogicImpl: QqMusicLogic{
 
+    @Inject
+    private lateinit var toolLogic: ToolLogic
+
     private val appId = 716027609L
     private val daId = 383
     private val ptAid = 100497308L
 
-    private fun getSign(params: String): String{
+     fun getSign(params: String): String{
         return "zza${MyUtils.randomStr(MyUtils.randomInt(10, 16))}${MD5Utils.toMD5("CJBPACrRuNy7$params")}"
     }
 
@@ -122,15 +127,54 @@ class QqMusicLogicImpl: QqMusicLogic{
         }else Result.failure("qq音乐发送动态失败！可能cookie已失效！")
     }
 
-    override fun comment(qqMusicEntity: QqMusicEntity, id: Int, content: String): Result<Void> {
+    override fun comment(qqMusicEntity: QqMusicEntity, id: Int, content: String): Result<String> {
         val qqMusicKey = qqMusicEntity.qqMusicKey ?: ""
         val gtk = QqUtils.getGTK(qqMusicKey)
-        val jsonObject = OkHttpUtils.postJson("https://u.y.qq.com/cgi-bin/musicu.fcg?_webcgikey=pre_submit_moment&_=${System.currentTimeMillis()}",
-            OkHttpUtils.addJson("{\"comm\":{\"cv\":4747474,\"ct\":24,\"format\":\"json\",\"inCharset\":\"utf-8\",\"outCharset\":\"utf-8\",\"notice\":0,\"platform\":\"yqq.json\",\"needNewCode\":1,\"uin\":${qqMusicEntity.qqEntity?.qq},\"g_tk_new_20200303\":$gtk,\"g_tk\":$gtk,\"req_1\":{\"module\":\"music.globalComment.CommentWriteServer\",\"method\":\"AddComment\",\"param\":{\"BizType\":1,\"BizId\":\"$id\",\"Content\":\"$content\"}}}"),
+        val params = "{\"comm\":{\"cv\":4747474,\"ct\":24,\"format\":\"json\",\"inCharset\":\"utf-8\",\"outCharset\":\"utf-8\",\"notice\":0,\"platform\":\"yqq.json\",\"needNewCode\":1,\"uin\":${qqMusicEntity.qqEntity?.qq},\"g_tk_new_20200303\":$gtk,\"g_tk\":$gtk},\"req_1\":{\"module\":\"music.globalComment.CommentWriteServer\",\"method\":\"AddComment\",\"param\":{\"BizType\":1,\"BizId\":\"$id\",\"Content\":\"$content\"}}}"
+        val jsonObject = OkHttpUtils.postJson("https://u.y.qq.com/cgi-bin/musicu.fcg?_=${System.currentTimeMillis()}",
+            OkHttpUtils.addJson(params),
             OkHttpUtils.addHeaders(qqMusicEntity.cookie, "https://y.qq.com", UA.PC))
         return if (jsonObject.getInteger("code") == 0 && jsonObject.getJSONObject("req_1").getInteger("code") == 0)
-            Result.success("qq音乐评论成功", null)
+            Result.success("qq音乐评论成功", jsonObject.getJSONObject("req_1").getJSONObject("data").getString("AddedCmId"))
         else Result.failure("qq音乐评论失败，" + jsonObject.getJSONObject("req_1").getString("errmsg"))
+    }
+
+    override fun replyComment(qqMusicEntity: QqMusicEntity, content: String): Result<Void> {
+        val str = OkHttpUtils.getStr("https://i.y.qq.com/n2/m/share/profile_v2/index.html",
+            OkHttpUtils.addHeaders(qqMusicEntity.cookie, "", UA.MOBILE))
+        val jsonStr = MyUtils.regex("firstPageData = ", "</sc", str) ?: return Result.failure("获取歌曲失败，cookie已失效！")
+        val jsonObject = JSON.parseObject(jsonStr)
+        val singleJsonObject = jsonObject.getJSONObject("tabData").getJSONObject("song").getJSONArray("list")
+            .random() as JSONObject
+        val id = singleJsonObject.getString("id")!!
+        val res = comment(qqMusicEntity, id.toInt(), content)
+        val mid = res.data
+        return replyComment(qqMusicEntity, id, mid, toolLogic.hiToKoTo()["text"] ?: "好听呀！")
+    }
+
+    private fun replyComment(qqMusicEntity: QqMusicEntity, songId: String, cmId: String, content: String): Result<Void>{
+        val qq = qqMusicEntity.qqEntity?.qq ?: 0
+        val gtk = QqUtils.getGTK(qqMusicEntity.qqMusicKey ?: "")
+        val resultJsonObject = OkHttpUtils.postJson("https://u.y.qq.com/cgi-bin/musicu.fcg?_=${System.currentTimeMillis()}",
+            OkHttpUtils.addJson("{\"comm\":{\"cv\":4747474,\"ct\":24,\"format\":\"json\",\"inCharset\":\"utf-8\",\"outCharset\":\"utf-8\",\"notice\":0,\"platform\":\"yqq.json\",\"needNewCode\":1,\"uin\":$qq,\"g_tk_new_20200303\":$gtk,\"g_tk\":$gtk},\"req_1\":{\"module\":\"music.globalComment.CommentWriteServer\",\"method\":\"AddComment\",\"param\":{\"BizType\":1,\"BizId\":\"$songId\",\"Content\":\"$content\",\"RepliedCmId\":\"$cmId\"}}}"),
+            OkHttpUtils.addHeaders(qqMusicEntity.cookie, "https://y.qq.com", UA.PC))
+        return if (resultJsonObject.getInteger("code") == 0) {
+            when (resultJsonObject.getJSONObject("req_1").getInteger("code")) {
+                0 -> Result.success("qq音乐随机歌曲评论成功！", null)
+                10009 -> {
+                    val url =
+                        resultJsonObject.getJSONObject("req_1").getJSONObject("data").getString("VerifyUrl")
+                    val res = identifyCaptcha(qqMusicEntity, url)
+                    if (res.isFailure)
+                        Result.failure("需要验证验证码，请打开该链接进行验证并重新发送该指令：$url")
+                    else {
+                        replyComment(qqMusicEntity, songId, cmId, content)
+                    }
+                }
+                else -> Result.failure("qq音乐随机歌曲评论失败！${resultJsonObject?.getJSONObject("req_1")?.getJSONObject("data")?.getString("Msg") ?: "可能cookie已失效！"}")
+            }
+        }
+        else Result.failure("qq音乐随机歌曲评论失败！")
     }
 
     override fun randomReplyComment(qqMusicEntity: QqMusicEntity, content: String): Result<Void> {
@@ -151,37 +195,19 @@ class QqMusicLogicImpl: QqMusicLogic{
                 commentsJsonObject.getJSONObject("req_3").getJSONObject("data").getJSONObject("CommentList2")
                     .getJSONArray("Comments").random() as JSONObject
             val cmId = commentJsonObject.getString("CmId")
-            val resultJsonObject = OkHttpUtils.postJson("https://u.y.qq.com/cgi-bin/musicu.fcg?_webcgikey=AddComment&_=${System.currentTimeMillis()}",
-                OkHttpUtils.addJson("{\"comm\":{\"cv\":4747474,\"ct\":24,\"format\":\"json\",\"inCharset\":\"utf-8\",\"outCharset\":\"utf-8\",\"notice\":0,\"platform\":\"yqq.json\",\"needNewCode\":1,\"uin\":$qq,\"g_tk_new_20200303\":$gtk,\"g_tk\":$gtk},\"req_1\":{\"module\":\"music.globalComment.CommentWriteServer\",\"method\":\"AddComment\",\"param\":{\"BizType\":1,\"BizId\":\"$songId\",\"Content\":\"$content\",\"RepliedCmId\":\"$cmId\"}}}"),
-                OkHttpUtils.addHeaders(qqMusicEntity.cookie, "https://y.qq.com", UA.PC))
-            if (resultJsonObject.getInteger("code") == 0) {
-                val code = resultJsonObject.getJSONObject("req_1").getInteger("code")
-                when (code) {
-                    0 -> Result.success("qq音乐随机歌曲评论成功！", null)
-                    10009 -> {
-                        val url =
-                            resultJsonObject.getJSONObject("req_1").getJSONObject("data").getString("VerifyUrl")
-                        val res = identifyCaptcha(qqMusicEntity, url)
-                        if (res.isFailure)
-                            Result.failure("需要验证验证码，请打开该链接进行验证并重新发送该指令：$url")
-                        else Result.failure("需要验证验证码，自动识别验证码成功！请重新发送该指令！")
-                    }
-                    else -> Result.failure("qq音乐随机歌曲评论失败！${resultJsonObject?.getJSONObject("req_1")?.getJSONObject("data")?.getString("Msg") ?: "可能cookie已失效！"}")
-                }
-            }
-            else Result.failure("qq音乐随机歌曲评论失败！")
+            replyComment(qqMusicEntity, songId, cmId, content)
         }else Result.failure("qq音乐随机歌曲评论失败！获取评论列表失败！")
     }
 
     override fun convertGreenDiamond(qqMusicEntity: QqMusicEntity): Result<Void> {
         val params = "{\"req_0\":{\"module\":\"music.sociality.KolUserRight\",\"method\":\"getOrderId\",\"param\":{\"userRedeemType\":3,\"greenVipNum\":1,\"greenVipType\":0,\"creditType\":0}},\"comm\":{\"g_tk\":${QqUtils.getGTK(qqMusicEntity.qqMusicKey)},\"uin\":${qqMusicEntity.qqEntity?.qq},\"format\":\"json\",\"platform\":\"h5\",\"ct\":23,\"cv\":0}}"
-        val jsonObject = OkHttpUtils.postJson("https://u.y.qq.com/cgi-bin/musics.fcg?sign=${getSign(params)}&_=" + System.currentTimeMillis(),
+        val jsonObject = OkHttpUtils.postJson("https://u.y.qq.com/cgi-bin/musicu.fcg?_=" + System.currentTimeMillis(),
             OkHttpUtils.addJson(params), OkHttpUtils.addHeaders(qqMusicEntity.cookie, "https://y.qq.com", UA.PC))
         val innerJsonObject = jsonObject.getJSONObject("req_0")
         return if (jsonObject.getInteger("code") == 0 && innerJsonObject.getInteger("code") == 0) {
             val orderId = innerJsonObject.getJSONObject("data").getString("orderId")
             val getParams = "{\"req_0\":{\"module\":\"music.sociality.KolUserRight\",\"method\":\"redeemGreenVip\",\"param\":{\"num\":1,\"greenVipType\":0,\"creditType\":0,\"orderId\":\"$orderId\"}},\"comm\":{\"g_tk\":${QqUtils.getGTK(qqMusicEntity.qqMusicKey)},\"uin\":${qqMusicEntity.qqEntity?.qq},\"format\":\"json\",\"platform\":\"h5\",\"ct\":23,\"cv\":0}}";
-            val getJsonObject = OkHttpUtils.postJson("https://u.y.qq.com/cgi-bin/musics.fcg?sign=${getSign(getParams)}&_=" + System.currentTimeMillis(),
+            val getJsonObject = OkHttpUtils.postJson("https://u.y.qq.com/cgi-bin/musicu.fcg?_=" + System.currentTimeMillis(),
                 OkHttpUtils.addJson(getParams), OkHttpUtils.addHeaders(qqMusicEntity.cookie, "https://y.qq.com", UA.PC))
             if (getJsonObject.getInteger("code") == 0 && getJsonObject.getJSONObject("req_0").getInteger("code") == 0)
                 Result.success("兑换绿钻一个月成功！", null)

@@ -125,7 +125,7 @@ class KuGouLogicImpl: KuGouLogic{
             "srcappid" to "2919"
         )
         val preJsonObject = OkHttpUtils.postJson(
-            "https://api.kukuqaq.com/tool/kuGou",
+            "https://api.kukuqaq.com/exec/kuGou",
             mutableMapOf("phone" to phone, "time" to time.toString())
         )
         val params = preJsonObject.getString("params")

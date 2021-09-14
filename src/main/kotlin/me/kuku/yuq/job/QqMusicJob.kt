@@ -3,10 +3,8 @@ package me.kuku.yuq.job
 import com.IceCreamQAQ.Yu.annotation.Config
 import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
+import com.IceCreamQAQ.Yu.job.JobManager
 import com.icecreamqaq.yudb.jpa.annotation.Transactional
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import me.kuku.pojo.Result
 import me.kuku.yuq.entity.QqMusicEntity
 import me.kuku.yuq.entity.QqMusicService
@@ -30,6 +28,8 @@ class QqMusicJob {
     private lateinit var master: String
     @Inject
     private lateinit var qqService: QqService
+    @Inject
+    private lateinit var jobManager: JobManager
 
     @Cron("At::d::05:15:41")
     @Transactional
@@ -107,24 +107,20 @@ class QqMusicJob {
         }
     }
 
-    @DelicateCoroutinesApi
-//    @Cron("At::d::00:00:00")
-    @Cron("1s")
+    @Cron("At::d::00:00:00")
     fun musicianConvert() {
-        GlobalScope.launch {
-            val qqEntity = qqService.findByQq(master.toLong()) ?: return@launch
-            val qqMusicEntity = qqMusicService.findByQqEntity(qqEntity)?: return@launch
-            for (i in 0..3) {
-                launch {
-                    try {
-                        val res = qqMusicLogic.convertGreenDiamond(qqMusicEntity)
-                        val message = res.message
-                        BotUtils.sendMessage(qqMusicEntity.qqEntity, "qq音乐人自动领取绿钻通知：\n$message")
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
+        val qqEntity = qqService.findByQq(master.toLong()) ?: return
+        val qqMusicEntity = qqMusicService.findByQqEntity(qqEntity)?: return
+        for (i in 0..10) {
+            jobManager.registerTimer({
+                try {
+                    val res = qqMusicLogic.convertGreenDiamond(qqMusicEntity)
+                    val message = res.message
+                    BotUtils.sendMessage(qqMusicEntity.qqEntity, "qq音乐人自动领取绿钻通知：\n$message")
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
-            }
+            }, 0)
         }
     }
 

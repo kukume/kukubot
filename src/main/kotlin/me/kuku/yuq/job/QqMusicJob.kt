@@ -44,6 +44,7 @@ class QqMusicJob {
                     continue
                 }
                 qqMusicLogic.musicianSign(qqMusicEntity)
+                qqMusicLogic.daySign(qqMusicEntity)
             } catch (e: Exception) {
                 e.printStackTrace()
             }

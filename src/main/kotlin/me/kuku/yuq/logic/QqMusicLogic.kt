@@ -22,6 +22,7 @@ interface QqMusicLogic {
     fun replyComment(qqMusicEntity: QqMusicEntity, content: String): Result<Void>
     fun randomReplyComment(qqMusicEntity: QqMusicEntity, content: String): Result<Void>
     fun convertGreenDiamond(qqMusicEntity: QqMusicEntity): Result<Void>
+    fun daySign(qqMusicEntity: QqMusicEntity): Result<Void>
 }
 
 class QqMusicLogicImpl: QqMusicLogic{
@@ -34,7 +35,8 @@ class QqMusicLogicImpl: QqMusicLogic{
     private val ptAid = 100497308L
 
      fun getSign(params: String): String{
-        return "zza${MyUtils.randomStr(MyUtils.randomInt(10, 16))}${MD5Utils.toMD5("CJBPACrRuNy7$params")}"
+         val jsonObject = OkHttpUtils.postJson("https://api.kukuqaq.com/exec/qqMusic", mutableMapOf("data" to params))
+         return jsonObject.getString("sign")
     }
 
     override fun getQrcode(): QqLoginQrcode {
@@ -239,5 +241,25 @@ class QqMusicLogicImpl: QqMusicLogic{
         val b = resJsonObject.getInteger("code") == 0 && resJsonObject.getJSONObject("data").getInteger("iRet") == 0
         return if (b) Result.success("识别成功！", null)
         else Result.failure(resJsonObject.getJSONObject("data").getString("strErrMsg"))
+    }
+
+    override fun daySign(qqMusicEntity: QqMusicEntity): Result<Void> {
+        val data = "{\"comm\":{\"g_tk\":${QqUtils.getGTK(qqMusicEntity.qqMusicKey ?: "")},\"uin\":${qqMusicEntity.qqEntity?.qq ?: 0},\"format\":\"json\",\"inCharset\":\"utf-8\",\"outCharset\":\"utf-8\",\"notice\":0,\"platform\":\"h5\",\"needNewCode\":1,\"ct\":23,\"cv\":0},\"req_0\":{\"module\":\"music.actCenter.DaysignactSvr\",\"method\":\"doSignIn\",\"param\":{}}}"
+        val jsonObject = OkHttpUtils.postJson("https://u.y.qq.com/cgi-bin/musics.fcg?_webcgikey=doSignIn&_=${System.currentTimeMillis()}&sign=${getSign(data)}",
+            OkHttpUtils.addJson(data), OkHttpUtils.addHeaders(qqMusicEntity.cookie, "https://i.y.qq.com/n2/m/client/day_sign/index.html",
+                UA.QQ))
+        return if (jsonObject.getInteger("code") == 0) {
+            val innerJsonObject = jsonObject.getJSONObject("req_0")
+            when (innerJsonObject.getInteger("code")){
+                0 -> {
+                    val ss = innerJsonObject.getJSONObject("data").getInteger("code")
+                    if (ss == 0)
+                        Result.success("qq音乐日签成功！", null)
+                    else Result.success("qq音乐今日已日签！", null)
+                }
+                1000 -> Result.failure("qq音乐日签失败，cookie已失效！", null)
+                else -> Result.failure("qq音乐日签失败，未知原因！")
+            }
+        }else Result.failure("sign验证失败！")
     }
 }

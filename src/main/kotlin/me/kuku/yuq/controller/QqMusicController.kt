@@ -107,6 +107,10 @@ class QqMusicController {
         return "删除qq音乐信息成功！"
     }
 
+    @Action("qq音乐日签")
+    @QMsg(at = true)
+    fun qqDaySign(qqMusicEntity: QqMusicEntity) = qqMusicLogic.daySign(qqMusicEntity).message!!
+
     @Action("qq音乐自动评论 {status}")
     @Synonym(["qq音乐自动发布动态 {status}"])
     @QMsg(at = true)

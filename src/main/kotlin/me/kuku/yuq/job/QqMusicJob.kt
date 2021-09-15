@@ -82,7 +82,7 @@ class QqMusicJob {
         }
     }
 
-    @Cron("At::d::23:50:13")
+    @Cron("1h")
     fun musicianUpdate() {
         val list = qqMusicService.findAll()
         for (qqMusicEntity in list) {

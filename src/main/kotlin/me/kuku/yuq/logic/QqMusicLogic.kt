@@ -1,3 +1,5 @@
+@file:Suppress("DuplicatedCode")
+
 package me.kuku.yuq.logic
 
 import com.IceCreamQAQ.Yu.annotation.AutoBind
@@ -136,8 +138,21 @@ class QqMusicLogicImpl: QqMusicLogic{
         val jsonObject = OkHttpUtils.postJson("https://u.y.qq.com/cgi-bin/musicu.fcg?_=${System.currentTimeMillis()}",
             OkHttpUtils.addJson(params),
             OkHttpUtils.addHeaders(qqMusicEntity.cookie, "https://y.qq.com", UA.PC))
-        return if (jsonObject.getInteger("code") == 0 && jsonObject.getJSONObject("req_1").getInteger("code") == 0)
-            Result.success("qq音乐评论成功", jsonObject.getJSONObject("req_1").getJSONObject("data").getString("AddedCmId"))
+        return if (jsonObject.getInteger("code") == 0)
+            when (jsonObject.getJSONObject("req_1").getInteger("code")){
+                0 -> Result.success("qq音乐评论成功", jsonObject.getJSONObject("req_1").getJSONObject("data").getString("AddedCmId"))
+                10009 -> {
+                    val url =
+                        jsonObject.getJSONObject("req_1").getJSONObject("data").getString("VerifyUrl")
+                    val res = identifyCaptcha(qqMusicEntity, url)
+                    if (res.isFailure)
+                        Result.failure("需要验证验证码，请打开该链接进行验证并重新发送该指令：$url")
+                    else {
+                        comment(qqMusicEntity, id, content)
+                    }
+                }
+                else -> Result.failure("qq音乐随机歌曲评论失败！${jsonObject?.getJSONObject("req_1")?.getJSONObject("data")?.getString("Msg") ?: "可能cookie已失效！"}")
+            }
         else Result.failure("qq音乐评论失败，" + jsonObject.getJSONObject("req_1").getString("errmsg"))
     }
 

@@ -42,6 +42,7 @@ public class Start {
 		packageName.add("me.kuku.yuq.entity.QqEntity");
 		packageName.add("com.alibaba.fastjson.JSONObject");
 		packageName.add("com.alibaba.fastjson.JSONArray");
+		packageName.add("jdk");
 		AppClassloader.registerBackList(packageName);
 		YuHook.put(new HookItem("org.hibernate.Version", "initVersion", "com.icecreamqaq.yudb.HibernateVersionHook"));
 		YuQStarter.start();

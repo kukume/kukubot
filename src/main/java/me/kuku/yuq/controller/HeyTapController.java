@@ -157,5 +157,11 @@ public class HeyTapController {
 		heyTapService.save(heyTapEntity);
 		return "欢太商城自动早睡打卡" + (status ? "开启" : "关闭") + "成功！如晚上打卡失败将会私聊提醒！";
 	}
+
+	@Action("早睡打卡")
+	@QMsg(at = true)
+	public String earlyToBedInvoke(HeyTapEntity heyTapEntity) throws IOException {
+		return heyTapLogic.earlyBedRegistration(heyTapEntity).getMessage();
+	}
 	
 }

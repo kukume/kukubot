@@ -368,8 +368,8 @@ public class HeyTapLogicImpl implements HeyTapLogic {
 		JSONObject jsonObject = OkHttpUtils.getJson("https://store.oppo.com/cn/oapi/credits/web/clockin/applyOrClockIn",
 				OkHttpUtils.addHeaders(heyTapEntity.getCookie(), "https://store.oppo.com/cn/app/cardingActivities?us=gerenzhongxin&um=hudongleyuan&uc=zaoshuidaka",
 						UA.OPPO));
-		if (jsonObject.getInteger("code") == 200) return Result.success("报名成功", null);
-		else return Result.failure("报名失败：" + jsonObject.getString("errorMessage"));
+		if (jsonObject.getInteger("code") == 200) return Result.success("报名或打卡成功", null);
+		else return Result.failure("报名或打卡失败：" + jsonObject.getString("errorMessage"));
 	}
 
 	private JSONObject lottery(HeyTapEntity heyTapEntity, Map<String, String> params) throws IOException {

@@ -2,6 +2,8 @@
 
 [First login tutorial](https://www.kuku.me/archives/17/) 、 [build](https://www.kuku.me/archives/6/)
 
+[Download](https://share.kukuqaq.com/kukubot)
+
 ## Functions
 * Automatic sign-in
 * New post push

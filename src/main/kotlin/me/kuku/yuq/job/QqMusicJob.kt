@@ -4,7 +4,6 @@ import com.IceCreamQAQ.Yu.annotation.Config
 import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
 import com.IceCreamQAQ.Yu.job.JobManager
-import com.icecreamqaq.yudb.jpa.annotation.Transactional
 import me.kuku.pojo.Result
 import me.kuku.yuq.entity.QqMusicEntity
 import me.kuku.yuq.entity.QqMusicService
@@ -32,7 +31,6 @@ class QqMusicJob {
     private lateinit var jobManager: JobManager
 
     @Cron("At::d::05:15:41")
-    @Transactional
     fun musicSign() {
         val list: List<QqMusicEntity> = qqMusicService.findAll()
         for (qqMusicEntity in list) {
@@ -52,7 +50,7 @@ class QqMusicJob {
     }
 
     @Cron("1h")
-    fun comment() {
+    fun qqMusicComment() {
         val list = qqMusicService.findByAutoComment(true)
         for (qqMusicEntity in list) {
             qqMusicLogic.replyComment(qqMusicEntity, toolLogic.hiToKoTo()["text"] ?: "好听好听！")
@@ -65,7 +63,6 @@ class QqMusicJob {
     }
 
     @Cron("1h")
-    @Transactional
     fun musicianTask() {
         val list = qqMusicService.findByAutoPublishView(true)
         for (qqMusicEntity in list) {
@@ -74,7 +71,6 @@ class QqMusicJob {
                 if (result.isFailure) {
                     val qqEntity = qqMusicEntity.qqEntity
                     BotUtils.sendMessage(qqEntity, "您的QQ音乐发布新动态失败，失败原因为" + result.message)
-                    break
                 }
             } catch (e: Exception) {
                 e.printStackTrace()

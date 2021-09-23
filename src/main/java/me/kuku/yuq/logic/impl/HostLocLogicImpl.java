@@ -122,6 +122,13 @@ public class HostLocLogicImpl implements HostLocLogic {
 		return list;
 	}
 
+	@Override
+	public String postContent(String url) throws IOException {
+		String str = OkHttpUtils.getStr(url, OkHttpUtils.addUA(UA.PC));
+		Elements pct = Jsoup.parse(str).getElementsByClass("pct");
+		return pct.first().text();
+	}
+
 	private String preventCookie() throws IOException {
 		String html = OkHttpUtils.getStr("https://hostloc.com");
 		if (!html.matches("toNumbers\\(\"(.*?)\"\\)")){

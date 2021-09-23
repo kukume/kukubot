@@ -13,4 +13,5 @@ public interface HostLocLogic {
 	boolean isLogin(String cookie) throws IOException;
 	void sign(String cookie) throws IOException;
 	List<Map<String, String>> post();
+	String postContent(String url) throws IOException;
 }

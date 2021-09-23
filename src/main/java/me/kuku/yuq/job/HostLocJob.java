@@ -7,6 +7,7 @@ import me.kuku.yuq.logic.HostLocLogic;
 import me.kuku.yuq.utils.BotUtils;
 
 import javax.inject.Inject;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +47,7 @@ public class HostLocJob {
 	}
 
 	@Cron("1m")
-	public void locMonitor() {
+	public void locMonitor() throws IOException {
 		List<Map<String, String>> list = hostLocLogic.post();
 		if (list.size() == 0) return;
 		List<Map<String, String>> newList = new ArrayList<>();
@@ -64,6 +65,7 @@ public class HostLocJob {
 					"标题：" + map.get("title") + "\n" +
 					"昵称：" + map.get("name") + "\n" +
 					"链接：" + map.get("url");
+			str += "\n内容：" + hostLocLogic.postContent(map.get("url"));
 			for (QqEntity  qqEntity : qqList) {
 				BotUtils.sendMessage(qqEntity, str);
 			}

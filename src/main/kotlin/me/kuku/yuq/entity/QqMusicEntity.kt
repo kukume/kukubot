@@ -63,10 +63,12 @@ class QqMusicServiceImpl: QqMusicService{
         return qqMusicDao.findAll()
     }
 
+    @Transactional
     override fun findByAutoComment(autoComment: Boolean): List<QqMusicEntity> {
         return qqMusicDao.findByAutoComment(autoComment)
     }
 
+    @Transactional
     override fun findByAutoPublishView(autoPublishView: Boolean): List<QqMusicEntity> {
         return qqMusicDao.findByAutoPublishView(autoPublishView)
     }

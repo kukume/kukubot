@@ -79,6 +79,18 @@ class QqMusicJob {
     }
 
     @Cron("1h")
+    fun musicShare(){
+        val list = qqMusicService.findAll()
+        for (qqMusicEntity in list) {
+            try {
+                qqMusicLogic.shareMusic(qqMusicEntity)
+            }catch (e: Exception){
+                e.printStackTrace()
+            }
+        }
+    }
+
+    @Cron("1h")
     fun musicianUpdate() {
         val list = qqMusicService.findAll()
         for (qqMusicEntity in list) {

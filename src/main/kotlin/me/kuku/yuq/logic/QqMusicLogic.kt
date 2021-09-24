@@ -10,6 +10,8 @@ import me.kuku.pojo.Result
 import me.kuku.pojo.UA
 import me.kuku.utils.*
 import me.kuku.yuq.entity.QqMusicEntity
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import javax.inject.Inject
 
 @AutoBind
@@ -25,6 +27,7 @@ interface QqMusicLogic {
     fun randomReplyComment(qqMusicEntity: QqMusicEntity, content: String): Result<Void>
     fun convertGreenDiamond(qqMusicEntity: QqMusicEntity): Result<Void>
     fun daySign(qqMusicEntity: QqMusicEntity): Result<Void>
+    fun shareMusic(qqMusicEntity: QqMusicEntity): Result<Void>
 }
 
 class QqMusicLogicImpl: QqMusicLogic{
@@ -276,5 +279,29 @@ class QqMusicLogicImpl: QqMusicLogic{
                 else -> Result.failure("qq音乐日签失败，未知原因！")
             }
         }else Result.failure("sign验证失败！")
+    }
+
+    override fun shareMusic(qqMusicEntity: QqMusicEntity): Result<Void> {
+        val str = OkHttpUtils.getStr("https://i.y.qq.com/n2/m/share/profile_v2/index.html",
+            OkHttpUtils.addHeaders(qqMusicEntity.cookie, "", UA.MOBILE))
+        val jsonStr = MyUtils.regex("firstPageData = ", "</sc", str) ?: return Result.failure("获取歌曲失败，cookie已失效！")
+        val jsonObject = JSON.parseObject(jsonStr)
+        val singleJsonObject = jsonObject.getJSONObject("tabData").getJSONObject("song").getJSONArray("list")
+            .random() as JSONObject
+        val id = singleJsonObject.getString("id")!!
+        val singerId = singleJsonObject.getJSONArray("singer").getJSONObject(0).getInteger("id")
+        val cookie = qqMusicEntity.cookie
+        val openId = OkHttpUtils.getCookie(cookie, "psrf_qqopenid")
+        val expires = OkHttpUtils.getCookie(cookie, "psrf_access_token_expiresAt")
+        val accessToken = OkHttpUtils.getCookie(cookie, "psrf_qqaccess_token")
+        val qq = qqMusicEntity.qqEntity?.qq
+        val qqMusicKey = qqMusicEntity.qqMusicKey
+        val params = """
+            <?xml version="1.0" encoding="UTF-8"?><root><tmeLoginType>2</tmeLoginType><psrf_qqopenid>$openId</psrf_qqopenid><psrf_access_token_expiresAt>$expires</psrf_access_token_expiresAt><tid>628985721295008768</tid><OpenUDID>ffffffffefeffc54000000000033c587</OpenUDID><udid>ffffffffefeffc54000000000033c587</udid><ct>11</ct><qq>$qq</qq><authst>$qqMusicKey</authst><psrf_qqaccess_token>$accessToken</psrf_qqaccess_token><item cmd="17" optime="${System.currentTimeMillis() / 1000}" nettype="1020" QQ="$qq" uid="4380989133" os="11" model="RMX3031" version="10.18.0.5" songid="$id" singerid="$singerId" songtype="1" count="1" sharetype="1" source="3" share_prompt="0"/></root>
+        """.trimIndent()
+        val response = OkHttpUtils.post("https://stat6.y.qq.com/android/fcgi-bin/imusic_tj",
+            GZipUtils.gzip(params.toByteArray()).toRequestBody() , OkHttpUtils.addUA("QQMusic 10180005(android 11)"))
+        response.close()
+        return Result.success()
     }
 }

@@ -122,6 +122,14 @@ class QqMusicController {
         qqMusicService.save(qqMusicEntity)
         return "$type${if (status) "开启" else "关闭"}成功"
     }
+
+    @Action("qq音乐分享")
+    @QMsg(at = true)
+    fun qqMusicShare(qqMusicEntity: QqMusicEntity): String{
+        val result = qqMusicLogic.shareMusic(qqMusicEntity)
+        return if (result.isSuccess) "应该是分享成功了吧！"
+        else result.message
+    }
 }
 
 @PrivateController

@@ -35,9 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
-@SuppressWarnings("unchecked")
 @GroupController
 public class ToolController {
 	@Inject
@@ -370,45 +368,6 @@ public class ToolController {
 			if (result.isSuccess()) return result.getData();
 			else return result.getMessage();
 		}
-	}
-
-	@Action("京东代挂")
-	public void jd(long qq, Group group) throws IOException {
-		String url = "https://api.kuku.me";
-		JSONObject jsonObject = OkHttpUtils.postJson(url + "/jd/qrcode", new HashMap<>());
-		if (jsonObject.getInteger("code") != 200) {
-			group.sendMessage(mif.at(qq).plus(jsonObject.getString("message")));
-			return;
-		}
-		JSONObject dataJsonObject = jsonObject.getJSONObject("data");
-		dataJsonObject.put("type", "0");
-		String qrcodeUrl = dataJsonObject.getString("qrcodeUrl");
-		group.sendMessage(mif.at(qq).plus(mif.imageByInputStream(toolLogic.creatQr(qrcodeUrl)).plus("请使用京东app扫码登录！")));
-		jobManager.registerTimer(() -> {
-			String msg;
-			while (true){
-				try {
-					TimeUnit.SECONDS.sleep(3);
-					JSONObject cookieJsonObject = OkHttpUtils.postJson(url + "/jd/cookie", dataJsonObject.toJavaObject(Map.class));
-					Integer code = cookieJsonObject.getInteger("code");
-					if (code == 200){
-						msg = "添加京东至青龙面板成功！";
-						break;
-					}else if (code == 505){
-						msg = "二维码已失效！";
-						break;
-					}else if (code == 506){
-						msg = "未配置配置文件信息！";
-						break;
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-					msg = "出现异常了，异常信息为：" + e.getMessage();
-					break;
-				}
-			}
-			group.sendMessage(mif.at(qq).plus(msg));
-		}, 0);
 	}
 
 	@Action("读懂世界")

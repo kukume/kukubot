@@ -10,7 +10,6 @@ import me.kuku.pojo.Result
 import me.kuku.pojo.UA
 import me.kuku.utils.*
 import me.kuku.yuq.entity.QqMusicEntity
-import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import javax.inject.Inject
 
@@ -164,9 +163,9 @@ class QqMusicLogicImpl: QqMusicLogic{
             OkHttpUtils.addHeaders(qqMusicEntity.cookie, "", UA.MOBILE))
         val jsonStr = MyUtils.regex("firstPageData = ", "</sc", str) ?: return Result.failure("获取歌曲失败，cookie已失效！")
         val jsonObject = JSON.parseObject(jsonStr)
-        val singleJsonObject = jsonObject.getJSONObject("tabData").getJSONObject("song").getJSONArray("list")
-            .random() as JSONObject
-        val id = singleJsonObject.getString("id")!!
+        val singleJsonObject = jsonObject?.getJSONObject("tabData")?.getJSONObject("song")?.getJSONArray("list")
+            ?.random() as? JSONObject
+        val id = singleJsonObject?.getString("id") ?: "319485192"
         val res = comment(qqMusicEntity, id.toInt(), content)
         val mid = res.data
         return replyComment(qqMusicEntity, id, mid, toolLogic.hiToKoTo()["text"] ?: "好听呀！")
@@ -286,10 +285,10 @@ class QqMusicLogicImpl: QqMusicLogic{
             OkHttpUtils.addHeaders(qqMusicEntity.cookie, "", UA.MOBILE))
         val jsonStr = MyUtils.regex("firstPageData = ", "</sc", str) ?: return Result.failure("获取歌曲失败，cookie已失效！")
         val jsonObject = JSON.parseObject(jsonStr)
-        val singleJsonObject = jsonObject.getJSONObject("tabData").getJSONObject("song").getJSONArray("list")
-            .random() as JSONObject
-        val id = singleJsonObject.getString("id")!!
-        val singerId = singleJsonObject.getJSONArray("singer").getJSONObject(0).getInteger("id")
+        val singleJsonObject = jsonObject?.getJSONObject("tabData")?.getJSONObject("song")?.getJSONArray("list")
+            ?.random() as? JSONObject
+        val id = singleJsonObject?.getString("id") ?: 319485192
+        val singerId = singleJsonObject?.getJSONArray("singer")?.getJSONObject(0)?.getInteger("id") ?: 9005038
         val cookie = qqMusicEntity.cookie
         val openId = OkHttpUtils.getCookie(cookie, "psrf_qqopenid")
         val expires = OkHttpUtils.getCookie(cookie, "psrf_access_token_expiresAt")

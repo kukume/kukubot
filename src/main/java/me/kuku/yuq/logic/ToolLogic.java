@@ -16,12 +16,9 @@ public interface ToolLogic {
 	String dogLicking() throws IOException;
 	String baiKe(String text) throws IOException;
 	String poisonousChickenSoup() throws IOException;
-	String loveWords() throws IOException;
-	String saying() throws IOException;
 	Result<List<Map<String, String>>> queryIp(String ip) throws IOException;
 	String queryWhois(String domain) throws IOException;
 	String queryIcp(String domain) throws IOException;
-	String zhiHuDaily() throws IOException;
 	String qqGodLock(Long qq) throws IOException;
 	String jokes() throws IOException;
 	String rubbish(String name) throws IOException;
@@ -40,7 +37,6 @@ public interface ToolLogic {
 	String queryVersion() throws IOException;
 	Result<Map<String, String>> bvToAv(String bv) throws IOException;
 	String wordSegmentation(String text) throws IOException;
-	String acgPic() throws IOException;
 	String sauceNaoIdentifyPic(String apiKey, String url) throws IOException;
 	String teachYou(String content, String type) throws IOException;
 	String songByQQ(String name) throws IOException;

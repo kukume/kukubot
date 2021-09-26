@@ -90,12 +90,6 @@ public class ToolController {
 		return toolLogic.poisonousChickenSoup();
 	}
 
-	@Action("名言")
-	@QMsg(at = true)
-	public String saying() throws IOException {
-		return toolLogic.saying();
-	}
-
 	@Action("一言")
 	@QMsg(at = true)
 	public String hiToKoTo() throws IOException {
@@ -132,12 +126,6 @@ public class ToolController {
 	@QMsg(at = true)
 	public String queryIcp(String params) throws IOException {
 		return toolLogic.queryIcp(params);
-	}
-
-	@Action("知乎日报")
-	@QMsg(at = true)
-	public String zhiHuDaily() throws IOException {
-		return toolLogic.zhiHuDaily();
 	}
 
 	@Action("测吉凶")
@@ -214,11 +202,6 @@ public class ToolController {
 							"描述：" + map.get("desc") +
 							"链接：" + map.get("url"));
 		}else return mif.text(result.getMessage()).toMessage();
-	}
-
-	@Action("acg")
-	public Image acgPic() throws IOException {
-		return mif.imageByUrl(toolLogic.acgPic());
 	}
 
 	@Action("分词 {word}")

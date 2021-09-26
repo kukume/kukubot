@@ -92,20 +92,6 @@ public class ToolLogicImpl implements ToolLogic {
 	}
 
 	@Override
-	public String loveWords() throws IOException {
-		return OkHttpUtils.getStr("https://v1.alapi.cn/api/qinghua?format=text");
-	}
-
-	@Override
-	public String saying() throws IOException {
-		JSONObject jsonObject = OkHttpUtils.getJson("https://v1.alapi.cn/api/mingyan");
-		if (jsonObject.getInteger("code") == 200){
-			JSONObject data = jsonObject.getJSONObject("data");
-			return data.getString("content") + "-----" + data.getString("author");
-		}else return "获取失败！";
-	}
-
-	@Override
 	public Result<List<Map<String, String>>> queryIp(String ip) throws IOException {
 		JSONObject jsonObject = OkHttpUtils.getJson(api + "/tool/ip?ip=" + ip);
 		if (jsonObject.getInteger("code") == 200){
@@ -152,22 +138,6 @@ public class ToolLogicImpl implements ToolLogic {
 				"网站名称：" + data.getString("name") + "\n" +
 				"网站首页网址：" + data.getString("homeUrl") + "\n" +
 				"最后更新时间：" + data.getString("updateTime");
-	}
-
-	@Override
-	public String zhiHuDaily() throws IOException {
-		JSONObject jsonObject = OkHttpUtils.getJson("https://v1.alapi.cn/api/zhihu/latest");
-		if (jsonObject.getInteger("code") == 200){
-			JSONArray jsonArray = jsonObject.getJSONObject("data").getJSONArray("stories");
-			StringBuilder sb = new StringBuilder();
-			jsonArray.forEach(obj -> {
-				JSONObject json = (JSONObject) obj;
-				sb.append("标题：").append(json.getString("title")).append("\n")
-						.append("链接：").append(json.getString("url")).append("\n")
-						.append(" -------------- ").append("\n");
-			});
-			return sb.toString();
-		}else return "获取失败，" + jsonObject.getString("msg");
 	}
 
 	@Override
@@ -480,13 +450,6 @@ public class ToolLogicImpl implements ToolLogic {
 			jsonArray.forEach(obj -> sb.append(obj).append("\n"));
 			return sb.deleteCharAt(sb.length() - 1).toString();
 		}else return jsonObject.getString("msg");
-	}
-
-	@Override
-	public String acgPic() throws IOException {
-		Response response = OkHttpUtils.get("https://v1.alapi.cn/api/acg");
-		response.close();
-		return response.header("location");
 	}
 
 	@Override

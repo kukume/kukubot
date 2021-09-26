@@ -314,7 +314,7 @@ public class ToolController {
 
 	@Action("窥屏检测")
 	public void checkPeeping(Group group){
-		String api = "https://api.kuku.me";
+		String api = "https://api.kukuqaq.com";
 		String random = MyUtils.randomNum(4);
 		String jsonStr = "{\"app\":\"com.tencent.miniapp\",\"desc\":\"\",\"view\":\"notification\",\"ver\":\"1.0.0.11\",\"prompt\":\"QQ程序\",\"appID\":\"\",\"sourceName\":\"\",\"actionData\":\"\",\"actionData_A\":\"\",\"sourceUrl\":\"\",\"meta\":{\"notification\":{\"appInfo\":{\"appName\":\"三楼有只猫\",\"appType\":4,\"appid\":1109659848,\"iconUrl\":\"" + api + "\\/tool\\/peeping\\/check\\/" + random + "\"},\"button\":[],\"data\":[],\"emphasis_keyword\":\"\",\"title\":\"请等待15s\"}},\"text\":\"\",\"extraApps\":[],\"sourceAd\":\"\",\"extra\":\"\"}";
 		group.sendMessage(mif.jsonEx(jsonStr).toMessage());
@@ -373,7 +373,7 @@ public class ToolController {
 	@Action("读懂世界")
 	@QMsg(at = true, atNewLine = true)
 	public String readWorld() throws IOException {
-		return OkHttpUtils.getJson("https://api.kuku.me/tool/readWorld").getJSONObject("data")
+		return OkHttpUtils.getJson("https://api.kukuqaq.com/tool/readWorld").getJSONObject("data")
 				.getString("data");
 	}
 

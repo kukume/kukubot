@@ -20,8 +20,6 @@ data class BiliBiliEntity(
     var userid: String = "",
     var token: String = "",
     var monitor: Boolean = false,
-    @Column(name = "task_")
-    var task: Boolean = false,
     var live: Boolean = false
 ){
 
@@ -38,7 +36,6 @@ data class BiliBiliEntity(
 interface BiliBiliDao: JPADao<BiliBiliEntity, Int>{
     fun findByQqEntity(qqEntity: QqEntity): BiliBiliEntity?
     fun findByMonitor(monitor: Boolean): List<BiliBiliEntity>
-    fun findByTask(task: Boolean): List<BiliBiliEntity>
     fun findByLive(live: Boolean): List<BiliBiliEntity>
 }
 
@@ -48,7 +45,6 @@ interface BiliBiliService {
     fun save(entity: BiliBiliEntity)
     fun findAll(): List<BiliBiliEntity>
     fun findByMonitor(monitor: Boolean): List<BiliBiliEntity>
-    fun findByTask(task: Boolean): List<BiliBiliEntity>
     fun findByLive(live: Boolean): List<BiliBiliEntity>
     fun delete(biliEntity: BiliBiliEntity)
 }
@@ -76,11 +72,6 @@ class BiliBiliServiceImpl: BiliBiliService{
     @Transactional
     override fun findByMonitor(monitor: Boolean): List<BiliBiliEntity> {
         return biliBiliDao.findByMonitor(monitor)
-    }
-
-    @Transactional
-    override fun findByTask(task: Boolean): List<BiliBiliEntity> {
-        return biliBiliDao.findByTask(task)
     }
 
     @Transactional

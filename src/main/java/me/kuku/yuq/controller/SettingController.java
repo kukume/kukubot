@@ -13,14 +13,10 @@ import com.icecreamqaq.yuq.controller.ContextSession;
 import com.icecreamqaq.yuq.controller.QQController;
 import com.icecreamqaq.yuq.entity.Group;
 import com.icecreamqaq.yuq.message.Message;
-import me.kuku.pojo.Result;
-import me.kuku.utils.MyUtils;
 import me.kuku.yuq.entity.*;
 import me.kuku.yuq.logic.BaiduAiPojo;
-import me.kuku.yuq.logic.OfficeGlobalLogic;
 
 import javax.inject.Inject;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -31,10 +27,6 @@ public class SettingController extends QQController {
 
 	@Inject
 	private GroupService groupService;
-	@Inject
-	private OfficeGlobalService officeGlobalService;
-	@Inject
-	private OfficeGlobalLogic officeGlobalLogic;
 	@Config("YuQ.Mirai.bot.master")
 	private String master;
 	@Inject
@@ -64,80 +56,6 @@ public class SettingController extends QQController {
 		}catch (Exception e){
 			return "退出群聊失败，异常信息：" + e.getMessage();
 		}
-	}
-
-	@Action("绑全局")
-	public String bindOfficeGlobal(ContextSession session){
-		reply("请输入该全局显示的名称");
-		String name = Message.Companion.firstString(session.waitNextMessage());
-		OfficeGlobalEntity officeGlobalEntity = officeGlobalService.findByName(name);
-		if (officeGlobalEntity != null){
-			return "绑定全局失败，该名称已存在！";
-		}
-		officeGlobalEntity = new OfficeGlobalEntity();
-		officeGlobalEntity.setName(name);
-		reply("请输入clientId");
-		String clientId = Message.Companion.firstString(session.waitNextMessage());
-		reply("请输入clientSecret");
-		String clientSecret = Message.Companion.firstString(session.waitNextMessage());
-		reply("请输入tenantId");
-		String tenantId = Message.Companion.firstString(session.waitNextMessage());
-		reply("请输入domain");
-		String domain = Message.Companion.firstString(session.waitNextMessage());
-		reply("请输入订阅显示名称和订阅ID，名称和ID以|分割，如果有多个订阅，请使用;分割");
-		String ss = Message.Companion.firstString(session.waitNextMessage(1000 * 60 * 5));
-		String[] arr = ss.split(";");
-		List<Sku> list = new ArrayList<>();
-		for (String sss : arr) {
-			Sku sku = new Sku();
-			String[] strArr = sss.split("\\|");
-			sku.setName(strArr[0]);
-			sku.setId(strArr[1]);
-			list.add(sku);
-		}
-		officeGlobalEntity.setClientId(clientId);
-		officeGlobalEntity.setClientSecret(clientSecret);
-		officeGlobalEntity.setTenantId(tenantId);
-		officeGlobalEntity.setDomain(domain);
-		officeGlobalEntity.setSKuJson(list);
-		officeGlobalService.save(officeGlobalEntity);
-		return "绑定全局信息成功！";
-	}
-
-	@Action("删全局 {name}")
-	public String deleteOffice(String name){
-		officeGlobalService.deleteByName(name);
-		return "删除全局成功！";
-	}
-
-	@Action("查全局")
-	public String queryOffice(){
-		List<OfficeGlobalEntity> list = officeGlobalService.findAll();
-		StringBuilder sb = new StringBuilder().append("您绑定的office全局如下：").append("\n");
-		list.forEach(it -> sb.append(it.getName()).append("\n"));
-		return MyUtils.removeLastLine(sb);
-	}
-
-	@Action("office提权 {mail}")
-	public String setAdmin(String mail, ContextSession session) throws IOException {
-		List<OfficeGlobalEntity> officeList = officeGlobalService.findAll();
-		if (officeList.size() == 0) return "管理员还没有绑定office信息，创建失败！";
-		int officeIndex = 0;
-		if (officeList.size() > 1){
-			StringBuilder sb = new StringBuilder("请选择您需要创建的全局名称，回复序号数字即可").append("\n");
-			for (int i = 0; i < officeList.size(); i++){
-				sb.append(i).append("、").append(officeList.get(i).getName()).append("\n");
-			}
-			reply(MyUtils.removeLastLine(sb));
-			String numStr = Message.Companion.firstString(session.waitNextMessage());
-			if (!numStr.matches("[0-9]+")) return "回复的不为数字！";
-			int num = Integer.parseInt(numStr);
-			if (num > officeList.size() - 1) return "回复的数字超限！";
-			officeIndex = num;
-		}
-		OfficeGlobalEntity officeGlobalEntity = officeList.get(officeIndex);
-		Result<?> result = officeGlobalLogic.userToAdmin(officeGlobalEntity, mail, OfficeRole.GLOBAL_ADMIN);
-		return result.getMessage();
 	}
 
 	@Action("加问答 {q}")

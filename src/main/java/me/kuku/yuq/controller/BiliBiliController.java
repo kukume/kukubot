@@ -98,12 +98,11 @@ public class BiliBiliController {
 	}
 
 	@Action("哔哩哔哩监控 {status}")
-	@Synonym({"哔哩哔哩开播提醒 {status}", "哔哩哔哩任务 {status}"})
+	@Synonym({"哔哩哔哩开播提醒 {status}"})
 	@QMsg(at = true)
 	public String biliBiliMonitor(BiliBiliEntity biliBiliEntity, boolean status, @PathVar(0) String type) {
 		switch (type){
 			case "哔哩哔哩监控": biliBiliEntity.setMonitor(status); break;
-			case "哔哩哔哩任务": biliBiliEntity.setTask(status); break;
 			case "哔哩哔哩开播提醒": biliBiliEntity.setLive(status); break;
 		}
 		biliBiliService.save(biliBiliEntity);

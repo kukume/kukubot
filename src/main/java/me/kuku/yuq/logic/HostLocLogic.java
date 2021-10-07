@@ -11,7 +11,6 @@ import java.util.Map;
 public interface HostLocLogic {
 	Result<String> login(String username, String password) throws IOException;
 	boolean isLogin(String cookie) throws IOException;
-	void sign(String cookie) throws IOException;
 	List<Map<String, String>> post();
 	String postContent(String url) throws IOException;
 }

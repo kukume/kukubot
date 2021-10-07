@@ -26,26 +26,6 @@ public class HostLocJob {
 
 	private int locId = 0;
 
-	@Cron("At::d::07:20:13")
-	public void sign(){
-		List<HostLocEntity> list = hostLocService.findBySign(true);
-		for (HostLocEntity hostLocEntity : list) {
-			try {
-				String cookie = hostLocEntity.getCookie();
-				boolean isLogin = hostLocLogic.isLogin(cookie);
-				if (isLogin) hostLocLogic.sign(cookie);
-				else {
-					QqEntity qqEntity = hostLocEntity.getQqEntity();
-					BotUtils.sendMessage(qqEntity,
-							"loc签到失败，cookie已失效，请重新绑定，并在群中发送<loc签到>进行手动签到！");
-					hostLocService.delete(hostLocEntity);
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
 	@Cron("1m")
 	public void locMonitor() throws IOException {
 		List<Map<String, String>> list = hostLocLogic.post();

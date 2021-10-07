@@ -20,7 +20,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class BiliBiliLogicImpl implements BiliBiliLogic {
 	@Override
@@ -286,114 +285,6 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
 	}
 
 	@Override
-	public String liveSign(BiliBiliEntity biliBiliEntity) throws IOException {
-		JSONObject jsonObject = OkHttpUtils.getJson("https://api.live.bilibili.com/xlive/web-ucenter/v1/sign/DoSign",
-				OkHttpUtils.addCookie(biliBiliEntity.getCookie()));
-		if (jsonObject.getInteger("code").equals(0)) return "哔哩哔哩直播签到成功！！";
-		else return jsonObject.getString("message");
-	}
-
-	@Override
-	public String like(BiliBiliEntity biliBiliEntity, String id, Boolean isLike) throws IOException {
-		Map<String, String> map = new HashMap<>();
-		map.put("uid", biliBiliEntity.getUserid());
-		map.put("dynamic_id", id);
-		int up = 2;
-		if (isLike) up = 1;
-		map.put("up", String.valueOf(up));
-		map.put("csrf_token", biliBiliEntity.getToken());
-		JSONObject jsonObject = OkHttpUtils.postJson("https://api.vc.bilibili.com/dynamic_like/v1/dynamic_like/thumb", map,
-				OkHttpUtils.addCookie(biliBiliEntity.getCookie()));
-		if (jsonObject.getInteger("code").equals(0)) return "赞动态成功";
-		else return "赞动态失败，" + jsonObject.getString("message");
-	}
-
-	@Override
-	public String comment(BiliBiliEntity biliBiliEntity, String rid, String type, String content) throws IOException {
-		HashMap<String, String> map = new HashMap<>();
-		map.put("oid", rid);
-		map.put("type", type);
-		map.put("message", content);
-		map.put("plat", "1");
-		map.put("jsonp", "jsonp");
-		map.put("csrf", biliBiliEntity.getToken());
-		JSONObject jsonObject = OkHttpUtils.postJson("https://api.bilibili.com/x/v2/reply/add", map, OkHttpUtils.addCookie(biliBiliEntity.getCookie()));
-		if (jsonObject.getInteger("code").equals(0)) return "评论动态成功！！";
-		else return "评论动态失败，" + jsonObject.getString("message");
-	}
-
-	@Override
-	public String forward(BiliBiliEntity biliBiliEntity, String id, String content) throws IOException {
-		HashMap<String, String> map = new HashMap<>();
-		map.put("uid", biliBiliEntity.getUserid());
-		map.put("dynamic_id", id);
-		map.put("content", content);
-		map.put("extension", "{\"emoji_type\":1}");
-		map.put("at_uids", "");
-		map.put("ctrl", "[]");
-		map.put("csrf_token", biliBiliEntity.getToken());
-		JSONObject jsonObject = OkHttpUtils.postJson("https://api.vc.bilibili.com/dynamic_repost/v1/dynamic_repost/repost", map,
-				OkHttpUtils.addCookie(biliBiliEntity.getCookie()));
-		if (jsonObject.getInteger("code") == 0) return "转发动态成功！！";
-		else return "转发动态失败，" + jsonObject.getString("message");
-	}
-
-	@Override
-	public String tossCoin(BiliBiliEntity biliBiliEntity, String rid, int count) throws IOException {
-		HashMap<String, String> map = new HashMap<>();
-		map.put("aid", rid);
-		map.put("multiply", String.valueOf(count));
-		map.put("select_like", "1");
-		map.put("cross_domain", "true");
-		map.put("csrf", biliBiliEntity.getToken());
-		JSONObject jsonObject = OkHttpUtils.postJson("https://api.bilibili.com/x/web-interface/coin/add", map,
-				OkHttpUtils.addHeader().add("cookie", biliBiliEntity.getCookie())
-						.add("referer", "https://www.bilibili.com/video/").build());
-		if (jsonObject.getInteger("code").equals(0)) return "对该动态（视频）投硬币成功！！";
-		else return "对该动态（视频）投硬币失败！！，" + jsonObject.getString("message");
-	}
-
-	@Override
-	public String favorites(BiliBiliEntity biliBiliEntity, String rid, String name) throws IOException {
-		String userId = biliBiliEntity.getUserid();
-		String cookie = biliBiliEntity.getCookie();
-		String token = biliBiliEntity.getToken();
-		JSONObject firstJsonObject = OkHttpUtils.getJson(String.format("https://api.bilibili.com/x/v3/fav/folder/created/list-all?type=2&rid=%s&up_mid=%s", rid, userId),
-				OkHttpUtils.addCookie(cookie));
-		if (firstJsonObject.getInteger("code") != 0) return "收藏失败，请重新绑定哔哩哔哩！！";
-		AtomicReference<String> favoriteId = new AtomicReference<>();
-		JSONArray jsonArray = firstJsonObject.getJSONObject("data").getJSONArray("list");
-		for (int i = 0; i < jsonArray.size(); i++){
-			JSONObject jsonObject = jsonArray.getJSONObject(i);
-			if (jsonObject.getString("title").equals(name)){
-				favoriteId.set(jsonObject.getString("id"));
-			}
-		}
-		if (favoriteId.get() == null){
-			HashMap<String, String> map = new HashMap<>();
-			map.put("title", name);
-			map.put("privacy", "0");
-			map.put("jsonp", "jsonp");
-			map.put("csrf", token);
-			JSONObject jsonObject = OkHttpUtils.postJson("https://api.bilibili.com/x/v3/fav/folder/add", map,
-					OkHttpUtils.addCookie(cookie));
-			if (jsonObject.getInteger("code") != 0) return "您并没有该收藏夹，而且创建该收藏夹失败，请重试！！";
-			favoriteId.set(jsonObject.getJSONObject("data").getString("id"));
-		}
-		HashMap<String, String> map = new HashMap<>();
-		map.put("rid", rid);
-		map.put("type", "2");
-		map.put("add_media_ids", favoriteId.get());
-		map.put("del_media_ids", "");
-		map.put("jsonp", "jsonp");
-		map.put("csrf", token);
-		JSONObject jsonObject = OkHttpUtils.postJson("https://api.bilibili.com/x/v3/fav/resource/deal", map,
-				OkHttpUtils.addCookie(cookie));
-		if (jsonObject.getInteger("code").equals(0)) return "收藏该视频成功！！";
-		else return "收藏视频失败，" + jsonObject.getString("message");
-	}
-
-	@Override
 	public Result<JSONObject> uploadImage(BiliBiliEntity biliBiliEntity, ByteString byteString) throws IOException {
 		MultipartBody body = new MultipartBody.Builder().setType(MultipartBody.FORM)
 				.addFormDataPart("file_up", "123.jpg", OkHttpUtils.addStream(byteString))
@@ -403,34 +294,6 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
 				OkHttpUtils.addCookie(biliBiliEntity.getCookie()));
 		if (jsonObject.getInteger("code") == 0) return Result.success(jsonObject.getJSONObject("data"));
 		else return Result.failure("图片上传失败，" + jsonObject.getString("message"), null);
-	}
-
-	@Override
-	public String publishDynamic(BiliBiliEntity biliBiliEntity, String content, List<String> images) throws IOException {
-		JSONArray jsonArray = new JSONArray();
-		for (String url : images) {
-			jsonArray.add(uploadImage(biliBiliEntity, OkHttpUtils.getByteStr(url)));
-		}
-		HashMap<String, String> map = new HashMap<>();
-		map.put("biz", "3");
-		map.put("category", "3");
-		map.put("type", "0");
-		map.put("pictures", jsonArray.toString());
-		map.put("title", "");
-		map.put("tags", "");
-		map.put("description", content);
-		map.put("content", content);
-		map.put("setting", "{\"copy_forbidden\":0,\"cachedTime\":0}");
-		map.put("from", "create.dynamic.web");
-		map.put("up_choose_comment", "0");
-		map.put("extension", "{\"emoji_type\":1,\"from\":{\"emoji_type\":1},\"flag_cfg\":{}}");
-		map.put("at_uids", "");
-		map.put("at_control", "");
-		map.put("csrf_token", biliBiliEntity.getToken());
-		JSONObject jsonObject = OkHttpUtils.postJson("https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/create_draw", map,
-				OkHttpUtils.addCookie(biliBiliEntity.getCookie()));
-		if (jsonObject.getInteger("code") == 0) return "发布动态成功！！";
-		else return "发布动态失败，" + jsonObject.getString("message");
 	}
 
 	@Override
@@ -451,30 +314,6 @@ public class BiliBiliLogicImpl implements BiliBiliLogic {
 			list.add(map);
 		}
 		return list;
-	}
-
-	@Override
-	public String report(BiliBiliEntity biliBiliEntity, String aid, String cid, int proGRes) throws IOException {
-		HashMap<String, String> map = new HashMap<>();
-		map.put("aid", aid);
-		map.put("cid", cid);
-		map.put("progres", String.valueOf(proGRes));
-		map.put("csrf", biliBiliEntity.getToken());
-		JSONObject jsonObject = OkHttpUtils.postJson("http://api.bilibili.com/x/v2/history/report", map,
-				OkHttpUtils.addCookie(biliBiliEntity.getCookie()));
-		if (jsonObject.getInteger("code").equals(0)) return "模拟观看视频成功！！";
-		else return jsonObject.getString("message");
-	}
-
-	@Override
-	public String share(BiliBiliEntity biliBiliEntity, String aid) throws IOException {
-		HashMap<String, String> map = new HashMap<>();
-		map.put("aid", aid);
-		map.put("csrf", biliBiliEntity.getToken());
-		JSONObject jsonObject = OkHttpUtils.postJson("https://api.bilibili.com/x/web-interface/share/add", map,
-				OkHttpUtils.addCookie(biliBiliEntity.getCookie()));
-		if (jsonObject.getInteger("code").equals(0)) return "分享视频成功！！";
-		else return jsonObject.getString("message");
 	}
 
 	@Override

@@ -55,32 +55,6 @@ public class HostLocLogicImpl implements HostLocLogic {
 	}
 
 	@Override
-	public void sign(String cookie) throws IOException {
-		String preventCookie = preventCookie();
-		String newCookie = cookie + preventCookie;
-		jobManager.registerTimer(() -> {
-			List<String> urlList = new ArrayList<>();
-			for (int i = 0; i < 12; i++){
-				int num = MyUtils.randomInt(10000, 50000);
-				urlList.add("https://hostloc.com/space-uid-" + num + ".html");
-			}
-			for (String url: urlList){
-				try {
-					TimeUnit.SECONDS.sleep(5);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				try {
-					OkHttpUtils.get(url, OkHttpUtils.addHeaders(newCookie, "https://hostloc.com/forum.php", UA.PC))
-							.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}, 0);
-	}
-
-	@Override
 	public List<Map<String, String>> post() {
 		String cookie = "";
 		try {

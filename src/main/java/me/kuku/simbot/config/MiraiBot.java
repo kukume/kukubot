@@ -12,9 +12,8 @@ public class MiraiBot implements MiraiBotConfigurationFactory {
 	@NotNull
 	@Override
 	public BotConfiguration getMiraiBotConfiguration(@NotNull BotVerifyInfo botInfo, @NotNull MiraiConfiguration simbotMiraiConfig) {
-		BotConfiguration botConfiguration = simbotMiraiConfig.getBotConfiguration().invoke(botInfo.getCode());
+		BotConfiguration botConfiguration = simbotMiraiConfig.getBotConfiguration().invoke(botInfo.get("code"));
 		System.setProperty("mirai.slider.captcha.supported", "true");
-		botConfiguration.setLoginSolver(new MyStandardCharImageLoginSolver());
 		botConfiguration.fileBasedDeviceInfo();
 		return botConfiguration;
 	}

@@ -292,7 +292,7 @@ public class ToolController {
 
 	@Filter("窥屏检测")
 	public void checkPeeping(GroupMsg groupMsg, MsgSender msgSender){
-		String api = "https://api.kuku.me";
+		String api = "https://api.kukuqaq.com";
 		String random = MyUtils.randomNum(4);
 		String jsonStr = "{\"app\":\"com.tencent.miniapp\",\"desc\":\"\",\"view\":\"notification\",\"ver\":\"1.0.0.11\",\"prompt\":\"QQ程序\",\"appID\":\"\",\"sourceName\":\"\",\"actionData\":\"\",\"actionData_A\":\"\",\"sourceUrl\":\"\",\"meta\":{\"notification\":{\"appInfo\":{\"appName\":\"三楼有只猫\",\"appType\":4,\"appid\":1109659848,\"iconUrl\":\"" + api + "\\/tool\\/peeping\\/check\\/" + random + "\"},\"button\":[],\"data\":[],\"emphasis_keyword\":\"\",\"title\":\"请等待15s\"}},\"text\":\"\",\"extraApps\":[],\"sourceAd\":\"\",\"extra\":\"\"}";
 		MiraiMessageContentBuilder build = messageContentBuilderFactory.getMessageContentBuilder();
@@ -340,51 +340,9 @@ public class ToolController {
 		return toolLogic.qinYunKeChat(ms);
 	}
 
-	@Filter("京东代挂")
-	public void jd(MsgSender msgSender, GroupMsg groupMsg) throws IOException {
-		long qq = groupMsg.getAccountInfo().getAccountCodeNumber();
-		String url = "https://api.kuku.me";
-		JSONObject jsonObject = OkHttpUtils.postJson(url + "/jd/qrcode", new HashMap<>());
-		if (jsonObject.getInteger("code") != 200) {
-			msgSender.SENDER.sendGroupMsg(groupMsg, stringTemplate.at(qq) + jsonObject.getString("message"));
-			return;
-		}
-		JSONObject dataJsonObject = jsonObject.getJSONObject("data");
-		dataJsonObject.put("type", "0");
-		String qrcodeUrl = dataJsonObject.getString("qrcodeUrl");
-		MessageContent content = messageContentBuilderFactory.getMessageContentBuilder()
-				.at(qq).image(toolLogic.creatQr(qrcodeUrl)).text("请使用京东app扫码登录！").build();
-		msgSender.SENDER.sendGroupMsg(groupMsg, content);
-		threadPoolTaskExecutor.execute(() -> {
-			String msg;
-			while (true){
-				try {
-					TimeUnit.SECONDS.sleep(3);
-					JSONObject cookieJsonObject = OkHttpUtils.postJson(url + "/jd/cookie", dataJsonObject.toJavaObject(Map.class));
-					Integer code = cookieJsonObject.getInteger("code");
-					if (code == 200){
-						msg = "添加京东至青龙面板成功！";
-						break;
-					}else if (code == 505){
-						msg = "二维码已失效！";
-						break;
-					}else if (code == 506){
-						msg = "未配置配置文件信息！";
-						break;
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-					msg = "出现异常了，异常信息为：" + e.getMessage();
-					break;
-				}
-			}
-			msgSender.SENDER.sendGroupMsg(groupMsg, stringTemplate.at(qq) + msg);
-		});
-	}
-
 	@Filter("读懂世界")
 	public String readWorld() throws IOException {
-		return OkHttpUtils.getJson("https://api.kuku.me/tool/readWorld").getJSONObject("data")
+		return OkHttpUtils.getJson("https://api.kukuqaq.com/tool/readWorld").getJSONObject("data")
 				.getString("data");
 	}
 

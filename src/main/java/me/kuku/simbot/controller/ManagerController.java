@@ -112,14 +112,14 @@ public class ManagerController {
 		return "已设置本群单个指令每人十分钟最大触发次数为" + count + "次";
 	}
 
-	@RegexFilter("加指令限制 {{command}} {count}")
-	public String addCommandLimit(GroupEntity groupEntity, String command, int count){
-		JSONObject jsonObject = groupEntity.getCommandLimitJson();
-		jsonObject.put(command, count);
-		groupEntity.setCommandLimitJson(jsonObject);
-		groupService.save(groupEntity);
-		return "加指令限制成功！！已设置指令{" + command + "}十分钟之内只会响应" + count + "次";
-	}
+//	@RegexFilter("加指令限制 {{command}} {count}")
+//	public String addCommandLimit(GroupEntity groupEntity, String command, int count){
+//		JSONObject jsonObject = groupEntity.getCommandLimitJson();
+//		jsonObject.put(command, count);
+//		groupEntity.setCommandLimitJson(jsonObject);
+//		groupService.save(groupEntity);
+//		return "加指令限制成功！！已设置指令{" + command + "}十分钟之内只会响应" + count + "次";
+//	}
 
 	@RegexFilter("删指令限制{{command}}")
 	public String delCommandLimit(GroupEntity groupEntity, String command){

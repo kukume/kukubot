@@ -570,7 +570,7 @@ public class ToolLogicImpl implements ToolLogic {
 
 	@Override
 	public Result<String> songBy163(String name) throws IOException {
-		String url = "https://netease.kuku.me";
+		String url = "https://netease.kukuqaq.com";
 		JSONObject jsonObject = OkHttpUtils.getJson(url + "/search?keywords=" + URLEncoder.encode(name, "utf-8"));
 		JSONObject resultJsonObject = jsonObject.getJSONObject("result");
 		if (resultJsonObject.getInteger("songCount") != 0){
@@ -691,7 +691,7 @@ public class ToolLogicImpl implements ToolLogic {
 
 	@Override
 	public JSONArray loLiConQuickly(String tags) throws IOException {
-		String url = "https://api.kuku.me/lolicon/random?num=20";
+		String url = "https://api.kukuqaq.com/lolicon/random?num=20";
 		if (tags != null) url += "&tags=" + tags;
 		JSONObject jsonObject = OkHttpUtils.getJson(url,
 				OkHttpUtils.addSingleHeader("Accept", "application/json"));

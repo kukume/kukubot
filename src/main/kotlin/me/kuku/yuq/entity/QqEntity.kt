@@ -1,5 +1,6 @@
 package me.kuku.yuq.entity
 
+import com.sun.org.apache.bcel.internal.generic.IFGE
 import com.vladmihalcea.hibernate.type.json.JsonType
 import org.hibernate.annotations.Type
 import org.hibernate.annotations.TypeDef
@@ -23,6 +24,13 @@ class QqEntity {
     @Type(type = "json")
     @Column(columnDefinition = "json")
     var config: QqConfig = QqConfig()
+
+    fun get(group: Long): GroupEntity? {
+        for (groupEntity in groups) {
+            if (groupEntity.group == group) return groupEntity
+        }
+        return null
+    }
 }
 
 interface QqRepository: JpaRepository<QqEntity, Int> {

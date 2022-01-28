@@ -15,5 +15,15 @@ class ToolController {
         group.sendMessage(mif.imageByByteArray(bytes))
     }
 
+    @Action("摸鱼日历搜狗")
+    fun fishermanCalendarSoGou(group: Group) {
+        val bytes = OkHttpUtils.getBytes("https://api.kukuqaq.com/tool/fishermanCalendar/sogou?preview")
+        group.sendMessage(mif.imageByByteArray(bytes))
+    }
+
+    @Action("色图")
+    fun color() =
+        mif.imageByUrl(OkHttpUtils.get("https://api.kukuqaq.com/lolicon/random?preview").also { it.close() }.header("location")!!)
+
 
 }

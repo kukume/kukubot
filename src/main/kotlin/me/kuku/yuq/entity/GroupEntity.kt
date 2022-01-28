@@ -21,6 +21,14 @@ class GroupEntity {
     @Type(type = "json")
     @Column(columnDefinition = "json")
     var config: GroupConfig = GroupConfig()
+
+    fun get(qq: Long): QqEntity? {
+        for (qqEntity in qqs) {
+            if (qqEntity.qq == qq)
+                return qqEntity
+        }
+        return null
+    }
 }
 
 interface GroupRepository: JpaRepository<GroupEntity, Int> {
@@ -43,6 +51,10 @@ class GroupService @Inject constructor(
 class GroupConfig{
     var repeat: Status = Status.OFF
     var locPush: Status = Status.OFF
+    var recallNotify: Status = Status.OFF
+    var flashImageNotify: Status = Status.OFF
+    var leaveToBlack: Status = Status.ON
+    var prohibitedWords: MutableSet<String> = mutableSetOf()
 }
 
 enum class Status {

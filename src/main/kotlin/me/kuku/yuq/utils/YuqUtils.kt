@@ -28,3 +28,4 @@ object YuqUtils {
         sendMessage(groupEntity, message.toMessage())
     }
 }
+

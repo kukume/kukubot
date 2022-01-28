@@ -1,15 +1,18 @@
-val utilsVersion = "0.3.4"
-val artQqVersion = "0.1.0.0-DEV10"
+val utilsVersion = "0.3.7"
+val artQqVersion = "0.1.0.0-DEV11"
 val webVersion = "0.0.2.0-DEV16"
-val springDataJpaVersion = "2.6.0"
-val hibernateVersion = "5.6.3.Final"
+val springDataJpaVersion = "2.6.1"
+val hibernateVersion = "5.6.4.Final"
 val h2Version = "1.4.200"
 val hibernateTypesVersion = "2.14.0"
 val jsoupVersion = "1.14.3"
 val jsr305Version = "3.0.2"
+val queryDslVersion = "5.0.0"
 
 plugins {
-    kotlin("jvm") version "1.6.10"
+    val kotlinVersion = "1.6.10"
+    kotlin("jvm") version kotlinVersion
+    id("org.jetbrains.kotlin.kapt") version kotlinVersion
 }
 
 group = "me.kuku"
@@ -31,4 +34,7 @@ dependencies {
     implementation("com.h2database:h2:$h2Version")
     implementation("org.jsoup:jsoup:$jsoupVersion")
     implementation("com.google.code.findbugs:jsr305:$jsr305Version")
+    implementation("com.querydsl:querydsl-core:$queryDslVersion")
+    implementation("com.querydsl:querydsl-jpa:$queryDslVersion")
+    kapt("com.querydsl:querydsl-apt:$queryDslVersion:jpa")
 }

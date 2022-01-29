@@ -17,7 +17,7 @@ class QqEntity {
     var id: Int? = null
     @Column(unique = true)
     var qq: Long = 0
-    @ManyToMany(cascade = [CascadeType.ALL])
+    @ManyToMany(cascade = [CascadeType.PERSIST, CascadeType.MERGE])
     @JoinTable(name = "qq_group", joinColumns = [JoinColumn(name = "qq_id")],
         inverseJoinColumns = [JoinColumn(name = "group_id")])
     var groups: MutableSet<GroupEntity> = linkedSetOf()

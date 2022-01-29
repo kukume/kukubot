@@ -2,11 +2,11 @@ package me.kuku.yuq.event
 
 import com.IceCreamQAQ.Yu.annotation.Event
 import com.IceCreamQAQ.Yu.annotation.EventListener
-import com.icecreamqaq.yuq.event.GroupMemberEvent
-import com.icecreamqaq.yuq.event.GroupMemberLeaveEvent
-import com.icecreamqaq.yuq.event.GroupMessageEvent
+import com.icecreamqaq.yuq.event.*
 import com.icecreamqaq.yuq.message.Message.Companion.toCodeString
+import com.icecreamqaq.yuq.message.Message.Companion.toMessageByRainCode
 import com.icecreamqaq.yuq.mif
+import me.kuku.utils.DateTimeFormatterUtils
 import me.kuku.yuq.entity.*
 import me.kuku.yuq.transaction
 import java.util.concurrent.ConcurrentHashMap
@@ -15,7 +15,8 @@ import javax.inject.Inject
 @EventListener
 class GroupManagerEvent @Inject constructor(
     private val groupService: GroupService,
-    private val qqGroupService: QqGroupService
+    private val qqGroupService: QqGroupService,
+    private val messageService: MessageService
 ) {
 
     private val lastMessage = ConcurrentHashMap<Long, String>()
@@ -72,13 +73,64 @@ class GroupManagerEvent @Inject constructor(
     }
 
     @Event
-    fun leaveToBlack(e: GroupMemberLeaveEvent) {
+    fun memberLeave(e: GroupMemberLeaveEvent) {
         val group = e.group
         val groupNum = group.id
+        val member = e.member
         val groupEntity = groupService.findByGroup(groupNum) ?: return
         if (groupEntity.config.leaveToBlack == Status.ON) {
-
+            groupEntity.config.blackList.add(member.id)
+            groupService.save(groupEntity)
+            group.sendMessage("""
+                ${member.nameCardOrName()}离开了我们，他（她）已被加入到黑名单
+            """.trimIndent())
+        } else {
+            group.sendMessage("""
+                ${member.nameCardOrName()}离开了我们
+            """.trimIndent())
+        }
+        val messageEntityList = messageService.findByGroupAndQqOrderByIdDesc(groupNum, member.id)
+        if (messageEntityList.isEmpty()) {
+            group.sendMessage("""
+                他（她）好像还没有说过话，那没事了
+            """.trimIndent())
+        } else {
+            val messageEntity = messageEntityList[0]
+            group.sendMessage("""
+                但是我们永远也不要忘记他（她）在群里的${messageEntity.localDateTime.format(DateTimeFormatterUtils.creat("yyyy-MM-dd HH:mm:ss"))}说的最后一句话
+            """.trimIndent())
+            group.sendMessage(messageEntity.content.toMessageByRainCode())
         }
     }
+
+    @Event
+    fun newRequest(e: NewRequestEvent) {
+        val qq: Long
+        val groupEntity = when (e) {
+            is GroupInviteEvent -> {
+                qq = e.qq.id
+                val id = e.group.id
+                groupService.findByGroup(id)
+            }
+            is GroupMemberRequestEvent -> {
+                qq = e.qq.id
+                val id = e.group.id
+                groupService.findByGroup(id)
+            }
+            else -> return
+        } ?: return
+        val blackList = groupEntity.config.blackList
+        if (blackList.contains(qq)) {
+            e.accept = false
+            e.rejectMessage = "你是黑名单用户，无法加入本群"
+            e.cancel = true
+        }
+    }
+
+    @Event
+    fun friend(e: NewFriendRequestEvent) {
+
+    }
+
 }
 

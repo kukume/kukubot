@@ -1,7 +1,8 @@
 package me.kuku.yuq.entity
 
 import org.springframework.data.jpa.repository.JpaRepository
-import java.util.*
+import org.springframework.data.querydsl.QuerydslPredicateExecutor
+import java.time.LocalDateTime
 import javax.inject.Inject
 import javax.persistence.*
 
@@ -20,10 +21,10 @@ class MessageEntity {
     var groupEntity: GroupEntity = GroupEntity()
     @Column(length = 5000)
     var content: String = ""
-    var date: Date = Date()
+    var localDateTime: LocalDateTime = LocalDateTime.now()
 }
 
-interface MessageRepository: JpaRepository<MessageEntity, Int> {
+interface MessageRepository: JpaRepository<MessageEntity, Int>, QuerydslPredicateExecutor<MessageEntity> {
     fun findByMessageIdAndGroupEntity(messageId: Int, groupEntity: GroupEntity): MessageEntity?
 }
 
@@ -35,5 +36,16 @@ class MessageService @Inject constructor(
 
     fun findByMessageIdAndGroupEntity(messageId: Int, groupEntity: GroupEntity) =
         messageRepository.findByMessageIdAndGroupEntity(messageId, groupEntity)
+
+    fun findByMessageIdAndGroup(messageId: Int, group: Long): MessageEntity? {
+        val q = QMessageEntity.messageEntity
+        return messageRepository.findOne(q.messageId.eq(messageId).and(q.groupEntity.group.eq(group))).orElse(null)
+    }
+
+    fun findByGroupAndQqOrderByIdDesc(group: Long, qq: Long): List<MessageEntity> {
+        with(QMessageEntity.messageEntity) {
+            return messageRepository.findAll(groupEntity.group.eq(group).and(qqEntity.qq.eq(qq)), id.desc()).toList()
+        }
+    }
 
 }

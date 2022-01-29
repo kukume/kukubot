@@ -16,7 +16,7 @@ class GroupEntity {
     var id: Int? = null
     @Column(unique = true, name = "group_")
     var group: Long = 0
-    @ManyToMany(cascade = [CascadeType.ALL], mappedBy = "groups")
+    @ManyToMany(cascade = [CascadeType.PERSIST, CascadeType.MERGE], mappedBy = "groups")
     var qqs: MutableSet<QqEntity> = linkedSetOf()
     @Type(type = "json")
     @Column(columnDefinition = "json")
@@ -55,6 +55,7 @@ class GroupConfig{
     var flashImageNotify: Status = Status.OFF
     var leaveToBlack: Status = Status.ON
     var prohibitedWords: MutableSet<String> = mutableSetOf()
+    var blackList: MutableSet<Long> = mutableSetOf()
 }
 
 enum class Status {

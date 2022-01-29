@@ -6,16 +6,20 @@ import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.controller.QQController
+import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.Message.Companion.firstString
+import com.icecreamqaq.yuq.message.Message.Companion.toCodeString
 import me.kuku.yuq.entity.GroupEntity
 import me.kuku.yuq.entity.GroupService
+import me.kuku.yuq.entity.MessageService
 import me.kuku.yuq.entity.Status
 import javax.inject.Inject
 
 @GroupController
 class ManagerController @Inject constructor(
     private val groupService: GroupService,
-    @Config("YuQ.ArtQQ.master") private val master: String
+    @Config("YuQ.ArtQQ.master") private val master: String,
+    private val messageService: MessageService
 ): QQController(){
 
     private fun before(qq: Long) {
@@ -45,10 +49,16 @@ class ManagerController @Inject constructor(
         val config = groupEntity.config
         when (operate) {
             "违禁词" -> {
-                reply("请输入违禁词列表，如有多个，使用空格分割")
+                reply("请发送违禁词列表，多个使用空格分割")
                 val str = session.waitNextMessage().firstString()
                 val arr = str.split(" ")
                 config.prohibitedWords.addAll(arr)
+            }
+            "黑名单" -> {
+                reply("请发送黑名单列表，多个使用空格分割")
+                val str = session.waitNextMessage().firstString()
+                val arr = str.split(" ").map { it.toLong() }
+                config.blackList.addAll(arr)
             }
             else -> return null
         }
@@ -63,11 +73,18 @@ class ManagerController @Inject constructor(
         val config = groupEntity.config
         when (operate) {
             "违禁词" -> {
-                reply("请输入需要删除的违禁词列表，如果有多个，使用空格分割")
+                reply("请发送需要删除的违禁词列表，多个使用空格分割")
                 val str = session.waitNextMessage().firstString()
                 val arr = str.split(" ")
                 val prohibitedWords = config.prohibitedWords
                 arr.forEach(prohibitedWords::remove)
+            }
+            "黑名单" -> {
+                reply("请发送需要删除的黑名单列表，多个使用空格分割")
+                val str = session.waitNextMessage().firstString()
+                val arr = str.split(" ").map { it.toLong() }
+                val blackList = config.blackList
+                arr.forEach(blackList::remove)
             }
             else -> return null
         }
@@ -84,6 +101,10 @@ class ManagerController @Inject constructor(
         return when (operate) {
             "违禁词" -> {
                 config.prohibitedWords.forEach { sb.append(it).append(" ") }
+                sb.toString()
+            }
+            "黑名单" -> {
+                config.blackList.forEach { sb.append(it).append(" ") }
                 sb.toString()
             }
             else -> return null

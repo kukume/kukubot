@@ -2,8 +2,11 @@
 
 package me.kuku.yuq
 
+import com.IceCreamQAQ.Yu.annotation.Event
+import com.IceCreamQAQ.Yu.annotation.EventListener
 import com.IceCreamQAQ.Yu.di.ClassContext
 import com.IceCreamQAQ.Yu.di.YuContext
+import com.IceCreamQAQ.Yu.event.events.AppStopEvent
 import com.IceCreamQAQ.Yu.loader.AppClassloader
 import com.IceCreamQAQ.Yu.module.Module
 import com.icecreamqaq.yuq.artqq.YuQArtQQStarter
@@ -73,6 +76,7 @@ class JpaModule: Module {
 
     override fun onLoad() {
         val applicationContext = AnnotationConfigApplicationContext(JpaConfig::class.java)
+        context.putBean(applicationContext)
         transactionManager = applicationContext.getBean(JpaTransactionManager::class.java)
         val classes = MyUtils.getClasses("me.kuku.yuq")
         for ((_, v) in classes) {
@@ -88,4 +92,16 @@ class JpaModule: Module {
                 }
         }
     }
+}
+
+@EventListener
+class CloseSpring @Inject constructor(
+    private val applicationContext: AnnotationConfigApplicationContext
+) {
+
+    @Event
+    fun close(e: AppStopEvent) {
+        applicationContext.close()
+    }
+
 }

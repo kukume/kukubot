@@ -2,14 +2,12 @@ package me.kuku.yuq.event
 
 import com.IceCreamQAQ.Yu.annotation.Event
 import com.IceCreamQAQ.Yu.annotation.EventListener
-import com.icecreamqaq.yuq.event.BotLeaveGroupEvent
-import com.icecreamqaq.yuq.event.GroupMessageEvent
-import com.icecreamqaq.yuq.event.GroupRecallEvent
-import com.icecreamqaq.yuq.event.MessageEvent
+import com.icecreamqaq.yuq.event.*
 import com.icecreamqaq.yuq.message.FlashImage
 import com.icecreamqaq.yuq.message.Message.Companion.toCodeString
 import com.icecreamqaq.yuq.message.Message.Companion.toMessageByRainCode
 import com.icecreamqaq.yuq.mif
+import com.icecreamqaq.yuq.yuq
 import me.kuku.yuq.entity.*
 import me.kuku.yuq.transaction
 import javax.inject.Inject
@@ -56,6 +54,29 @@ class Save @Inject constructor(
         messageEntity.qqEntity = qqEntity
         messageEntity.groupEntity = groupEntity
         messageEntity.content = ss
+        messageService.save(messageEntity)
+    }
+
+    @Event
+    fun saveBotMessage(e: SendMessageEvent.Post) = transaction {
+        val messageId = e.messageSource.id
+        val groupEntity = groupService.findByGroup(e.sendTo.id) ?: return@transaction
+        val botQq = yuq.botId
+        var qqEntity = groupEntity.get(botQq)
+        if (qqEntity == null) {
+            qqEntity = qqService.findByQq(botQq)
+            if (qqEntity == null) {
+                qqEntity = QqEntity().also { it.qq = botQq }
+            }
+            groupEntity.qqs.add(qqEntity)
+            qqService.save(qqEntity)
+            groupService.save(groupEntity)
+        }
+        val messageEntity = MessageEntity()
+        messageEntity.messageId = messageId
+        messageEntity.qqEntity = qqEntity
+        messageEntity.groupEntity = groupEntity
+        messageEntity.content = e.message.toCodeString()
         messageService.save(messageEntity)
     }
 

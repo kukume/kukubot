@@ -1,11 +1,13 @@
 package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.Action
+import com.IceCreamQAQ.Yu.annotation.Before
 import com.IceCreamQAQ.Yu.annotation.Config
 import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.controller.QQController
+import com.icecreamqaq.yuq.entity.Group
 import com.icecreamqaq.yuq.message.Message.Companion.firstString
 import com.icecreamqaq.yuq.message.Message.Companion.toCodeString
 import me.kuku.yuq.entity.*
@@ -18,7 +20,8 @@ class ManagerController @Inject constructor(
     private val messageService: MessageService
 ): QQController(){
 
-    private fun before(qq: Long) {
+    @Before(except = ["operateStatus", "add", "delete", "query"])
+    fun before(qq: Long) {
         if (qq != master.toLong()) throw mif.at(qq).plus("权限不足，无法执行").toThrowable()
     }
 
@@ -129,6 +132,43 @@ class ManagerController @Inject constructor(
             }
             else -> return null
         }
+    }
+
+    @Action("t {qqNo}")
+    @QMsg(reply = true)
+    fun kick(qqNo: Long, group: Group): String {
+        return kotlin.runCatching {
+            group[qqNo].kick()
+            "踢出成功！"
+        }.getOrDefault("踢出失败，可能权限不足！")
+    }
+
+    @Action("列出{day}天未发言")
+    @QMsg(reply = true)
+    fun notSpeak(day: String, group: Group, session: ContextSession, qq: Long): String? {
+        val list = mutableListOf<Long>()
+        val members = group.members
+        for ((k, v) in members) {
+            val lastMessageTime = v.lastMessageTime
+            if ((System.currentTimeMillis() - lastMessageTime) / (1000 * 60 * 60 * 24) > Integer.parseInt(day)){
+                list.add(k);
+            }
+        }
+        group.sendMessage(mif.at(qq).plus("""
+            本群${day}天未发言的有${list.size}人
+        """.trimIndent()))
+        return if (list.isNotEmpty()) {
+            group.sendMessage(mif.at(qq).plus("您可以发送<踢出>来踢出本次查询到的未发言人"))
+            val ss = session.waitNextMessage().firstString()
+            if (ss == "踢出") {
+                list.forEach {
+                    kotlin.runCatching {
+                        members[it]?.kick("${day}天为发言被踢出")
+                    }
+                }
+                "踢出成功"
+            } else null
+        } else null
     }
 }
 

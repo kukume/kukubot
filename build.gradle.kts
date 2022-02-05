@@ -13,6 +13,7 @@ plugins {
     val kotlinVersion = "1.6.10"
     kotlin("jvm") version kotlinVersion
     id("org.jetbrains.kotlin.kapt") version kotlinVersion
+    id("com.github.johnrengelman.shadow") version "7.1.0"
 }
 
 group = "me.kuku"
@@ -22,6 +23,18 @@ repositories {
     maven("https://nexus.kuku.me/repository/maven-public/")
     mavenCentral()
 }
+
+tasks{
+    shadowJar {
+        manifest {
+            attributes(Pair("Main-Class", "me.kuku.yuq.StartKt"))
+        }
+    }
+    build {
+        finalizedBy(shadowJar)
+    }
+}
+
 
 dependencies {
     implementation(kotlin("stdlib"))

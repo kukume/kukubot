@@ -1,6 +1,6 @@
 package me.kuku.yuq.entity
 
-import com.sun.org.apache.bcel.internal.generic.IFGE
+import com.alibaba.fastjson.annotation.JSONField
 import com.vladmihalcea.hibernate.type.json.JsonType
 import org.hibernate.annotations.Type
 import org.hibernate.annotations.TypeDef
@@ -11,19 +11,20 @@ import javax.persistence.*
 @Entity
 @Table(name = "qq")
 @TypeDef(name = "json", typeClass = JsonType::class)
-class QqEntity {
+open class QqEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Int? = null
+    open var id: Int? = null
     @Column(unique = true)
-    var qq: Long = 0
+    open var qq: Long = 0
     @ManyToMany(cascade = [CascadeType.PERSIST, CascadeType.MERGE])
     @JoinTable(name = "qq_group", joinColumns = [JoinColumn(name = "qq_id")],
         inverseJoinColumns = [JoinColumn(name = "group_id")])
-    var groups: MutableSet<GroupEntity> = linkedSetOf()
+    @JSONField(serialize = false)
+    open var groups: MutableSet<GroupEntity> = linkedSetOf()
     @Type(type = "json")
     @Column(columnDefinition = "json")
-    var config: QqConfig = QqConfig()
+    open var config: QqConfig = QqConfig()
 
     fun get(group: Long): GroupEntity? {
         for (groupEntity in groups) {

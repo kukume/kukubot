@@ -1,6 +1,7 @@
 package me.kuku.yuq.entity
 
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.repository.RepositoryDefinition
 import javax.inject.Inject
 import javax.persistence.*
 

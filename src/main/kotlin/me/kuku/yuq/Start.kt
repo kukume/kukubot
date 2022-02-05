@@ -26,7 +26,7 @@ import javax.inject.Inject
 import javax.persistence.EntityManagerFactory
 
 fun main(args: Array<String>) {
-    AppClassloader.registerBackList(listOf("org.springframework", "me.kuku.yuq.entity"))
+    AppClassloader.registerBackList(listOf("org.springframework", "me.kuku.yuq.entity", "com.alibaba.fastjson"))
     YuQArtQQStarter.start(args)
 }
 
@@ -57,14 +57,16 @@ open class JpaConfig{
 
 private lateinit var transactionManager: JpaTransactionManager
 
-fun transaction(block: () -> Unit) {
+fun <T> transaction(block: () -> T): T {
     val transactionDefinition = DefaultTransactionDefinition()
     val ts = transactionManager.getTransaction(transactionDefinition)
-    try {
-        block()
-        transactionManager.commit(ts);
+    return try {
+        val s = block()
+        transactionManager.commit(ts)
+        s
     }catch (e: Exception) {
         transactionManager.rollback(ts)
+        throw e
     }
 }
 

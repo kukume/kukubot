@@ -6,13 +6,9 @@ import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.controller.QQController
-import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.Message.Companion.firstString
 import com.icecreamqaq.yuq.message.Message.Companion.toCodeString
-import me.kuku.yuq.entity.GroupEntity
-import me.kuku.yuq.entity.GroupService
-import me.kuku.yuq.entity.MessageService
-import me.kuku.yuq.entity.Status
+import me.kuku.yuq.entity.*
 import javax.inject.Inject
 
 @GroupController
@@ -60,6 +56,17 @@ class ManagerController @Inject constructor(
                 val arr = str.split(" ").map { it.toLong() }
                 config.blackList.addAll(arr)
             }
+            "问答" -> {
+                reply("请发送问题")
+                val q = session.waitNextMessage().toCodeString()
+                reply("请发送机器人回复的答案")
+                val a = session.waitNextMessage().toCodeString()
+                reply("请发送数字，1表示精准匹配，2表示模糊匹配")
+                val ss = session.waitNextMessage().firstString()
+                val type = if (ss == "1") QaType.EXACT else QaType.FUZZY
+                val qa = Qa(q, a, type)
+                config.qaList.add(qa)
+            }
             else -> return null
         }
         before(qq)
@@ -86,6 +93,15 @@ class ManagerController @Inject constructor(
                 val blackList = config.blackList
                 arr.forEach(blackList::remove)
             }
+            "问答" -> {
+                reply("请发送需要删除的问答的问题")
+                val str = session.waitNextMessage().firstString()
+                val arr = str.split(" ")
+                val qaList = config.qaList
+                for (s in arr) {
+                    qaList.removeIf { it.q == s }
+                }
+            }
             else -> return null
         }
         before(qq)
@@ -105,6 +121,10 @@ class ManagerController @Inject constructor(
             }
             "黑名单" -> {
                 config.blackList.forEach { sb.append(it).append(" ") }
+                sb.toString()
+            }
+            "问答" -> {
+                config.qaList.forEach { sb.append(it.q).append(" ") }
                 sb.toString()
             }
             else -> return null

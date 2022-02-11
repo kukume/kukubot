@@ -7,10 +7,17 @@ import com.IceCreamQAQ.Yu.annotation.EventListener
 import com.IceCreamQAQ.Yu.di.ClassContext
 import com.IceCreamQAQ.Yu.di.YuContext
 import com.IceCreamQAQ.Yu.event.events.AppStopEvent
+import com.IceCreamQAQ.Yu.hook.*
 import com.IceCreamQAQ.Yu.loader.AppClassloader
 import com.IceCreamQAQ.Yu.module.Module
+import com.icecreamqaq.yuq.artqq.HookCaptchaUtils
 import com.icecreamqaq.yuq.artqq.YuQArtQQStarter
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import me.kuku.utils.MyUtils
+import me.kuku.utils.OkHttpUtils
+import org.artqq.util.CommonResult
+import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
@@ -27,6 +34,13 @@ import javax.persistence.EntityManagerFactory
 
 fun main(args: Array<String>) {
     AppClassloader.registerBackList(listOf("org.springframework", "me.kuku.yuq.entity", "com.alibaba.fastjson"))
+    YuHook.put(
+        HookItem(
+            "org.artqq.util.TenCentCaptchaUtils",
+            "identifyByUrl",
+            "me.kuku.yuq.HookCaptchaUtils"
+        )
+    )
     YuQArtQQStarter.start(args)
 }
 
@@ -105,5 +119,54 @@ class CloseSpring @Inject constructor(
     fun close(e: AppStopEvent) {
         applicationContext.close()
     }
+
+}
+
+
+class HookCaptchaUtils : HookRunnable {
+    override fun init(info: HookInfo) {
+
+    }
+
+    private val log = LoggerFactory.getLogger(HookRunnable::class.java)
+
+    override fun preRun(method: HookMethod): Boolean {
+        log.info("验证码url: ${method.paras[1]}")
+
+
+        val url = method.paras[1]!! as String
+        val ticket = runBlocking {
+            var ticket: String? = null
+            for (i in 0..3) {
+                log.info("正在尝试第${i + 1}次自动过验证码~~~")
+                val jsonObject = OkHttpUtils.postJson("https://api.kuku.me/tool/captcha", mapOf("url" to url))
+                if (jsonObject.getInteger("code") == 200) {
+                    val id = jsonObject.getJSONObject("data").getString("id")
+                    delay(2000)
+                    val resultJsonObject = OkHttpUtils.getJson("https://api.kuku.me/tool/captcha/$id")
+                    if (resultJsonObject.getInteger("code") == 200) {
+                        ticket = resultJsonObject.getJSONObject("data").getString("ticket")
+                        break
+                    }
+                }
+            }
+            ticket
+        }
+        if (ticket == null) {
+            log.info("自动识别验证码失败，转为手动验证验证码")
+            return HookCaptchaUtils().preRun(method)
+        }
+        //        RainUI.webListener(url)
+        method.result = CommonResult(200, "Success!", mutableMapOf("ticket" to ticket))
+        return true
+    }
+
+    override fun postRun(method: HookMethod) {
+        val result = method.result as CommonResult<MutableMap<String, String>>
+//        result.t!!["ticket"] = "123"
+        println("result: ${method.result}")
+    }
+
+    override fun onError(method: HookMethod) = false
 
 }

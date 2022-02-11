@@ -5,9 +5,14 @@ import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.entity.Group
 import com.icecreamqaq.yuq.message.Message
+import com.icecreamqaq.yuq.message.Message.Companion.toCodeString
+import com.icecreamqaq.yuq.message.Message.Companion.toMessageByRainCode
 import com.icecreamqaq.yuq.mif
 import me.kuku.utils.OkHttpUtils
+import me.kuku.yuq.entity.GroupEntity
 import me.kuku.yuq.entity.MessageService
+import me.kuku.yuq.entity.QaType
+import me.kuku.yuq.logic.ToolLogic
 import javax.inject.Inject
 
 @GroupController
@@ -39,5 +44,24 @@ class ToolController @Inject constructor(
         val messageEntity = messageService.findByMessageIdAndGroup(id, group) ?: return "没有找到该消息"
         return messageEntity.content
     }
+
+    @Action("\\.*\\")
+    fun qa(group: Group, groupEntity: GroupEntity, message: Message) {
+        message.recall()
+        val codeStr = message.toCodeString()
+        val qaList = groupEntity.config.qaList
+        for (qa in qaList) {
+            if (qa.q == codeStr && qa.type == QaType.EXACT) {
+                group.sendMessage(qa.a.toMessageByRainCode())
+            }
+            if (codeStr.contains(qa.q) && qa.type == QaType.FUZZY) {
+                group.sendMessage(qa.a.toMessageByRainCode())
+            }
+        }
+    }
+
+    @Action("百科 {text}")
+    @QMsg(reply = true)
+    fun baiKe(text: String) = ToolLogic.baiKe(text)
 
 }

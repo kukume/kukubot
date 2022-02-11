@@ -143,7 +143,7 @@ class ManagerController @Inject constructor(
         }.getOrDefault("踢出失败，可能权限不足！")
     }
 
-    @Action("列出{day}天未发言")
+    @Action("{day}天未发言")
     @QMsg(reply = true)
     fun notSpeak(day: String, group: Group, session: ContextSession, qq: Long): String? {
         val list = mutableListOf<Long>()

@@ -49,5 +49,4 @@ class QqService @Inject constructor(
 }
 
 class QqConfig {
-    var locPush: Status = Status.OFF
 }

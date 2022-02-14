@@ -1,6 +1,7 @@
 package me.kuku.yuq.entity
 
 import com.alibaba.fastjson.annotation.JSONField
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.vladmihalcea.hibernate.type.json.JsonType
 import org.hibernate.annotations.Type
 import org.hibernate.annotations.TypeDef
@@ -11,6 +12,7 @@ import javax.persistence.*
 @Entity
 @Table(name = "qq")
 @TypeDef(name = "json", typeClass = JsonType::class)
+@JsonIgnoreProperties("groups")
 open class QqEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

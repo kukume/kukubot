@@ -11,7 +11,7 @@ class GlobalController {
     @After
     @Global
     fun access(response: H.Response) {
-        response.header["Access-Control-Allow-Origin"] = "*"
+//        response.header["Access-Control-Allow-Origin"] = "*"
     }
 
 }

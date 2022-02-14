@@ -6,15 +6,18 @@ import com.IceCreamQAQ.Yu.annotation.Event
 import com.IceCreamQAQ.Yu.annotation.EventListener
 import com.IceCreamQAQ.Yu.di.ClassContext
 import com.IceCreamQAQ.Yu.di.YuContext
+import com.IceCreamQAQ.Yu.event.events.AppStartEvent
 import com.IceCreamQAQ.Yu.event.events.AppStopEvent
 import com.IceCreamQAQ.Yu.hook.*
 import com.IceCreamQAQ.Yu.loader.AppClassloader
 import com.IceCreamQAQ.Yu.module.Module
+import com.IceCreamQAQ.Yu.util.OkHttpWebImpl
 import com.icecreamqaq.yuq.artqq.HookCaptchaUtils
 import com.icecreamqaq.yuq.artqq.YuQArtQQStarter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import me.kuku.utils.MyUtils
+import me.kuku.yuq.utils.YuqUtils
 import me.kuku.utils.OkHttpUtils
 import org.artqq.util.CommonResult
 import org.slf4j.LoggerFactory
@@ -33,7 +36,11 @@ import javax.inject.Inject
 import javax.persistence.EntityManagerFactory
 
 fun main(args: Array<String>) {
-    AppClassloader.registerBackList(listOf("org.springframework", "me.kuku.yuq.entity", "com.alibaba.fastjson"))
+    val list = mutableListOf(
+        "com.alibaba.fastjson", "com.fasterxml.jackson",
+        "org.springframework", "me.kuku.yuq.entity"
+    )
+    AppClassloader.registerBackList(list)
     YuHook.put(
         HookItem(
             "org.artqq.util.TenCentCaptchaUtils",
@@ -94,7 +101,7 @@ class JpaModule: Module {
         val applicationContext = AnnotationConfigApplicationContext(JpaConfig::class.java)
         context.putBean(applicationContext)
         transactionManager = applicationContext.getBean(JpaTransactionManager::class.java)
-        val classes = MyUtils.getClasses("me.kuku.yuq")
+        val classes = MyUtils.getClasses("me.kuku.yuq.entity")
         for ((_, v) in classes) {
             v.interfaces.takeIf { it.contains(JpaRepository::class.java) }
                 ?.let {
@@ -111,13 +118,19 @@ class JpaModule: Module {
 }
 
 @EventListener
-class CloseSpring @Inject constructor(
-    private val applicationContext: AnnotationConfigApplicationContext
+class SystemEvent @Inject constructor(
+    private val applicationContext: AnnotationConfigApplicationContext,
+    private val web: OkHttpWebImpl
 ) {
 
     @Event
     fun close(e: AppStopEvent) {
         applicationContext.close()
+    }
+
+    @Event
+    fun start(e: AppStartEvent) {
+        YuqUtils.web = web
     }
 
 }
@@ -162,8 +175,6 @@ class HookCaptchaUtils : HookRunnable {
     }
 
     override fun postRun(method: HookMethod) {
-        val result = method.result as CommonResult<MutableMap<String, String>>
-//        result.t!!["ticket"] = "123"
         println("result: ${method.result}")
     }
 

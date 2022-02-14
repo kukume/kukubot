@@ -2,6 +2,7 @@ package me.kuku.yuq.event
 
 import com.IceCreamQAQ.Yu.annotation.Event
 import com.IceCreamQAQ.Yu.annotation.EventListener
+import com.icecreamqaq.yuq.artqq.message.ArtGroupMessageSource
 import com.icecreamqaq.yuq.event.*
 import com.icecreamqaq.yuq.message.FlashImage
 import com.icecreamqaq.yuq.message.Message.Companion.toCodeString
@@ -54,6 +55,8 @@ class Save @Inject constructor(
         messageEntity.qqEntity = qqEntity
         messageEntity.groupEntity = groupEntity
         messageEntity.content = ss
+        val source = e.message.source as? ArtGroupMessageSource
+        messageEntity.artGroupMessageSource = source
         messageService.save(messageEntity)
     }
 

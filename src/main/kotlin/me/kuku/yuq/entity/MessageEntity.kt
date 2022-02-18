@@ -2,6 +2,8 @@ package me.kuku.yuq.entity
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.icecreamqaq.yuq.artqq.message.ArtGroupMessageSource
+import com.icecreamqaq.yuq.artqq.message.ArtMessageSource
+import com.icecreamqaq.yuq.artqq.message.ArtToGroupMessageSource
 import com.querydsl.core.BooleanBuilder
 import com.vladmihalcea.hibernate.type.json.JsonType
 import me.kuku.yuq.utils.plus
@@ -36,7 +38,7 @@ class MessageEntity {
     var localDateTime: LocalDateTime = LocalDateTime.now()
     @Type(type = "json")
     @Column(columnDefinition = "json")
-    var artGroupMessageSource: ArtGroupMessageSource? = null
+    var messageSource: MessageSource? = null
 }
 
 interface MessageRepository: JpaRepository<MessageEntity, Int>, QuerydslPredicateExecutor<MessageEntity> {
@@ -72,5 +74,26 @@ class MessageService @Inject constructor(
             return messageRepository.findAll(bb, pageRequest.withSort(Sort.by("id").descending()))
         }
     }
+}
 
+data class MessageSource(
+    val id: Int,
+    val qq: Long,
+    val groupCode: Long,
+    val rand: Int,
+    val sendTime: Long,
+    val liteMsg: String
+) {
+    fun toArtGroupMessageSource(): ArtGroupMessageSource {
+        return ArtGroupMessageSource(id, qq, groupCode, rand, sendTime, liteMsg)
+    }
+}
+
+
+fun ArtMessageSource.toMessageSource(): MessageSource? {
+    return when (this) {
+        is ArtGroupMessageSource -> MessageSource(this.id, this.qq, this. groupCode, this.rand, this.sendTime, this.liteMsg)
+        is ArtToGroupMessageSource -> MessageSource(this.id, this.qq, this. groupCode, this.rand, this.sendTime, this.liteMsg)
+        else -> null
+    }
 }

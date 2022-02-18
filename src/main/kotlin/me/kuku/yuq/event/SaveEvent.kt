@@ -3,6 +3,7 @@ package me.kuku.yuq.event
 import com.IceCreamQAQ.Yu.annotation.Event
 import com.IceCreamQAQ.Yu.annotation.EventListener
 import com.icecreamqaq.yuq.artqq.message.ArtGroupMessageSource
+import com.icecreamqaq.yuq.artqq.message.ArtToGroupMessageSource
 import com.icecreamqaq.yuq.event.*
 import com.icecreamqaq.yuq.message.FlashImage
 import com.icecreamqaq.yuq.message.Message.Companion.toCodeString
@@ -56,7 +57,7 @@ class Save @Inject constructor(
         messageEntity.groupEntity = groupEntity
         messageEntity.content = ss
         val source = e.message.source as? ArtGroupMessageSource
-        messageEntity.artGroupMessageSource = source
+        messageEntity.messageSource = source?.toMessageSource()
         messageService.save(messageEntity)
     }
 
@@ -80,6 +81,8 @@ class Save @Inject constructor(
         messageEntity.qqEntity = qqEntity
         messageEntity.groupEntity = groupEntity
         messageEntity.content = e.message.toCodeString()
+        val source = e.messageSource as? ArtToGroupMessageSource
+        messageEntity.messageSource = source?.toMessageSource()
         messageService.save(messageEntity)
     }
 

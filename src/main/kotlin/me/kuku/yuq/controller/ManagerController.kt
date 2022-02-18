@@ -8,6 +8,8 @@ import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.controller.QQController
 import com.icecreamqaq.yuq.entity.Group
+import com.icecreamqaq.yuq.entity.Member
+import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.Message.Companion.firstString
 import com.icecreamqaq.yuq.message.Message.Companion.toCodeString
 import me.kuku.yuq.entity.*
@@ -20,14 +22,15 @@ class ManagerController @Inject constructor(
     private val messageService: MessageService
 ): QQController(){
 
-    @Before(except = ["operateStatus", "add", "delete", "query"])
+    @Before(except = ["operateStatus", "add", "delete", "query", "recallMessage"])
     fun before(qq: Long) {
         if (qq != master.toLong()) throw mif.at(qq).plus("权限不足，无法执行").toThrowable()
     }
 
-    @Action("{operate} {status}")
+    @Action("{operate} {statusStr}")
     @QMsg(reply = true)
-    fun operateStatus(operate: String, status: Boolean, groupEntity: GroupEntity, qq: Long): String? {
+    fun operateStatus(operate: String, statusStr: String, groupEntity: GroupEntity, qq: Long): String? {
+        val status = statusStr.contains("开")
         val config = groupEntity.config
         when (operate) {
             "loc群推送" -> config.locPush = status.toStatus()
@@ -169,6 +172,24 @@ class ManagerController @Inject constructor(
                 "踢出成功"
             } else null
         } else null
+    }
+
+    @Action("\\.*\\")
+    @QMsg(reply = true)
+    fun recallMessage(message: Message, group: Group, qq: Member): String? {
+        if (message.toPath().last() != "撤回") return null
+        val botId = yuq.botId
+        val bot = group[botId]
+        if ((!bot.isAdmin() && qq.id != botId) || (bot.isAdmin() && qq.isOwner())) return "撤回失败，机器人权限不足"
+        val messageSource = message.reply ?: return null
+        val id = messageSource.id
+        val messageEntity = messageService.findByMessageIdAndGroup(id, group.id) ?: return "没有找到该条消息，撤回失败"
+        val source = messageEntity.messageSource ?: return "没有找到该条消息源，撤回失败"
+        val ss = kotlin.runCatching {
+            source.toArtGroupMessageSource().recall()
+            null
+        }.getOrDefault("撤回失败，机器人权限不足")
+        return ss
     }
 }
 

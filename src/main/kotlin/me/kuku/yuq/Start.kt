@@ -36,18 +36,7 @@ import javax.inject.Inject
 import javax.persistence.EntityManagerFactory
 
 fun main(args: Array<String>) {
-    val list = mutableListOf(
-        "com.alibaba.fastjson", "com.fasterxml.jackson",
-        "org.springframework", "me.kuku.yuq.entity"
-    )
-    AppClassloader.registerBackList(list)
-    YuHook.put(
-        HookItem(
-            "org.artqq.util.TenCentCaptchaUtils",
-            "identifyByUrl",
-            "me.kuku.yuq.HookCaptchaUtils"
-        )
-    )
+    AppClassloader.registerBackList(listOf())
     YuQArtQQStarter.start(args)
 }
 
@@ -98,6 +87,13 @@ class JpaModule: Module {
     private lateinit var context: YuContext
 
     override fun onLoad() {
+        YuHook.put(
+            HookItem(
+                "org.artqq.util.TenCentCaptchaUtils",
+                "identifyByUrl",
+                "me.kuku.yuq.HookCaptchaUtils"
+            )
+        )
         val applicationContext = AnnotationConfigApplicationContext(JpaConfig::class.java)
         context.putBean(applicationContext)
         transactionManager = applicationContext.getBean(JpaTransactionManager::class.java)

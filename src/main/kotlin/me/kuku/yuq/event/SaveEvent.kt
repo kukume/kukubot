@@ -117,10 +117,4 @@ class Save @Inject constructor(
         }
     }
 
-    @Event
-    fun leave(e: BotLeaveGroupEvent) {
-        val id = e.group.id
-        groupService.deleteByGroup(id)
-    }
-
 }

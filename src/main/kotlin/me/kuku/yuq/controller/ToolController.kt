@@ -13,6 +13,7 @@ import com.icecreamqaq.yuq.message.Message.Companion.toMessage
 import com.icecreamqaq.yuq.message.Message.Companion.toMessageByRainCode
 import com.icecreamqaq.yuq.mif
 import me.kuku.pojo.QqLoginPojo
+import me.kuku.utils.JobManager
 import me.kuku.utils.MyUtils
 import me.kuku.utils.OkHttpUtils
 import me.kuku.yuq.entity.GroupEntity
@@ -20,6 +21,7 @@ import me.kuku.yuq.entity.MessageService
 import me.kuku.yuq.entity.QaType
 import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.utils.YuqUtils
+import java.net.URLEncoder
 import javax.inject.Inject
 
 @GroupController
@@ -111,6 +113,56 @@ class ToolController @Inject constructor(
             "https://vkceyugu.cdn.bspapp.com/VKCEYUGU-ba222f61-ee83-431d-bf9f-7e6216a8cf41/bb768136-d96d-451d-891a-5f409f7fbff1.jpg"
         )
         return mif.at(groupHonor.qq).plus(mif.imageByUrl(urlList.random())).plus("龙王，已上位${groupHonor.desc}，快喷水")
+    }
+
+    @Action("窥屏检测")
+    fun peeping(group: Group) {
+        val api = "https://api.kukuqaq.com"
+        val random = MyUtils.random(5)
+        val check = "$api/tool/peeping/check/$random"
+        val jsonStr = """
+            <?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="108" templateID="1" action="web" brief="窥屏检测中..." sourcePublicUin="2747277822" sourceMsgId="0" url="https://youxi.gamecenter.qq.com/" flag="0" adverSign="0" multiMsgFlag="0"><item layout="2" advertiser_id="0" aid="0"><picture cover="$check" w="0" h="0" /><title>窥屏检测</title><summary>检测中, 请稍候(电脑端窥屏暂时无法检测)</summary></item><source name="窥屏检测中..." icon="https://url.cn/JS8oE7" action="plugin" a_actionData="mqqapi://app/action?pkg=com.tencent.mobileqq&amp;cmp=com.tencent.biz.pubaccount.AccountDetail.activity.api.impl.AccountDetailActivity&amp;uin=2747277822" i_actionData="mqqapi://card/show_pslcard?src_type=internal&amp;card_type=public_account&amp;uin=2747277822&amp;version=1" appid="-1" /></msg>
+        """.trimIndent()
+        group.sendMessage(mif.xmlEx(5, jsonStr))
+        JobManager.delay(1000 * 15) {
+            val jsonObject = OkHttpUtils.getJson("$api/tool/peeping/result/$random")
+            if (jsonObject.getInteger("code") == 200) {
+                val sb = StringBuilder()
+                val jsonArray = jsonObject.getJSONObject("data").getJSONArray("list")
+                sb.appendLine("检测到共有${jsonArray.size}位小伙伴正在窥屏")
+                jsonArray.forEach {
+                    val singleJsonObject = it as JSONObject
+                    sb.appendLine("${singleJsonObject.getString("ip")}-${singleJsonObject.getString("address")}")
+                }
+                group.sendMessage(sb.removeSuffix("\n").toString())
+            } else group.sendMessage(jsonObject.getString("message"))
+        }
+    }
+
+    @Action("读懂世界")
+    @QMsg(reply = true)
+    fun readWorld(): String =
+        OkHttpUtils.getJson("https://api.kukuqaq.com/tool/readWorld").getJSONObject("data").getString("data")
+
+    @Action("icp {domain}")
+    @QMsg(at = true, atNewLine = true)
+    fun icp(domain: String): String {
+        val jsonObject = OkHttpUtils.getJson("https://api.kukuqaq.com/tool/icp?keyword=${URLEncoder.encode(domain, "utf-8")}&m")
+        return if (jsonObject.getInteger("code") == 200) {
+            val jsonArray = jsonObject.getJSONArray("data")
+            if (jsonArray.isEmpty()) "该域名未查到备案信息"
+            else {
+                val singleJsonObject = jsonArray.getJSONObject(0)
+                """
+                    网站名称：${singleJsonObject.getString("name")}
+                    主办单位名称：${singleJsonObject.getString("unitName")}
+                    域名：${singleJsonObject.getString("domain")}
+                    主页：${singleJsonObject.getString("homeUrl")}
+                    备案号：${singleJsonObject.getString("licence")}
+                    更新时间：${singleJsonObject.getString("updateTime")}
+                """.trimIndent()
+            }
+        } else jsonObject.getString("message")
     }
 
 }

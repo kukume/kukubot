@@ -1,6 +1,6 @@
 val utilsVersion = "0.3.10"
 val artQqVersion = "0.1.0.0-DEV13"
-val webVersion = "0.0.2.0-DEV19"
+val webVersion = "0.0.2.0-DEV22"
 val springDataJpaVersion = "2.6.1"
 val hibernateVersion = "5.6.5.Final"
 val h2Version = "2.1.210"

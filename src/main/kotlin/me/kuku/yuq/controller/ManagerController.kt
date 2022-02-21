@@ -178,10 +178,10 @@ class ManagerController @Inject constructor(
     @QMsg(reply = true)
     fun recallMessage(message: Message, group: Group, qq: Member): String? {
         if (message.toPath().last() != "撤回") return null
+        val messageSource = message.reply ?: return null
         val botId = yuq.botId
         val bot = group[botId]
-        if ((!bot.isAdmin() && qq.id != botId) || (bot.isAdmin() && qq.isOwner())) return "撤回失败，机器人权限不足"
-        val messageSource = message.reply ?: return null
+        if ((!bot.isAdmin() && messageSource.sender != botId) || (bot.isAdmin() && qq.isOwner())) return "撤回失败，机器人权限不足"
         val id = messageSource.id
         val messageEntity = messageService.findByMessageIdAndGroup(id, group.id) ?: return "没有找到该条消息，撤回失败"
         val source = messageEntity.messageSource ?: return "没有找到该条消息源，撤回失败"

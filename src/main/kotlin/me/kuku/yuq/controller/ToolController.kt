@@ -6,8 +6,10 @@ import com.alibaba.fastjson.JSONObject
 import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.annotation.QMsg
+import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.entity.Group
 import com.icecreamqaq.yuq.message.Message
+import com.icecreamqaq.yuq.message.Message.Companion.firstString
 import com.icecreamqaq.yuq.message.Message.Companion.toCodeString
 import com.icecreamqaq.yuq.message.Message.Companion.toMessage
 import com.icecreamqaq.yuq.message.Message.Companion.toMessageByRainCode
@@ -16,17 +18,19 @@ import me.kuku.pojo.QqLoginPojo
 import me.kuku.utils.JobManager
 import me.kuku.utils.MyUtils
 import me.kuku.utils.OkHttpUtils
-import me.kuku.yuq.entity.GroupEntity
-import me.kuku.yuq.entity.MessageService
-import me.kuku.yuq.entity.QaType
+import me.kuku.yuq.entity.*
 import me.kuku.yuq.logic.ToolLogic
+import me.kuku.yuq.transaction
 import me.kuku.yuq.utils.YuqUtils
+import org.jsoup.Jsoup
 import java.net.URLEncoder
+import java.time.LocalDate
 import javax.inject.Inject
 
 @GroupController
 class ToolController @Inject constructor(
-    private val messageService: MessageService
+    private val messageService: MessageService,
+    private val recallService: RecallService
 ) {
 
     @Action("摸鱼日历")
@@ -42,8 +46,11 @@ class ToolController @Inject constructor(
     }
 
     @Action("色图")
-    fun color() =
-        mif.imageByUrl(OkHttpUtils.get("https://api.kukuqaq.com/lolicon/random?preview").also { it.close() }.header("location")!!)
+    @QMsg(recall = 3000)
+    fun color(groupEntity: GroupEntity) =
+        if (groupEntity.config.loLiConR18 == Status.OFF)
+            mif.imageByUrl(OkHttpUtils.get("https://api.kukuqaq.com/lolicon/random?preview").also { it.close() }.header("location")!!)
+        else mif.imageByUrl(OkHttpUtils.getJson("https://api.lolicon.app/setu/v2?r18=1").getJSONArray("data").getJSONObject(0).getJSONObject("urls").getString("original").replace("i.pixiv.cat", "i.pixiv.re"))
 
     @Action(value = "读消息", suffix = true)
     @QMsg(reply = true)
@@ -123,7 +130,7 @@ class ToolController @Inject constructor(
         val jsonStr = """
             <?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="108" templateID="1" action="web" brief="窥屏检测中..." sourcePublicUin="2747277822" sourceMsgId="0" url="https://youxi.gamecenter.qq.com/" flag="0" adverSign="0" multiMsgFlag="0"><item layout="2" advertiser_id="0" aid="0"><picture cover="$check" w="0" h="0" /><title>窥屏检测</title><summary>检测中, 请稍候(电脑端窥屏暂时无法检测)</summary></item><source name="窥屏检测中..." icon="https://url.cn/JS8oE7" action="plugin" a_actionData="mqqapi://app/action?pkg=com.tencent.mobileqq&amp;cmp=com.tencent.biz.pubaccount.AccountDetail.activity.api.impl.AccountDetailActivity&amp;uin=2747277822" i_actionData="mqqapi://card/show_pslcard?src_type=internal&amp;card_type=public_account&amp;uin=2747277822&amp;version=1" appid="-1" /></msg>
         """.trimIndent()
-        group.sendMessage(mif.xmlEx(5, jsonStr))
+        group.sendMessage(mif.xmlEx(108, jsonStr))
         JobManager.delay(1000 * 15) {
             val jsonObject = OkHttpUtils.getJson("$api/tool/peeping/result/$random")
             if (jsonObject.getInteger("code") == 200) {
@@ -165,6 +172,60 @@ class ToolController @Inject constructor(
         } else jsonObject.getString("message")
     }
 
+
+    @Action("查撤回 {qqNo}")
+    fun queryRecall(qqNo: Long, group: Group, qq: Long, session: ContextSession): Any {
+        val list = recallService.findByGroupAndQq(group.id, qqNo)
+        if (list.isEmpty()) return mif.at(qq).plus("该qq没有撤回消息哦")
+        group.sendMessage(mif.at(qq).plus("该qq有${list.size}条撤回消息，您需要查询第几条"))
+        var num = session.waitNextMessage().firstString().toIntOrNull() ?: return mif.at(qq).plus("您输入的不为数字，上下文结束")
+        if (num > list.size) return mif.at(qq).plus("您输入数字的已超出撤回消息数，上下文结束")
+        num -= 1
+        val recallEntity = list[num]
+        return recallEntity.messageEntity.content.toMessageByRainCode()
+    }
+
+    @Action("查发言数")
+    fun queryMessage(group: Group) = transaction {
+        val list = messageService.findByGroupAndLocalDateTimeAfter(group.id, LocalDate.now().atStartOfDay())
+        val map = mutableMapOf<Long, Int>()
+        for (messageEntity in list) {
+            val qq = messageEntity.qqEntity.qq
+            val i = map[qq] ?: 0
+            map[qq] = i + 1
+        }
+        val ss = map.toSortedMap { o1, o2 -> map[o2]!!.compareTo(map[o1]!!) }
+        val sb = StringBuilder()
+        var i = 0
+        for ((k, v) in ss) {
+            if (++i == 5) break
+            sb.append(group[k].nameCardOrName()).append("（").append(k).append("）").append(" - ").append(v).appendLine("条")
+        }
+        return@transaction sb.removeSuffix("\n").toString()
+    }
+
+    @Action("舔狗日记")
+    fun dog() = OkHttpUtils.getStr("https://api.oick.cn/dog/api.php").replace("\"", "")
+
+    @Action("测吉凶")
+    @QMsg(at = true, atNewLine = true)
+    fun qqGodLock(qq: Long): String {
+        val doc = Jsoup.connect("http://qq.link114.cn/$qq").get()
+        val ele = doc.getElementById("main")?.getElementsByClass("listpage_content")?.first()
+        val elements = ele?.getElementsByTag("dl") ?: return "没查询到信息"
+        val sb = StringBuilder()
+        for (element in elements) {
+            sb.append(element.getElementsByTag("dt").first()?.text())
+                .appendLine(element.getElementsByTag("dd").text())
+        }
+        return sb.removeSuffix("\n").toString()
+    }
+
+    @Action("oracle {email}")
+    @QMsg(reply = true)
+    fun oracle(email: String) =
+        if (OkHttpUtils.getJson("https://api.kukuqaq.com/tool/oracle/promotion?email=$email").getJSONArray("items")?.isNotEmpty() == true) "有资格了"
+        else "你木的资格"
 }
 
 object QqGroupLogic {

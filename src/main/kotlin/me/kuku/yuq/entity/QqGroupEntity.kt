@@ -27,7 +27,7 @@ data class QqGroupId(
     @Column(name = "qq_id")
     var qqId: Int = 0,
     @Column(name = "group_id")
-var groupId: Int = 0
+    var groupId: Int = 0
 ) : Serializable {
     companion object {
         private const val serialVersionUID = -3549488445375382600L

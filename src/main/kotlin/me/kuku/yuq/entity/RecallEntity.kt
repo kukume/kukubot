@@ -1,8 +1,9 @@
 package me.kuku.yuq.entity
 
+import me.kuku.yuq.utils.plus
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.querydsl.QuerydslPredicateExecutor
-import java.util.*
+import java.time.LocalDateTime
 import javax.inject.Inject
 import javax.persistence.*
 
@@ -15,7 +16,7 @@ class RecallEntity {
     @OneToOne
     @JoinColumn(name = "message_id")
     var messageEntity: MessageEntity = MessageEntity()
-    var date = Date()
+    var localDateTime: LocalDateTime = LocalDateTime.now()
 }
 
 
@@ -33,5 +34,11 @@ class RecallService @Inject constructor(
     fun findByMessageId(messageId: Int): List<RecallEntity> {
         val q = QRecallEntity.recallEntity
         return recallRepository.findAll(q.messageEntity.messageId.eq(messageId)).toList()
+    }
+
+    fun findByGroupAndQq(group: Long, qq: Long): List<RecallEntity> {
+        with(QRecallEntity.recallEntity.messageEntity) {
+            return recallRepository.findAll(qqEntity.qq.eq(qq) + groupEntity.group.eq(group), id.desc()).toList()
+        }
     }
 }

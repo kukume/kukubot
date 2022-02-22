@@ -11,6 +11,7 @@ import org.hibernate.annotations.Type
 import org.hibernate.annotations.TypeDef
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.querydsl.QuerydslPredicateExecutor
@@ -43,6 +44,7 @@ class MessageEntity {
 
 interface MessageRepository: JpaRepository<MessageEntity, Int>, QuerydslPredicateExecutor<MessageEntity> {
     fun findByMessageIdAndGroupEntity(messageId: Int, groupEntity: GroupEntity): MessageEntity?
+    fun findByLocalDateTimeAfter(localDateTime: LocalDateTime): List<MessageEntity>
 }
 
 class MessageService @Inject constructor(
@@ -73,6 +75,15 @@ class MessageService @Inject constructor(
             qq?.let { bb + qqEntity.qq.eq(qq) }
             return messageRepository.findAll(bb, pageRequest.withSort(Sort.by("id").descending()))
         }
+    }
+
+    fun findByLocalDateTimeAfter(localDateTime: LocalDateTime) = messageRepository.findByLocalDateTimeAfter(localDateTime)
+
+    fun findByGroupAndLocalDateTimeAfter(group: Long, localDateTimeParam: LocalDateTime): List<MessageEntity> {
+        with(QMessageEntity.messageEntity) {
+            return messageRepository.findAll(groupEntity.group.eq(group) + localDateTime.after(localDateTimeParam)).toList()
+        }
+
     }
 }
 

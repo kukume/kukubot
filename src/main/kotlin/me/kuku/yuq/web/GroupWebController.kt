@@ -55,7 +55,6 @@ class GroupWebController @Inject constructor(
         groupEntity.config = GroupConfig().also {
             it.flashImageNotify = flashImageNotify.toStatus()
             it.leaveToBlack = leaveToBlack.toStatus()
-            it.locPush = locPush.toStatus()
             it.recallNotify = recallNotify.toStatus()
             it.repeat = repeat.toStatus()
         }

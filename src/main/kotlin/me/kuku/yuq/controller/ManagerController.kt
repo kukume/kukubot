@@ -33,11 +33,11 @@ class ManagerController @Inject constructor(
         val status = statusStr.contains("开")
         val config = groupEntity.config
         when (operate) {
-            "loc群推送" -> config.locPush = status.toStatus()
             "复读" -> config.repeat = status.toStatus()
             "撤回通知" -> config.recallNotify = status.toStatus()
             "闪照通知" -> config.flashImageNotify = status.toStatus()
             "退群拉黑" -> config.leaveToBlack = status.toStatus()
+            "r18" -> config.loLiConR18 = status.toStatus()
             else -> return null
         }
         before(qq)

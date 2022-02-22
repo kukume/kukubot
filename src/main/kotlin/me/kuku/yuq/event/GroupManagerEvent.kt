@@ -131,6 +131,5 @@ class GroupManagerEvent @Inject constructor(
     fun friend(e: NewFriendRequestEvent) {
 
     }
-
 }
 

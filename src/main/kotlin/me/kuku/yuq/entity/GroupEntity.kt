@@ -73,10 +73,10 @@ class GroupConfig{
     var recallNotify: Status = Status.OFF
     var flashImageNotify: Status = Status.OFF
     var leaveToBlack: Status = Status.ON
+    var loLiConR18: Status = Status.OFF
     var prohibitedWords: MutableSet<String> = mutableSetOf()
     var blackList: MutableSet<Long> = mutableSetOf()
     var qaList: MutableList<Qa> = mutableListOf()
-
 }
 
 data class Qa(

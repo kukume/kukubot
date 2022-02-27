@@ -38,6 +38,7 @@ class ManagerController @Inject constructor(
             "闪照通知" -> config.flashImageNotify = status.toStatus()
             "退群拉黑" -> config.leaveToBlack = status.toStatus()
             "r18" -> config.loLiConR18 = status.toStatus()
+            "进群验证" -> config.entryVerification = status.toStatus()
             else -> return null
         }
         before(qq)

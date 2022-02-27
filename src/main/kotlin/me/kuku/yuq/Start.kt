@@ -2,6 +2,7 @@
 
 package me.kuku.yuq
 
+import com.IceCreamQAQ.Yu.annotation.Config
 import com.IceCreamQAQ.Yu.annotation.Event
 import com.IceCreamQAQ.Yu.annotation.EventListener
 import com.IceCreamQAQ.Yu.di.ClassContext
@@ -14,7 +15,7 @@ import com.IceCreamQAQ.Yu.module.Module
 import com.IceCreamQAQ.Yu.util.OkHttpWebImpl
 import com.icecreamqaq.yuq.artqq.HookCaptchaUtils
 import com.icecreamqaq.yuq.artqq.YuQArtQQStarter
-import kotlinx.coroutines.delay
+import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.runBlocking
 import me.kuku.utils.MyUtils
 import me.kuku.yuq.utils.YuqUtils
@@ -23,14 +24,18 @@ import org.artqq.util.CommonResult
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories
 import org.springframework.orm.jpa.JpaTransactionManager
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter
+import org.springframework.transaction.annotation.EnableTransactionManagement
 import org.springframework.transaction.support.DefaultTransactionDefinition
+import org.telegram.abilitybots.api.bot.AbilityBot
+import org.telegram.abilitybots.api.util.AbilityExtension
+import org.telegram.telegrambots.meta.TelegramBotsApi
+import org.telegram.telegrambots.updatesreceivers.DefaultBotSession
 import java.util.*
 import javax.inject.Inject
 import javax.persistence.EntityManagerFactory
@@ -41,19 +46,26 @@ fun main(args: Array<String>) {
 }
 
 @Configuration
-@ComponentScan(basePackages = ["me.kuku.yuq.entity"])
-@EnableJpaRepositories(basePackages = ["me.kuku.yuq.entity"])
+@EnableJpaRepositories
+@EnableTransactionManagement
 open class JpaConfig{
 
     @Bean
+    open fun dataSource(): HikariDataSource {
+        return HikariDataSource()
+    }
+
+    @Bean
     open fun entityManagerFactory(): LocalContainerEntityManagerFactoryBean {
-        val em = LocalContainerEntityManagerFactoryBean()
-        em.setPackagesToScan("me.kuku.yuq.entity")
-        em.jpaVendorAdapter = HibernateJpaVendorAdapter()
+        val vendorAdapter  = HibernateJpaVendorAdapter()
+        val factory = LocalContainerEntityManagerFactoryBean()
+        factory.setPackagesToScan("me.kuku.yuq.entity")
+        factory.jpaVendorAdapter = vendorAdapter
         val properties = Properties()
         properties.load(Thread.currentThread().contextClassLoader.getResourceAsStream("hibernate.properties"))
-        em.setJpaProperties(properties)
-        return em
+        factory.setJpaProperties(properties)
+        factory.dataSource = dataSource()
+        return factory
     }
 
     @Bean
@@ -113,11 +125,38 @@ class JpaModule: Module {
     }
 }
 
+class TelegramModule @Inject constructor(
+    private val context: YuContext,
+    @Config("me.kuku.botToken") private val botToken: String,
+    @Config("me.kuku.botUsername") private val botUsername: String,
+    @Config("me.kuku.creatorId") private val creatorId: String
+): Module {
+
+    override fun onLoad() {
+        if (botToken.isNotEmpty() && botUsername.isNotEmpty() && creatorId.isNotEmpty()) {
+            val tgBot = TgBot(botToken, botUsername, creatorId.toLong())
+            context.putBean(tgBot, "tgBot")
+        }
+    }
+}
+
+class TgBot(botToken: String, botUsername: String, private val creatorId: Long): AbilityBot(botToken, botUsername) {
+    override fun creatorId(): Long = creatorId
+
+    public override fun addExtension(extension: AbilityExtension) {
+        super.addExtension(extension)
+    }
+}
+
 @EventListener
 class SystemEvent @Inject constructor(
     private val applicationContext: AnnotationConfigApplicationContext,
-    private val web: OkHttpWebImpl
+    private val web: OkHttpWebImpl,
+    private val context: YuContext,
 ) {
+
+    @Inject
+    private var tgBot: TgBot? = null
 
     @Event
     fun close(e: AppStopEvent) {
@@ -129,8 +168,27 @@ class SystemEvent @Inject constructor(
         YuqUtils.web = web
     }
 
-}
+    @Event
+    fun telegramInit(e: AppStartEvent) {
+        if (tgBot != null) {
+            val field = context::class.java.getDeclaredField("classContextMap")
+            field.isAccessible = true
+            val map = field.get(context) as HashMap<String, ClassContext>
+            map.forEach{(_,v) ->
+                v.clazz.interfaces.takeIf { it.contains(AbilityExtension::class.java) }?.let {
+                    context.getBean(v.clazz)
+                    val ob = v.defaultInstance as? AbilityExtension
+                    ob?.apply {
+                        tgBot?.addExtension(this)
+                    }
+                }
+            }
+            val botsApi = TelegramBotsApi(DefaultBotSession::class.java)
+            botsApi.registerBot(tgBot)
+        }
+    }
 
+}
 
 class HookCaptchaUtils : HookRunnable {
     override fun init(info: HookInfo) {
@@ -148,15 +206,10 @@ class HookCaptchaUtils : HookRunnable {
             var ticket: String? = null
             for (i in 0..3) {
                 log.info("正在尝试第${i + 1}次自动过验证码~~~")
-                val jsonObject = OkHttpUtils.postJson("https://api.kuku.me/tool/captcha", mapOf("url" to url))
+                val jsonObject = OkHttpUtils.postJson("https://api.kukuqaq.com/tool/captcha", mapOf("url" to url))
                 if (jsonObject.getInteger("code") == 200) {
-                    val id = jsonObject.getJSONObject("data").getString("id")
-                    delay(2000)
-                    val resultJsonObject = OkHttpUtils.getJson("https://api.kuku.me/tool/captcha/$id")
-                    if (resultJsonObject.getInteger("code") == 200) {
-                        ticket = resultJsonObject.getJSONObject("data").getString("ticket")
-                        break
-                    }
+                    ticket = jsonObject.getJSONObject("data").getString("ticket")
+                    break
                 }
             }
             ticket

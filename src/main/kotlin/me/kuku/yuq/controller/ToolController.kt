@@ -15,9 +15,7 @@ import com.icecreamqaq.yuq.message.Message.Companion.toMessage
 import com.icecreamqaq.yuq.message.Message.Companion.toMessageByRainCode
 import com.icecreamqaq.yuq.mif
 import me.kuku.pojo.QqLoginPojo
-import me.kuku.utils.JobManager
-import me.kuku.utils.MyUtils
-import me.kuku.utils.OkHttpUtils
+import me.kuku.utils.*
 import me.kuku.yuq.entity.*
 import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.transaction
@@ -63,7 +61,6 @@ class ToolController @Inject constructor(
 
     @Action("\\.*\\")
     fun qa(group: Group, groupEntity: GroupEntity, message: Message) {
-        message.recall()
         val codeStr = message.toCodeString()
         val qaList = groupEntity.config.qaList
         for (qa in qaList) {

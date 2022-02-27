@@ -16,7 +16,7 @@ import me.kuku.yuq.transaction
 import javax.inject.Inject
 
 @WebController
-class GroupWebController @Inject constructor(
+class GroupController @Inject constructor(
     private val groupService: GroupService
 ) {
 
@@ -48,7 +48,7 @@ class GroupWebController @Inject constructor(
     }
 
     @Action("/group/save")
-    fun groupSave(id: Int, flashImageNotify: Boolean, leaveToBlack: Boolean, locPush: Boolean,
+    fun groupSave(id: Int, flashImageNotify: Boolean, leaveToBlack: Boolean,
                   recallNotify: Boolean, repeat: Boolean): Result<*> {
         val groupEntity = groupService.findById(id)
             ?: return ResultStatus.DATA_NOT_EXISTS.toResult()

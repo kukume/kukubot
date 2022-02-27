@@ -69,11 +69,11 @@ class GroupService @Inject constructor(
 
 class GroupConfig{
     var repeat: Status = Status.OFF
-    var locPush: Status = Status.OFF
     var recallNotify: Status = Status.OFF
     var flashImageNotify: Status = Status.OFF
     var leaveToBlack: Status = Status.ON
     var loLiConR18: Status = Status.OFF
+    var entryVerification: Status = Status.OFF
     var prohibitedWords: MutableSet<String> = mutableSetOf()
     var blackList: MutableSet<Long> = mutableSetOf()
     var qaList: MutableList<Qa> = mutableListOf()

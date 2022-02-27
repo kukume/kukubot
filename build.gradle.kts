@@ -1,13 +1,14 @@
-val utilsVersion = "0.3.10"
+val utilsVersion = "0.3.11"
 val artQqVersion = "0.1.0.0-DEV13"
 val webVersion = "0.0.2.0-DEV22"
-val springDataJpaVersion = "2.6.1"
+val springDataJpaVersion = "2.6.2"
 val hibernateVersion = "5.6.5.Final"
 val h2Version = "2.1.210"
 val hibernateTypesVersion = "2.14.0"
 val jsoupVersion = "1.14.3"
 val jsr305Version = "3.0.2"
 val queryDslVersion = "5.0.0"
+val telegramBotsVersion = "5.7.1"
 
 plugins {
     val kotlinVersion = "1.6.10"
@@ -50,4 +51,6 @@ dependencies {
     implementation("com.querydsl:querydsl-core:$queryDslVersion")
     implementation("com.querydsl:querydsl-jpa:$queryDslVersion")
     kapt("com.querydsl:querydsl-apt:$queryDslVersion:jpa")
+    implementation("org.telegram:telegrambots:$telegramBotsVersion")
+    implementation("org.telegram:telegrambots-abilities:$telegramBotsVersion")
 }

@@ -124,12 +124,24 @@ class GroupManagerEvent @Inject constructor(
             e.accept = false
             e.rejectMessage = "你是黑名单用户，无法加入本群"
             e.cancel = true
+        } else {
+            e.accept = true
+            e.cancel = true
         }
     }
 
     @Event
     fun friend(e: NewFriendRequestEvent) {
 
+    }
+
+    @Event
+    fun verification(e: GroupMemberJoinEvent) {
+        val group = e.group
+        val groupEntity = groupService.findByGroup(group.id) ?: return
+        if (groupEntity.config.entryVerification == Status.ON) {
+
+        }
     }
 }
 

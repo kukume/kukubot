@@ -59,19 +59,6 @@ class ToolController @Inject constructor(
         return messageEntity.content
     }
 
-    @Action("\\.*\\")
-    fun qa(group: Group, groupEntity: GroupEntity, message: Message) {
-        val codeStr = message.toCodeString()
-        val qaList = groupEntity.config.qaList
-        for (qa in qaList) {
-            if (qa.q == codeStr && qa.type == QaType.EXACT) {
-                group.sendMessage(qa.a.toMessageByRainCode())
-            }
-            if (codeStr.contains(qa.q) && qa.type == QaType.FUZZY) {
-                group.sendMessage(qa.a.toMessageByRainCode())
-            }
-        }
-    }
 
     @Action("百科 {text}")
     @QMsg(reply = true)

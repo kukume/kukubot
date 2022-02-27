@@ -173,7 +173,9 @@ class GroupManagerEvent @Inject constructor(
     fun verify(e: GroupMessageEvent) {
         val group = e.group.id
         val qq = e.sender.id
-        val captchaCode = e.message.firstString()
+        val captchaCode = kotlin.runCatching {
+            e.message.firstString()
+        }.getOrNull() ?: return
         val key = group.toString() + qq + captchaCode
         verifyMap.remove(key)
     }

@@ -8,8 +8,6 @@ import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.controller.QQController
 import com.icecreamqaq.yuq.entity.Group
-import com.icecreamqaq.yuq.entity.Member
-import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.Message.Companion.firstString
 import com.icecreamqaq.yuq.message.Message.Companion.toCodeString
 import me.kuku.yuq.entity.*
@@ -18,11 +16,10 @@ import javax.inject.Inject
 @GroupController
 class ManagerController @Inject constructor(
     private val groupService: GroupService,
-    @Config("YuQ.ArtQQ.master") private val master: String,
-    private val messageService: MessageService
+    @Config("YuQ.ArtQQ.master") private val master: String
 ): QQController(){
 
-    @Before(except = ["operateStatus", "add", "delete", "query", "recallMessage"])
+    @Before(except = ["operateStatus", "add", "delete", "query"])
     fun before(qq: Long) {
         if (qq != master.toLong()) throw mif.at(qq).plus("权限不足，无法执行").toThrowable()
     }
@@ -174,24 +171,7 @@ class ManagerController @Inject constructor(
             } else null
         } else null
     }
-
-    @Action("\\.*\\")
-    @QMsg(reply = true)
-    fun recallMessage(message: Message, group: Group, qq: Member): String? {
-        if (message.toPath().last() != "撤回") return null
-        val messageSource = message.reply ?: return null
-        val botId = yuq.botId
-        val bot = group[botId]
-        if ((!bot.isAdmin() && messageSource.sender != botId) || (bot.isAdmin() && qq.isOwner())) return "撤回失败，机器人权限不足"
-        val id = messageSource.id
-        val messageEntity = messageService.findByMessageIdAndGroup(id, group.id) ?: return "没有找到该条消息，撤回失败"
-        val source = messageEntity.messageSource ?: return "没有找到该条消息源，撤回失败"
-        val ss = kotlin.runCatching {
-            source.toArtGroupMessageSource().recall()
-            null
-        }.getOrDefault("撤回失败，机器人权限不足")
-        return ss
-    }
 }
 
 fun Boolean.toStatus() = if (this) Status.ON else Status.OFF
+

@@ -7,6 +7,7 @@ import com.IceCreamQAQ.Yu.annotation.Event
 import com.IceCreamQAQ.Yu.annotation.EventListener
 import com.IceCreamQAQ.Yu.di.ClassContext
 import com.IceCreamQAQ.Yu.di.YuContext
+import com.IceCreamQAQ.Yu.event.EventBus
 import com.IceCreamQAQ.Yu.event.events.AppStartEvent
 import com.IceCreamQAQ.Yu.event.events.AppStopEvent
 import com.IceCreamQAQ.Yu.hook.*
@@ -20,6 +21,7 @@ import kotlinx.coroutines.runBlocking
 import me.kuku.utils.MyUtils
 import me.kuku.yuq.utils.YuqUtils
 import me.kuku.utils.OkHttpUtils
+import me.kuku.yuq.event.*
 import org.artqq.util.CommonResult
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
@@ -35,6 +37,7 @@ import org.springframework.transaction.support.DefaultTransactionDefinition
 import org.telegram.abilitybots.api.bot.AbilityBot
 import org.telegram.abilitybots.api.util.AbilityExtension
 import org.telegram.telegrambots.meta.TelegramBotsApi
+import org.telegram.telegrambots.meta.api.objects.Update
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession
 import java.util.*
 import javax.inject.Inject
@@ -141,10 +144,29 @@ class TelegramModule @Inject constructor(
 }
 
 class TgBot(botToken: String, botUsername: String, private val creatorId: Long): AbilityBot(botToken, botUsername) {
+
+    @Inject
+    private lateinit var eventBus: EventBus
+
     override fun creatorId(): Long = creatorId
 
     public override fun addExtension(extension: AbilityExtension) {
         super.addExtension(extension)
+    }
+
+    override fun onUpdateReceived(update: Update) {
+        super.onUpdateReceived(update)
+        eventBus.post(TelegramMessageEvent(update))
+        val chat = update.message.chat
+        if (chat.isChannelChat) {
+            eventBus.post(TelegramChannelMessageEvent(update))
+        } else if (chat.isGroupChat) {
+            eventBus.post(TelegramGroupMessageEvent(update))
+        } else if (chat.isSuperGroupChat) {
+            eventBus.post(TelegramSuperGroupMessageEvent(update))
+        } else if (chat.isUserChat) {
+            eventBus.post(TelegramUserMessageEvent(update))
+        }
     }
 }
 
@@ -183,6 +205,7 @@ class SystemEvent @Inject constructor(
                     }
                 }
             }
+            context.injectBean(tgBot!!)
             val botsApi = TelegramBotsApi(DefaultBotSession::class.java)
             botsApi.registerBot(tgBot)
         }

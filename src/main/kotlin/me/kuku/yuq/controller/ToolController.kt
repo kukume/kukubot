@@ -8,6 +8,7 @@ import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.entity.Group
+import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.Message.Companion.firstString
 import com.icecreamqaq.yuq.message.Message.Companion.toCodeString
@@ -20,6 +21,7 @@ import me.kuku.yuq.entity.*
 import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.transaction
 import me.kuku.yuq.utils.YuqUtils
+import okhttp3.MultipartBody
 import org.jsoup.Jsoup
 import java.net.URLEncoder
 import java.time.LocalDate
@@ -210,6 +212,27 @@ class ToolController @Inject constructor(
     fun oracle(email: String) =
         if (OkHttpUtils.getJson("https://api.kukuqaq.com/tool/oracle/promotion?email=$email").getJSONArray("items")?.isNotEmpty() == true) "有资格了"
         else "你木的资格"
+
+    @Action("dcloud上传")
+    fun dCloudUpload(session: ContextSession, group: Group, qq: Long): Message {
+        group.sendMessage(mif.at(qq).plus("请发送需要上传的图片"))
+        val message = session.waitNextMessage()
+        var url: String? = null
+        for (messageItem in message.body) {
+            if (messageItem is Image) {
+                val tempUrl = messageItem.url
+                val jsonObject = OkHttpUtils.postJson("https://api.kukuqaq.com/tool/upload", MultipartBody.Builder().setType(MultipartBody.FORM)
+                    .addFormDataPart("type", "4")
+                    .addFormDataPart("file", messageItem.id, OkHttpUtils.getStreamBody(OkHttpUtils.getBytes(tempUrl))).build())
+                url = if (jsonObject.getInteger("code") == 200) jsonObject.getJSONObject("data").getString("url")
+                else jsonObject.getString("message")
+                break
+            }
+        }
+        val send = if (url != null) url.toMessage() else "没有发现图片".toMessage()
+        send.reply = message.source
+        return send
+    }
 }
 
 object QqGroupLogic {

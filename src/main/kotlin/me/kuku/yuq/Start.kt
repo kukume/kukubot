@@ -34,6 +34,7 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import org.springframework.transaction.support.DefaultTransactionDefinition
+import org.springframework.transaction.support.TransactionTemplate
 import org.telegram.abilitybots.api.bot.AbilityBot
 import org.telegram.abilitybots.api.util.AbilityExtension
 import org.telegram.telegrambots.meta.TelegramBotsApi
@@ -112,6 +113,8 @@ class JpaModule: Module {
         val applicationContext = AnnotationConfigApplicationContext(JpaConfig::class.java)
         context.putBean(applicationContext)
         transactionManager = applicationContext.getBean(JpaTransactionManager::class.java)
+        val transactionTemplate = applicationContext.getBean(TransactionTemplate::class.java)
+        context.putBean(transactionTemplate)
         val classes = MyUtils.getClasses("me.kuku.yuq.entity")
         for ((_, v) in classes) {
             v.interfaces.takeIf { it.contains(JpaRepository::class.java) }

@@ -2,6 +2,7 @@ package me.kuku.yuq.event
 
 import com.IceCreamQAQ.Yu.annotation.Event
 import com.IceCreamQAQ.Yu.annotation.EventListener
+import com.IceCreamQAQ.Yu.di.YuContext
 import com.icecreamqaq.yuq.event.GroupMessageEvent
 import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.message.Text
@@ -27,12 +28,15 @@ class MessageInteractEvent {
     @Inject
     private lateinit var tgBot: TgBot
     @Inject
+    private lateinit var context: YuContext
+    @Inject
     private lateinit var messageInteractService: MessageInteractService
     @Inject
     private lateinit var messageService: MessageService
 
     @Event(weight = Event.Weight.lowest)
     fun qqMessage(e: GroupMessageEvent) {
+        if (context.getBean(TgBot::class.java) == null) return
         val message = e.message
         val group = e.group
         val member = e.sender

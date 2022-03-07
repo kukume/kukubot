@@ -71,7 +71,7 @@ class GroupConfig{
     var repeat: Status = Status.OFF
     var recallNotify: Status = Status.OFF
     var flashImageNotify: Status = Status.OFF
-    var leaveToBlack: Status = Status.ON
+    var leaveToBlack: Status = Status.OFF
     var loLiConR18: Status = Status.OFF
     var entryVerification: Status = Status.OFF
     var prohibitedWords: MutableSet<String> = mutableSetOf()

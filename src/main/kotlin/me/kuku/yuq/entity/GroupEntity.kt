@@ -68,6 +68,7 @@ class GroupService @Inject constructor(
 }
 
 class GroupConfig{
+    var switch: Status = Status.OFF
     var repeat: Status = Status.OFF
     var recallNotify: Status = Status.OFF
     var flashImageNotify: Status = Status.OFF

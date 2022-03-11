@@ -11,6 +11,7 @@ import com.icecreamqaq.yuq.mif
 import me.kuku.utils.DateTimeFormatterUtils
 import me.kuku.utils.JobManager
 import me.kuku.utils.MyUtils
+import me.kuku.yuq.controller.toStatus
 import me.kuku.yuq.entity.*
 import me.kuku.yuq.transaction
 import java.util.concurrent.ConcurrentHashMap
@@ -75,6 +76,26 @@ class GroupManagerEvent @Inject constructor(
             }
             lastMessage[groupNum] = nowMsg
             lastQq[groupNum] = qq
+        }
+    }
+
+    @Event
+    fun groupSwitch(e: GroupMessageEvent) {
+        val ss = kotlin.runCatching {
+            e.message.firstString()
+        }.getOrNull() ?: return
+        val group = e.group
+        val groupId = group.id
+        val groupEntity = groupService.findByGroup(groupId) ?: return
+        if (ss in listOf("bot开", "bot关")) {
+            val sss = ss.contains("开")
+            groupEntity.config.switch = sss.toStatus()
+            groupService.save(groupEntity)
+            group.sendMessage("bot${if (sss) "开启" else "关闭"}成功")
+        } else {
+            if (groupEntity.config.switch == Status.OFF) {
+                e.cancel = true
+            }
         }
     }
 

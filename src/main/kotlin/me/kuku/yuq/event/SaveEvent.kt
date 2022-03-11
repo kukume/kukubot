@@ -22,7 +22,7 @@ class Save @Inject constructor(
     private val recallService: RecallService
 ) {
 
-    @Event(weight = Event.Weight.high)
+    @Event(weight = Event.Weight.highest)
     fun savePeople(e: MessageEvent) {
         transaction {
             val qq = e.sender.id
@@ -46,7 +46,7 @@ class Save @Inject constructor(
         }
     }
 
-    @Event
+    @Event(weight = Event.Weight.high)
     fun saveMessage(e: GroupMessageEvent) {
         val groupEntity = groupService.findByGroup(e.group.id) ?: return
         val qqEntity = qqService.findByQq(e.sender.id) ?: return
@@ -61,7 +61,7 @@ class Save @Inject constructor(
         messageService.save(messageEntity)
     }
 
-    @Event
+    @Event(weight = Event.Weight.high)
     fun saveBotMessage(e: SendMessageEvent.Post) = transaction {
         val messageId = e.messageSource.id
         val groupEntity = groupService.findByGroup(e.sendTo.id) ?: return@transaction
@@ -86,7 +86,6 @@ class Save @Inject constructor(
         messageService.save(messageEntity)
     }
 
-    @Event
     fun saveRecallMessage(e: GroupRecallEvent) {
         val messageId = e.messageId
         val group = e.group

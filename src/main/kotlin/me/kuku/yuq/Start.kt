@@ -79,6 +79,11 @@ open class JpaConfig{
         return transactionManager
     }
 
+    @Bean
+    open fun transactionTemplate(transactionManager: JpaTransactionManager): TransactionTemplate {
+        return TransactionTemplate(transactionManager)
+    }
+
 }
 
 private lateinit var transactionManager: JpaTransactionManager

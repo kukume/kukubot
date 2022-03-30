@@ -6,6 +6,7 @@ import com.icecreamqaq.yuq.message.Message.Companion.toMessage
 import com.icecreamqaq.yuq.yuq
 import me.kuku.utils.OkHttpUtils
 import me.kuku.pojo.QqLoginPojo
+import me.kuku.utils.OkUtils
 import me.kuku.yuq.entity.GroupEntity
 import me.kuku.yuq.entity.QqEntity
 
@@ -37,7 +38,7 @@ object YuqUtils {
     fun shortUrl(url: String): String {
         val newUrl = if (url.startsWith("http")) url else "http://$url"
         val jsonObject = OkHttpUtils.postJson("https://api.0n0.co/v1/domain/gen",
-            OkHttpUtils.addJson("""
+            OkUtils.json("""
                 {"urlCurrent":"$newUrl","validTime":"180"}
             """.trimIndent()))
         return if (jsonObject.getInteger("code") == 1000) jsonObject.getString("data")

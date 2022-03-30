@@ -2,6 +2,7 @@ package me.kuku.yuq.logic
 
 import me.kuku.utils.OkHttpUtils
 import me.kuku.pojo.Result
+import me.kuku.utils.OkUtils
 import me.kuku.yuq.utils.YuqUtils
 import org.jsoup.Jsoup
 import java.net.URLEncoder
@@ -18,7 +19,7 @@ object ToolLogic {
             else "https://baike.baidu.com$location"
             response = OkHttpUtils.get(resultUrl)
         }
-        val html = OkHttpUtils.str(response)
+        val html = OkUtils.str(response)
         val doc = Jsoup.parse(html)
         val result = doc.select(".lemma-summary .para").first()?.text()
             ?: return Result.failure(210, "", "https://baike.baidu.com" + doc.select("li[class=list-dot list-dot-paddingleft]").first()?.getElementsByTag("a")?.first()?.attr("href"))

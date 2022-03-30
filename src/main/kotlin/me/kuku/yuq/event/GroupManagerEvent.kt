@@ -169,7 +169,7 @@ class GroupManagerEvent @Inject constructor(
         val qq = e.member.id
         val groupEntity = groupService.findByGroup(group.id) ?: return
         if (groupEntity.config.entryVerification == Status.ON) {
-            val captchaCode = MyUtils.randomStr(4)
+            val captchaCode = MyUtils.randomLetter(4)
             val message = buildMessage {
                 at(qq)
                 line()

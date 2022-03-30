@@ -11,7 +11,6 @@ import com.icecreamqaq.yuq.entity.Group
 import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.Message.Companion.firstString
-import com.icecreamqaq.yuq.message.Message.Companion.toCodeString
 import com.icecreamqaq.yuq.message.Message.Companion.toMessage
 import com.icecreamqaq.yuq.message.Message.Companion.toMessageByRainCode
 import com.icecreamqaq.yuq.mif
@@ -223,13 +222,13 @@ class ToolController @Inject constructor(
                 val tempUrl = messageItem.url
                 val jsonObject = OkHttpUtils.postJson("https://api.kukuqaq.com/tool/upload", MultipartBody.Builder().setType(MultipartBody.FORM)
                     .addFormDataPart("type", "4")
-                    .addFormDataPart("file", messageItem.id, OkHttpUtils.getStreamBody(OkHttpUtils.getBytes(tempUrl))).build())
+                    .addFormDataPart("file", messageItem.id, OkUtils.streamBody(OkHttpUtils.getBytes(tempUrl))).build())
                 url = if (jsonObject.getInteger("code") == 200) jsonObject.getJSONObject("data").getString("url")
                 else jsonObject.getString("message")
                 break
             }
         }
-        val send = if (url != null) url.toMessage() else "没有发现图片".toMessage()
+        val send = url?.toMessage() ?: "没有发现图片".toMessage()
         send.reply = message.source
         return send
     }
@@ -276,7 +275,7 @@ object QqGroupLogic {
             }
         }
         val html = OkHttpUtils.getStr("https://qun.qq.com/interactive/honorlist?gc=$group&type=$typeNum&_wv=3&_wwv=$wwv",
-            OkHttpUtils.addCookie(qqLoginPojo.cookieWithPs))
+            OkUtils.cookie(qqLoginPojo.cookieWithPs))
         val jsonStr = MyUtils.regex("window.__INITIAL_STATE__=", "</script", html)
         val jsonObject = JSON.parseObject(jsonStr)
         val jsonArray = jsonObject.getJSONArray(param)

@@ -1,10 +1,12 @@
 package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.Action
+import com.IceCreamQAQ.Yu.annotation.Before
 import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.entity.Contact
 import com.icecreamqaq.yuq.message.Message.Companion.firstString
+import com.icecreamqaq.yuq.mif
 import me.kuku.yuq.entity.NetEaseEntity
 import me.kuku.yuq.entity.NetEaseService
 import me.kuku.yuq.entity.QqEntity
@@ -35,4 +37,28 @@ class NetEaseController @Inject constructor(
         } else result.message
     }
 
+    @Before(except = ["login"])
+    fun before(qqEntity: QqEntity): NetEaseEntity {
+        val netEaseEntity = netEaseService.findByQqEntity(qqEntity)
+        return netEaseEntity ?: throw mif.at(qqEntity.qq).plus("您没有绑定网易云音乐账号，操作失败").toThrowable()
+    }
+
+    @Action("网易签到")
+    fun sign(netEaseEntity: NetEaseEntity): String {
+        val result = NetEaseLogic.sign(netEaseEntity)
+        return if (result.isSuccess) "网易云音乐签到成功"
+        else "网易云音乐签到失败，${result.message}"
+    }
+
+    @Action("网易听歌")
+    fun listenMusic(netEaseEntity: NetEaseEntity): String {
+        val result = NetEaseLogic.listenMusic(netEaseEntity)
+        return if (result.isSuccess) "网易云音乐听歌成功"
+        else "网易云音乐听歌失败，${result.message}"
+    }
+
+    @Action("网易音乐人签到")
+    fun musicianSign(netEaseEntity: NetEaseEntity) {
+
+    }
 }

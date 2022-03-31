@@ -2,9 +2,9 @@ val utilsVersion = "0.3.17"
 val artQqVersion = "0.1.0.0-DEV14"
 val webVersion = "0.0.2.0-DEV22"
 val springDataJpaVersion = "2.6.3"
-val hibernateVersion = "5.6.5.Final"
+val hibernateVersion = "5.6.7.Final"
 val h2Version = "1.4.200"
-val hibernateTypesVersion = "2.14.0"
+val hibernateTypesVersion = "2.14.1"
 val jsoupVersion = "1.14.3"
 val jsr305Version = "3.0.2"
 val queryDslVersion = "5.0.0"
@@ -25,7 +25,7 @@ repositories {
     mavenCentral()
 }
 
-tasks{
+tasks {
     shadowJar {
         manifest {
             attributes(Pair("Main-Class", "me.kuku.yuq.StartKt"))

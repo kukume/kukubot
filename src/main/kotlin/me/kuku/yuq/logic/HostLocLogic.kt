@@ -1,12 +1,9 @@
-package me.kuku.automatic.logic
+package me.kuku.yuq.logic
 
 import kotlinx.coroutines.delay
 import me.kuku.pojo.Result
 import me.kuku.pojo.UA
-import me.kuku.utils.JobManager
-import me.kuku.utils.MyUtils
-import me.kuku.utils.OkHttpUtils
-import me.kuku.utils.OkUtils
+import me.kuku.utils.*
 import org.jsoup.Jsoup
 import java.io.IOException
 
@@ -42,7 +39,7 @@ object HostLocLogic {
             for (url in urlList) {
                 delay(5000)
                 try {
-                    OkHttpUtils.get(url, OkUtils.headers(cookie, "https://hostloc.com/forum.php", UA.PC))
+                    OkHttpKtUtils.get(url, OkUtils.headers(cookie, "https://hostloc.com/forum.php", UA.PC))
                         .close()
                 } catch (e: IOException) {
                     e.printStackTrace()

@@ -21,7 +21,7 @@ class ForwardEntity {
 interface ForwardRepository: JpaRepository<ForwardEntity, Int> {
     fun findByInstruction(instruction: String): ForwardEntity?
     fun deleteByInstruction(instruction: String)
-    fun findByInstructionStartsWith(instruction: String): MutableList<ForwardEntity>
+    fun findByInstructionStartingWith(instruction: String): MutableList<ForwardEntity>
 }
 
 class ForwardService @Inject constructor(
@@ -36,7 +36,7 @@ class ForwardService @Inject constructor(
 
     fun findAll(): MutableList<ForwardEntity> = forwardRepository.findAll()
 
-    fun findByInstructionStartsWith(instruction: String): MutableList<ForwardEntity> =
-        forwardRepository.findByInstructionStartsWith(instruction)
+    fun findByInstructionStartingWith(instruction: String): MutableList<ForwardEntity> =
+        forwardRepository.findByInstructionStartingWith(instruction)
 
 }

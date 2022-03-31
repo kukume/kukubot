@@ -1,3 +1,5 @@
+@file:Suppress("SameParameterValue")
+
 package me.kuku.yuq.logic
 
 import me.kuku.yuq.entity.KuGouEntity
@@ -41,8 +43,7 @@ class KuGouLogic {
         return sb.toString()
     }
 
-    private fun signature2(map: MutableMap<String, String>, other: String = ""): String{
-        val ss = "NVPh5oo715z5DIWAeQlhMDsWXXQV4hwt"
+    private fun signature(ss: String, map: MutableMap<String, String>, other: String = ""): String {
         val list = LinkedList<String>()
         val sb = StringBuilder()
         for ((k, v) in map){
@@ -57,6 +58,14 @@ class KuGouLogic {
         val signature = MD5Utils.toMD5(s)
         sb.append("signature=$signature")
         return sb.toString()
+    }
+
+    private fun signature2(map: MutableMap<String, String>, other: String = ""): String{
+        return signature("NVPh5oo715z5DIWAeQlhMDsWXXQV4hwt", map, other)
+    }
+
+    private fun signature3(map: MutableMap<String, String>, other: String = ""): String{
+        return signature("LnT6xpN3khm36zse0QzvmgTZ3waWdRSA", map, other)
     }
 
     fun getQrcode(mid: String?): KuGouQrcode {
@@ -103,7 +112,8 @@ class KuGouLogic {
     fun sendMobileCode(phone: String, mid: String): Result<Void> {
         val time = System.currentTimeMillis()
         val map = mutableMapOf(
-            "appid" to "1058",
+            // 1058
+            "appid" to "3116",
             "clientver" to "1000",
             "clienttime" to time.toString(),
             "mid" to mid,
@@ -133,7 +143,7 @@ class KuGouLogic {
     fun verifyCode(phone: String, code: String, mid: String): Result<KuGouEntity> {
         val time = clientTime()
         val map = mutableMapOf(
-            "appid" to "1058",
+            "appid" to "3116",
             "clientver" to "10",
             "clienttime" to time.toString(),
             "mid" to mid,
@@ -208,6 +218,19 @@ class KuGouLogic {
             OkHttpUtils.postJson("https://h5activity.kugou.com/v1/musician/do_signed?${signature2(map)}", mapOf())
         return if (jsonObject.getInteger("errcode") == 0) Result.success("酷狗音乐人签到成功！", null)
         else Result.failure("酷狗音乐人签到失败！" + jsonObject.getString("errmsg"))
+    }
+
+    suspend fun listenMusic(kuGouEntity: KuGouEntity): Result<Void> {
+        val aId = MyUtils.regex("a_id=", "&", kuGouEntity.kuGoo)!!
+        val map = mutableMapOf("userid" to kuGouEntity.userid.toString(), "token" to kuGouEntity.token,
+            "appid" to "3116", "clientver" to "10547", "clienttime" to (System.currentTimeMillis() / 1000).toString(),
+            "mid" to kuGouEntity.mid, "uuid" to MyUtils.randomLetter(32), "dfid" to "-")
+        val other = """{"mixsongid":273263741}"""
+        val jsonObject = OkHttpKtUtils.postJson("https://gateway.kugou.com/v2/report/listen_song?${signature3(map, other)}",
+            OkUtils.text(other), mapOf("x-router" to "youth.kugou.com", "User-Agent" to "Android12-1070-10536-130-0-ReportPlaySongToServerProtocol-wifi"))
+        val code = jsonObject.getInteger("error_code")
+        return if (code == 0 || code == 130012) Result.success()
+        else Result.failure(jsonObject.getString("error_msg"))
     }
 
 }

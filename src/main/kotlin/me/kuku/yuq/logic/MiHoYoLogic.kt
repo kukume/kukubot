@@ -3,15 +3,48 @@ package me.kuku.yuq.logic
 import com.alibaba.fastjson.JSONObject
 import me.kuku.yuq.entity.MiHoYoEntity
 import me.kuku.pojo.Result
-import me.kuku.utils.MD5Utils
-import me.kuku.utils.MyUtils
-import me.kuku.utils.OkHttpUtils
-import me.kuku.utils.OkUtils
+import me.kuku.pojo.UA
+import me.kuku.utils.*
 import java.util.*
 
 object MiHoYoLogic {
 
     private const val version = "2.3.0"
+
+    fun login(account: String, password: String): Result<MiHoYoEntity> {
+        val beforeJsonObject = OkHttpUtils.getJson("https://webapi.account.mihoyo.com/Api/create_mmt?scene_type=1&now=${System.currentTimeMillis()}&reason=bbs.mihoyo.com")
+        val dataJsonObject = beforeJsonObject.getJSONObject("data").getJSONObject("mmt_data")
+        val challenge = dataJsonObject.getString("challenge")
+        val gt = dataJsonObject.getString("gt")
+        val mmtKey = dataJsonObject.getString("mmt_key")
+        val jsonObject = OkHttpUtils.postJson("https://api.kukuqaq.com/tool/geetest",
+            mapOf("challenge" to challenge, "gt" to gt, "referer" to "https://bbs.mihoyo.com/ys/"))
+        if (jsonObject.getInteger("code") != 200) return Result.failure("验证码识别失败，请重试")
+        val cha = jsonObject.getString("challenge")
+        val validate = jsonObject.getString("validate")
+        val rsaKey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDDvekdPMHN3AYhm/vktJT+YJr7cI5DcsNKqdsx5DZX0gDuWFuIjzdwButrIYPNmRJ1G8ybDIF7oDW2eEpm5sMbL9zs9ExXCdvqrn51qELbqj0XxtMTIpaCHFSI50PfPpTFV9Xt/hmyVwokoOXFlAEgCn+QCgGs52bFoYMtyi+xEQIDAQAB"
+        val enPassword = password.rsaEncrypt(rsaKey)
+        val map = mapOf("is_bh2" to "false", "account" to account, "password" to enPassword,
+            "mmt_key" to mmtKey, "is_crypto" to "true", "geetest_challenge" to cha, "geetest_validate" to validate,
+            "geetest_seccode" to "${validate}|jordan")
+        val response = OkHttpUtils.post("https://webapi.account.mihoyo.com/Api/login_by_password", map, OkUtils.ua(UA.PC))
+        val loginJsonObject = OkUtils.json(response)
+        val infoDataJsonObject = loginJsonObject.getJSONObject("data")
+        if (infoDataJsonObject.getInteger("status") != 1) return Result.failure(infoDataJsonObject.getString("msg"))
+        var cookie = OkUtils.cookie(response)
+        val infoJsonObject = infoDataJsonObject.getJSONObject("account_info")
+        val accountId = infoJsonObject.getString("account_id")
+        val ticket = infoJsonObject.getString("weblogin_token")
+        val cookieJsonObject = OkHttpUtils.getJson("https://webapi.account.mihoyo.com/Api/cookie_accountinfo_by_loginticket?login_ticket=$ticket&t=${System.currentTimeMillis()}",
+            OkUtils.headers(cookie, "", UA.PC))
+        val cookieToken = cookieJsonObject.getJSONObject("data").getJSONObject("cookie_info").getString("cookie_token")
+        cookie += "cookie_token=$cookieToken; account_id=$accountId; "
+        val loginResponse = OkHttpUtils.post("https://bbs-api.mihoyo.com/user/wapi/login",
+            OkUtils.json("{\"gids\":\"2\"}"), OkUtils.cookie(cookie)).also { it.close() }
+        val finaCookie = OkUtils.cookie(loginResponse)
+        cookie += finaCookie
+        return Result.success(MiHoYoEntity().also { it.cookie = cookieToken })
+    }
 
     private fun ds(n: String = "h8w582wxwgqvahcdkpvdhbh2w9casgfl"): String {
         val i = System.currentTimeMillis() / 1000

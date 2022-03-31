@@ -92,11 +92,11 @@ class ForwardEvent {
     @Inject
     private lateinit var forwardService: ForwardService
 
-    @Event
+//    @Event
     fun forward(e: GroupMessageEvent) {
         val group = e.group.id
         val message = kotlin.runCatching { e.message.firstString() }.getOrNull() ?: return
-        val list = forwardService.findByInstructionStartsWith(e.message.path[0].toString())
+        val list = forwardService.findByInstructionStartingWith(e.message.path[0].toString())
         if (list.isEmpty()) return
         val forwardEntity = list[0]
         val qq = forwardEntity.qq

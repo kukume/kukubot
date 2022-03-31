@@ -17,10 +17,14 @@ class MiHoYoEntity {
     var cookie: String = ""
 }
 
-interface MiHoYoRepository: JpaRepository<MiHoYoEntity, Int>
+interface MiHoYoRepository: JpaRepository<MiHoYoEntity, Int> {
+    fun findByQqEntity(qqEntity: QqEntity): MiHoYoEntity?
+}
 
 class MiHoYoService @Inject constructor(
     private val miHoYoRepository: MiHoYoRepository
 ) {
     fun save(miHoYoEntity: MiHoYoEntity): MiHoYoEntity = miHoYoRepository.save(miHoYoEntity)
+
+    fun findByQqEntity(qqEntity: QqEntity) = miHoYoRepository.findByQqEntity(qqEntity)
 }

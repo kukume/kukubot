@@ -15,7 +15,7 @@ class BeforeController @Inject constructor(
     private val qqService: QqService
 ){
 
-    @Before
+    @Before(weight = -1)
     @Global
     fun before(session: ContextSession, qq: Long, group: Long?) {
         transaction {

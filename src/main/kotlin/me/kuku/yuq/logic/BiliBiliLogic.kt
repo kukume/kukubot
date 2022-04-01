@@ -75,7 +75,7 @@ object BiliBiliLogic {
                 }
             }
             if (text == null) {
-                val vestJsonObject = cardJsonObject.getJSONObject("vest")?.let {
+                cardJsonObject.getJSONObject("vest")?.let {
                     text = it.getString("content")
                 }
             }

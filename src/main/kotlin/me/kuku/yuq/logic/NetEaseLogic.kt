@@ -116,7 +116,7 @@ object NetEaseLogic {
             val jsonArray = jsonObject.getJSONObject("data").getJSONArray("list")
             val list = mutableListOf<Mission>()
             jsonArray.map { it as JSONObject }.forEach {
-                list.add(Mission(it.getLong("userMissionId"), it.getInteger("period"), it.getString("description")))
+                list.add(Mission(it.getLong("userMissionId"), it.getInteger("period"), it.getInteger("type"), it.getString("description")))
             }
             Result.success(list)
         } else Result.failure(jsonObject.getString("msg"))
@@ -130,7 +130,7 @@ object NetEaseLogic {
             val jsonArray = jsonObject.getJSONObject("data").getJSONArray("list")
             val list = mutableListOf<Mission>()
             jsonArray.map { it as JSONObject }.forEach {
-                list.add(Mission(it.getLong("userMissionId"), it.getInteger("period"), it.getString("description")))
+                list.add(Mission(it.getLong("userMissionId"), it.getInteger("period"), it.getInteger("type"), it.getString("description")))
             }
             Result.success(list)
         } else Result.failure(jsonObject.getString("msg"))
@@ -153,7 +153,23 @@ object NetEaseLogic {
         else Result.failure(jsonObject.getString("msg"))
     }
 
+    fun musicianSign(netEaseEntity: NetEaseEntity): Result<Void> {
+        val result = musicianCycleMission(netEaseEntity)
+        return if (result.isSuccess) {
+            val list = result.data
+            for (mission in list) {
+                if (mission.description == "音乐人中心签到") {
+                    if (mission.type != 100) {
+                        userAccess(netEaseEntity)
+                    }
+                    return musicianReceive(netEaseEntity, mission)
+                }
+            }
+            Result.failure("没有找到音乐人签到任务")
+        } else Result.failure(result.message)
+    }
+
 
 }
 
-data class Mission(val userMissionId: Long?, val period: Int, val description: String = "")
+data class Mission(val userMissionId: Long?, val period: Int, val type: Int, val description: String = "")

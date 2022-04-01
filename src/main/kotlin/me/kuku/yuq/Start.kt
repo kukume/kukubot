@@ -11,7 +11,6 @@ import com.IceCreamQAQ.Yu.event.EventBus
 import com.IceCreamQAQ.Yu.event.events.AppStartEvent
 import com.IceCreamQAQ.Yu.event.events.AppStopEvent
 import com.IceCreamQAQ.Yu.hook.*
-import com.IceCreamQAQ.Yu.loader.AppClassloader
 import com.IceCreamQAQ.Yu.module.Module
 import com.IceCreamQAQ.Yu.util.OkHttpWebImpl
 import com.icecreamqaq.yuq.artqq.HookCaptchaUtils
@@ -46,8 +45,9 @@ import javax.inject.Inject
 import javax.persistence.EntityManagerFactory
 
 fun main(args: Array<String>) {
-    AppClassloader.registerBackList(listOf())
-    YuQArtQQStarter.start(args)
+    val newArgs = if (args.contains("-noUI")) args
+    else args.plus("-noUI")
+    YuQArtQQStarter.start(newArgs)
 }
 
 @Configuration

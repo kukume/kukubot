@@ -20,8 +20,9 @@ object MiHoYoLogic {
         val jsonObject = OkHttpUtils.postJson("https://api.kukuqaq.com/tool/geetest",
             mapOf("challenge" to challenge, "gt" to gt, "referer" to "https://bbs.mihoyo.com/ys/"))
         if (jsonObject.getInteger("code") != 200) return Result.failure("验证码识别失败，请重试")
-        val cha = jsonObject.getString("challenge")
-        val validate = jsonObject.getString("validate")
+        val myDataJsonObject = jsonObject.getJSONObject("data")
+        val cha = myDataJsonObject.getString("challenge")
+        val validate = myDataJsonObject.getString("validate")
         val rsaKey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDDvekdPMHN3AYhm/vktJT+YJr7cI5DcsNKqdsx5DZX0gDuWFuIjzdwButrIYPNmRJ1G8ybDIF7oDW2eEpm5sMbL9zs9ExXCdvqrn51qELbqj0XxtMTIpaCHFSI50PfPpTFV9Xt/hmyVwokoOXFlAEgCn+QCgGs52bFoYMtyi+xEQIDAQAB"
         val enPassword = password.rsaEncrypt(rsaKey)
         val map = mapOf("is_bh2" to "false", "account" to account, "password" to enPassword,
@@ -43,7 +44,7 @@ object MiHoYoLogic {
             OkUtils.json("{\"gids\":\"2\"}"), OkUtils.cookie(cookie)).also { it.close() }
         val finaCookie = OkUtils.cookie(loginResponse)
         cookie += finaCookie
-        return Result.success(MiHoYoEntity().also { it.cookie = cookieToken })
+        return Result.success(MiHoYoEntity().also { it.cookie = cookie })
     }
 
     private fun ds(n: String = "h8w582wxwgqvahcdkpvdhbh2w9casgfl"): String {

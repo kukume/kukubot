@@ -21,10 +21,15 @@ class BiliBiliEntity: BaseEntity() {
     var live: Status = Status.OFF
 }
 
-interface BiliBiliRepository: JpaRepository<BiliBiliEntity, Int>
+interface BiliBiliRepository: JpaRepository<BiliBiliEntity, Int> {
+    fun findByQqEntity(qqEntity: QqEntity): BiliBiliEntity?
+}
 
 class BiliBiliService @Inject constructor(
     private val biliBiliRepository: BiliBiliRepository
 ) {
+    fun findByQqEntity(qqEntity: QqEntity) = biliBiliRepository.findByQqEntity(qqEntity)
+
+    fun save(biliEntity: BiliBiliEntity): BiliBiliEntity = biliBiliRepository.save(biliEntity)
 
 }

@@ -1,11 +1,15 @@
 package me.kuku.yuq.entity
 
+import com.vladmihalcea.hibernate.type.json.JsonType
+import org.hibernate.annotations.Type
+import org.hibernate.annotations.TypeDef
 import org.springframework.data.jpa.repository.JpaRepository
 import javax.inject.Inject
 import javax.persistence.*
 
 @Entity
 @Table(name = "ku_gou")
+@TypeDef(name = "json", typeClass = JsonType::class)
 class KuGouEntity: BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,6 +22,9 @@ class KuGouEntity: BaseEntity() {
     @Column(length = 2000)
     var kuGoo: String = ""
     var mid: String = ""
+    @Type(type = "json")
+    @Column(columnDefinition = "json")
+    var config: KuGouConfig = KuGouConfig()
 }
 
 interface KuGouRepository: JpaRepository<KuGouEntity, Int> {
@@ -33,4 +40,8 @@ class KuGouService @Inject constructor(
 
     fun findByQqEntity(qqEntity: QqEntity) = kuGouRepository.findByQqEntity(qqEntity)
 
+    fun findAll(): List<KuGouEntity> = kuGouRepository.findAll()
+
 }
+
+data class KuGouConfig(var sign: Status = Status.OFF)

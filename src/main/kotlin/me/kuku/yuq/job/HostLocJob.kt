@@ -33,7 +33,7 @@ class HostLocJob @Inject constructor(
         JobManager.now {
             for (hostLocPost in newList) {
                 delay(3000)
-                val hostLocList = hostLocService.findByStatus(Status.ON)
+                val hostLocList = hostLocService.findByStatus(Status.ON).filter { it.config.push == Status.ON }
                 for (hostLocEntity in hostLocList) {
                     val str = """
                         Loc有新帖了！！

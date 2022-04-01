@@ -65,4 +65,11 @@ class KuGouController @Inject constructor(
         }
     }
 
+    @Action("酷狗自动签到 {status}")
+    fun autoSign(status: Boolean, kuGouEntity: KuGouEntity): String {
+        kuGouEntity.config.sign = status.toStatus()
+        kuGouService.save(kuGouEntity)
+        return "酷狗音乐自动签到${if (status) "开启" else "关闭"}成功"
+    }
+
 }

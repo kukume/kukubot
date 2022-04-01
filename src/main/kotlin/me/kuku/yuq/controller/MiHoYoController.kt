@@ -18,9 +18,9 @@ class MiHoYoController @Inject constructor(
 
     @Action("米哈游登录")
     fun login(session: ContextSession, qqEntity: QqEntity): String {
-        reply("请输入手机号")
+        reply("请发送手机号")
         val phone = session.waitNextMessage().firstString()
-        reply("请输入密码")
+        reply("请发送密码")
         val password = session.waitNextMessage().firstString()
         val result = MiHoYoLogic.login(phone, password)
         return if (result.isSuccess) {

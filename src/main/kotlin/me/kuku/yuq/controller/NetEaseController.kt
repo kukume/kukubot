@@ -20,9 +20,9 @@ class NetEaseController @Inject constructor(
 
     @Action("网易登录")
     fun login(qqEntity: QqEntity, qq: Contact, session: ContextSession): String {
-        qq.sendMessage("请输入手机号")
+        qq.sendMessage("请发送手机号")
         val phone = session.waitNextMessage().firstString()
-        qq.sendMessage("请输入密码")
+        qq.sendMessage("请发送密码")
         val password = session.waitNextMessage().firstString()
         val result = NetEaseLogic.login(phone, password)
         return if (result.isSuccess) {

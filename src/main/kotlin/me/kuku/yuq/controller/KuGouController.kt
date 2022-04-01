@@ -22,8 +22,8 @@ class KuGouController @Inject constructor(
 
     @Action("酷狗登录")
     fun kuGouLogin(group: Group, session: ContextSession, qqEntity: QqEntity): String {
-        group.sendMessage("清输入手机号")
-        val phone = session.waitNextMessage().firstString().toLongOrNull() ?: return "输入的手机号有误"
+        group.sendMessage("请发送手机号")
+        val phone = session.waitNextMessage().firstString().toLongOrNull() ?: return "发送的手机号有误"
         val kuGouEntity = kuGouService.findByQqEntity(qqEntity) ?: KuGouEntity().also {
             it.mid = kuGouLogic.mid()
             it.qqEntity = qqEntity
@@ -31,7 +31,7 @@ class KuGouController @Inject constructor(
         val mid = kuGouEntity.mid
         val result = kuGouLogic.sendMobileCode(phone.toString(), mid)
         return if (result.isSuccess) {
-            group.sendMessage("请输入短信验证码")
+            group.sendMessage("请发送短信验证码")
             val code = session.waitNextMessage(1000 * 60 * 2).firstString()
             val verifyResult = kuGouLogic.verifyCode(phone.toString(), code, mid)
             if (verifyResult.isSuccess) {

@@ -7,7 +7,7 @@ import javax.persistence.*
 
 @Entity
 @Table(name = "baidu")
-class BaiduEntity {
+class BaiduEntity: BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int? = null
@@ -38,7 +38,7 @@ class BaiduService @Inject constructor(
     private val baiduRepository: BaiduRepository
 ) {
 
-    fun findByUserEntity(qqEntity: QqEntity) = baiduRepository.findByQqEntity(qqEntity)
+    fun findByQqEntity(qqEntity: QqEntity) = baiduRepository.findByQqEntity(qqEntity)
 
     fun save(baiduEntity: BaiduEntity): BaiduEntity = baiduRepository.save(baiduEntity)
 

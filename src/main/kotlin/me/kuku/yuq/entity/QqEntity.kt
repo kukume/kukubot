@@ -13,7 +13,7 @@ import javax.persistence.*
 @Table(name = "qq")
 @TypeDef(name = "json", typeClass = JsonType::class)
 @JsonIgnoreProperties("groups")
-open class QqEntity {
+open class QqEntity: BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     open var id: Int? = null

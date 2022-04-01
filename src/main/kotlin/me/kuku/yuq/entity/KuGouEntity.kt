@@ -6,7 +6,7 @@ import javax.persistence.*
 
 @Entity
 @Table(name = "ku_gou")
-class KuGouEntity {
+class KuGouEntity: BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int? = null

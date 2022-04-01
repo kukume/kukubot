@@ -21,7 +21,7 @@ import javax.persistence.*
 @Entity
 @Table(name = "message")
 @TypeDef(name = "json", typeClass = JsonType::class)
-class MessageEntity {
+class MessageEntity: BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int? = null

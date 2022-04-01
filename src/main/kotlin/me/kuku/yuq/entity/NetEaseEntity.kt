@@ -6,7 +6,7 @@ import javax.persistence.*
 
 @Entity
 @Table(name = "net_ease")
-class NetEaseEntity {
+class NetEaseEntity: BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int? = null

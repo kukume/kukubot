@@ -71,8 +71,8 @@ object HostLocLogic {
         return list
     }
 
-    fun postContent(url: String): String {
-        val str = OkHttpUtils.getStr(url, OkUtils.ua(UA.PC))
+    suspend fun postContent(url: String, cookie: String = ""): String {
+        val str = OkHttpKtUtils.getStr(url, OkUtils.headers(cookie, "", UA.PC))
         val pct = Jsoup.parse(str).getElementsByClass("pct")
         return pct.first()?.text() ?: "未获取到内容，需要权限查看"
     }

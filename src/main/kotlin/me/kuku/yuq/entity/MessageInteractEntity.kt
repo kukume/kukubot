@@ -7,7 +7,7 @@ import javax.persistence.*
 
 @Entity
 @Table(name = "message_interact")
-class MessageInteractEntity {
+class MessageInteractEntity: BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int? = null

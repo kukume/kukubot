@@ -18,7 +18,7 @@ import javax.persistence.*
 @Table(name=  "group_")
 @TypeDef(name = "json", typeClass = JsonType::class)
 @JsonIgnoreProperties("qqs")
-class GroupEntity {
+class GroupEntity: BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int? = null
@@ -92,5 +92,5 @@ enum class QaType {
 }
 
 enum class Status {
-    ON,OFF;
+    OFF,ON;
 }

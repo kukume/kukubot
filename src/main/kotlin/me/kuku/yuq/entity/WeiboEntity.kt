@@ -6,7 +6,7 @@ import javax.persistence.*
 
 @Entity
 @Table(name = "weibo")
-class WeiboEntity {
+class WeiboEntity: BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int? = null
@@ -31,6 +31,6 @@ class WeiboService @Inject constructor(
 
     fun findAll(): List<WeiboEntity> = weiboRepository.findAll()
 
-    fun findByUserEntity(qqEntity: QqEntity) = weiboRepository.findByQqEntity(qqEntity)
+    fun findByQqEntity(qqEntity: QqEntity) = weiboRepository.findByQqEntity(qqEntity)
 
 }

@@ -13,7 +13,7 @@ import javax.persistence.*
 
 @Entity
 @Table(name = "recall")
-class RecallEntity {
+class RecallEntity: BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int? = null

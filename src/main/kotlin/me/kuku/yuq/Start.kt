@@ -28,6 +28,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories
 import org.springframework.orm.jpa.JpaTransactionManager
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean
@@ -52,6 +53,7 @@ fun main(args: Array<String>) {
 @Configuration
 @EnableJpaRepositories
 @EnableTransactionManagement
+@EnableJpaAuditing
 open class JpaConfig{
 
     @Bean

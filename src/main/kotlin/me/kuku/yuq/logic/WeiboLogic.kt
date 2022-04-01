@@ -7,6 +7,7 @@ import me.kuku.yuq.entity.WeiboEntity
 import me.kuku.pojo.Result
 import me.kuku.pojo.ResultStatus
 import me.kuku.pojo.UA
+import me.kuku.utils.OkHttpKtUtils
 import me.kuku.utils.OkHttpUtils
 import me.kuku.utils.OkUtils
 import org.jsoup.Jsoup
@@ -163,26 +164,29 @@ object WeiboLogic {
         return WeiboQrcode(dataJsonObject.getString("qrid"), dataJsonObject.getString("image"))
     }
 
-    fun loginByQr2(weiboQrcode: WeiboQrcode): Result<WeiboEntity> {
-        val jsonObject = OkHttpUtils.getJsonp("https://login.sina.com.cn/sso/qrcode/check?entry=weibo&qrid=${weiboQrcode.id}&callback=STK_16010457545443",
+    suspend fun loginByQr2(weiboQrcode: WeiboQrcode): Result<WeiboEntity> {
+        val jsonObject = OkHttpKtUtils.getJsonp("https://login.sina.com.cn/sso/qrcode/check?entry=weibo&qrid=${weiboQrcode.id}&callback=STK_16010457545443",
             OkUtils.referer("https://weibo.com/"))
         return when (jsonObject.getInteger("retcode")) {
             20000000 -> {
                 val dataJsonObject = jsonObject.getJSONObject("data")
                 val alt = dataJsonObject.getString("alt")
-                val response = OkHttpUtils.get("https://login.sina.com.cn/sso/login.php?entry=weibo&returntype=TEXT&crossdomain=1&cdult=3&domain=weibo.com&alt=$alt&savestate=30&callback=STK_160104719639113")
+                val response = OkHttpKtUtils.get("https://login.sina.com.cn/sso/login.php?entry=weibo&returntype=TEXT&crossdomain=1&cdult=3&domain=weibo.com&alt=$alt&savestate=30&callback=STK_160104719639113")
                 val cookie = OkUtils.cookie(response)
                 val resultJsonObject = OkUtils.jsonp(response)
                 val jsonArray = resultJsonObject.getJSONArray("crossDomainUrlList")
                 val url = jsonArray.getString(2)
-                val finallyResponse = OkHttpUtils.get(url).apply { close() }
+                val finallyResponse = OkHttpKtUtils.get(url).apply { close() }
                 val pcCookie = OkUtils.cookie(finallyResponse)
-                val mobileCookie = mobileCookie(pcCookie)
+                val mobileCookie = mobileCookie(cookie)
                 Result.success(WeiboEntity().also {
-                    it.pcCookie = pcCookie
+                    it.pcCookie = cookie
                     it.mobileCookie = mobileCookie
                 })
             }
+            50114001 -> Result.failure(201, "未扫码")
+            50114003 -> Result.failure("您的微博登录二维码已失效")
+            50114002 -> Result.failure(202, "已扫码")
             else -> Result.failure(jsonObject.getString("msg"), null)
         }
     }

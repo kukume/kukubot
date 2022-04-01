@@ -11,7 +11,7 @@ import javax.persistence.Table
 
 @Entity
 @Table(name = "tg_push")
-class TgPushEntity {
+class TgPushEntity: BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int? = null

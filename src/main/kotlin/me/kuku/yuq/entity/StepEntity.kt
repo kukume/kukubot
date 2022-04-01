@@ -1,13 +1,12 @@
 package me.kuku.yuq.entity
 
-import me.kuku.yuq.entity.QqEntity
 import org.springframework.data.jpa.repository.JpaRepository
 import javax.inject.Inject
 import javax.persistence.*
 
 @Entity
 @Table(name = "step")
-class StepEntity {
+class StepEntity: BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int? = null
@@ -25,7 +24,7 @@ class StepEntity {
 }
 
 interface StepRepository: JpaRepository<StepEntity, Int> {
-
+    fun findByQqEntity(qqEntity: QqEntity): StepEntity?
 }
 
 class StepService @Inject constructor(
@@ -36,4 +35,5 @@ class StepService @Inject constructor(
 
     fun findAll(): List<StepEntity> = stepRepository.findAll()
 
+    fun findByQqEntity(qqEntity: QqEntity) = stepRepository.findByQqEntity(qqEntity)
 }

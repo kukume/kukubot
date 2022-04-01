@@ -1,7 +1,9 @@
 val utilsVersion = "0.3.17"
+val yuVersion = "0.2.0.0-DEV20"
 val artQqVersion = "0.1.0.0-DEV14"
 val webVersion = "0.0.2.0-DEV22"
 val springDataJpaVersion = "2.6.3"
+val springVersion = "5.3.17"
 val hibernateVersion = "5.6.7.Final"
 val h2Version = "1.4.200"
 val hibernateTypesVersion = "2.14.1"
@@ -38,19 +40,30 @@ tasks {
 
 
 dependencies {
-    implementation(kotlin("stdlib"))
-    implementation("me.kuku:utils:$utilsVersion")
+    // yuq
     implementation("com.IceCreamQAQ.YuQ:YuQ-ArtQQ:$artQqVersion")
     implementation("com.IceCreamQAQ.Yu:WebCore:$webVersion")
+//    implementation("com.IceCreamQAQ.Yu.WebCore.Server:SmartHTTP:$webVersion")
+//    implementation("com.IceCreamQAQ:Yu-Core:$yuVersion")
+
+    // spring-data
     implementation("org.springframework.data:spring-data-jpa:$springDataJpaVersion")
+    implementation("org.springframework:spring-aspects:$springVersion")
     implementation("org.hibernate:hibernate-hikaricp:$hibernateVersion")
     implementation("com.vladmihalcea:hibernate-types-52:$hibernateTypesVersion")
     implementation("com.h2database:h2:$h2Version")
-    implementation("org.jsoup:jsoup:$jsoupVersion")
-    implementation("com.google.code.findbugs:jsr305:$jsr305Version")
     implementation("com.querydsl:querydsl-core:$queryDslVersion")
     implementation("com.querydsl:querydsl-jpa:$queryDslVersion")
     kapt("com.querydsl:querydsl-apt:$queryDslVersion:jpa")
+
+
+    // telegram
     implementation("org.telegram:telegrambots:$telegramBotsVersion")
     implementation("org.telegram:telegrambots-abilities:$telegramBotsVersion")
+
+
+    // other
+    implementation("me.kuku:utils:$utilsVersion")
+    implementation("org.jsoup:jsoup:$jsoupVersion")
+    implementation("com.google.code.findbugs:jsr305:$jsr305Version")
 }

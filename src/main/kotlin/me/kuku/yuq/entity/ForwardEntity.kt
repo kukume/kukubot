@@ -6,7 +6,7 @@ import javax.persistence.*
 
 @Entity
 @Table(name = "forward")
-class ForwardEntity {
+class ForwardEntity: BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int? = null

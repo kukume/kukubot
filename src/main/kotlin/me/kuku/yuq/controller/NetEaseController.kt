@@ -70,6 +70,13 @@ class NetEaseController @Inject constructor(
         netEaseEntity.config.sign = status.toStatus()
         netEaseService.save(netEaseEntity)
         return "网易云自动签到${if (status) "开启" else "关闭"}成功"
+    }
 
+    @Action("网易发布动态")
+    fun dy(netEaseEntity: NetEaseEntity): String {
+        val result = NetEaseLogic.publish(netEaseEntity)
+        return if (result.isSuccess) "网易云发布动态成功"
+        else "网易云音乐发布动态失败，${result.message}"
     }
 }
+

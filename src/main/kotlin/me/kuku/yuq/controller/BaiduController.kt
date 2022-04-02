@@ -13,6 +13,7 @@ import me.kuku.yuq.entity.BaiduEntity
 import me.kuku.yuq.entity.BaiduService
 import me.kuku.yuq.entity.QqEntity
 import me.kuku.yuq.logic.BaiduLogic
+import me.kuku.yuq.utils.openOrClose
 import java.util.Base64
 import javax.inject.Inject
 
@@ -67,6 +68,13 @@ class BaiduController @Inject constructor(
         val result = baiduLogic.tieBaSign(baiduEntity)
         if (result.isSuccess) "百度贴吧签到成功"
         else "百度贴吧签到失败"
+    }
+
+    @Action("百度自动签到 {status}")
+    fun baiduAutoSign(baiduEntity: BaiduEntity, status: Boolean): String {
+        baiduEntity.config.sign = status.toStatus()
+        baiduService.save(baiduEntity)
+        return "百度自动签到${status.openOrClose()}成功"
     }
 
 

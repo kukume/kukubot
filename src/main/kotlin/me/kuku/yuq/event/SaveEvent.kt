@@ -4,6 +4,9 @@ import com.IceCreamQAQ.Yu.annotation.Event
 import com.IceCreamQAQ.Yu.annotation.EventListener
 import com.icecreamqaq.yuq.artqq.message.ArtGroupMessageSource
 import com.icecreamqaq.yuq.artqq.message.ArtToGroupMessageSource
+import com.icecreamqaq.yuq.entity.Friend
+import com.icecreamqaq.yuq.entity.Group
+import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.event.*
 import com.icecreamqaq.yuq.message.FlashImage
 import com.icecreamqaq.yuq.message.Message.Companion.toCodeString
@@ -19,7 +22,8 @@ class Save @Inject constructor(
     private val groupService: GroupService,
     private val qqService: QqService,
     private val messageService: MessageService,
-    private val recallService: RecallService
+    private val recallService: RecallService,
+    private val privateMessageService: PrivateMessageService
 ) {
 
     @Event(weight = Event.Weight.highest)
@@ -62,28 +66,60 @@ class Save @Inject constructor(
     }
 
     @Event(weight = Event.Weight.high)
-    fun saveBotMessage(e: SendMessageEvent.Post) = transaction {
-        val messageId = e.messageSource.id
-        val groupEntity = groupService.findByGroup(e.sendTo.id) ?: return@transaction
-        val botQq = yuq.botId
-        var qqEntity = groupEntity.get(botQq)
-        if (qqEntity == null) {
-            qqEntity = qqService.findByQq(botQq)
-            if (qqEntity == null) {
-                qqEntity = QqEntity().also { it.qq = botQq }
-            }
-            groupEntity.qqs.add(qqEntity)
-            qqService.save(qqEntity)
-            groupService.save(groupEntity)
-        }
-        val messageEntity = MessageEntity()
+    fun savePrivateMessage(e: PrivateMessageEvent) {
+        val qq = e.sender.id
+        val qqEntity = qqService.findByQq(qq) ?: return
+        val message = e.message
+        val messageId = message.source.id
+        val ss = message.toCodeString()
+        val messageEntity = PrivateMessageEntity()
         messageEntity.messageId = messageId
         messageEntity.qqEntity = qqEntity
-        messageEntity.groupEntity = groupEntity
-        messageEntity.content = e.message.toCodeString()
-        val source = e.messageSource as? ArtToGroupMessageSource
-        messageEntity.messageSource = source?.toMessageSource()
-        messageService.save(messageEntity)
+        messageEntity.content = ss
+        privateMessageService.save(messageEntity)
+    }
+
+    @Event(weight = Event.Weight.high)
+    fun saveBotMessage(e: SendMessageEvent.Post) = transaction {
+        val messageId = e.messageSource.id
+        val contact = e.sendTo
+        if (contact is Member || contact is Group) {
+            val groupEntity = groupService.findByGroup(contact.id) ?: return@transaction
+            val botQq = yuq.botId
+            var qqEntity = groupEntity.get(botQq)
+            if (qqEntity == null) {
+                qqEntity = qqService.findByQq(botQq)
+                if (qqEntity == null) {
+                    qqEntity = QqEntity().also { it.qq = botQq }
+                }
+                groupEntity.qqs.add(qqEntity)
+                qqService.save(qqEntity)
+                groupService.save(groupEntity)
+            }
+            val messageEntity = MessageEntity()
+            messageEntity.messageId = messageId
+            messageEntity.qqEntity = qqEntity
+            messageEntity.groupEntity = groupEntity
+            messageEntity.content = e.message.toCodeString()
+            val source = e.messageSource as? ArtToGroupMessageSource
+            messageEntity.messageSource = source?.toMessageSource()
+            messageService.save(messageEntity)
+        }
+    }
+
+    @Event(weight = Event.Weight.high)
+    fun savePrivateMessage(e: SendMessageEvent.Post) {
+        val messageId = e.messageSource.id
+        val contact = e.sendTo
+        if (contact is Friend) {
+            val qqEntity = qqService.findByQq(contact.id) ?: return
+            val messageEntity = PrivateMessageEntity()
+            messageEntity.messageId = messageId
+            messageEntity.qqEntity = qqEntity
+            messageEntity.content = e.message.toCodeString()
+            messageEntity.type = PrivateMessageType.SEND
+            privateMessageService.save(messageEntity)
+        }
     }
 
     fun saveRecallMessage(e: GroupRecallEvent) {

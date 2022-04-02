@@ -13,6 +13,7 @@ import me.kuku.yuq.entity.BiliBiliEntity
 import me.kuku.yuq.entity.BiliBiliService
 import me.kuku.yuq.entity.QqEntity
 import me.kuku.yuq.logic.BiliBiliLogic
+import me.kuku.yuq.utils.openOrClose
 import javax.inject.Inject
 
 @GroupController
@@ -64,6 +65,27 @@ class BiliBiliController @Inject constructor(
         BiliBiliLogic.share(biliBiliEntity, firstRank.aid)
         BiliBiliLogic.liveSign(biliBiliEntity)
         return "哔哩哔哩签到成功"
+    }
+
+    @Action("哔哩哔哩开播提醒 {status}")
+    fun biliBiliLive(status: Boolean, biliBiliEntity: BiliBiliEntity): String {
+        biliBiliEntity.config.live = status.toStatus()
+        biliBiliService.save(biliBiliEntity)
+        return "哔哩哔哩开播提醒${status.openOrClose()}成功"
+    }
+
+    @Action("哔哩哔哩自动签到 {status}")
+    fun biliBiliAutoSign(status: Boolean, biliBiliEntity: BiliBiliEntity): String {
+        biliBiliEntity.config.sign = status.toStatus()
+        biliBiliService.save(biliBiliEntity)
+        return "哔哩哔哩自动签到${status.openOrClose()}成功"
+    }
+
+    @Action("哔哩哔哩推送 {status}")
+    fun biliBiliPush(status: Boolean, biliBiliEntity: BiliBiliEntity): String {
+        biliBiliEntity.config.push = status.toStatus()
+        biliBiliService.save(biliBiliEntity)
+        return "哔哩哔哩推送${status.openOrClose()}成功"
     }
 
 }

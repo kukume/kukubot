@@ -1,6 +1,5 @@
 package me.kuku.yuq.entity
 
-import com.fasterxml.jackson.annotation.JsonFormat
 import com.icecreamqaq.yuq.artqq.message.ArtGroupMessageSource
 import com.icecreamqaq.yuq.artqq.message.ArtMessageSource
 import com.icecreamqaq.yuq.artqq.message.ArtToGroupMessageSource
@@ -29,10 +28,9 @@ class MessageEntity: BaseEntity() {
     @OneToOne
     @JoinColumn(name = "group_id")
     var groupEntity: GroupEntity = GroupEntity()
-    @Column(length = 5000)
+    @Lob
+    @Column(columnDefinition = "text")
     var content: String = ""
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    var localDateTime: LocalDateTime = LocalDateTime.now()
     @Type(type = "json")
     @Column(columnDefinition = "json")
     var messageSource: MessageSource? = null
@@ -40,7 +38,7 @@ class MessageEntity: BaseEntity() {
 
 interface MessageRepository: JpaRepository<MessageEntity, Int>, QuerydslPredicateExecutor<MessageEntity> {
     fun findByMessageIdAndGroupEntity(messageId: Int, groupEntity: GroupEntity): MessageEntity?
-    fun findByLocalDateTimeAfter(localDateTime: LocalDateTime): List<MessageEntity>
+    fun findByCreateDateAfter(localDateTime: LocalDateTime): List<MessageEntity>
 }
 
 class MessageService @Inject constructor(
@@ -73,11 +71,11 @@ class MessageService @Inject constructor(
         }
     }
 
-    fun findByLocalDateTimeAfter(localDateTime: LocalDateTime) = messageRepository.findByLocalDateTimeAfter(localDateTime)
+    fun findByCreateDateAfter(localDateTime: LocalDateTime) = messageRepository.findByCreateDateAfter(localDateTime)
 
     fun findByGroupAndLocalDateTimeAfter(group: Long, localDateTimeParam: LocalDateTime): List<MessageEntity> {
         with(QMessageEntity.messageEntity) {
-            return messageRepository.findAll(groupEntity.group.eq(group) + localDateTime.after(localDateTimeParam)).toList()
+            return messageRepository.findAll(groupEntity.group.eq(group) + createDate.after(localDateTimeParam)).toList()
         }
 
     }

@@ -11,6 +11,7 @@ import me.kuku.yuq.entity.HostLocEntity
 import me.kuku.yuq.entity.HostLocService
 import me.kuku.yuq.entity.QqEntity
 import me.kuku.yuq.logic.HostLocLogic
+import me.kuku.yuq.utils.openOrClose
 import javax.inject.Inject
 
 @GroupController
@@ -54,6 +55,13 @@ class HostLocController @Inject constructor(
         hostLocEntity.config.push = status.toStatus()
         hostLocService.save(hostLocEntity)
         return "loc推送${if (status) "开启" else "关闭"}成功"
+    }
+
+    @Action("loc自动签到 {status}")
+    fun locAutoSign(hostLocEntity: HostLocEntity, status: Boolean): String {
+        hostLocEntity.config.sign = status.toStatus()
+        hostLocService.save(hostLocEntity)
+        return "loc自动签到${status.openOrClose()}成功"
     }
 
 }

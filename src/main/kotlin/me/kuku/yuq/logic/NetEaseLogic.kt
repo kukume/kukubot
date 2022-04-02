@@ -169,7 +169,81 @@ object NetEaseLogic {
         } else Result.failure(result.message)
     }
 
+    fun myMusic(netEaseEntity: NetEaseEntity): Result<List<NetEaseSong>> {
+        val jsonObject = OkHttpUtils.postJson("$domain/weapi/nmusician/production/common/artist/song/item/list/get?csrf_token=${netEaseEntity.csrf}",
+            prepare(mapOf("fromBackend" to "0", "limit" to "10", "offset" to "0", "online" to "1")),
+            mapOf("user-agent" to UA.PC.value, "cookie" to netEaseEntity.cookie(), "referer" to "https://music.163.com/nmusician/web/albums/work/actor/song/self/pub"))
+        return if (jsonObject.getInteger("code") == 200) {
+            val list = mutableListOf<NetEaseSong>()
+            jsonObject.getJSONObject("data").getJSONArray("list").map { it as JSONObject }.forEach {
+                list.add(NetEaseSong(it.getString("songName"), it.getLong("songId"), it.getLong("albumId"), it.getString("albumName")))
+            }
+            Result.success(list)
+        } else Result.failure(jsonObject.getString("message"))
+    }
+
+    fun personalizedPlaylist(netEaseEntity: NetEaseEntity): Result<List<Play>> {
+        val jsonObject = OkHttpUtils.postJson("$domain/weapi/personalized/playlist",
+            prepare(mapOf("limit" to "9")), OkUtils.headers(netEaseEntity.cookie(), domain, UA.PC)
+        )
+        return if (jsonObject.getInteger("code") == 200) {
+            val list = mutableListOf<Play>()
+            jsonObject.getJSONArray("result").map { it as JSONObject }.forEach {
+                list.add(Play(it.getString("name"), it.getLong("id"), it.getLong("playCount")))
+            }
+            Result.success(list)
+        } else Result.failure(jsonObject.getString("message") ?: "获取失败")
+    }
+
+    fun shareResource(netEaseEntity: NetEaseEntity, id: Long, msg: String = "每日分享"): Result<Long> {
+        val jsonObject = OkHttpUtils.postJson("$domain/weapi/share/friends/resource",
+            prepare(mapOf("type" to "playlist", "id" to id.toString(), "msg" to msg)),
+            mapOf("cookie" to netEaseEntity.cookie(), "referer" to domain, "user-agent" to UA.PC.value)
+        )
+        return if (jsonObject.getInteger("code") == 200)
+            Result.success("成功", jsonObject.getLong("id"))
+        else Result.failure(jsonObject.getString("message"))
+    }
+
+    fun removeDy(netEaseEntity: NetEaseEntity, id: Long): Result<Void> {
+        val jsonObject = OkHttpUtils.postJson("$domain/weapi/event/delete",
+            prepare(mapOf("id" to id.toString())),
+            OkUtils.headers(netEaseEntity.cookie(), domain, UA.PC)
+        )
+        return if (jsonObject.getInteger("code") == 200) Result.success()
+        else Result.failure(jsonObject.getString("message") ?: "删除动态失败")
+    }
+
+    fun publish(netEaseEntity: NetEaseEntity): Result<Void> {
+        val result = personalizedPlaylist(netEaseEntity)
+        if (result.isFailure) return Result.failure(result.message)
+        val play = result.data.random()
+        val res = shareResource(netEaseEntity, play.id)
+        return if (res.isSuccess) {
+            val id = res.data
+            removeDy(netEaseEntity, id)
+            val missionResult = musicianCycleMission(netEaseEntity)
+            return if (result.isSuccess) {
+                val list = missionResult.data
+                for (mission in list) {
+                    if (mission.description == "发布动态") {
+                        if (mission.type != 100) {
+                            userAccess(netEaseEntity)
+                        }
+                        return musicianReceive(netEaseEntity, mission)
+                    }
+                }
+                Result.failure("没有找到音乐人签到任务")
+            } else Result.failure(result.message)
+        }
+        else Result.failure(res.message)
+    }
+
 
 }
 
 data class Mission(val userMissionId: Long?, val period: Int, val type: Int, val description: String = "")
+
+data class NetEaseSong(val songName: String, val songId: Long, val albumId: Long, val albumName: String)
+
+data class Play(val name: String, val id: Long, val playCount: Long)

@@ -1,6 +1,7 @@
 package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.Action
+import com.IceCreamQAQ.Yu.annotation.Synonym
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
 import com.icecreamqaq.yuq.annotation.GroupController
@@ -243,6 +244,19 @@ class ToolController @Inject constructor(
         val send = url?.toMessage() ?: "没有发现图片".toMessage()
         send.reply = message.source
         return send
+    }
+
+    @Action("菜单")
+    @Synonym(["帮助", "功能"])
+    fun menu(qqEntity: QqEntity, group: Group) {
+        transaction {
+            val str = """
+                机器人帮助（命令）如下：
+                https://www.notion.so/kukubot-1d6dd31be25d4018b42d43d4997e0936
+            """.trimIndent()
+            YuqUtils.sendMessage(qqEntity, str)
+            group.sendMessage(mif.at(qqEntity.qq).plus("机器人帮助已私信给您！"))
+        }
     }
 }
 

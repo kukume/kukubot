@@ -124,7 +124,7 @@ class GroupManagerEvent @Inject constructor(
         } else {
             val messageEntity = messageEntityList[0]
             group.sendMessage("""
-                但是我们永远也不要忘记他（她）在群里的${messageEntity.localDateTime.format(DateTimeFormatterUtils.creat("yyyy-MM-dd HH:mm:ss"))}说的最后一句话
+                但是我们永远也不要忘记他（她）在群里的${messageEntity.createDate.format(DateTimeFormatterUtils.creat("yyyy-MM-dd HH:mm:ss"))}说的最后一句话
             """.trimIndent())
             group.sendMessage(messageEntity.content.toMessageByRainCode())
         }

@@ -57,3 +57,6 @@ object YuqUtils {
 
 }
 
+fun Boolean.openOrClose(): String {
+    return if (this) "开启" else "关闭"
+}

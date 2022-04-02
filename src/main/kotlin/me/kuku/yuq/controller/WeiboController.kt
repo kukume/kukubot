@@ -60,5 +60,19 @@ class WeiboController @Inject constructor(
         else "微博超话签到失败，${result.message}"
     }
 
+    @Action("微博推送 {status}")
+    fun weiboPush(status: Boolean, weiboEntity: WeiboEntity): String {
+        weiboEntity.config.push = status.toStatus()
+        weiboService.save(weiboEntity)
+        return "微博推送${if (status) "开启" else "关闭"}成功"
+    }
+
+    @Action("微博自动签到 {status}")
+    fun weiboAutoSign(status: Boolean, weiboEntity: WeiboEntity): String {
+        weiboEntity.config.sign = status.toStatus()
+        weiboService.save(weiboEntity)
+        return "微博自动签到${if (status) "开启" else "关闭"}成功"
+    }
+
 
 }

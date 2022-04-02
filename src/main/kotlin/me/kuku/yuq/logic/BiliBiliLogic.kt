@@ -46,7 +46,7 @@ object BiliBiliLogic {
         biliBiliPojo.id = descJsonObject.getString("dynamic_id")
         biliBiliPojo.rid = descJsonObject.getString("rid")
         biliBiliPojo.time = (descJsonObject.getString("timestamp") + "000").toLong()
-        biliBiliPojo.bvId = descJsonObject.getString("bvid")
+        biliBiliPojo.bvId = descJsonObject.getString("bvid") ?: "没有发现bv号"
         biliBiliPojo.isForward = forwardJsonObject != null
         if (forwardJsonObject != null) {
             biliBiliPojo.forwardBvId = forwardJsonObject.getString("bvid")
@@ -63,8 +63,9 @@ object BiliBiliLogic {
             text = cardJsonObject.getString("dynamic")
             val picList = biliBiliPojo.picList
             if (biliBiliPojo.bvId.isNotEmpty()) {
-                val picUrl = cardJsonObject.getString("pic")
-                picList.add(picUrl)
+                cardJsonObject.getString("pic")?.let {
+                    picList.add(it)
+                }
             }
             if (itemJsonObject != null) {
                 if (text == null) text = itemJsonObject.getString("description")
@@ -412,7 +413,7 @@ object BiliBiliLogic {
                 if (jsonArray.size == 0) break
                 for (any in jsonArray) {
                     val it = any as JSONObject
-                    list.add(BiliBiliFollowed(it.getString("id"), it.getString("uname")))
+                    list.add(BiliBiliFollowed(it.getString("mid"), it.getString("uname")))
                 }
             } else return Result.failure(jsonObject.getString("message"))
         }

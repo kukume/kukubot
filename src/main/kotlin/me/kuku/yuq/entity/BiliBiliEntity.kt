@@ -13,7 +13,7 @@ class BiliBiliEntity: BaseEntity() {
     var id: Int? = null
     @OneToOne
     @JoinColumn(name = "qq_id")
-    var qqEntity: QqEntity? = null
+    var qqEntity: QqEntity = QqEntity()
     @Column(length = 2000)
     var cookie: String = ""
     var userid: String = ""
@@ -38,4 +38,4 @@ class BiliBiliService @Inject constructor(
 
 }
 
-data class BiliBiliConfig(var push: Status = Status.OFF, var sign: Status = Status.OFF)
+data class BiliBiliConfig(var push: Status = Status.OFF, var sign: Status = Status.OFF, var live: Status = Status.OFF)

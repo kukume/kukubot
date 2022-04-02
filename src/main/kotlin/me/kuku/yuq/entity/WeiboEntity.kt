@@ -1,5 +1,6 @@
 package me.kuku.yuq.entity
 
+import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
 import javax.inject.Inject
 import javax.persistence.*
@@ -17,6 +18,9 @@ class WeiboEntity: BaseEntity() {
     var pcCookie: String = ""
     @Column(length = 2000)
     var mobileCookie: String= ""
+    @Type(type = "json")
+    @Column(columnDefinition = "json")
+    var config: WeiboConfig = WeiboConfig()
 }
 
 interface WeiboRepository: JpaRepository<WeiboEntity, Int> {
@@ -34,3 +38,5 @@ class WeiboService @Inject constructor(
     fun findByQqEntity(qqEntity: QqEntity) = weiboRepository.findByQqEntity(qqEntity)
 
 }
+
+data class WeiboConfig(var push: Status = Status.OFF, var sign: Status = Status.OFF)

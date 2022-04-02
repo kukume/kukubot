@@ -1,4 +1,4 @@
-@file:Suppress("UNCHECKED_CAST")
+@file:Suppress("UNCHECKED_CAST", "unused", "UNUSED_PARAMETER")
 
 package me.kuku.yuq
 

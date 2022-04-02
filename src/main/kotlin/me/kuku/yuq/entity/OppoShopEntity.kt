@@ -1,5 +1,6 @@
 package me.kuku.yuq.entity
 
+import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
 import javax.inject.Inject
 import javax.persistence.*
@@ -15,7 +16,10 @@ class OppoShopEntity: BaseEntity() {
     var qqEntity: QqEntity? = null
     @Column(length = 6000)
     var cookie: String = ""
-    var earlyToBedClock: Status = Status.OFF
+    @Type(type = "json")
+    @Column(columnDefinition = "json")
+    var config: OppoShopConfig = OppoShopConfig()
+
 }
 
 interface OppoShopRepository: JpaRepository<OppoShopEntity, Int> {
@@ -27,3 +31,5 @@ class OppoShopService @Inject constructor(
 ) {
 
 }
+
+data class OppoShopConfig(var earlyToBedClock: Status = Status.OFF)

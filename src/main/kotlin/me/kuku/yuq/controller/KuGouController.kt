@@ -3,6 +3,7 @@ package me.kuku.yuq.controller
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Before
 import com.icecreamqaq.yuq.annotation.GroupController
+import com.icecreamqaq.yuq.annotation.PrivateController
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.entity.Group
 import com.icecreamqaq.yuq.message.Message.Companion.firstString
@@ -15,6 +16,7 @@ import me.kuku.yuq.logic.KuGouLogic
 import javax.inject.Inject
 
 @GroupController
+@PrivateController
 class KuGouController @Inject constructor(
     private val kuGouLogic: KuGouLogic,
     private val kuGouService: KuGouService

@@ -1,5 +1,6 @@
 package me.kuku.yuq.entity
 
+import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
 import javax.inject.Inject
 import javax.persistence.*
@@ -17,8 +18,9 @@ class BiliBiliEntity: BaseEntity() {
     var cookie: String = ""
     var userid: String = ""
     var token: String = ""
-    var push: Status = Status.OFF
-    var live: Status = Status.OFF
+    @Type(type = "json")
+    @Column(columnDefinition = "json")
+    var config: BiliBiliConfig = BiliBiliConfig()
 }
 
 interface BiliBiliRepository: JpaRepository<BiliBiliEntity, Int> {
@@ -32,4 +34,8 @@ class BiliBiliService @Inject constructor(
 
     fun save(biliEntity: BiliBiliEntity): BiliBiliEntity = biliBiliRepository.save(biliEntity)
 
+    fun findAll(): List<BiliBiliEntity> = biliBiliRepository.findAll()
+
 }
+
+data class BiliBiliConfig(var push: Status = Status.OFF, var sign: Status = Status.OFF)

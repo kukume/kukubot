@@ -3,10 +3,8 @@ package me.kuku.yuq.entity
 import com.alibaba.fastjson.annotation.JSONField
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.querydsl.core.BooleanBuilder
-import com.vladmihalcea.hibernate.type.json.JsonType
 import me.kuku.yuq.utils.plus
 import org.hibernate.annotations.Type
-import org.hibernate.annotations.TypeDef
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
@@ -16,7 +14,6 @@ import javax.persistence.*
 
 @Entity
 @Table(name=  "group_")
-@TypeDef(name = "json", typeClass = JsonType::class)
 @JsonIgnoreProperties("qqs")
 class GroupEntity: BaseEntity() {
     @Id

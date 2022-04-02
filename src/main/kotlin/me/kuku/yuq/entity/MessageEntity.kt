@@ -5,10 +5,8 @@ import com.icecreamqaq.yuq.artqq.message.ArtGroupMessageSource
 import com.icecreamqaq.yuq.artqq.message.ArtMessageSource
 import com.icecreamqaq.yuq.artqq.message.ArtToGroupMessageSource
 import com.querydsl.core.BooleanBuilder
-import com.vladmihalcea.hibernate.type.json.JsonType
 import me.kuku.yuq.utils.plus
 import org.hibernate.annotations.Type
-import org.hibernate.annotations.TypeDef
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -20,7 +18,6 @@ import javax.persistence.*
 
 @Entity
 @Table(name = "message")
-@TypeDef(name = "json", typeClass = JsonType::class)
 class MessageEntity: BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

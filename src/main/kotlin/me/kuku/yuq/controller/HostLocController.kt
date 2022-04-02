@@ -3,6 +3,7 @@ package me.kuku.yuq.controller
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Before
 import com.icecreamqaq.yuq.annotation.GroupController
+import com.icecreamqaq.yuq.annotation.PrivateController
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.controller.QQController
 import com.icecreamqaq.yuq.message.Message.Companion.firstString
@@ -13,6 +14,7 @@ import me.kuku.yuq.logic.HostLocLogic
 import javax.inject.Inject
 
 @GroupController
+@PrivateController
 class HostLocController @Inject constructor(
     private val hostLocService: HostLocService
 ): QQController() {

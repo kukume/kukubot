@@ -94,14 +94,14 @@ class BaiduLogic @Inject constructor(
     }
 
     suspend fun tieBaSign(baiduEntity: BaiduEntity): Result<Void> {
-        var sToken = baiduEntity.tieBaSToken
+        var sToken = baiduEntity.config.tieBaSToken
         val url = "http://tieba.baidu.com/f/like/mylike?v=${System.currentTimeMillis()}"
         if (sToken.isEmpty()){
             sToken = getSToken(baiduEntity, url)
-            baiduEntity.tieBaSToken = sToken
+            baiduEntity.config.tieBaSToken = sToken
             baiduService.save(baiduEntity)
         }
-        val headers = mapOf("user-agent" to UA.PC.value, "cookie" to baiduEntity.tieBaSToken)
+        val headers = mapOf("user-agent" to UA.PC.value, "cookie" to baiduEntity.config.tieBaSToken)
         val likeHtml = OkHttpUtils.getStr(url,
             headers)
         val trElements = Jsoup.parse(likeHtml).getElementsByTag("tr")

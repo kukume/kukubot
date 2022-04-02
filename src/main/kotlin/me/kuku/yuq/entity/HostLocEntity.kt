@@ -1,8 +1,6 @@
 package me.kuku.yuq.entity
 
-import com.vladmihalcea.hibernate.type.json.JsonType
 import org.hibernate.annotations.Type
-import org.hibernate.annotations.TypeDef
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import javax.inject.Inject
@@ -10,7 +8,6 @@ import javax.persistence.*
 
 @Entity
 @Table(name = "host_loc")
-@TypeDef(name = "json", typeClass = JsonType::class)
 @NamedEntityGraph(name = "qq_graph", attributeNodes = [NamedAttributeNode(value = "qqEntity", subgraph = "qqEntity")],
     subgraphs = [NamedSubgraph(name = "qqEntity", attributeNodes = [NamedAttributeNode("groups")])])
 class HostLocEntity: BaseEntity() {

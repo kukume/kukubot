@@ -170,6 +170,18 @@ class ToolController @Inject constructor(
         return recallEntity.messageEntity.content.toMessageByRainCode()
     }
 
+    @Action("查消息 {qqNo}")
+    fun queryMessage(qqNo: Long, group: Group, session: ContextSession, qq: Long): Any {
+        val list = messageService.findByGroupAndQqOrderByIdDesc(group.id, qqNo)
+        if (list.isEmpty()) return mif.at(qq).plus("该qq没有消息记录哦")
+        group.sendMessage(mif.at(qq).plus("该qq有${list.size}条消息，您需要查询第几条"))
+        var num = session.waitNextMessage().firstString().toIntOrNull() ?: return mif.at(qq).plus("您输入的不为数字，上下文结束")
+        if (num > list.size) return mif.at(qq).plus("您输入数字的已超出消息数，上下文结束")
+        num -= 1
+        val messageEntity = list[num]
+        return messageEntity.content.toMessageByRainCode()
+    }
+
     @Action("查发言数")
     fun queryMessage(group: Group) = transaction {
         val list = messageService.findByGroupAndLocalDateTimeAfter(group.id, LocalDate.now().atStartOfDay())

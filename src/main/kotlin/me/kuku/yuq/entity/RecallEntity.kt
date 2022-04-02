@@ -1,13 +1,11 @@
 package me.kuku.yuq.entity
 
-import com.alibaba.fastjson.annotation.JSONField
 import com.querydsl.core.BooleanBuilder
 import me.kuku.yuq.utils.plus
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.querydsl.QuerydslPredicateExecutor
-import java.time.LocalDateTime
 import javax.inject.Inject
 import javax.persistence.*
 
@@ -20,8 +18,6 @@ class RecallEntity: BaseEntity() {
     @OneToOne
     @JoinColumn(name = "message_id")
     var messageEntity: MessageEntity = MessageEntity()
-    @JSONField(format = "yyyy-MM-dd HH:mm:ss")
-    var localDateTime: LocalDateTime = LocalDateTime.now()
 }
 
 

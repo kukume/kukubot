@@ -28,10 +28,15 @@ repositories {
 }
 
 tasks {
+    val excludePath = arrayOf("conf/YuQ.properties")
+    jar {
+        exclude(*excludePath)
+    }
     shadowJar {
         manifest {
             attributes(Pair("Main-Class", "me.kuku.yuq.StartKt"))
         }
+        exclude(*excludePath)
     }
     build {
         finalizedBy(shadowJar)

@@ -3,6 +3,7 @@ package me.kuku.yuq.controller
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Before
 import com.icecreamqaq.yuq.annotation.GroupController
+import com.icecreamqaq.yuq.annotation.PrivateController
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.QQController
 import kotlinx.coroutines.delay
@@ -14,6 +15,7 @@ import me.kuku.yuq.logic.WeiboLogic
 import javax.inject.Inject
 
 @GroupController
+@PrivateController
 class WeiboController @Inject constructor(
     private val weiboService: WeiboService
 ): QQController() {

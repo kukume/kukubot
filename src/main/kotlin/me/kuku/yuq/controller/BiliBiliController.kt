@@ -1,7 +1,9 @@
 package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.Action
+import com.IceCreamQAQ.Yu.annotation.Before
 import com.icecreamqaq.yuq.annotation.GroupController
+import com.icecreamqaq.yuq.annotation.PrivateController
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.QQController
 import kotlinx.coroutines.delay
@@ -14,6 +16,7 @@ import me.kuku.yuq.logic.BiliBiliLogic
 import javax.inject.Inject
 
 @GroupController
+@PrivateController
 class BiliBiliController @Inject constructor(
     private val biliBiliService: BiliBiliService
 ): QQController() {
@@ -47,6 +50,20 @@ class BiliBiliController @Inject constructor(
                 }
             }
         }
+    }
+
+    @Before(except = ["login"])
+    fun before(qqEntity: QqEntity): BiliBiliEntity {
+        return biliBiliService.findByQqEntity(qqEntity) ?: throw mif.at(qqEntity.qq).plus("没有绑定哔哩哔哩，操作失败").toThrowable()
+    }
+
+    @Action("哔哩哔哩签到")
+    fun sign(biliBiliEntity: BiliBiliEntity): String {
+        val firstRank = BiliBiliLogic.ranking()[0]
+        BiliBiliLogic.report(biliBiliEntity, firstRank.aid, firstRank.cid, 300)
+        BiliBiliLogic.share(biliBiliEntity, firstRank.aid)
+        BiliBiliLogic.liveSign(biliBiliEntity)
+        return "哔哩哔哩签到成功"
     }
 
 }

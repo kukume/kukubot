@@ -1,5 +1,6 @@
 package me.kuku.yuq.entity
 
+import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.querydsl.QuerydslPredicateExecutor
 import javax.inject.Inject
@@ -18,15 +19,16 @@ class BaiduEntity: BaseEntity() {
     var cookie: String = ""
     var bdUss: String = ""
     var sToken: String = ""
-    var tieBaSToken: String = ""
-
+    @Type(type = "json")
+    @Column(columnDefinition = "json")
+    var config: BaiduConfig = BaiduConfig()
 
     fun otherCookie(sToken: String): String {
         return cookie.replace("STOKEN=" + this.sToken + "; ", "STOKEN=$sToken; ")
     }
 
     fun teiBaCookie(): String {
-        return otherCookie(tieBaSToken)
+        return otherCookie(config.tieBaSToken)
     }
 }
 
@@ -50,4 +52,8 @@ class BaiduService @Inject constructor(
         }
     }
 
+    fun findAll(): List<BaiduEntity> = baiduRepository.findAll()
+
 }
+
+data class BaiduConfig(var sign: Status = Status.OFF, var tieBaSToken: String = "")

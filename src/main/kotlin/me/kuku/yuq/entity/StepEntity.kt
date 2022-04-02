@@ -1,5 +1,6 @@
 package me.kuku.yuq.entity
 
+import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
 import javax.inject.Inject
 import javax.persistence.*
@@ -20,7 +21,9 @@ class StepEntity: BaseEntity() {
     var leXinAccessToken: String = ""
     @Column(length = 1000)
     var miLoginToken: String = ""
-    var step: Int = -1
+    @Type(type = "json")
+    @Column(columnDefinition = "json")
+    var config: StepConfig = StepConfig()
 }
 
 interface StepRepository: JpaRepository<StepEntity, Int> {
@@ -37,3 +40,5 @@ class StepService @Inject constructor(
 
     fun findByQqEntity(qqEntity: QqEntity) = stepRepository.findByQqEntity(qqEntity)
 }
+
+class StepConfig(var step: Int = -1)

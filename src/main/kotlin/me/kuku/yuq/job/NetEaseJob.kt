@@ -22,6 +22,7 @@ class NetEaseJob @Inject constructor(
                 NetEaseLogic.listenMusic(netEaseEntity)
                 NetEaseLogic.musicianSign(netEaseEntity)
                 NetEaseLogic.publish(netEaseEntity)
+                NetEaseLogic.publishMLog(netEaseEntity)
             }
         }
     }

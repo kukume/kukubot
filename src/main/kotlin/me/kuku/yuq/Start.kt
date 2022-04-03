@@ -11,10 +11,14 @@ import com.IceCreamQAQ.Yu.event.EventBus
 import com.IceCreamQAQ.Yu.event.events.AppStartEvent
 import com.IceCreamQAQ.Yu.event.events.AppStopEvent
 import com.IceCreamQAQ.Yu.hook.*
+import com.IceCreamQAQ.Yu.loader.AppClassloader
 import com.IceCreamQAQ.Yu.module.Module
 import com.IceCreamQAQ.Yu.util.OkHttpWebImpl
 import com.icecreamqaq.yuq.artqq.HookCaptchaUtils
+import com.icecreamqaq.yuq.artqq.YuQArtQQModule
 import com.icecreamqaq.yuq.artqq.YuQArtQQStarter
+import com.icecreamqaq.yuq.artqq.YuQInternalFunArtQQImpl
+import com.icecreamqaq.yuq.util.YuQInternalFun
 import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.runBlocking
 import me.kuku.utils.MyUtils
@@ -45,6 +49,13 @@ import javax.inject.Inject
 import javax.persistence.EntityManagerFactory
 
 fun main(args: Array<String>) {
+//    YuHook.put(
+//        HookItem(
+//            "com.icecreamqaq.yuq.artqq.YuQArtQQModule",
+//            "onLoad",
+//            "me.kuku.yuq.HookYuQArtQQModule"
+//        )
+//    )
     val newArgs = if (args.contains("-noUI")) args
     else args.plus("-noUI")
     YuQArtQQStarter.start(newArgs)
@@ -110,13 +121,6 @@ class JpaModule: Module {
     private lateinit var context: YuContext
 
     override fun onLoad() {
-        YuHook.put(
-            HookItem(
-                "org.artqq.util.TenCentCaptchaUtils",
-                "identifyByUrl",
-                "me.kuku.yuq.HookCaptchaUtils"
-            )
-        )
         val applicationContext = AnnotationConfigApplicationContext(JpaConfig::class.java)
         context.putBean(applicationContext)
         transactionManager = applicationContext.getBean(JpaTransactionManager::class.java)
@@ -242,6 +246,7 @@ class HookCaptchaUtils : HookRunnable {
                 val jsonObject = OkHttpUtils.postJson("https://api.kukuqaq.com/tool/captcha", mapOf("url" to url))
                 if (jsonObject.getInteger("code") == 200) {
                     ticket = jsonObject.getJSONObject("data").getString("ticket")
+                    log.info("自动过验证码成功")
                     break
                 }
             }
@@ -262,4 +267,43 @@ class HookCaptchaUtils : HookRunnable {
 
     override fun onError(method: HookMethod) = false
 
+}
+
+class HookYuQArtQQModule: HookRunnable {
+
+    override fun preRun(method: HookMethod): Boolean {
+        val yuQArtQQModule = method.paras[0] as YuQArtQQModule
+        val context = yuQArtQQModule::class.java.declaredFields[0].also { it.isAccessible = true }
+            .get(yuQArtQQModule) as YuContext
+        context.putBean(YuQInternalFun::class.java, "", YuQInternalFunArtQQImpl())
+        AppClassloader.registerBackList(
+            arrayListOf(
+                "javafx.",
+                "org.w3c",
+                "jdk.internal.",
+            )
+        )
+        YuHook.put(
+            HookItem(
+                "org.artqq.util.TenCentCaptchaUtils",
+                "identifyByUrl",
+                "me.kuku.yuq.HookCaptchaUtils"
+            )
+        )
+        YuHook.put(
+            HookItem(
+                "org.artqq.Wtlogin._Login",
+                "onSuccessSendVC",
+                "com.icecreamqaq.yuq.artqq.HookPhoneCap"
+            )
+        )
+        YuHook.put(
+            HookItem(
+                "com.baidu.bjf.remoting.protobuf.utils.JDKCompilerHelper",
+                "getJdkCompiler",
+                "com.icecreamqaq.yuq.artqq.HookProto"
+            )
+        )
+        return true
+    }
 }

@@ -69,14 +69,28 @@ class NetEaseController @Inject constructor(
     fun signOpen(status: Boolean, netEaseEntity: NetEaseEntity): String {
         netEaseEntity.config.sign = status.toStatus()
         netEaseService.save(netEaseEntity)
-        return "网易云自动签到${if (status) "开启" else "关闭"}成功"
+        return "网易云音乐自动签到${if (status) "开启" else "关闭"}成功"
     }
 
     @Action("网易发布动态")
     fun dy(netEaseEntity: NetEaseEntity): String {
         val result = NetEaseLogic.publish(netEaseEntity)
-        return if (result.isSuccess) "网易云发布动态成功"
+        return if (result.isSuccess) "网易云音乐发布动态成功"
         else "网易云音乐发布动态失败，${result.message}"
+    }
+
+    @Action("网易发布mlog")
+    fun pub(netEaseEntity: NetEaseEntity): String {
+        val result = NetEaseLogic.publishMLog(netEaseEntity)
+        return if (result.isSuccess) "网易云音乐发布mlog成功"
+        else "网易云音乐发布mlog失败，${result.message}"
+    }
+
+    @Action("网易主创说")
+    fun commentMyMusic(netEaseEntity: NetEaseEntity): String {
+        val result = NetEaseLogic.myMusicComment(netEaseEntity)
+        return if (result.isSuccess) "网易云音乐发布主创说成功"
+        else "网易云音乐发布主创说失败，${result.message}"
     }
 }
 

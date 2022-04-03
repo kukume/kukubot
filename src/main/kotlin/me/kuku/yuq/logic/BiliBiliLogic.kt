@@ -49,7 +49,7 @@ object BiliBiliLogic {
         biliBiliPojo.bvId = descJsonObject.getString("bvid") ?: "没有发现bv号"
         biliBiliPojo.isForward = forwardJsonObject != null
         if (forwardJsonObject != null) {
-            biliBiliPojo.forwardBvId = forwardJsonObject.getString("bvid")
+            biliBiliPojo.forwardBvId = forwardJsonObject.getString("bvid") ?: "没有bvId"
             forwardJsonObject.getString("timestamp")?.let {
                 biliBiliPojo.forwardTime = (it + "000").toLong()
             }
@@ -88,8 +88,9 @@ object BiliBiliLogic {
                 val forwardPicList = biliBiliPojo.forwardPicList
                 val forwardContentJsonObject = JSON.parseObject(originStr)
                 if (biliBiliPojo.forwardBvId.isNotEmpty()) {
-                    val picUrl = forwardContentJsonObject.getString("pic")
-                    forwardPicList.add(picUrl)
+                    forwardContentJsonObject.getString("pic")?.let {
+                        forwardPicList.add(it)
+                    }
                 }
                 if (forwardContentJsonObject.containsKey("item")) {
                     val forwardItemJsonObject = forwardContentJsonObject.getJSONObject("item")
@@ -116,7 +117,7 @@ object BiliBiliLogic {
                         }
                     }
                 } else {
-                    biliBiliPojo.forwardText = forwardContentJsonObject.getString("dynamic")
+                    biliBiliPojo.forwardText = forwardContentJsonObject.getString("dynamic") ?: "没有动态内容"
                     val forwardOwnerJsonObject = forwardContentJsonObject.getJSONObject("owner")
                     if (forwardOwnerJsonObject != null) {
                         biliBiliPojo.forwardUserId = forwardOwnerJsonObject.getString("mid")

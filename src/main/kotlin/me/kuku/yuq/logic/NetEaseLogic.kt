@@ -2,28 +2,41 @@
 
 package me.kuku.yuq.logic
 
+import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
 import me.kuku.utils.*
 import me.kuku.pojo.Result
 import me.kuku.pojo.UA
 import me.kuku.yuq.entity.NetEaseEntity
+import okhttp3.internal.toHexString
+import javax.imageio.ImageIO
 
 object NetEaseLogic {
 
     private const val domain = "https://music.163.com"
+
+    private const val ua = "NeteaseMusic/8.7.22.220331222744(8007022);Dalvik/2.1.0 (Linux; U; Android 12; M2007J3SC Build/SKQ1.211006.001)"
 
     private fun aesEncode(secretData: String, secret: String): String {
         val vi = "0102030405060708"
         return AESUtils.encrypt(secretData, secret, vi)!!
     }
 
-    private fun prepare(map: Map<String, String>): Map<String, String> {
+    private fun prepare(map: Map<String, String>, netEaseEntity: NetEaseEntity? = null): Map<String, String> {
+        return prepare(map.toJSONString(), netEaseEntity)
+    }
+
+    private fun prepare(json: String, netEaseEntity: NetEaseEntity? = null): Map<String, String> {
         val nonce = "0CoJUm6Qyw8W8jud"
         val secretKey = "TA3YiYCfY2dDJQgg"
         val encSecKey =
             "84ca47bca10bad09a6b04c5c927ef077d9b9f1e37098aa3eac6ea70eb59df0aa28b691b7e75e4f1f9831754919ea784c8f74fbfadf2898b0be17849fd656060162857830e241aba44991601f137624094c114ea8d17bce815b0cd4e5b8e2fbaba978c6d1d14dc3d1faf852bdd28818031ccdaaa13a6018e1024e2aae98844210"
-        var param = aesEncode(map.toJSONString(), nonce)
+        val jsonObject = JSON.parseObject(json)
+        netEaseEntity?.let {
+            jsonObject["csrf_token"] = netEaseEntity.csrf
+        }
+        var param = aesEncode(jsonObject.toString(), nonce)
         param = aesEncode(param, secretKey)
         return mapOf("params" to param, "encSecKey" to encSecKey)
     }
@@ -109,7 +122,7 @@ object NetEaseLogic {
         } else Result.failure(recommend.message)
     }
 
-    fun musicianStageMission(netEaseEntity: NetEaseEntity): Result<MutableList<Mission>>? {
+    fun musicianStageMission(netEaseEntity: NetEaseEntity): Result<MutableList<Mission>> {
         val jsonObject = OkHttpUtils.postJson("$domain/weapi/nmusician/workbench/mission/stage/list", prepare(mapOf()),
             OkUtils.headers(netEaseEntity.cookie(), domain, UA.PC))
         return if (jsonObject.getInteger("code") == 200) {
@@ -214,6 +227,38 @@ object NetEaseLogic {
         else Result.failure(jsonObject.getString("message") ?: "删除动态失败")
     }
 
+    private fun finishCycleMission(netEaseEntity: NetEaseEntity, name: String): Result<Void> {
+        val missionResult = musicianCycleMission(netEaseEntity)
+        return if (missionResult.isSuccess) {
+            val list = missionResult.data
+            for (mission in list) {
+                if (mission.description == name) {
+                    if (mission.type != 100) {
+                        userAccess(netEaseEntity)
+                    }
+                    return musicianReceive(netEaseEntity, mission)
+                }
+            }
+            Result.failure("没有找到音乐人签到任务")
+        } else Result.failure(missionResult.message)
+    }
+
+    private fun finishStageMission(netEaseEntity: NetEaseEntity, name: String): Result<Void> {
+        val missionResult = musicianStageMission(netEaseEntity)
+        return if (missionResult.isSuccess) {
+            val list = missionResult.data
+            for (mission in list) {
+                if (mission.description == name) {
+                    if (mission.type != 100) {
+                        userAccess(netEaseEntity)
+                    }
+                    return musicianReceive(netEaseEntity, mission)
+                }
+            }
+            Result.failure("没有找到音乐人签到任务")
+        } else Result.failure(missionResult.message)
+    }
+
     fun publish(netEaseEntity: NetEaseEntity): Result<Void> {
         val result = personalizedPlaylist(netEaseEntity)
         if (result.isFailure) return Result.failure(result.message)
@@ -222,23 +267,106 @@ object NetEaseLogic {
         return if (res.isSuccess) {
             val id = res.data
             removeDy(netEaseEntity, id)
-            val missionResult = musicianCycleMission(netEaseEntity)
-            return if (result.isSuccess) {
-                val list = missionResult.data
-                for (mission in list) {
-                    if (mission.description == "发布动态") {
-                        if (mission.type != 100) {
-                            userAccess(netEaseEntity)
-                        }
-                        return musicianReceive(netEaseEntity, mission)
-                    }
-                }
-                Result.failure("没有找到音乐人签到任务")
-            } else Result.failure(result.message)
+            finishCycleMission(netEaseEntity, "发布动态")
         }
         else Result.failure(res.message)
     }
 
+    fun mLogNosToken(netEaseEntity: NetEaseEntity, url: String): Result<MLogInfo> {
+        val bizKey = StringBuilder()
+        for (i in 0..8) {
+            bizKey.append(MyUtils.randomInt(0, 15).toHexString().replace("0x", ""))
+        }
+        val fileName = "album.jpg"
+        val bytes =
+            OkHttpUtils.getBytes(url)
+        val size = bytes.size
+        val md5 = bytes.md5()
+        val jsonObject = OkHttpUtils.postJson("$domain/weapi/nos/token/whalealloc",
+            prepare(mapOf("bizKey" to bizKey.toString(), "filename" to fileName, "bucket" to "yyimgs",
+                "md5" to md5, "type" to "image", "fileSize" to size.toString())),
+            OkUtils.headers(netEaseEntity.cookie(), domain, UA.PC)
+        )
+        return if (jsonObject.getInteger("code") == 200) {
+            val dataJsonObject = jsonObject.getJSONObject("data")
+            Result.success(MLogInfo(dataJsonObject.getLong("resourceId"), dataJsonObject.getString("objectKey"), dataJsonObject.getString("token"),
+                dataJsonObject.getString("bucket"), bytes))
+        } else Result.failure(jsonObject.getString("message"))
+    }
+
+    fun uploadFile(netEaseEntity: NetEaseEntity, mLogInfo: MLogInfo): UploadFileInfo {
+        val url = "http://45.127.129.8/${mLogInfo.bucket}/${mLogInfo.objectKey}?offset=0&complete=true&version=1.0"
+        val contentType = "image/jpg"
+        val jsonObject = OkHttpUtils.postJson(url, OkUtils.streamBody(mLogInfo.byteArray, contentType),
+            mapOf("x-nos-token" to mLogInfo.token, "cookie" to netEaseEntity.cookie(), "referer" to domain))
+        return jsonObject.toJavaObject(UploadFileInfo::class.java)
+    }
+
+    fun songDetail(netEaseEntity: NetEaseEntity, id: Long): Result<SongDetail> {
+        val jsonObject = OkHttpUtils.postJson("$domain/weapi/v3/song/detail",
+            prepare("""
+                {"c": "[{\"id\": $id}]", "ids": "[$id]"}
+            """.trimIndent(), netEaseEntity),
+            OkUtils.headers(netEaseEntity.cookie(), domain, UA.PC)
+        )
+        return if (jsonObject.getInteger("code") == 200) {
+            val songJsonObject = jsonObject.getJSONArray("songs").getJSONObject(0)
+            Result.success(SongDetail(songJsonObject.getString("name"), songJsonObject.getJSONArray("ar").getJSONObject(0).getString("name"),
+                songJsonObject.getJSONObject("al").getString("picUrl") + "?param=500y500"))
+        } else Result.failure(jsonObject.getString("message"))
+    }
+
+    fun publishMLog(netEaseEntity: NetEaseEntity): Result<Void> {
+        val musicResult = myMusic(netEaseEntity)
+        val songId = musicResult.data.random().songId
+        val songDetailResult = songDetail(netEaseEntity, songId)
+        val songDetail = songDetailResult.data
+        val infoResult = mLogNosToken(netEaseEntity, songDetail.pic)
+        if (infoResult.isFailure) return Result.failure(infoResult.message)
+        val mLogInfo = infoResult.data
+        uploadFile(netEaseEntity, mLogInfo)
+        val songName = songDetail.name
+        val text = "分享${songDetail.artistName}的歌曲: ${songDetail.name}"
+        val jsonStr = """
+            {"type":1,"mlog":"{\"content\": {\"image\": [{\"height\": 500, \"width\": 500, \"more\": false, \"nosKey\": \"${mLogInfo.bucket}/${mLogInfo.objectKey}\", \"picKey\": ${mLogInfo.resourceId}}], \"needAudio\": false, \"song\": {\"endTime\": 0, \"name\": \"${songName}\", \"songId\": $songId, \"startTime\": 30000}, \"text\": \"$text\"}, \"from\": 0, \"type\": 1}"}
+        """.trimIndent()
+        val jsonObject = OkHttpUtils.postJson("$domain/weapi/mlog/publish/v1", prepare(jsonStr), OkUtils.headers(netEaseEntity.cookie(), domain, UA.PC))
+        return if (jsonObject.getInteger("code") == 200) {
+            val resourceId = jsonObject.getJSONObject("data").getJSONObject("event").getJSONObject("info").getLong("resourceId")
+            removeDy(netEaseEntity, resourceId)
+            return finishCycleMission(netEaseEntity, "发布mlog")
+        } else Result.failure(jsonObject.getString("message"))
+    }
+
+    fun musicComment(netEaseEntity: NetEaseEntity, id: Long, comment: String = "欢迎大家收听"): Result<Long> {
+        val jsonObject = OkHttpUtils.postJson("$domain/weapi/v1/resource/comments/add",
+            prepare(mapOf("threadId" to "R_SO_4_$id", "content" to comment)),
+            OkUtils.headers(netEaseEntity.cookie().replace("os=pc; ", "") + "os=android; ", domain, ua)
+        )
+        return if (jsonObject.getInteger("code") == 200) {
+            Result.success(jsonObject.getJSONObject("comment").getLong("commentId"))
+        } else Result.failure(jsonObject.getString("message"))
+    }
+
+    fun deleteMusicComment(netEaseEntity: NetEaseEntity, id: Long, commentId: Long): Result<Void> {
+        val jsonObject = OkHttpUtils.postJson("$domain/weapi/resource/comments/delete",
+            prepare(mapOf("commentId" to commentId.toString(), "threadId" to "R_SO_4_$id")),
+            OkUtils.headers(netEaseEntity.cookie(), domain, UA.PC)
+        )
+        return if (jsonObject.getInteger("code") == 200) Result.success()
+        else Result.failure(jsonObject.getString("message"))
+    }
+
+    fun myMusicComment(netEaseEntity: NetEaseEntity): Result<Void> {
+        val musicResult = myMusic(netEaseEntity)
+        if (musicResult.isFailure) return Result.failure(musicResult.message)
+        val netEaseSong = musicResult.data.random()
+        val result = musicComment(netEaseEntity, netEaseSong.songId)
+        val commentId = result.data
+        return deleteMusicComment(netEaseEntity, netEaseSong.songId, commentId).also {
+            finishStageMission(netEaseEntity, "发布主创说")
+        }
+    }
 
 }
 
@@ -247,3 +375,9 @@ data class Mission(val userMissionId: Long?, val period: Int, val type: Int, val
 data class NetEaseSong(val songName: String, val songId: Long, val albumId: Long, val albumName: String)
 
 data class Play(val name: String, val id: Long, val playCount: Long)
+
+data class MLogInfo(val resourceId: Long, val objectKey: String, val token: String, val bucket: String, val byteArray: ByteArray)
+
+data class UploadFileInfo(val callbackRetMsg: String, val offset: Long, val requestId: String, val context: String)
+
+data class SongDetail(val name: String, val artistName: String, val pic: String)

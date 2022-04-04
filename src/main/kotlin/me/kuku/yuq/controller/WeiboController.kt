@@ -8,6 +8,7 @@ import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.QQController
 import kotlinx.coroutines.delay
 import me.kuku.utils.JobManager
+import me.kuku.utils.OkHttpUtils
 import me.kuku.yuq.entity.QqEntity
 import me.kuku.yuq.entity.WeiboEntity
 import me.kuku.yuq.entity.WeiboService
@@ -24,7 +25,8 @@ class WeiboController @Inject constructor(
     fun login(qqEntity: QqEntity, context: BotActionContext) {
         val weiboQrcode = WeiboLogic.loginByQr1()
         val url = weiboQrcode.url
-        reply(mif.at(qqEntity.qq).plus(mif.imageByUrl("https:$url")).plus("请使用微博APP扫码登录（第三方微博也可以）").toMessage())
+        val bytes = OkHttpUtils.getBytes("https:$url")
+        reply(mif.at(qqEntity.qq).plus(mif.imageByByteArray(bytes)).plus("请使用微博APP扫码登录（第三方微博也可以）").toMessage())
         JobManager.now {
             while (true) {
                 delay(3000)

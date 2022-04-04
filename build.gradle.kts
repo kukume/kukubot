@@ -13,7 +13,7 @@ val queryDslVersion = "5.0.0"
 val telegramBotsVersion = "5.7.1"
 
 plugins {
-    val kotlinVersion = "1.6.10"
+    val kotlinVersion = "1.6.20"
     kotlin("jvm") version kotlinVersion
     id("org.jetbrains.kotlin.kapt") version kotlinVersion
     id("com.github.johnrengelman.shadow") version "7.1.0"

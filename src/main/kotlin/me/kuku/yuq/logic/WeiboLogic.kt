@@ -88,7 +88,7 @@ object WeiboLogic {
     private fun convert(jsonObject: JSONObject): WeiboPojo {
         val weiboPojo = WeiboPojo()
         val userJsonObject = jsonObject.getJSONObject("user")
-        weiboPojo.id - jsonObject.getLong("id")
+        weiboPojo.id = jsonObject.getLong("id")
         weiboPojo.name = userJsonObject.getString("screen_name")
         weiboPojo.created = jsonObject.getString("created_at")
         weiboPojo.text = Jsoup.parse(jsonObject.getString("text")).text()

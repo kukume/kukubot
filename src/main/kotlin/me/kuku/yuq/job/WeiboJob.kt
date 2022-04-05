@@ -40,10 +40,7 @@ class WeiboJob @Inject constructor(
                     newList.add(weiboPojo)
                 }
                 for (weiboPojo in newList) {
-                    YuqUtils.sendMessage(weiboEntity.qqEntity, """
-                        有新微博了！
-                        ${WeiboLogic.convert(weiboPojo)}
-                    """.trimIndent())
+                    YuqUtils.sendMessage(weiboEntity.qqEntity, "有新微博了！！\n${WeiboLogic.convert(weiboPojo)}")
                 }
             }
             userMap[qq] = list[0].id

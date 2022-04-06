@@ -159,7 +159,13 @@ class GroupManagerEvent @Inject constructor(
 
     @Event
     fun friend(e: NewFriendRequestEvent) {
-
+        if (e.qq.level > 32) {
+            e.accept = true
+        } else {
+            e.accept = false
+            e.rejectMessage = "您的qq登陆没有32级，升级了再来把"
+        }
+        e.cancel = true
     }
 
     @Event

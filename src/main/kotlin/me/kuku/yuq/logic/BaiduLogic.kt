@@ -60,26 +60,51 @@ class BaiduLogic @Inject constructor(
         }
     }
 
-    fun ybbSign(baiduEntity: BaiduEntity): Result<Void> {
+    private fun ybbDefaultHeader(): MutableMap<String, String> {
+        val map = mutableMapOf<String, String>()
+        map["X-Channel-Name"] = "xiaomi"
+        map["X-Device-Name"] = "android"
+        map["X-Client-Version"] = "2.3.14"
+        map["X-System-Version"] = "31"
+        map["X-Auth-Timestamp"] = System.currentTimeMillis().toString()
+        return map
+    }
+
+    suspend fun ybbWatchAd(baiduEntity: BaiduEntity): Result<Void> {
+        val preJsonObject = OkHttpKtUtils.getJson("https://api-gt.baidu.com/v1/server/task?version=v2", ybbDefaultHeader().also {
+            it["cookie"] = baiduEntity.cookie
+        })
+        if (!preJsonObject.getBoolean("success")) return Result.failure(preJsonObject.getJSONObject("errors").getString("message_cn"))
+        val preResult = preJsonObject.getJSONArray("result")
+        val ll = preResult.map { it as JSONObject }.filter { it.getString("name") == "看视频送时长" }
+        if (ll.isEmpty()) return Result.failure("没有这个任务")
+        val sign = ll[0].getString("sign")
         val time = System.currentTimeMillis()
         val tenTime = time / 1000
         val jsonObject = JSONObject()
         jsonObject["end_time"] = tenTime
         jsonObject["start_time"] = tenTime
         jsonObject["task"] = 1
-        val map: MutableMap<String, String> = HashMap()
-        map["X-Channel-Name"] = "vivo"
-        map["X-Device-Name"] = "android"
-        map["X-Client-Version"] = "2.0.13"
-        map["X-System-Version"] = "29"
-        map["X-Auth-Timestamp"] = time.toString()
-        map["cookie"] = baiduEntity.cookie
-        val resultJsonObject = OkHttpUtils.postJson(
+        jsonObject["sign"] = sign
+        val resultJsonObject = OkHttpKtUtils.postJson(
             "https://api-gt.baidu.com/v1/server/task",
-            OkUtils.json(jsonObject), OkHttpUtils.addHeaders(map)
+            OkUtils.json(jsonObject), ybbDefaultHeader().also {
+                it["cookie"] = baiduEntity.cookie
+            }
         )
         return if (resultJsonObject.getBoolean("success")) Result.success("观看广告成功！", null)
         else Result.failure(resultJsonObject.getJSONObject("errors").getString("message_cn"))
+    }
+
+    suspend fun ybbSign(baiduEntity: BaiduEntity): Result<Void> {
+        val map = ybbDefaultHeader()
+        map["cookie"] = baiduEntity.cookie
+        map["referer"] = "https://ybb.baidu.com/m/pages/h5/sign-activity?channel=xiaomi&device=android&appversion=2.3.14&cuid=8D795D0D8C8AB781BD0E0B807B0B1B0F%7CVCUIVQGDM&systemversion=31"
+        map["user-agent"] = "Mozilla/5.0 (Linux; Android 12; M2007J3SC Build/SKQ1.211006.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/100.0.4896.79 Mobile Safari/537.36 com.baidu.ybb/2.3.14"
+        val jsonObject = OkHttpKtUtils.postJson("https://ybb.baidu.com/api/v1/server/scores",
+            OkUtils.json("""{"type": "daily"}"""), map)
+        return if (jsonObject.getBoolean("success")) Result.success()
+        else Result.failure(jsonObject.getJSONObject("errors").getString("message_cn"))
     }
 
     private fun getSToken(baiduEntity: BaiduEntity, url: String): String {

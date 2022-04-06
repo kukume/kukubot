@@ -58,7 +58,7 @@ class BaiduController @Inject constructor(
         }
     }
 
-    @Before
+    @Before(except = ["baiduLogin"])
     fun before(qqEntity: QqEntity): BaiduEntity {
         return baiduService.findByQqEntity(qqEntity) ?: throw mif.at(qqEntity.qq).plus("您没有绑定百度，操作失败").toThrowable()
     }
@@ -67,7 +67,7 @@ class BaiduController @Inject constructor(
     fun tieBaSign(baiduEntity: BaiduEntity) = runBlocking {
         val result = baiduLogic.tieBaSign(baiduEntity)
         if (result.isSuccess) "百度贴吧签到成功"
-        else "百度贴吧签到失败"
+        else "百度贴吧签到失败，${result.message}"
     }
 
     @Action("百度自动签到 {status}")
@@ -75,6 +75,20 @@ class BaiduController @Inject constructor(
         baiduEntity.config.sign = status.toStatus()
         baiduService.save(baiduEntity)
         return "百度自动签到${status.openOrClose()}成功"
+    }
+
+    @Action("游帮帮看广告")
+    fun watchAd(baiduEntity: BaiduEntity) = runBlocking {
+        val result = baiduLogic.ybbWatchAd(baiduEntity)
+        if (result.isSuccess) "游帮帮观看广告成功"
+        else "游帮帮观看广告失败，${result.message}"
+    }
+
+    @Action("游帮帮签到")
+    fun ybbSign(baiduEntity: BaiduEntity) = runBlocking {
+        val result = baiduLogic.ybbSign(baiduEntity)
+        if (result.isSuccess) "游帮帮签到成功"
+        else "游帮帮签到失败，${result.message}"
     }
 
 

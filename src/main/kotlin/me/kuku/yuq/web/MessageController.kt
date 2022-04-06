@@ -26,7 +26,7 @@ class MessageController @Inject constructor(
     fun recall(group: Long, id: Int): Result<*> {
         val messageEntity = messageService.findByMessageIdAndGroup(id, group)
             ?: return Result.failure(ResultStatus.DATA_NOT_EXISTS, null)
-        messageEntity.messageSource?.toArtGroupMessageSource()?.recall()
+//        messageEntity.messageSource?.toArtGroupMessageSource()?.recall()
         return Result.success()
     }
 

@@ -31,9 +31,9 @@ class MessageEntity: BaseEntity() {
     @Lob
     @Column(columnDefinition = "text")
     var content: String = ""
-    @Type(type = "json")
-    @Column(columnDefinition = "json")
-    var messageSource: MessageSource? = null
+//    @Type(type = "json")
+//    @Column(columnDefinition = "json")
+//    var messageSource: MessageSource? = null
 }
 
 interface MessageRepository: JpaRepository<MessageEntity, Int>, QuerydslPredicateExecutor<MessageEntity> {

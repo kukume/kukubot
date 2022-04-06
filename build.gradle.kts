@@ -5,6 +5,7 @@ val webVersion = "0.0.2.0-DEV22"
 val springDataJpaVersion = "2.6.3"
 val springVersion = "5.3.17"
 val hibernateVersion = "5.6.7.Final"
+val hikariCPVersion = "4.0.3"
 val h2Version = "1.4.200"
 val hibernateTypesVersion = "2.14.1"
 val jsoupVersion = "1.14.3"
@@ -54,7 +55,8 @@ dependencies {
     // spring-data
     implementation("org.springframework.data:spring-data-jpa:$springDataJpaVersion")
     implementation("org.springframework:spring-aspects:$springVersion")
-    implementation("org.hibernate:hibernate-hikaricp:$hibernateVersion")
+    implementation("org.hibernate:hibernate-core:$hibernateVersion")
+    implementation("com.zaxxer:HikariCP:$hikariCPVersion")
     implementation("com.vladmihalcea:hibernate-types-52:$hibernateTypesVersion")
     implementation("com.h2database:h2:$h2Version")
     implementation("com.querydsl:querydsl-core:$queryDslVersion")

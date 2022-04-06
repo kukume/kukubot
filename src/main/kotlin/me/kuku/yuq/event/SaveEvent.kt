@@ -61,7 +61,7 @@ class Save @Inject constructor(
         messageEntity.groupEntity = groupEntity
         messageEntity.content = ss
         val source = e.message.source as? ArtGroupMessageSource
-        messageEntity.messageSource = source?.toMessageSource()
+//        messageEntity.messageSource = source?.toMessageSource()
         messageService.save(messageEntity)
     }
 
@@ -102,7 +102,7 @@ class Save @Inject constructor(
             messageEntity.groupEntity = groupEntity
             messageEntity.content = e.message.toCodeString()
             val source = e.messageSource as? ArtToGroupMessageSource
-            messageEntity.messageSource = source?.toMessageSource()
+//            messageEntity.messageSource = source?.toMessageSource()
             messageService.save(messageEntity)
         }
     }

@@ -35,7 +35,7 @@ class ReplyEvent @Inject constructor(
         }
     }
 
-    @Event
+    /*@Event
     fun recallMessage(e: GroupMessageEvent) {
         val group = e.group
         val qq = e.sender
@@ -52,7 +52,7 @@ class ReplyEvent @Inject constructor(
         val source = messageEntity.messageSource ?: throw mif.at(qq.id).plus("没有找到该条消息源，撤回失败").toThrowable()
         source.toArtGroupMessageSource().recall()
         message.recall()
-    }
+    }*/
 
 
 }

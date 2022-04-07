@@ -49,13 +49,13 @@ import javax.inject.Inject
 import javax.persistence.EntityManagerFactory
 
 fun main(args: Array<String>) {
-//    YuHook.put(
-//        HookItem(
-//            "com.icecreamqaq.yuq.artqq.YuQArtQQModule",
-//            "onLoad",
-//            "me.kuku.yuq.HookYuQArtQQModule"
-//        )
-//    )
+    YuHook.put(
+        HookItem(
+            "com.icecreamqaq.yuq.artqq.YuQArtQQModule",
+            "onLoad",
+            "me.kuku.yuq.HookYuQArtQQModule"
+        )
+    )
     val newArgs = if (args.contains("-noUI")) args
     else args.plus("-noUI")
     YuQArtQQStarter.start(newArgs)

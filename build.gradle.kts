@@ -1,7 +1,7 @@
 val utilsVersion = "0.3.17"
 val yuCoreVersion = "0.2.0.0-DEV20"
-val artQqVersion = "0.1.0.0-DEV14"
-val webVersion = "0.0.2.0-DEV22"
+val artQqVersion = "0.1.0.0-DEV15"
+val webVersion = "0.0.2.0-DEV23"
 val springDataJpaVersion = "2.6.3"
 val springVersion = "5.3.17"
 val hibernateVersion = "5.6.7.Final"
@@ -49,7 +49,7 @@ dependencies {
     // yuq
     implementation("com.IceCreamQAQ.YuQ:YuQ-ArtQQ:$artQqVersion")
     implementation("com.IceCreamQAQ.Yu:WebCore:$webVersion")
-//    implementation("com.IceCreamQAQ.Yu.WebCore.Server:SmartHTTP:$webVersion")
+    implementation("com.IceCreamQAQ.Yu.WebCore.Server:SmartHTTP:$webVersion")
 //    implementation("com.IceCreamQAQ:Yu-Core:$yuCoreVersion")
 
     // spring-data

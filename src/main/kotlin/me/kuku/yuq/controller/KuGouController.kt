@@ -4,8 +4,8 @@ import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Before
 import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.annotation.PrivateController
+import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.ContextSession
-import com.icecreamqaq.yuq.entity.Group
 import com.icecreamqaq.yuq.message.Message.Companion.firstString
 import com.icecreamqaq.yuq.mif
 import kotlinx.coroutines.runBlocking
@@ -23,8 +23,8 @@ class KuGouController @Inject constructor(
 ) {
 
     @Action("酷狗登录")
-    fun kuGouLogin(group: Group, session: ContextSession, qqEntity: QqEntity): String {
-        group.sendMessage("请发送手机号")
+    fun kuGouLogin(context: BotActionContext, session: ContextSession, qqEntity: QqEntity): String {
+        context.source.sendMessage("请发送手机号")
         val phone = session.waitNextMessage().firstString().toLongOrNull() ?: return "发送的手机号有误"
         val kuGouEntity = kuGouService.findByQqEntity(qqEntity) ?: KuGouEntity().also {
             it.mid = kuGouLogic.mid()
@@ -33,7 +33,7 @@ class KuGouController @Inject constructor(
         val mid = kuGouEntity.mid
         val result = kuGouLogic.sendMobileCode(phone.toString(), mid)
         return if (result.isSuccess) {
-            group.sendMessage("请发送短信验证码")
+            context.source.sendMessage("请发送短信验证码")
             val code = session.waitNextMessage(1000 * 60 * 2).firstString()
             val verifyResult = kuGouLogic.verifyCode(phone.toString(), code, mid)
             if (verifyResult.isSuccess) {

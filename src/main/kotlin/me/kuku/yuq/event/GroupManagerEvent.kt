@@ -13,8 +13,7 @@ import me.kuku.utils.JobManager
 import me.kuku.utils.MyUtils
 import me.kuku.yuq.controller.toStatus
 import me.kuku.yuq.entity.*
-import me.kuku.yuq.transaction
-import me.kuku.yuq.transactionBlock
+import org.springframework.transaction.support.TransactionTemplate
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
@@ -22,7 +21,8 @@ import javax.inject.Inject
 class GroupManagerEvent @Inject constructor(
     private val groupService: GroupService,
     private val qqGroupService: QqGroupService,
-    private val messageService: MessageService
+    private val messageService: MessageService,
+    private val transactionTemplate: TransactionTemplate
 ) {
 
     private val lastMessage = ConcurrentHashMap<Long, String>()
@@ -32,13 +32,13 @@ class GroupManagerEvent @Inject constructor(
     private val verifyMap = ConcurrentHashMap<String, Boolean>()
 
     @Event
-    fun inter(e: GroupMessageEvent) = transactionBlock {
+    fun inter(e: GroupMessageEvent) = transactionTemplate.execute {
         val group = e.group
         val groupNum = group.id
         val sender = e.sender
         val qq = sender.id
-        val groupEntity = groupService.findByGroup(groupNum) ?: return@transactionBlock
-        val qqEntity = groupEntity.get(qq) ?: return@transactionBlock
+        val groupEntity = groupService.findByGroup(groupNum) ?: return@execute
+        val qqEntity = groupEntity.get(qq) ?: return@execute
         val codeString = e.message.toCodeString()
         val config = groupEntity.config
         val prohibitedWords = config.prohibitedWords
@@ -54,7 +54,7 @@ class GroupManagerEvent @Inject constructor(
                     qqGroupEntity.config.prohibitedCount += 1
                     qqGroupService.save(qqGroupEntity)
                     e.cancel = true
-                    return@transactionBlock
+                    return@execute
                 }
             }
         }

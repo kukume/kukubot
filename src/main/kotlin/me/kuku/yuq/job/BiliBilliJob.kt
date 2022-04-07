@@ -4,15 +4,17 @@ import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
 import me.kuku.yuq.entity.BiliBiliService
 import me.kuku.yuq.entity.Status
+import me.kuku.yuq.executeBlock
 import me.kuku.yuq.logic.BiliBiliLogic
 import me.kuku.yuq.logic.BiliBiliPojo
-import me.kuku.yuq.transaction
 import me.kuku.yuq.utils.YuqUtils
+import org.springframework.transaction.support.TransactionTemplate
 import javax.inject.Inject
 
 @JobCenter
 class BiliBilliJob @Inject constructor(
-    private val biliBiliService: BiliBiliService
+    private val biliBiliService: BiliBiliService,
+    private val transactionTemplate: TransactionTemplate
 ) {
 
     private val liveMap = mutableMapOf<Long, MutableMap<Long, Boolean>>()
@@ -31,7 +33,7 @@ class BiliBilliJob @Inject constructor(
     }
 
     @Cron("2m")
-    suspend fun liveMonitor() = transaction {
+    suspend fun liveMonitor() = transactionTemplate.executeBlock {
         val list = biliBiliService.findAll().filter { it.config.live == Status.ON }
         for (biliBiliEntity in list) {
             val result = BiliBiliLogic.followed(biliBiliEntity)
@@ -64,7 +66,7 @@ class BiliBilliJob @Inject constructor(
 
 
     @Cron("2m")
-    suspend fun userMonitor() = transaction {
+    suspend fun userMonitor() = transactionTemplate.executeBlock {
         val biliBiliList = biliBiliService.findAll().filter { it.config.push == Status.ON }
         for (biliBiliEntity in biliBiliList) {
             val qq = biliBiliEntity.qqEntity.qq

@@ -3,6 +3,7 @@ package me.kuku.yuq.event
 import com.IceCreamQAQ.Yu.annotation.Event
 import com.IceCreamQAQ.Yu.annotation.EventListener
 import com.IceCreamQAQ.Yu.di.YuContext
+import com.IceCreamQAQ.Yu.di.inject
 import com.icecreamqaq.yuq.event.GroupMessageEvent
 import com.icecreamqaq.yuq.message.Image
 import com.icecreamqaq.yuq.message.Text
@@ -14,7 +15,7 @@ import me.kuku.yuq.TgBot
 import me.kuku.yuq.entity.MessageInteractEntity
 import me.kuku.yuq.entity.MessageInteractService
 import me.kuku.yuq.entity.MessageService
-import me.kuku.yuq.transactionBlock
+import org.springframework.transaction.support.TransactionTemplate
 import org.telegram.telegrambots.meta.api.methods.GetFile
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto
 import org.telegram.telegrambots.meta.api.methods.send.SendVoice
@@ -33,6 +34,7 @@ class MessageInteractEvent {
     private lateinit var messageInteractService: MessageInteractService
     @Inject
     private lateinit var messageService: MessageService
+    private val transactionTemplate: TransactionTemplate by inject()
 
     @Event(weight = Event.Weight.lowest)
     fun qqMessage(e: GroupMessageEvent) {
@@ -80,13 +82,13 @@ class MessageInteractEvent {
     }
 
     @Event
-    fun tgMessage(e: TelegramUserMessageEvent) = transactionBlock {
+    fun tgMessage(e: TelegramUserMessageEvent) = transactionTemplate.execute {
         val update = e.update
         if (update.message.isReply) {
             val replyToMessage = update.message.replyToMessage
             val messageId = replyToMessage.messageId
-            val messageInteractEntity = messageInteractService.findByTelegramMessageId(messageId) ?: return@transactionBlock
-            val messageEntity = messageInteractEntity.messageEntity ?: return@transactionBlock
+            val messageInteractEntity = messageInteractService.findByTelegramMessageId(messageId) ?: return@execute
+            val messageEntity = messageInteractEntity.messageEntity ?: return@execute
             val groupEntity = messageEntity.groupEntity
             val groupNum = groupEntity.group
             val group = yuq.groups[groupNum]

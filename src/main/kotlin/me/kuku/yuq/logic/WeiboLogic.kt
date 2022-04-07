@@ -96,8 +96,19 @@ object WeiboLogic {
         val picNum = jsonObject.getInteger("pic_num")
         if (picNum != 0) {
             val list = weiboPojo.imageUrl
-            jsonObject.getJSONArray("pics")
-                ?.map { (it as JSONObject).getJSONObject("large").getString("url") }?.forEach(list::add)
+            val pics = jsonObject["pics"]
+            if (pics is JSONArray) {
+                pics.map { it as JSONObject }.map { it.getJSONObject("large").getString("url")}.forEach {
+                    it?.let { list.add(it) }
+                }
+            } else if (pics is JSONObject) {
+                jsonObject.forEach { _, u ->
+                    val ss = u as? JSONObject
+                    ss?.getJSONObject("large")?.getString("url")?.let {
+                        list.add(it)
+                    }
+                }
+            }
         }
         if (jsonObject.containsKey("retweeted_status")) {
             val forwardJsonObject = jsonObject.getJSONObject("retweeted_status")

@@ -4,9 +4,9 @@ import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
 import me.kuku.yuq.entity.Status
 import me.kuku.yuq.entity.WeiboService
+import me.kuku.yuq.executeBlock
 import me.kuku.yuq.logic.WeiboLogic
 import me.kuku.yuq.logic.WeiboPojo
-import me.kuku.yuq.transaction
 import me.kuku.yuq.utils.YuqUtils
 import org.springframework.transaction.support.TransactionTemplate
 import javax.inject.Inject
@@ -28,7 +28,7 @@ class WeiboJob @Inject constructor(
     }
 
     @Cron("2m")
-    suspend fun userMonitor() = transaction {
+    suspend fun userMonitor() = transactionTemplate.executeBlock {
         val weiboList = weiboService.findAll().filter { it.config.push == Status.ON }
         for (weiboEntity in weiboList) {
             val qq = weiboEntity.qqEntity.qq

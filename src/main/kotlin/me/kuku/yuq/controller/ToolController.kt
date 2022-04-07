@@ -18,18 +18,20 @@ import com.icecreamqaq.yuq.mif
 import me.kuku.pojo.QqLoginPojo
 import me.kuku.utils.*
 import me.kuku.yuq.entity.*
+import me.kuku.yuq.executeBlock
 import me.kuku.yuq.logic.ToolLogic
-import me.kuku.yuq.transaction
 import me.kuku.yuq.utils.YuqUtils
 import okhttp3.MultipartBody
 import org.jsoup.Jsoup
+import org.springframework.transaction.support.TransactionTemplate
 import java.time.LocalDate
 import javax.inject.Inject
 
 @GroupController
 class ToolController @Inject constructor(
     private val messageService: MessageService,
-    private val recallService: RecallService
+    private val recallService: RecallService,
+    private val transactionTemplate: TransactionTemplate
 ) {
 
     @Action("摸鱼日历")
@@ -183,7 +185,7 @@ class ToolController @Inject constructor(
     }
 
     @Action("查发言数")
-    suspend fun queryMessage(group: Group) = transaction {
+    suspend fun queryMessage(group: Group) = transactionTemplate.executeBlock {
         val list = messageService.findByGroupAndLocalDateTimeAfter(group.id, LocalDate.now().atStartOfDay())
         val map = mutableMapOf<Long, Int>()
         for (messageEntity in list) {
@@ -198,7 +200,7 @@ class ToolController @Inject constructor(
             if (++i == 5) break
             sb.append(group[k].nameCardOrName()).append("（").append(k).append("）").append(" - ").append(v).appendLine("条")
         }
-        return@transaction sb.removeSuffix("\n").toString()
+        return@executeBlock sb.removeSuffix("\n").toString()
     }
 
     @Action("舔狗日记")
@@ -248,7 +250,7 @@ class ToolController @Inject constructor(
     @Action("菜单")
     @Synonym(["帮助", "功能"])
     suspend fun menu(qqEntity: QqEntity, group: Group) {
-        transaction {
+        transactionTemplate.executeBlock {
             val str = """
                 机器人帮助（命令）如下：
                 https://www.notion.so/kukubot-1d6dd31be25d4018b42d43d4997e0936

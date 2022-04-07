@@ -16,7 +16,7 @@ import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.mif
 import me.kuku.utils.OkHttpUtils
 import me.kuku.yuq.entity.*
-import me.kuku.yuq.transactionBlock
+import org.springframework.transaction.support.TransactionTemplate
 import java.io.PrintWriter
 import java.io.StringWriter
 import javax.inject.Inject
@@ -27,13 +27,14 @@ class BeforeController @Inject constructor(
     private val qqService: QqService,
     private val messageService: MessageService,
     private val privateMessageService: PrivateMessageService,
-    private val exceptionLogService: ExceptionLogService
+    private val exceptionLogService: ExceptionLogService,
+    private val transactionTemplate: TransactionTemplate
 ){
 
     @Before(weight = -1)
     @Global
     fun before(session: ContextSession, qq: Long, group: Long?) {
-        transactionBlock {
+        transactionTemplate.execute {
             val qqEntity = qqService.findByQq(qq)
             session["qqEntity"] = qqEntity!!
             if (group != null) {

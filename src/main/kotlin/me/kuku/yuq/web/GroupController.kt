@@ -12,28 +12,29 @@ import me.kuku.yuq.controller.toStatus
 import me.kuku.yuq.entity.GroupConfig
 import me.kuku.yuq.entity.GroupService
 import me.kuku.yuq.pojo.Page
-import me.kuku.yuq.transaction
+import org.springframework.transaction.support.TransactionTemplate
 import javax.inject.Inject
 
 @WebController
 class GroupController @Inject constructor(
-    private val groupService: GroupService
+    private val groupService: GroupService,
+    private val transactionTemplate: TransactionTemplate
 ) {
 
-//    @Action("/group/list")
-//    suspend fun groupList(group: Long?, page: Page = Page()): Result<*> = transaction {
-//        val groupPage = groupService.findAll(group, page.toPageRequest())
-//        val jsonObject = JSON.parseObject(groupPage.toJSONString())
-//        val jsonArray = jsonObject.getJSONArray("content")
-//        for (any in jsonArray) {
-//            val singleJsonObject = any as JSONObject
-//            val g = singleJsonObject.getLong("group")
-//            val groupObj = yuq.groups[g]
-//            singleJsonObject["name"] = groupObj?.name ?: ""
-//            singleJsonObject["avatar"] = groupObj?.avatar
-//        }
-//        Result.success(jsonObject)
-//    }
+    @Action("/group/list")
+    fun groupList(group: Long?, page: Page = Page()): Result<JSONObject>? = transactionTemplate.execute {
+        val groupPage = groupService.findAll(group, page.toPageRequest())
+        val jsonObject = JSON.parseObject(groupPage.toJSONString())
+        val jsonArray = jsonObject.getJSONArray("content")
+        for (any in jsonArray) {
+            val singleJsonObject = any as JSONObject
+            val g = singleJsonObject.getLong("group")
+            val groupObj = yuq.groups[g]
+            singleJsonObject["name"] = groupObj?.name ?: ""
+            singleJsonObject["avatar"] = groupObj?.avatar
+        }
+        Result.success(jsonObject)
+    }
 
     @Action("/group/detail")
     fun groupDetail(id: Int): Result<*> {

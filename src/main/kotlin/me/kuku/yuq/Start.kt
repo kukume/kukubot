@@ -37,7 +37,6 @@ import org.springframework.orm.jpa.JpaTransactionManager
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter
 import org.springframework.transaction.annotation.EnableTransactionManagement
-import org.springframework.transaction.support.DefaultTransactionDefinition
 import org.springframework.transaction.support.TransactionTemplate
 import org.telegram.abilitybots.api.bot.AbilityBot
 import org.telegram.abilitybots.api.util.AbilityExtension
@@ -99,34 +98,6 @@ open class JpaConfig{
 
 }
 
-private lateinit var transactionManager: JpaTransactionManager
-
-suspend fun <T> transaction(block: suspend () -> T): T {
-    val transactionDefinition = DefaultTransactionDefinition()
-    val ts = transactionManager.getTransaction(transactionDefinition)
-    return try {
-        val s = block()
-        transactionManager.commit(ts)
-        s
-    }catch (e: Exception) {
-        transactionManager.rollback(ts)
-        throw e
-    }
-}
-
-fun <T> transactionBlock(block: () -> T): T {
-    val ts = transactionManager.getTransaction(DefaultTransactionDefinition())
-    return try {
-        val s = block()
-        transactionManager.commit(ts)
-        s
-    }catch (e: Exception) {
-        transactionManager.rollback(ts)
-        throw e
-    }
-}
-
-
 class JpaModule: Module {
 
     @Inject
@@ -135,7 +106,6 @@ class JpaModule: Module {
     override fun onLoad() {
         val applicationContext = AnnotationConfigApplicationContext(JpaConfig::class.java)
         context.putBean(applicationContext)
-        transactionManager = applicationContext.getBean(JpaTransactionManager::class.java)
         val transactionTemplate = applicationContext.getBean(TransactionTemplate::class.java)
         context.putBean(transactionTemplate)
         val classes = MyUtils.getClasses("me.kuku.yuq.entity")
@@ -150,6 +120,14 @@ class JpaModule: Module {
                         ClassContext(name, v, false, null, repository, mutableMapOf("" to repository), null, null)
                     classContextMap[name] = classContext
                 }
+        }
+    }
+}
+
+suspend fun <T> TransactionTemplate.executeBlock(block: suspend () -> T?): T? {
+    return this.execute {
+        runBlocking {
+            block.invoke()
         }
     }
 }

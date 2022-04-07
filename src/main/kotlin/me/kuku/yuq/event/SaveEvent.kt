@@ -14,7 +14,7 @@ import com.icecreamqaq.yuq.message.Message.Companion.toMessageByRainCode
 import com.icecreamqaq.yuq.mif
 import com.icecreamqaq.yuq.yuq
 import me.kuku.yuq.entity.*
-import me.kuku.yuq.transactionBlock
+import org.springframework.transaction.support.TransactionTemplate
 import javax.inject.Inject
 
 @EventListener
@@ -23,11 +23,12 @@ class Save @Inject constructor(
     private val qqService: QqService,
     private val messageService: MessageService,
     private val recallService: RecallService,
-    private val privateMessageService: PrivateMessageService
+    private val privateMessageService: PrivateMessageService,
+    private val transactionTemplate: TransactionTemplate
 ) {
 
     @Event(weight = Event.Weight.highest)
-    fun savePeople(e: MessageEvent) = transactionBlock {
+    fun savePeople(e: MessageEvent) = transactionTemplate.execute {
         val qq = e.sender.id
         var isSave = false
         val qqEntity = qqService.findByQq(qq) ?: QqEntity().also {
@@ -78,11 +79,11 @@ class Save @Inject constructor(
     }
 
     @Event(weight = Event.Weight.high)
-    fun saveBotMessage(e: SendMessageEvent.Post) = transactionBlock {
+    fun saveBotMessage(e: SendMessageEvent.Post) = transactionTemplate.execute {
         val messageId = e.messageSource.id
         val contact = e.sendTo
         if (contact is Member || contact is Group) {
-            val groupEntity = groupService.findByGroup(contact.id) ?: return@transactionBlock
+            val groupEntity = groupService.findByGroup(contact.id) ?: return@execute
             val botQq = yuq.botId
             var qqEntity = groupEntity.get(botQq)
             if (qqEntity == null) {

@@ -9,12 +9,12 @@ import java.io.IOException
 
 object HostLocLogic {
 
-    fun login(username: String, password: String): Result<String> {
+    suspend fun login(username: String, password: String): Result<String> {
         val map = mapOf(
             "fastloginfield" to "username", "username" to username, "cookietime" to "2592000",
             "password" to password, "quickforward" to "yes", "handlekey" to "ls"
         )
-        val response = OkHttpUtils.post("https://hostloc.com/member.php?mod=logging&action=login&loginsubmit=yes&infloat=yes&lssubmit=yes&inajax=1",
+        val response = OkHttpKtUtils.post("https://hostloc.com/member.php?mod=logging&action=login&loginsubmit=yes&infloat=yes&lssubmit=yes&inajax=1",
             map, OkUtils.headers("", "https://hostloc.com/forum.php", UA.PC))
         val str = OkUtils.str(response)
         return if (str.contains("https://hostloc.com/forum.php"))
@@ -22,8 +22,8 @@ object HostLocLogic {
         else Result.failure("账号或密码错误或其他原因登录失败！")
     }
 
-    fun isLogin(cookie: String): Boolean {
-        val html = OkHttpUtils.getStr("https://hostloc.com/home.php?mod=spacecp",
+    suspend fun isLogin(cookie: String): Boolean {
+        val html = OkHttpKtUtils.getStr("https://hostloc.com/home.php?mod=spacecp",
             OkUtils.headers(cookie, "", UA.PC))
         val text = Jsoup.parse(html).getElementsByTag("title").first()!!.text()
         return text.contains("个人资料")
@@ -48,10 +48,10 @@ object HostLocLogic {
         }
     }
 
-    fun post(): List<HostLocPost> {
+    suspend fun post(): List<HostLocPost> {
         val list = mutableListOf<HostLocPost>()
         val html = kotlin.runCatching {
-            OkHttpUtils.getStr("https://hostloc.com/forum.php?mod=forumdisplay&fid=45&filter=author&orderby=dateline",
+            OkHttpKtUtils.getStr("https://hostloc.com/forum.php?mod=forumdisplay&fid=45&filter=author&orderby=dateline",
                 OkUtils.headers("", "https://hostloc.com/forum.php", UA.PC))
         }.onFailure {
             return list

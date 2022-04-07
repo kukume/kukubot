@@ -2,7 +2,6 @@ package me.kuku.yuq.job
 
 import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
-import me.kuku.utils.JobManager
 import me.kuku.yuq.entity.KuGouService
 import me.kuku.yuq.entity.Status
 import me.kuku.yuq.logic.KuGouLogic
@@ -16,13 +15,11 @@ class KuGouJob @Inject constructor(
 
 
     @Cron("03:41")
-    fun sign() {
+    suspend fun sign() {
         val list = kuGouService.findAll().filter { it.config.sign == Status.ON }
         for (kuGouEntity in list) {
-            JobManager.now {
-                kuGouLogic.musicianSign(kuGouEntity)
-                kuGouLogic.listenMusic(kuGouEntity)
-            }
+            kuGouLogic.musicianSign(kuGouEntity)
+            kuGouLogic.listenMusic(kuGouEntity)
         }
     }
 

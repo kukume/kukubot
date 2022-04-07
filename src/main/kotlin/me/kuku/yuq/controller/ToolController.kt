@@ -23,7 +23,6 @@ import me.kuku.yuq.transaction
 import me.kuku.yuq.utils.YuqUtils
 import okhttp3.MultipartBody
 import org.jsoup.Jsoup
-import java.net.URLEncoder
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -34,23 +33,23 @@ class ToolController @Inject constructor(
 ) {
 
     @Action("摸鱼日历")
-    fun fishermanCalendar(group: Group) {
-        val bytes = OkHttpUtils.getBytes("https://api.kukuqaq.com/tool/fishermanCalendar?preview")
+    suspend fun fishermanCalendar(group: Group) {
+        val bytes = OkHttpKtUtils.getBytes("https://api.kukuqaq.com/tool/fishermanCalendar?preview")
         group.sendMessage(mif.imageByByteArray(bytes))
     }
 
     @Action("摸鱼日历搜狗")
-    fun fishermanCalendarSoGou(group: Group) {
-        val bytes = OkHttpUtils.getBytes("https://api.kukuqaq.com/tool/fishermanCalendar/sogou?preview")
+    suspend fun fishermanCalendarSoGou(group: Group) {
+        val bytes = OkHttpKtUtils.getBytes("https://api.kukuqaq.com/tool/fishermanCalendar/sogou?preview")
         group.sendMessage(mif.imageByByteArray(bytes))
     }
 
     @Action("色图")
     @QMsg(recall = 3000)
-    fun color(groupEntity: GroupEntity) =
+    suspend fun color(groupEntity: GroupEntity) =
         if (groupEntity.config.loLiConR18 == Status.OFF)
-            mif.imageByUrl(OkHttpUtils.get("https://api.kukuqaq.com/lolicon/random?preview").also { it.close() }.header("location")!!)
-        else mif.imageByUrl(OkHttpUtils.getJson("https://api.lolicon.app/setu/v2?r18=1").getJSONArray("data").getJSONObject(0).getJSONObject("urls").getString("original").replace("i.pixiv.cat", "i.pixiv.re"))
+            mif.imageByUrl(OkHttpKtUtils.get("https://api.kukuqaq.com/lolicon/random?preview").also { it.close() }.header("location")!!)
+        else mif.imageByUrl(OkHttpKtUtils.getJson("https://api.lolicon.app/setu/v2?r18=1").getJSONArray("data").getJSONObject(0).getJSONObject("urls").getString("original").replace("i.pixiv.cat", "i.pixiv.re"))
 
     @Action(value = "读消息", suffix = true)
     @QMsg(reply = true)
@@ -64,10 +63,10 @@ class ToolController @Inject constructor(
 
     @Action("百科 {text}")
     @QMsg(reply = true)
-    fun baiKe(text: String) = ToolLogic.baiKe(text)
+    suspend fun baiKe(text: String) = ToolLogic.baiKe(text)
 
     @Action("龙王")
-    fun dragonKing(group: Long, qq: Long, @PathVar(value = 1, type = PathVar.Type.Integer) num: Int?): Any {
+    suspend fun dragonKing(group: Long, qq: Long, @PathVar(value = 1, type = PathVar.Type.Integer) num: Int?): Any {
         val groupQqLoginPojo = YuqUtils.groupQqLoginPojo()
         val list = QqGroupLogic.groupHonor(groupQqLoginPojo, group, GroupHonorType.TALK_AT_IVE)
         if (list.isEmpty()) return mif.at(qq).plus("没有发现龙王")
@@ -118,7 +117,7 @@ class ToolController @Inject constructor(
         """.trimIndent()
         group.sendMessage(mif.xmlEx(108, jsonStr))
         JobManager.delay(1000 * 15) {
-            val jsonObject = OkHttpUtils.getJson("$api/tool/peeping/result/$random")
+            val jsonObject = OkHttpKtUtils.getJson("$api/tool/peeping/result/$random")
             if (jsonObject.getInteger("code") == 200) {
                 val sb = StringBuilder()
                 val jsonArray = jsonObject.getJSONObject("data").getJSONArray("list")
@@ -134,13 +133,13 @@ class ToolController @Inject constructor(
 
     @Action("读懂世界")
     @QMsg(reply = true)
-    fun readWorld(): String =
-        OkHttpUtils.getJson("https://api.kukuqaq.com/tool/readWorld").getJSONObject("data").getString("data")
+    suspend fun readWorld(): String =
+        OkHttpKtUtils.getJson("https://api.kukuqaq.com/tool/readWorld").getJSONObject("data").getString("data")
 
     @Action("icp {domain}")
     @QMsg(at = true, atNewLine = true)
-    fun icp(domain: String): String {
-        val jsonObject = OkHttpUtils.getJson("https://api.kukuqaq.com/tool/icp?keyword=${URLEncoder.encode(domain, "utf-8")}&m")
+    suspend fun icp(domain: String): String {
+        val jsonObject = OkHttpKtUtils.getJson("https://api.kukuqaq.com/tool/icp?keyword=${domain.toUrlEncode()}&m")
         return if (jsonObject.getInteger("code") == 200) {
             val jsonArray = jsonObject.getJSONArray("data")
             if (jsonArray.isEmpty()) "该域名未查到备案信息"
@@ -184,7 +183,7 @@ class ToolController @Inject constructor(
     }
 
     @Action("查发言数")
-    fun queryMessage(group: Group) = transaction {
+    suspend fun queryMessage(group: Group) = transaction {
         val list = messageService.findByGroupAndLocalDateTimeAfter(group.id, LocalDate.now().atStartOfDay())
         val map = mutableMapOf<Long, Int>()
         for (messageEntity in list) {
@@ -203,7 +202,7 @@ class ToolController @Inject constructor(
     }
 
     @Action("舔狗日记")
-    fun dog() = OkHttpUtils.getStr("https://api.oick.cn/dog/api.php").replace("\"", "")
+    suspend fun dog() = OkHttpKtUtils.getStr("https://api.oick.cn/dog/api.php").replace("\"", "")
 
     @Action("测吉凶")
     @QMsg(at = true, atNewLine = true)
@@ -221,21 +220,21 @@ class ToolController @Inject constructor(
 
     @Action("oracle {email}")
     @QMsg(reply = true)
-    fun oracle(email: String) =
-        if (OkHttpUtils.getJson("https://api.kukuqaq.com/tool/oracle/promotion?email=$email").getJSONArray("items")?.isNotEmpty() == true) "有资格了"
+    suspend fun oracle(email: String) =
+        if (OkHttpKtUtils.getJson("https://api.kukuqaq.com/tool/oracle/promotion?email=$email").getJSONArray("items")?.isNotEmpty() == true) "有资格了"
         else "你木的资格"
 
     @Action("dcloud上传")
-    fun dCloudUpload(session: ContextSession, group: Group, qq: Long): Message {
+    suspend fun dCloudUpload(session: ContextSession, group: Group, qq: Long): Message {
         group.sendMessage(mif.at(qq).plus("请发送需要上传的图片"))
         val message = session.waitNextMessage()
         var url: String? = null
         for (messageItem in message.body) {
             if (messageItem is Image) {
                 val tempUrl = messageItem.url
-                val jsonObject = OkHttpUtils.postJson("https://api.kukuqaq.com/tool/upload", MultipartBody.Builder().setType(MultipartBody.FORM)
+                val jsonObject = OkHttpKtUtils.postJson("https://api.kukuqaq.com/tool/upload", MultipartBody.Builder().setType(MultipartBody.FORM)
                     .addFormDataPart("type", "4")
-                    .addFormDataPart("file", messageItem.id, OkUtils.streamBody(OkHttpUtils.getBytes(tempUrl))).build())
+                    .addFormDataPart("file", messageItem.id, OkUtils.streamBody(OkHttpKtUtils.getBytes(tempUrl))).build())
                 url = if (jsonObject.getInteger("code") == 200) jsonObject.getJSONObject("data").getString("url")
                 else jsonObject.getString("message")
                 break
@@ -248,7 +247,7 @@ class ToolController @Inject constructor(
 
     @Action("菜单")
     @Synonym(["帮助", "功能"])
-    fun menu(qqEntity: QqEntity, group: Group) {
+    suspend fun menu(qqEntity: QqEntity, group: Group) {
         transaction {
             val str = """
                 机器人帮助（命令）如下：
@@ -262,7 +261,7 @@ class ToolController @Inject constructor(
 
 object QqGroupLogic {
 
-    fun groupHonor(qqLoginPojo: QqLoginPojo, group: Long, type: GroupHonorType): List<GroupHonor> {
+    suspend fun groupHonor(qqLoginPojo: QqLoginPojo, group: Long, type: GroupHonorType): List<GroupHonor> {
         val typeNum: Int
         val wwv: Int
         val param: String
@@ -300,7 +299,7 @@ object QqGroupLogic {
                 image = "https://qq-web.cdn-go.cn/qun.qq.com_interactive/067dafcc/app/qunhonor/dist/cdn/assets/images/icon-happy-stream.png"
             }
         }
-        val html = OkHttpUtils.getStr("https://qun.qq.com/interactive/honorlist?gc=$group&type=$typeNum&_wv=3&_wwv=$wwv",
+        val html = OkHttpKtUtils.getStr("https://qun.qq.com/interactive/honorlist?gc=$group&type=$typeNum&_wv=3&_wwv=$wwv",
             OkUtils.cookie(qqLoginPojo.cookieWithPs))
         val jsonStr = MyUtils.regex("window.__INITIAL_STATE__=", "</script", html)
         val jsonObject = JSON.parseObject(jsonStr)

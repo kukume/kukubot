@@ -21,7 +21,7 @@ class StepController @Inject constructor(
 ): QQController() {
 
     @Action("乐心运动登录")
-    fun leXinLogin(qqEntity: QqEntity, session: ContextSession): String {
+    suspend fun leXinLogin(qqEntity: QqEntity, session: ContextSession): String {
         reply(mif.at(qqEntity.qq).plus("请发送手机号").toMessage())
         val phone = session.waitNextMessage().firstString()
         reply(mif.at(qqEntity.qq).plus("请发送密码").toMessage())
@@ -41,7 +41,7 @@ class StepController @Inject constructor(
     }
 
     @Action("小米运动登录")
-    fun miLogin(qqEntity: QqEntity, session: ContextSession): String {
+    suspend fun miLogin(qqEntity: QqEntity, session: ContextSession): String {
         reply(mif.at(qqEntity.qq).plus("请发送手机号").toMessage())
         val phone = session.waitNextMessage().firstString()
         reply(mif.at(qqEntity.qq).plus("请发送密码").toMessage())
@@ -64,7 +64,7 @@ class StepController @Inject constructor(
     }
 
     @Action("乐心运动步数")
-    fun leXinStep(stepEntity: StepEntity, qq: Long, session: ContextSession): String {
+    suspend fun leXinStep(stepEntity: StepEntity, qq: Long, session: ContextSession): String {
         reply(mif.at(qq).plus("请发送需要修改的步数").toMessage())
         val s = session.waitNextMessage().firstString().toIntOrNull() ?: return "发送的步数有误"
         val result = LeXinStepLogic.modifyStepCount(stepEntity, s)
@@ -73,7 +73,7 @@ class StepController @Inject constructor(
     }
 
     @Action("小米运动步数")
-    fun miStep(stepEntity: StepEntity, qq: Long, session: ContextSession): String {
+    suspend fun miStep(stepEntity: StepEntity, qq: Long, session: ContextSession): String {
         reply(mif.at(qq).plus("请发送需要修改的步数").toMessage())
         val s = session.waitNextMessage().firstString().toIntOrNull() ?: return "发送的步数有误"
         val result = XiaomiStepLogic.modifyStepCount(stepEntity, s)

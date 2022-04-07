@@ -14,7 +14,7 @@ class NetEaseJob @Inject constructor(
 
 
     @Cron("07:12")
-    fun sign() {
+    suspend fun sign() {
         val list = netEaseService.findAll().filter { it.config.sign == Status.ON }
         for (netEaseEntity in list) {
             kotlin.runCatching {

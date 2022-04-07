@@ -16,11 +16,11 @@ class MessageController @Inject constructor(
     private val messageService: MessageService
 ) {
 
-    @Action("/message/list")
-    fun list(group: Long?, content: String?, qq: Long?, page: Page): Result<*> = transaction {
-        val p = messageService.findAll(group, content, qq, page.toPageRequest())
-        Result.success(JSON.parse(JacksonUtils.toJsonString(p)))
-    }
+//    @Action("/message/list")
+//    suspend fun list(group: Long?, content: String?, qq: Long?, page: Page): Result<*> = transaction {
+//        val p = messageService.findAll(group, content, qq, page.toPageRequest())
+//        Result.success(JSON.parse(JacksonUtils.toJsonString(p)))
+//    }
 
     @Action("/message/recall")
     fun recall(group: Long, id: Int): Result<*> {

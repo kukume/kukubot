@@ -13,9 +13,9 @@ class RecallController @Inject constructor(
     private val recallService: RecallService
 ) {
 
-    @Action("/recall/list")
-    fun recallList(group: Long?, messageId: Int?, content: String?, qq: Long?, page: Page): Result<*> = transaction {
-        Result.success(recallService.findByAll(group, messageId, content, qq, page.toPageRequest()))
-    }
+//    @Action("/recall/list")
+//    fun recallList(group: Long?, messageId: Int?, content: String?, qq: Long?, page: Page): Result<*> =  {
+//        Result.success(recallService.findByAll(group, messageId, content, qq, page.toPageRequest()))
+//    }
 
 }

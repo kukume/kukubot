@@ -1,16 +1,13 @@
 package me.kuku.yuq.logic
 
 import com.alibaba.fastjson.JSONObject
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
 import me.kuku.yuq.entity.BaiduEntity
 import me.kuku.yuq.entity.BaiduService
 import me.kuku.pojo.Result
 import me.kuku.pojo.UA
 import me.kuku.utils.*
 import org.jsoup.Jsoup
-import java.net.URLEncoder
 import javax.inject.Inject
 
 class BaiduLogic @Inject constructor(
@@ -30,7 +27,7 @@ class BaiduLogic @Inject constructor(
         if (checkRes.isFailure) return Result.failure(checkRes.code, checkRes.message)
         else {
             val response =
-                OkHttpUtils.get("https://passport.baidu.com/phoenix/account/startlogin?type=15&tpl=mn&u=https%3A%2F%2Fwww.baidu.com%2F&display=page&act=implicit&xd=https%3A%2F%2Fwww.baidu.com%2Fcache%2Fuser%2Fhtml%2Fxd.html%23display%3Dpopup&fire_failure=1")
+                OkHttpKtUtils.get("https://passport.baidu.com/phoenix/account/startlogin?type=15&tpl=mn&u=https%3A%2F%2Fwww.baidu.com%2F&display=page&act=implicit&xd=https%3A%2F%2Fwww.baidu.com%2Fcache%2Fuser%2Fhtml%2Fxd.html%23display%3Dpopup&fire_failure=1")
             response.close()
             val cookie = OkUtils.cookie(response)
             val mKey = OkUtils.cookie(cookie, "mkey")
@@ -44,7 +41,7 @@ class BaiduLogic @Inject constructor(
             if (result.isFailure) return Result.failure(result.message)
             else {
                 val url = result.data
-                val baiduResponse = OkHttpUtils.get(url, mapOf("referer" to "https://graph.qq.com/",
+                val baiduResponse = OkHttpKtUtils.get(url, mapOf("referer" to "https://graph.qq.com/",
                     "cookie" to cookie, "user-agent" to UA.PC.value)
                 )
                 baiduResponse.close()
@@ -107,14 +104,14 @@ class BaiduLogic @Inject constructor(
         else Result.failure(jsonObject.getJSONObject("errors").getString("message_cn"))
     }
 
-    private fun getSToken(baiduEntity: BaiduEntity, url: String): String {
+    private suspend fun getSToken(baiduEntity: BaiduEntity, url: String): String {
         val cookie = baiduEntity.cookie
-        val response = OkHttpUtils.get(url, OkUtils.cookie(cookie)).apply { close() }
+        val response = OkHttpKtUtils.get(url, OkUtils.cookie(cookie)).apply { close() }
         if (response.code != 302) throw RuntimeException("您的百度cookie已失效！")
         val firstUrl = response.header("location")!!
-        val firstResponse = OkHttpUtils.get(firstUrl, OkUtils.cookie(cookie)).apply { close() }
+        val firstResponse = OkHttpKtUtils.get(firstUrl, OkUtils.cookie(cookie)).apply { close() }
         val finallyUrl = firstResponse.header("location")!!
-        val finallyResponse = OkHttpUtils.get(finallyUrl, OkUtils.cookie(cookie)).apply { close() }
+        val finallyResponse = OkHttpKtUtils.get(finallyUrl, OkUtils.cookie(cookie)).apply { close() }
         return OkUtils.cookie(finallyResponse, "STOKEN")!!
     }
 
@@ -127,7 +124,7 @@ class BaiduLogic @Inject constructor(
             baiduService.save(baiduEntity)
         }
         val headers = mapOf("user-agent" to UA.PC.value, "cookie" to baiduEntity.config.tieBaSToken)
-        val likeHtml = OkHttpUtils.getStr(url,
+        val likeHtml = OkHttpKtUtils.getStr(url,
             headers)
         val trElements = Jsoup.parse(likeHtml).getElementsByTag("tr")
         val list = mutableListOf<String>()
@@ -137,11 +134,10 @@ class BaiduLogic @Inject constructor(
         }
         for (s in list) {
             delay(1000)
-            val html = withContext(Dispatchers.IO) {
-                OkHttpUtils.getStr("https://tieba.baidu.com/f?kw=${URLEncoder.encode(s, "utf-8")}&fr=index", headers)
-            }
+            val html =
+                OkHttpKtUtils.getStr("https://tieba.baidu.com/f?kw=${s.toUrlEncode()}&fr=index", headers)
             val tbs = MyUtils.regex("'tbs': \"", "\"", html)!!
-            val jsonObject = OkHttpUtils.postJson("https://tieba.baidu.com/sign/add", mapOf("ie" to "utf-8", "kw" to s, "tbs" to tbs),
+            val jsonObject = OkHttpKtUtils.postJson("https://tieba.baidu.com/sign/add", mapOf("ie" to "utf-8", "kw" to s, "tbs" to tbs),
                 headers)
             if (!arrayOf(1101, 0).contains(jsonObject.getInteger("no"))) return Result.failure(jsonObject.getString("error"))
         }

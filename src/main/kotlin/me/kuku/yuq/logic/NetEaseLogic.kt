@@ -10,7 +10,6 @@ import me.kuku.pojo.Result
 import me.kuku.pojo.UA
 import me.kuku.yuq.entity.NetEaseEntity
 import okhttp3.internal.toHexString
-import javax.imageio.ImageIO
 
 object NetEaseLogic {
 
@@ -41,11 +40,11 @@ object NetEaseLogic {
         return mapOf("params" to param, "encSecKey" to encSecKey)
     }
 
-    fun login(phone: String, password: String): Result<NetEaseEntity> {
+    suspend fun login(phone: String, password: String): Result<NetEaseEntity> {
         val map = mapOf("checkToken" to "9ca17ae2e6ffcda170e2e6ee8dd53df59ab694c65efcbc8fa6d55b938f8faaf17eedbaf783d944ac8aa494bb2af0feaec3b92a9699a392aa61fc9e9c95c55b938f9aa7d44a8fafbf96ce7caf8b9893b85be994ee9e",
             "countrycode" to "86", "password" to if (password.length == 32) password else password.md5(), "phone" to phone,
             "rememberLogin" to "true")
-        val response = OkHttpUtils.post("$domain/weapi/login/cellphone", prepare(map))
+        val response = OkHttpKtUtils.post("$domain/weapi/login/cellphone", prepare(map))
         val jsonObject = OkUtils.json(response)
         return if (jsonObject.getInteger("code") == 200) {
             val cookie = OkUtils.cookie(response)
@@ -58,17 +57,17 @@ object NetEaseLogic {
         } else Result.failure(jsonObject.getString("msg"))
     }
 
-    fun sign(netEaseEntity: NetEaseEntity): Result<Void> {
+    suspend fun sign(netEaseEntity: NetEaseEntity): Result<Void> {
         val map = mapOf("type" to "1")
-        val jsonObject = OkHttpUtils.postJson("$domain/weapi/point/dailyTask", prepare(map),
+        val jsonObject = OkHttpKtUtils.postJson("$domain/weapi/point/dailyTask", prepare(map),
             OkUtils.cookie(netEaseEntity.cookie()))
         val code = jsonObject.getInteger("code")
         return if (code == 200 || code == -2) Result.success()
         else Result.failure(jsonObject.getString("msg"))
     }
 
-    private fun recommend(netEaseEntity: NetEaseEntity): Result<MutableList<String>> {
-        val jsonObject = OkHttpUtils.postJson("$domain/weapi/v1/discovery/recommend/resource",
+    private suspend fun recommend(netEaseEntity: NetEaseEntity): Result<MutableList<String>> {
+        val jsonObject = OkHttpKtUtils.postJson("$domain/weapi/v1/discovery/recommend/resource",
             prepare(mapOf("csrf_token" to netEaseEntity.csrf)), OkUtils.headers(netEaseEntity.cookie(), domain, UA.PC)
         )
         return when (jsonObject.getInteger("code")) {
@@ -84,14 +83,14 @@ object NetEaseLogic {
     }
 
 
-    private fun songId(playListId: String): JSONArray {
-        val jsonObject = OkHttpUtils.postJson("$domain/weapi/v3/playlist/detail",
+    private suspend fun songId(playListId: String): JSONArray {
+        val jsonObject = OkHttpKtUtils.postJson("$domain/weapi/v3/playlist/detail",
             prepare(mapOf("id" to playListId, "total" to "true", "limit" to "1000", "n" to "1000"))
         )
         return jsonObject.getJSONObject("playlist").getJSONArray("trackIds")
     }
 
-    fun listenMusic(netEaseEntity: NetEaseEntity): Result<Void> {
+    suspend fun listenMusic(netEaseEntity: NetEaseEntity): Result<Void> {
         val recommend = recommend(netEaseEntity)
         return if (recommend.isSuccess) {
             val playList = recommend.data
@@ -115,15 +114,15 @@ object NetEaseLogic {
                     k++
                 }
             }
-            val jsonObject = OkHttpUtils.postJson("$domain/weapi/feedback/weblog", prepare(mapOf("logs" to ids.toString())),
+            val jsonObject = OkHttpKtUtils.postJson("$domain/weapi/feedback/weblog", prepare(mapOf("logs" to ids.toString())),
                 OkUtils.headers(netEaseEntity.cookie(), domain, UA.PC))
             if (jsonObject.getInteger("code") == 200) Result.success()
             else Result.failure(jsonObject.getString("message"))
         } else Result.failure(recommend.message)
     }
 
-    fun musicianStageMission(netEaseEntity: NetEaseEntity): Result<MutableList<Mission>> {
-        val jsonObject = OkHttpUtils.postJson("$domain/weapi/nmusician/workbench/mission/stage/list", prepare(mapOf()),
+    suspend fun musicianStageMission(netEaseEntity: NetEaseEntity): Result<MutableList<Mission>> {
+        val jsonObject = OkHttpKtUtils.postJson("$domain/weapi/nmusician/workbench/mission/stage/list", prepare(mapOf()),
             OkUtils.headers(netEaseEntity.cookie(), domain, UA.PC))
         return if (jsonObject.getInteger("code") == 200) {
             val jsonArray = jsonObject.getJSONObject("data").getJSONArray("list")
@@ -135,8 +134,8 @@ object NetEaseLogic {
         } else Result.failure(jsonObject.getString("msg"))
     }
 
-    fun musicianCycleMission(netEaseEntity: NetEaseEntity): Result<List<Mission>> {
-        val jsonObject = OkHttpUtils.postJson("$domain/weapi/nmusician/workbench/mission/cycle/list",
+    suspend fun musicianCycleMission(netEaseEntity: NetEaseEntity): Result<List<Mission>> {
+        val jsonObject = OkHttpKtUtils.postJson("$domain/weapi/nmusician/workbench/mission/cycle/list",
             prepare(mapOf("actionType" to "", "platform" to "")),
             OkUtils.headers(netEaseEntity.cookie(), domain, UA.PC))
         return if (jsonObject.getInteger("code") == 200) {
@@ -149,9 +148,9 @@ object NetEaseLogic {
         } else Result.failure(jsonObject.getString("msg"))
     }
 
-    fun musicianReceive(netEaseEntity: NetEaseEntity, mission: Mission): Result<Void> {
+    suspend fun musicianReceive(netEaseEntity: NetEaseEntity, mission: Mission): Result<Void> {
         val missionId = mission.userMissionId?.toString() ?: return Result.failure("userMissionId为空")
-        val jsonObject = OkHttpUtils.postJson("$domain/weapi/nmusician/workbench/mission/reward/obtain/new",
+        val jsonObject = OkHttpKtUtils.postJson("$domain/weapi/nmusician/workbench/mission/reward/obtain/new",
             prepare(mapOf("userMissionId" to missionId, "period" to mission.period.toString())),
             OkUtils.headers(netEaseEntity.cookie(), domain, UA.PC)
         )
@@ -160,13 +159,13 @@ object NetEaseLogic {
         else Result.failure(jsonObject.getString("msg"))
     }
 
-    fun userAccess(netEaseEntity: NetEaseEntity): Result<Void> {
-        val jsonObject = OkHttpUtils.postJson("$domain/weapi/creator/user/access", prepare(mapOf()), OkUtils.headers(netEaseEntity.cookie(), domain, UA.PC))
+    suspend fun userAccess(netEaseEntity: NetEaseEntity): Result<Void> {
+        val jsonObject = OkHttpKtUtils.postJson("$domain/weapi/creator/user/access", prepare(mapOf()), OkUtils.headers(netEaseEntity.cookie(), domain, UA.PC))
         return if (jsonObject.getInteger("code") == 200) Result.success()
         else Result.failure(jsonObject.getString("msg"))
     }
 
-    fun musicianSign(netEaseEntity: NetEaseEntity): Result<Void> {
+    suspend fun musicianSign(netEaseEntity: NetEaseEntity): Result<Void> {
         val result = musicianCycleMission(netEaseEntity)
         return if (result.isSuccess) {
             val list = result.data
@@ -182,8 +181,8 @@ object NetEaseLogic {
         } else Result.failure(result.message)
     }
 
-    fun myMusic(netEaseEntity: NetEaseEntity): Result<List<NetEaseSong>> {
-        val jsonObject = OkHttpUtils.postJson("$domain/weapi/nmusician/production/common/artist/song/item/list/get?csrf_token=${netEaseEntity.csrf}",
+    suspend fun myMusic(netEaseEntity: NetEaseEntity): Result<List<NetEaseSong>> {
+        val jsonObject = OkHttpKtUtils.postJson("$domain/weapi/nmusician/production/common/artist/song/item/list/get?csrf_token=${netEaseEntity.csrf}",
             prepare(mapOf("fromBackend" to "0", "limit" to "10", "offset" to "0", "online" to "1")),
             mapOf("user-agent" to UA.PC.value, "cookie" to netEaseEntity.cookie(), "referer" to "https://music.163.com/nmusician/web/albums/work/actor/song/self/pub"))
         return if (jsonObject.getInteger("code") == 200) {
@@ -195,8 +194,8 @@ object NetEaseLogic {
         } else Result.failure(jsonObject.getString("message"))
     }
 
-    fun personalizedPlaylist(netEaseEntity: NetEaseEntity): Result<List<Play>> {
-        val jsonObject = OkHttpUtils.postJson("$domain/weapi/personalized/playlist",
+    suspend fun personalizedPlaylist(netEaseEntity: NetEaseEntity): Result<List<Play>> {
+        val jsonObject = OkHttpKtUtils.postJson("$domain/weapi/personalized/playlist",
             prepare(mapOf("limit" to "9")), OkUtils.headers(netEaseEntity.cookie(), domain, UA.PC)
         )
         return if (jsonObject.getInteger("code") == 200) {
@@ -208,8 +207,8 @@ object NetEaseLogic {
         } else Result.failure(jsonObject.getString("message") ?: "获取失败")
     }
 
-    fun shareResource(netEaseEntity: NetEaseEntity, id: Long, msg: String = "每日分享"): Result<Long> {
-        val jsonObject = OkHttpUtils.postJson("$domain/weapi/share/friends/resource",
+    suspend fun shareResource(netEaseEntity: NetEaseEntity, id: Long, msg: String = "每日分享"): Result<Long> {
+        val jsonObject = OkHttpKtUtils.postJson("$domain/weapi/share/friends/resource",
             prepare(mapOf("type" to "playlist", "id" to id.toString(), "msg" to msg)),
             mapOf("cookie" to netEaseEntity.cookie(), "referer" to domain, "user-agent" to UA.PC.value)
         )
@@ -218,8 +217,8 @@ object NetEaseLogic {
         else Result.failure(jsonObject.getString("message"))
     }
 
-    fun removeDy(netEaseEntity: NetEaseEntity, id: Long): Result<Void> {
-        val jsonObject = OkHttpUtils.postJson("$domain/weapi/event/delete",
+    suspend fun removeDy(netEaseEntity: NetEaseEntity, id: Long): Result<Void> {
+        val jsonObject = OkHttpKtUtils.postJson("$domain/weapi/event/delete",
             prepare(mapOf("id" to id.toString())),
             OkUtils.headers(netEaseEntity.cookie(), domain, UA.PC)
         )
@@ -227,7 +226,7 @@ object NetEaseLogic {
         else Result.failure(jsonObject.getString("message") ?: "删除动态失败")
     }
 
-    private fun finishCycleMission(netEaseEntity: NetEaseEntity, name: String): Result<Void> {
+    private suspend fun finishCycleMission(netEaseEntity: NetEaseEntity, name: String): Result<Void> {
         val missionResult = musicianCycleMission(netEaseEntity)
         return if (missionResult.isSuccess) {
             val list = missionResult.data
@@ -243,7 +242,7 @@ object NetEaseLogic {
         } else Result.failure(missionResult.message)
     }
 
-    private fun finishStageMission(netEaseEntity: NetEaseEntity, name: String): Result<Void> {
+    private suspend fun finishStageMission(netEaseEntity: NetEaseEntity, name: String): Result<Void> {
         val missionResult = musicianStageMission(netEaseEntity)
         return if (missionResult.isSuccess) {
             val list = missionResult.data
@@ -259,7 +258,7 @@ object NetEaseLogic {
         } else Result.failure(missionResult.message)
     }
 
-    fun publish(netEaseEntity: NetEaseEntity): Result<Void> {
+    suspend fun publish(netEaseEntity: NetEaseEntity): Result<Void> {
         val result = personalizedPlaylist(netEaseEntity)
         if (result.isFailure) return Result.failure(result.message)
         val play = result.data.random()
@@ -272,17 +271,17 @@ object NetEaseLogic {
         else Result.failure(res.message)
     }
 
-    fun mLogNosToken(netEaseEntity: NetEaseEntity, url: String): Result<MLogInfo> {
+    suspend fun mLogNosToken(netEaseEntity: NetEaseEntity, url: String): Result<MLogInfo> {
         val bizKey = StringBuilder()
         for (i in 0..8) {
             bizKey.append(MyUtils.randomInt(0, 15).toHexString().replace("0x", ""))
         }
         val fileName = "album.jpg"
         val bytes =
-            OkHttpUtils.getBytes(url)
+            OkHttpKtUtils.getBytes(url)
         val size = bytes.size
         val md5 = bytes.md5()
-        val jsonObject = OkHttpUtils.postJson("$domain/weapi/nos/token/whalealloc",
+        val jsonObject = OkHttpKtUtils.postJson("$domain/weapi/nos/token/whalealloc",
             prepare(mapOf("bizKey" to bizKey.toString(), "filename" to fileName, "bucket" to "yyimgs",
                 "md5" to md5, "type" to "image", "fileSize" to size.toString())),
             OkUtils.headers(netEaseEntity.cookie(), domain, UA.PC)
@@ -294,16 +293,16 @@ object NetEaseLogic {
         } else Result.failure(jsonObject.getString("message"))
     }
 
-    fun uploadFile(netEaseEntity: NetEaseEntity, mLogInfo: MLogInfo): UploadFileInfo {
+    suspend fun uploadFile(netEaseEntity: NetEaseEntity, mLogInfo: MLogInfo): UploadFileInfo {
         val url = "http://45.127.129.8/${mLogInfo.bucket}/${mLogInfo.objectKey}?offset=0&complete=true&version=1.0"
         val contentType = "image/jpg"
-        val jsonObject = OkHttpUtils.postJson(url, OkUtils.streamBody(mLogInfo.byteArray, contentType),
+        val jsonObject = OkHttpKtUtils.postJson(url, OkUtils.streamBody(mLogInfo.byteArray, contentType),
             mapOf("x-nos-token" to mLogInfo.token, "cookie" to netEaseEntity.cookie(), "referer" to domain))
         return jsonObject.toJavaObject(UploadFileInfo::class.java)
     }
 
-    fun songDetail(netEaseEntity: NetEaseEntity, id: Long): Result<SongDetail> {
-        val jsonObject = OkHttpUtils.postJson("$domain/weapi/v3/song/detail",
+    suspend fun songDetail(netEaseEntity: NetEaseEntity, id: Long): Result<SongDetail> {
+        val jsonObject = OkHttpKtUtils.postJson("$domain/weapi/v3/song/detail",
             prepare("""
                 {"c": "[{\"id\": $id}]", "ids": "[$id]"}
             """.trimIndent(), netEaseEntity),
@@ -316,7 +315,7 @@ object NetEaseLogic {
         } else Result.failure(jsonObject.getString("message"))
     }
 
-    fun publishMLog(netEaseEntity: NetEaseEntity): Result<Void> {
+    suspend fun publishMLog(netEaseEntity: NetEaseEntity): Result<Void> {
         val musicResult = myMusic(netEaseEntity)
         val songId = musicResult.data.random().songId
         val songDetailResult = songDetail(netEaseEntity, songId)
@@ -330,7 +329,7 @@ object NetEaseLogic {
         val jsonStr = """
             {"type":1,"mlog":"{\"content\": {\"image\": [{\"height\": 500, \"width\": 500, \"more\": false, \"nosKey\": \"${mLogInfo.bucket}/${mLogInfo.objectKey}\", \"picKey\": ${mLogInfo.resourceId}}], \"needAudio\": false, \"song\": {\"endTime\": 0, \"name\": \"${songName}\", \"songId\": $songId, \"startTime\": 30000}, \"text\": \"$text\"}, \"from\": 0, \"type\": 1}"}
         """.trimIndent()
-        val jsonObject = OkHttpUtils.postJson("$domain/weapi/mlog/publish/v1", prepare(jsonStr), OkUtils.headers(netEaseEntity.cookie(), domain, UA.PC))
+        val jsonObject = OkHttpKtUtils.postJson("$domain/weapi/mlog/publish/v1", prepare(jsonStr), OkUtils.headers(netEaseEntity.cookie(), domain, UA.PC))
         return if (jsonObject.getInteger("code") == 200) {
             val resourceId = jsonObject.getJSONObject("data").getJSONObject("event").getJSONObject("info").getLong("resourceId")
             removeDy(netEaseEntity, resourceId)
@@ -338,8 +337,8 @@ object NetEaseLogic {
         } else Result.failure(jsonObject.getString("message"))
     }
 
-    fun musicComment(netEaseEntity: NetEaseEntity, id: Long, comment: String = "欢迎大家收听"): Result<Long> {
-        val jsonObject = OkHttpUtils.postJson("$domain/weapi/v1/resource/comments/add",
+    suspend fun musicComment(netEaseEntity: NetEaseEntity, id: Long, comment: String = "欢迎大家收听"): Result<Long> {
+        val jsonObject = OkHttpKtUtils.postJson("$domain/weapi/v1/resource/comments/add",
             prepare(mapOf("threadId" to "R_SO_4_$id", "content" to comment)),
             OkUtils.headers(netEaseEntity.cookie().replace("os=pc; ", "") + "os=android; ", domain, ua)
         )
@@ -348,8 +347,8 @@ object NetEaseLogic {
         } else Result.failure(jsonObject.getString("message"))
     }
 
-    fun deleteMusicComment(netEaseEntity: NetEaseEntity, id: Long, commentId: Long): Result<Void> {
-        val jsonObject = OkHttpUtils.postJson("$domain/weapi/resource/comments/delete",
+    suspend fun deleteMusicComment(netEaseEntity: NetEaseEntity, id: Long, commentId: Long): Result<Void> {
+        val jsonObject = OkHttpKtUtils.postJson("$domain/weapi/resource/comments/delete",
             prepare(mapOf("commentId" to commentId.toString(), "threadId" to "R_SO_4_$id")),
             OkUtils.headers(netEaseEntity.cookie(), domain, UA.PC)
         )
@@ -357,7 +356,7 @@ object NetEaseLogic {
         else Result.failure(jsonObject.getString("message"))
     }
 
-    fun myMusicComment(netEaseEntity: NetEaseEntity): Result<Void> {
+    suspend fun myMusicComment(netEaseEntity: NetEaseEntity): Result<Void> {
         val musicResult = myMusic(netEaseEntity)
         if (musicResult.isFailure) return Result.failure(musicResult.message)
         val netEaseSong = musicResult.data.random()

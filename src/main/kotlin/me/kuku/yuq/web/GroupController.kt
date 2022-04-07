@@ -20,20 +20,20 @@ class GroupController @Inject constructor(
     private val groupService: GroupService
 ) {
 
-    @Action("/group/list")
-    fun groupList(group: Long?, page: Page = Page()): Result<*> = transaction {
-        val groupPage = groupService.findAll(group, page.toPageRequest())
-        val jsonObject = JSON.parseObject(groupPage.toJSONString())
-        val jsonArray = jsonObject.getJSONArray("content")
-        for (any in jsonArray) {
-            val singleJsonObject = any as JSONObject
-            val g = singleJsonObject.getLong("group")
-            val groupObj = yuq.groups[g]
-            singleJsonObject["name"] = groupObj?.name ?: ""
-            singleJsonObject["avatar"] = groupObj?.avatar
-        }
-        Result.success(jsonObject)
-    }
+//    @Action("/group/list")
+//    suspend fun groupList(group: Long?, page: Page = Page()): Result<*> = transaction {
+//        val groupPage = groupService.findAll(group, page.toPageRequest())
+//        val jsonObject = JSON.parseObject(groupPage.toJSONString())
+//        val jsonArray = jsonObject.getJSONArray("content")
+//        for (any in jsonArray) {
+//            val singleJsonObject = any as JSONObject
+//            val g = singleJsonObject.getLong("group")
+//            val groupObj = yuq.groups[g]
+//            singleJsonObject["name"] = groupObj?.name ?: ""
+//            singleJsonObject["avatar"] = groupObj?.avatar
+//        }
+//        Result.success(jsonObject)
+//    }
 
     @Action("/group/detail")
     fun groupDetail(id: Int): Result<*> {

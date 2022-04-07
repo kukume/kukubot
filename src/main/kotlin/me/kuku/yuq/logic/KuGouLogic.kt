@@ -68,23 +68,23 @@ class KuGouLogic {
         return signature("LnT6xpN3khm36zse0QzvmgTZ3waWdRSA", map, other)
     }
 
-    fun getQrcode(mid: String?): KuGouQrcode {
+    suspend fun getQrcode(mid: String?): KuGouQrcode {
         val newMid = mid ?: mid()
         val map = mutableMapOf(
             "appid" to "1014", "clientver" to "8131", "clienttime" to clientTime().toString(),
             "uuid" to newMid, "mid" to newMid, "type" to "1"
         )
-        val jsonObject = OkHttpUtils.getJson("https://login-user.kugou.com/v1/qrcode?${signature(map)}")
+        val jsonObject = OkHttpKtUtils.getJson("https://login-user.kugou.com/v1/qrcode?${signature(map)}")
         val qrcode = jsonObject.getJSONObject("data").getString("qrcode")
         return KuGouQrcode("https://h5.kugou.com/apps/loginQRCode/html/index.html?qrcode=$qrcode&appid=1014",
             qrcode, newMid)
     }
 
-    fun checkQrcode(kuGouQrcode: KuGouQrcode): Result<KuGouEntity> {
+    suspend fun checkQrcode(kuGouQrcode: KuGouQrcode): Result<KuGouEntity> {
         val map = mutableMapOf("appid" to "1014", "clientver" to "8131",
             "clienttime" to clientTime().toString(), "qrcode" to kuGouQrcode.qrcode, "dfid" to "-",
             "mid" to kuGouQrcode.mid, "plat" to "4", "uuid" to kuGouQrcode.mid)
-        val jsonObject = OkHttpUtils.getJson(
+        val jsonObject = OkHttpKtUtils.getJson(
             "https://login-user.kugou.com/v1/get_userinfo_qrcode?${signature(map)}"
         )
         val dataStatus = jsonObject.getJSONObject("data").getInteger("status")
@@ -95,7 +95,7 @@ class KuGouLogic {
                 val token = jsonObject.getJSONObject("data").getString("token")
                 val userid = jsonObject.getJSONObject("data").getLong("userid")
                 val response =
-                    OkHttpUtils.get("https://login-user.kugou.com/v1/autologin?a_id=1014&userid=$userid&t=$token&ct=${clientTime()}&callback=qrcodeLoginCallback&domain=kugou.com&uuid=${kuGouQrcode.mid}&mid=$${kuGouQrcode.mid}&plat=4&dfid=-&kguser_jv=180925")
+                    OkHttpKtUtils.get("https://login-user.kugou.com/v1/autologin?a_id=1014&userid=$userid&t=$token&ct=${clientTime()}&callback=qrcodeLoginCallback&domain=kugou.com&uuid=${kuGouQrcode.mid}&mid=$${kuGouQrcode.mid}&plat=4&dfid=-&kguser_jv=180925")
                 val cookie = OkUtils.cookie(response)
                 val kuGoo = OkUtils.cookie(cookie, "KuGoo")
                 val kuGouEntity = KuGouEntity()
@@ -109,7 +109,7 @@ class KuGouLogic {
         }
     }
 
-    fun sendMobileCode(phone: String, mid: String): Result<Void> {
+    suspend fun sendMobileCode(phone: String, mid: String): Result<Void> {
         val time = System.currentTimeMillis()
         val map = mutableMapOf(
             // 1058
@@ -121,7 +121,7 @@ class KuGouLogic {
             "dfid" to "-",
             "srcappid" to "2919"
         )
-        val preJsonObject = OkHttpUtils.postJson(
+        val preJsonObject = OkHttpKtUtils.postJson(
             "https://api.kukuqaq.com/exec/kuGou",
             mutableMapOf("phone" to phone, "time" to time.toString())
         )
@@ -130,7 +130,7 @@ class KuGouLogic {
         val pk = preDataJsonObject.getString("pk")
         val mobile = phone.substring(0, 2) + "********" + phone.substring(phone.length - 1)
         val other = "{\"plat\":4,\"clienttime_ms\":$time,\"businessid\":5,\"pk\":\"$pk\",\"params\":\"$params\",\"mobile\":\"$mobile\"}"
-        val jsonObject = OkHttpUtils.postJson(
+        val jsonObject = OkHttpKtUtils.postJson(
             "https://gateway.kugou.com/v8/send_mobile_code?${signature2(map, other)}",
             OkUtils.text(other),
             mutableMapOf("x-router" to "loginservice.kugou.com", "referer" to "https://m3ws.kugou.com/",
@@ -140,7 +140,7 @@ class KuGouLogic {
         else Result.failure(jsonObject.getString("data"))
     }
 
-    fun verifyCode(phone: String, code: String, mid: String): Result<KuGouEntity> {
+    suspend fun verifyCode(phone: String, code: String, mid: String): Result<KuGouEntity> {
         val time = clientTime()
         val map = mutableMapOf(
             "appid" to "3116",
@@ -152,7 +152,7 @@ class KuGouLogic {
             "srcappid" to "2919"
         )
         val other = "{\"plat\":4,\"mobile\":\"$phone\",\"code\":\"$code\",\"expire_day\":60,\"support_multi\":1,\"userid\":\"\",\"force_login\":0}"
-        val response = OkHttpUtils.post(
+        val response = OkHttpKtUtils.post(
             "https://login-user.kugou.com/v2/loginbyverifycode/?${signature2(map, other)}",
             OkUtils.text(other),
             mutableMapOf("x-router" to "loginservice.kugou.com", "referer" to "https://m3ws.kugou.com/",
@@ -174,13 +174,13 @@ class KuGouLogic {
         else Result.failure(jsonObject.getString("data"))
     }
 
-    fun login(username: String, password: String, mid: String?): Result<KuGouEntity> {
+    suspend fun login(username: String, password: String, mid: String?): Result<KuGouEntity> {
         val newMid = mid ?: mid()
         val md5Pwd = MD5Utils.toMD5(password)
         val params = "appid=1058&username=$username&pwd=$md5Pwd&code=&ticket=&clienttime=${clientTime()}&expire_day=60&autologin=false&redirect_uri=&state=&callback=loginModule.loginCallback&login_ver=1&mobile=&mobile_code=&plat=4&dfid=-&mid=$newMid&kguser_jv=180925"
         val headers = OkUtils.headers("", "https://m3ws.kugou.com/", UA.PC)
         val response =
-            OkHttpUtils.get("https://login-user.kugou.com/v1/login/?$params", headers)
+            OkHttpKtUtils.get("https://login-user.kugou.com/v1/login/?$params", headers)
         val jsonObject = OkUtils.jsonp(response)
         return when (jsonObject.getInteger("errorCode")){
             30791 -> {
@@ -204,7 +204,7 @@ class KuGouLogic {
         }
     }
 
-    fun musicianSign(kuGouEntity: KuGouEntity): Result<Void> {
+    suspend fun musicianSign(kuGouEntity: KuGouEntity): Result<Void> {
         // 1014
         // 1058
         val kuGoo = kuGouEntity.kuGoo ?: return Result.failure("请重新登陆酷狗！")
@@ -215,7 +215,7 @@ class KuGouLogic {
             "clienttime" to time, "dfid" to "-",
             "mid" to time, "uuid" to time)
         val jsonObject =
-            OkHttpUtils.postJson("https://h5activity.kugou.com/v1/musician/do_signed?${signature2(map)}", mapOf())
+            OkHttpKtUtils.postJson("https://h5activity.kugou.com/v1/musician/do_signed?${signature2(map)}", mapOf())
         return if (jsonObject.getInteger("errcode") == 0) Result.success("酷狗音乐人签到成功！", null)
         else Result.failure("酷狗音乐人签到失败！" + jsonObject.getString("errmsg"))
     }

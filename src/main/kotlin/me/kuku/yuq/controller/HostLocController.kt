@@ -21,7 +21,7 @@ class HostLocController @Inject constructor(
 ): QQController() {
 
     @Action("loc登录")
-    fun locLogin(qqEntity: QqEntity, session: ContextSession): String {
+    suspend fun locLogin(qqEntity: QqEntity, session: ContextSession): String {
         reply(mif.at(qqEntity.qq).plus("请发送账号").toMessage())
         val account = session.waitNextMessage().firstString()
         reply(mif.at(qqEntity.qq).plus("请发送密码").toMessage())

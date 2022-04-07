@@ -3,7 +3,6 @@ package me.kuku.yuq.job
 import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
 import kotlinx.coroutines.delay
-import me.kuku.utils.JobManager
 import me.kuku.yuq.entity.HostLocService
 import me.kuku.yuq.entity.Status
 import me.kuku.yuq.logic.HostLocLogic
@@ -19,7 +18,7 @@ class HostLocJob @Inject constructor(
     private var locId = 0
 
     @Cron("1s")
-    fun locPush() {
+    suspend fun locPush() {
         val list = HostLocLogic.post()
         if (list.isEmpty()) return
         val newList = mutableListOf<HostLocPost>()
@@ -30,20 +29,18 @@ class HostLocJob @Inject constructor(
             }
         }
         locId = list[0].id
-        JobManager.now {
-            for (hostLocPost in newList) {
-                delay(3000)
-                val hostLocList = hostLocService.findByStatus(Status.ON).filter { it.config.push == Status.ON }
-                for (hostLocEntity in hostLocList) {
-                    val str = """
-                        Loc有新帖了！！
-                        标题：${hostLocPost.title}
-                        昵称：${hostLocPost.name}
-                        链接：${hostLocPost.url}
-                        内容：${HostLocLogic.postContent(hostLocPost.url, hostLocEntity.cookie)}
-                    """.trimIndent()
-                    YuqUtils.sendMessage(hostLocEntity.qqEntity, str)
-                }
+        for (hostLocPost in newList) {
+            delay(3000)
+            val hostLocList = hostLocService.findByStatus(Status.ON).filter { it.config.push == Status.ON }
+            for (hostLocEntity in hostLocList) {
+                val str = """
+                    Loc有新帖了！！
+                    标题：${hostLocPost.title}
+                    昵称：${hostLocPost.name}
+                    链接：${hostLocPost.url}
+                    内容：${HostLocLogic.postContent(hostLocPost.url, hostLocEntity.cookie)}
+                """.trimIndent()
+                YuqUtils.sendMessage(hostLocEntity.qqEntity, str)
             }
         }
     }

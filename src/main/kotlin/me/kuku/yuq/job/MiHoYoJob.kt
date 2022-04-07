@@ -14,7 +14,7 @@ class MiHoYoJob @Inject constructor(
 
 
     @Cron("05:13")
-    fun genShinSign() {
+    suspend fun genShinSign() {
         val list = miHoYoService.findAll().filter { it.config.sign == Status.ON }
         for (miHoYoEntity in list) {
             MiHoYoLogic.sign(miHoYoEntity)

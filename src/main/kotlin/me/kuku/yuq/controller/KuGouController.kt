@@ -8,7 +8,6 @@ import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.message.Message.Companion.firstString
 import com.icecreamqaq.yuq.mif
-import kotlinx.coroutines.runBlocking
 import me.kuku.yuq.entity.KuGouEntity
 import me.kuku.yuq.entity.KuGouService
 import me.kuku.yuq.entity.QqEntity
@@ -23,7 +22,7 @@ class KuGouController @Inject constructor(
 ) {
 
     @Action("酷狗登录")
-    fun kuGouLogin(context: BotActionContext, session: ContextSession, qqEntity: QqEntity): String {
+    suspend fun kuGouLogin(context: BotActionContext, session: ContextSession, qqEntity: QqEntity): String {
         context.source.sendMessage("请发送手机号")
         val phone = session.waitNextMessage().firstString().toLongOrNull() ?: return "发送的手机号有误"
         val kuGouEntity = kuGouService.findByQqEntity(qqEntity) ?: KuGouEntity().also {
@@ -54,17 +53,15 @@ class KuGouController @Inject constructor(
     }
 
     @Action("酷狗音乐人签到")
-    fun kuGouMusicianSign(kuGouEntity: KuGouEntity): String {
+    suspend fun kuGouMusicianSign(kuGouEntity: KuGouEntity): String {
         val ss = kuGouLogic.musicianSign(kuGouEntity)
         return if (ss.isSuccess) "酷狗音乐人签到成功" else "酷狗音乐人签到失败，${ss.message}"
     }
 
     @Action("酷狗听歌")
-    fun kuGouListenMusic(kuGouEntity: KuGouEntity): String {
-        return runBlocking {
-            val ss = kuGouLogic.listenMusic(kuGouEntity)
-            if (ss.isSuccess) "酷狗听歌成功" else "酷狗听歌失败，${ss.message}"
-        }
+    suspend fun kuGouListenMusic(kuGouEntity: KuGouEntity): String {
+        val ss = kuGouLogic.listenMusic(kuGouEntity)
+        return if (ss.isSuccess) "酷狗听歌成功" else "酷狗听歌失败，${ss.message}"
     }
 
     @Action("酷狗自动签到 {status}")

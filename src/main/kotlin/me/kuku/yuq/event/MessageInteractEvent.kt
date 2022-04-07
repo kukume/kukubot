@@ -14,7 +14,7 @@ import me.kuku.yuq.TgBot
 import me.kuku.yuq.entity.MessageInteractEntity
 import me.kuku.yuq.entity.MessageInteractService
 import me.kuku.yuq.entity.MessageService
-import me.kuku.yuq.transaction
+import me.kuku.yuq.transactionBlock
 import org.telegram.telegrambots.meta.api.methods.GetFile
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto
 import org.telegram.telegrambots.meta.api.methods.send.SendVoice
@@ -80,13 +80,13 @@ class MessageInteractEvent {
     }
 
     @Event
-    fun tgMessage(e: TelegramUserMessageEvent) = transaction {
+    fun tgMessage(e: TelegramUserMessageEvent) = transactionBlock {
         val update = e.update
         if (update.message.isReply) {
             val replyToMessage = update.message.replyToMessage
             val messageId = replyToMessage.messageId
-            val messageInteractEntity = messageInteractService.findByTelegramMessageId(messageId) ?: return@transaction
-            val messageEntity = messageInteractEntity.messageEntity ?: return@transaction
+            val messageInteractEntity = messageInteractService.findByTelegramMessageId(messageId) ?: return@transactionBlock
+            val messageEntity = messageInteractEntity.messageEntity ?: return@transactionBlock
             val groupEntity = messageEntity.groupEntity
             val groupNum = groupEntity.group
             val group = yuq.groups[groupNum]

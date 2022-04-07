@@ -6,6 +6,7 @@ import me.kuku.yuq.entity.Status
 import me.kuku.yuq.entity.WeiboService
 import me.kuku.yuq.logic.WeiboLogic
 import me.kuku.yuq.logic.WeiboPojo
+import me.kuku.yuq.transaction
 import me.kuku.yuq.utils.YuqUtils
 import org.springframework.transaction.support.TransactionTemplate
 import javax.inject.Inject
@@ -19,7 +20,7 @@ class WeiboJob @Inject constructor(
     private val userMap = mutableMapOf<Long, Long>()
 
     @Cron("04:51")
-    fun sign() {
+    suspend fun sign() {
         val list = weiboService.findAll().filter { it.config.sign == Status.ON }
         for (weiboEntity in list) {
             WeiboLogic.superTalkSign(weiboEntity)
@@ -27,7 +28,7 @@ class WeiboJob @Inject constructor(
     }
 
     @Cron("2m")
-    fun userMonitor() = transactionTemplate.execute {
+    suspend fun userMonitor() = transaction {
         val weiboList = weiboService.findAll().filter { it.config.push == Status.ON }
         for (weiboEntity in weiboList) {
             val qq = weiboEntity.qqEntity.qq

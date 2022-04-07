@@ -14,7 +14,7 @@ import com.icecreamqaq.yuq.message.Message.Companion.toMessageByRainCode
 import com.icecreamqaq.yuq.mif
 import com.icecreamqaq.yuq.yuq
 import me.kuku.yuq.entity.*
-import me.kuku.yuq.transaction
+import me.kuku.yuq.transactionBlock
 import javax.inject.Inject
 
 @EventListener
@@ -27,27 +27,25 @@ class Save @Inject constructor(
 ) {
 
     @Event(weight = Event.Weight.highest)
-    fun savePeople(e: MessageEvent) {
-        transaction {
-            val qq = e.sender.id
-            var isSave = false
-            val qqEntity = qqService.findByQq(qq) ?: QqEntity().also {
-                it.qq = qq
-                isSave = true
-            }
-            if (e is GroupMessageEvent) {
-                val group = e.group.id
-                if (!qqEntity.groups.any { it.group == group }) {
-                    val groupEntity = groupService.findByGroup(group) ?: GroupEntity().also {
-                        it.group = group
-                        isSave = true
-                    }
-                    qqEntity.groups.add(groupEntity)
+    fun savePeople(e: MessageEvent) = transactionBlock {
+        val qq = e.sender.id
+        var isSave = false
+        val qqEntity = qqService.findByQq(qq) ?: QqEntity().also {
+            it.qq = qq
+            isSave = true
+        }
+        if (e is GroupMessageEvent) {
+            val group = e.group.id
+            if (!qqEntity.groups.any { it.group == group }) {
+                val groupEntity = groupService.findByGroup(group) ?: GroupEntity().also {
+                    it.group = group
                     isSave = true
                 }
+                qqEntity.groups.add(groupEntity)
+                isSave = true
             }
-            if (isSave) qqService.save(qqEntity)
         }
+        if (isSave) qqService.save(qqEntity)
     }
 
     @Event(weight = Event.Weight.high)
@@ -80,11 +78,11 @@ class Save @Inject constructor(
     }
 
     @Event(weight = Event.Weight.high)
-    fun saveBotMessage(e: SendMessageEvent.Post) = transaction {
+    fun saveBotMessage(e: SendMessageEvent.Post) = transactionBlock {
         val messageId = e.messageSource.id
         val contact = e.sendTo
         if (contact is Member || contact is Group) {
-            val groupEntity = groupService.findByGroup(contact.id) ?: return@transaction
+            val groupEntity = groupService.findByGroup(contact.id) ?: return@transactionBlock
             val botQq = yuq.botId
             var qqEntity = groupEntity.get(botQq)
             if (qqEntity == null) {
@@ -105,7 +103,7 @@ class Save @Inject constructor(
 //            messageEntity.messageSource = source?.toMessageSource()
             messageService.save(messageEntity)
         }
-    }
+        }
 
     @Event(weight = Event.Weight.high)
     fun savePrivateMessage(e: SendMessageEvent.Post) {

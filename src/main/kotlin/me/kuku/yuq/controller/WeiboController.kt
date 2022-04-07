@@ -22,30 +22,28 @@ class WeiboController @Inject constructor(
 ): QQController() {
 
     @Action("微博登录")
-    fun login(qqEntity: QqEntity, context: BotActionContext) {
+    suspend fun login(qqEntity: QqEntity, context: BotActionContext) {
         val weiboQrcode = WeiboLogic.loginByQr1()
         val url = weiboQrcode.url
         val bytes = OkHttpUtils.getBytes("https:$url")
         reply(mif.at(qqEntity.qq).plus(mif.imageByByteArray(bytes)).plus("请使用微博APP扫码登录（第三方微博也可以）").toMessage())
-        JobManager.now {
-            while (true) {
-                delay(3000)
-                val result = WeiboLogic.loginByQr2(weiboQrcode)
-                if (result.isSuccess) {
-                    val newWeiboEntity = result.data
-                    val weiboEntity = weiboService.findByQqEntity(qqEntity) ?: WeiboEntity().also {
-                        it.qqEntity = qqEntity
-                    }
-                    weiboEntity.pcCookie = newWeiboEntity.pcCookie
-                    weiboEntity.mobileCookie = newWeiboEntity.mobileCookie
-                    weiboService.save(weiboEntity)
-                    context.source.sendMessage(mif.at(qqEntity.qq).plus("绑定微博成功"))
-                    break
-                } else if (result.code in listOf(201, 202)) continue
-                else {
-                    context.source.sendMessage(mif.at(qqEntity.qq).plus(result.message))
-                    break
+        while (true) {
+            delay(3000)
+            val result = WeiboLogic.loginByQr2(weiboQrcode)
+            if (result.isSuccess) {
+                val newWeiboEntity = result.data
+                val weiboEntity = weiboService.findByQqEntity(qqEntity) ?: WeiboEntity().also {
+                    it.qqEntity = qqEntity
                 }
+                weiboEntity.pcCookie = newWeiboEntity.pcCookie
+                weiboEntity.mobileCookie = newWeiboEntity.mobileCookie
+                weiboService.save(weiboEntity)
+                context.source.sendMessage(mif.at(qqEntity.qq).plus("绑定微博成功"))
+                break
+            } else if (result.code in listOf(201, 202)) continue
+            else {
+                context.source.sendMessage(mif.at(qqEntity.qq).plus(result.message))
+                break
             }
         }
     }
@@ -56,7 +54,7 @@ class WeiboController @Inject constructor(
     }
 
     @Action("微博超话签到")
-    fun superSign(weiboEntity: WeiboEntity): String {
+    suspend fun superSign(weiboEntity: WeiboEntity): String {
         val result = WeiboLogic.superTalkSign(weiboEntity)
         return if (result.isSuccess) "微博超话签到成功"
         else "微博超话签到失败，${result.message}"

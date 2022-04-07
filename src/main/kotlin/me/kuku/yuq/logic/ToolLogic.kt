@@ -1,23 +1,23 @@
 package me.kuku.yuq.logic
 
-import me.kuku.utils.OkHttpUtils
+import me.kuku.utils.OkHttpKtUtils
 import me.kuku.pojo.Result
 import me.kuku.utils.OkUtils
+import me.kuku.utils.toUrlEncode
 import me.kuku.yuq.utils.YuqUtils
 import org.jsoup.Jsoup
-import java.net.URLEncoder
 
 object ToolLogic {
 
-    private fun baiKeByUrl(url: String): Result<String> {
-        var response = OkHttpUtils.get(url)
+    private suspend fun baiKeByUrl(url: String): Result<String> {
+        var response = OkHttpKtUtils.get(url)
         while (response.code == 302) {
             response.close()
             val location = response.header("location")!!
             if (location.startsWith("//baike.baidu.com/search/none")) return Result.failure("")
             val resultUrl = if (location.startsWith("//")) "https:$location"
             else "https://baike.baidu.com$location"
-            response = OkHttpUtils.get(resultUrl)
+            response = OkHttpKtUtils.get(resultUrl)
         }
         val html = OkUtils.str(response)
         val doc = Jsoup.parse(html)
@@ -26,8 +26,8 @@ object ToolLogic {
         return Result.success(result)
     }
 
-    fun baiKe(text: String): String {
-        val encodeText = URLEncoder.encode(text, "utf-8")
+    suspend fun baiKe(text: String): String {
+        val encodeText = text.toUrlEncode()
         val url = "https://baike.baidu.com/search/word?word=$encodeText"
         val result = baiKeByUrl(url)
         return if (result.isSuccess)

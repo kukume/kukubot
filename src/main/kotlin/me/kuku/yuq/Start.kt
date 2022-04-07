@@ -101,9 +101,21 @@ open class JpaConfig{
 
 private lateinit var transactionManager: JpaTransactionManager
 
-fun <T> transaction(block: () -> T): T {
+suspend fun <T> transaction(block: suspend () -> T): T {
     val transactionDefinition = DefaultTransactionDefinition()
     val ts = transactionManager.getTransaction(transactionDefinition)
+    return try {
+        val s = block()
+        transactionManager.commit(ts)
+        s
+    }catch (e: Exception) {
+        transactionManager.rollback(ts)
+        throw e
+    }
+}
+
+fun <T> transactionBlock(block: () -> T): T {
+    val ts = transactionManager.getTransaction(DefaultTransactionDefinition())
     return try {
         val s = block()
         transactionManager.commit(ts)

@@ -14,6 +14,7 @@ import me.kuku.utils.MyUtils
 import me.kuku.yuq.controller.toStatus
 import me.kuku.yuq.entity.*
 import me.kuku.yuq.transaction
+import me.kuku.yuq.transactionBlock
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
@@ -31,13 +32,13 @@ class GroupManagerEvent @Inject constructor(
     private val verifyMap = ConcurrentHashMap<String, Boolean>()
 
     @Event
-    fun inter(e: GroupMessageEvent) = transaction {
+    fun inter(e: GroupMessageEvent) = transactionBlock {
         val group = e.group
         val groupNum = group.id
         val sender = e.sender
         val qq = sender.id
-        val groupEntity = groupService.findByGroup(groupNum) ?: return@transaction
-        val qqEntity = groupEntity.get(qq) ?: return@transaction
+        val groupEntity = groupService.findByGroup(groupNum) ?: return@transactionBlock
+        val qqEntity = groupEntity.get(qq) ?: return@transactionBlock
         val codeString = e.message.toCodeString()
         val config = groupEntity.config
         val prohibitedWords = config.prohibitedWords
@@ -53,7 +54,7 @@ class GroupManagerEvent @Inject constructor(
                     qqGroupEntity.config.prohibitedCount += 1
                     qqGroupService.save(qqGroupEntity)
                     e.cancel = true
-                    return@transaction
+                    return@transactionBlock
                 }
             }
         }

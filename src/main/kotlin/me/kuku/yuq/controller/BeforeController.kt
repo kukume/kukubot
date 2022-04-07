@@ -16,7 +16,7 @@ import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.mif
 import me.kuku.utils.OkHttpUtils
 import me.kuku.yuq.entity.*
-import me.kuku.yuq.transaction
+import me.kuku.yuq.transactionBlock
 import java.io.PrintWriter
 import java.io.StringWriter
 import javax.inject.Inject
@@ -33,7 +33,7 @@ class BeforeController @Inject constructor(
     @Before(weight = -1)
     @Global
     fun before(session: ContextSession, qq: Long, group: Long?) {
-        transaction {
+        transactionBlock {
             val qqEntity = qqService.findByQq(qq)
             session["qqEntity"] = qqEntity!!
             if (group != null) {

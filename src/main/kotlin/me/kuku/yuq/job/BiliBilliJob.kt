@@ -8,13 +8,11 @@ import me.kuku.yuq.logic.BiliBiliLogic
 import me.kuku.yuq.logic.BiliBiliPojo
 import me.kuku.yuq.transaction
 import me.kuku.yuq.utils.YuqUtils
-import org.springframework.transaction.support.TransactionTemplate
 import javax.inject.Inject
 
 @JobCenter
 class BiliBilliJob @Inject constructor(
-    private val biliBiliService: BiliBiliService,
-    private val transactionTemplate: TransactionTemplate
+    private val biliBiliService: BiliBiliService
 ) {
 
     private val liveMap = mutableMapOf<Long, MutableMap<Long, Boolean>>()
@@ -22,7 +20,7 @@ class BiliBilliJob @Inject constructor(
 
 
     @Cron("03:23")
-    fun sign() {
+    suspend fun sign() {
         val list = biliBiliService.findAll().filter { it.config.sign == Status.ON }
         for (biliBiliEntity in list) {
             val firstRank = BiliBiliLogic.ranking()[0]
@@ -33,7 +31,7 @@ class BiliBilliJob @Inject constructor(
     }
 
     @Cron("2m")
-    fun liveMonitor() = transaction {
+    suspend fun liveMonitor() = transaction {
         val list = biliBiliService.findAll().filter { it.config.live == Status.ON }
         for (biliBiliEntity in list) {
             val result = BiliBiliLogic.followed(biliBiliEntity)
@@ -66,7 +64,7 @@ class BiliBilliJob @Inject constructor(
 
 
     @Cron("2m")
-    fun userMonitor() = transactionTemplate.execute {
+    suspend fun userMonitor() = transaction {
         val biliBiliList = biliBiliService.findAll().filter { it.config.push == Status.ON }
         for (biliBiliEntity in biliBiliList) {
             val qq = biliBiliEntity.qqEntity.qq

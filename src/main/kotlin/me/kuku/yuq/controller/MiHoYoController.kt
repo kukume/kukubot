@@ -20,7 +20,7 @@ class MiHoYoController @Inject constructor(
 ): QQController() {
 
     @Action("米哈游登录")
-    fun login(session: ContextSession, qqEntity: QqEntity): String {
+    suspend fun login(session: ContextSession, qqEntity: QqEntity): String {
         reply("请发送手机号")
         val phone = session.waitNextMessage().firstString()
         reply("请发送密码")
@@ -43,7 +43,7 @@ class MiHoYoController @Inject constructor(
     }
 
     @Action("原神签到")
-    fun sign(miHoYoEntity: MiHoYoEntity): String {
+    suspend fun sign(miHoYoEntity: MiHoYoEntity): String {
         val result = MiHoYoLogic.sign(miHoYoEntity)
         return if (result.isSuccess) "原神签到成功"
         else "原神签到失败，${result.message}"

@@ -13,7 +13,7 @@ class StepJob @Inject constructor(
 ) {
 
     @Cron("05:12")
-    fun ss() {
+    suspend fun ss() {
         val list = stepService.findAll().filter { it.config.step > 0 }
         for (stepEntity in list) {
             val step = stepEntity.config.step

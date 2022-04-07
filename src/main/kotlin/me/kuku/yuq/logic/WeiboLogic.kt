@@ -8,23 +8,22 @@ import me.kuku.pojo.Result
 import me.kuku.pojo.ResultStatus
 import me.kuku.pojo.UA
 import me.kuku.utils.OkHttpKtUtils
-import me.kuku.utils.OkHttpUtils
 import me.kuku.utils.OkUtils
 import org.jsoup.Jsoup
 import java.net.URLEncoder
 
 object WeiboLogic {
 
-    fun hotSearch(): List<HotSearch> {
-        val jsonObject = OkHttpUtils.postJsonp("https://passport.weibo.com/visitor/genvisitor",
+    suspend fun hotSearch(): List<HotSearch> {
+        val jsonObject = OkHttpKtUtils.postJsonp("https://passport.weibo.com/visitor/genvisitor",
             mapOf("cb" to "gen_callback", "fp" to """{"os":"1","browser":"Chrome97,0,4692,99","fonts":"undefined","screenInfo":"1536*864*24","plugins":"Portable Document Format::internal-pdf-viewer::PDF Viewer|Portable Document Format::internal-pdf-viewer::Chrome PDF Viewer|Portable Document Format::internal-pdf-viewer::Chromium PDF Viewer|Portable Document Format::internal-pdf-viewer::Microsoft Edge PDF Viewer|Portable Document Format::internal-pdf-viewer::WebKit built-in PDF"}""")
         )
         val tid = jsonObject.getJSONObject("data").getString("tid")
         val response =
-            OkHttpUtils.get("https://passport.weibo.com/visitor/visitor?a=incarnate&t=${URLEncoder.encode(tid, "utf-8")}&w=2&c=095&gc=&cb=cross_domain&from=weibo&_rand=${Math.random()}")
+            OkHttpKtUtils.get("https://passport.weibo.com/visitor/visitor?a=incarnate&t=${URLEncoder.encode(tid, "utf-8")}&w=2&c=095&gc=&cb=cross_domain&from=weibo&_rand=${Math.random()}")
                 .apply { close() }
         val cookie = OkUtils.cookie(response)
-        val str = OkHttpUtils.getStr("https://s.weibo.com/top/summary", OkUtils.cookie(cookie))
+        val str = OkHttpKtUtils.getStr("https://s.weibo.com/top/summary", OkUtils.cookie(cookie))
         val doc = Jsoup.parse(str)
         val elements = doc.getElementById("pl_top_realtimehot")?.getElementsByTag("tbody")?.first()
             ?.getElementsByTag("tr") ?: return emptyList()
@@ -43,9 +42,9 @@ object WeiboLogic {
         return list
     }
 
-    fun getIdByName(name: String, page: Int = 1): Result<List<WeiboPojo>> {
+    suspend fun getIdByName(name: String, page: Int = 1): Result<List<WeiboPojo>> {
         val newName = URLEncoder.encode(name, "utf-8")
-        val response = OkHttpUtils.get("https://m.weibo.cn/api/container/getIndex?containerid=100103type%3D3%26q%3D$newName%26t%3D0&page_type=searchall&page=$page",
+        val response = OkHttpKtUtils.get("https://m.weibo.cn/api/container/getIndex?containerid=100103type%3D3%26q%3D$newName%26t%3D0&page_type=searchall&page=$page",
             OkUtils.referer("https://m.weibo.cn/search?containerid=100103type%3D1%26q%3D$newName"))
         return if (response.code == 200) {
             val jsonObject = OkUtils.json(response)
@@ -135,8 +134,8 @@ object WeiboLogic {
         return sb.toString()
     }
 
-    fun getWeiboById(id: String): Result<List<WeiboPojo>> {
-        val response = OkHttpUtils.get("https://m.weibo.cn/api/container/getIndex?type=uid&uid=$id&containerid=107603$id")
+    suspend fun getWeiboById(id: String): Result<List<WeiboPojo>> {
+        val response = OkHttpKtUtils.get("https://m.weibo.cn/api/container/getIndex?type=uid&uid=$id&containerid=107603$id")
         return if (response.code == 200) {
             val jsonObject = OkUtils.json(response)
             val cardJsonArray = jsonObject.getJSONObject("data").getJSONArray("cards")
@@ -151,14 +150,14 @@ object WeiboLogic {
         } else Result.failure("查询失败，请稍后重试！")
     }
 
-    private fun mobileCookie(pcCookie: String): String {
-        val response = OkHttpUtils.get("https://login.sina.com.cn/sso/login.php?url=https%3A%2F%2Fm.weibo.cn%2F%3F%26jumpfrom%3Dweibocom&_rand=1588483688.7261&gateway=1&service=sinawap&entry=sinawap&useticket=1&returntype=META&sudaref=&_client_version=0.6.33",
+    private suspend fun mobileCookie(pcCookie: String): String {
+        val response = OkHttpKtUtils.get("https://login.sina.com.cn/sso/login.php?url=https%3A%2F%2Fm.weibo.cn%2F%3F%26jumpfrom%3Dweibocom&_rand=1588483688.7261&gateway=1&service=sinawap&entry=sinawap&useticket=1&returntype=META&sudaref=&_client_version=0.6.33",
             OkUtils.cookie(pcCookie)).apply { close() }
         return OkUtils.cookie(response)
     }
 
-    fun loginByQr1(): WeiboQrcode {
-        val jsonObject = OkHttpUtils.getJsonp("https://login.sina.com.cn/sso/qrcode/image?entry=weibo&size=180&callback=STK_16010457545441",
+    suspend fun loginByQr1(): WeiboQrcode {
+        val jsonObject = OkHttpKtUtils.getJsonp("https://login.sina.com.cn/sso/qrcode/image?entry=weibo&size=180&callback=STK_16010457545441",
             OkUtils.referer("https://weibo.com/"))
         val dataJsonObject = jsonObject.getJSONObject("data")
         return WeiboQrcode(dataJsonObject.getString("qrid"), dataJsonObject.getString("image"))
@@ -191,8 +190,8 @@ object WeiboLogic {
         }
     }
 
-    fun friendWeibo(weiboEntity: WeiboEntity): Result<List<WeiboPojo>> {
-        val str = OkHttpUtils.getStr("https://m.weibo.cn/feed/friends?",
+    suspend fun friendWeibo(weiboEntity: WeiboEntity): Result<List<WeiboPojo>> {
+        val str = OkHttpKtUtils.getStr("https://m.weibo.cn/feed/friends?",
             OkUtils.cookie(weiboEntity.mobileCookie))
         return if ("" != str) {
             val jsonArray = kotlin.runCatching {
@@ -209,8 +208,8 @@ object WeiboLogic {
         } else Result.failure("您的cookie已失效，请重新绑定微博")
     }
 
-    fun myWeibo(weiboEntity: WeiboEntity): Result<List<WeiboPojo>> {
-        val jsonObject = OkHttpUtils.getJson("https://m.weibo.cn/profile/info",
+    suspend fun myWeibo(weiboEntity: WeiboEntity): Result<List<WeiboPojo>> {
+        val jsonObject = OkHttpKtUtils.getJson("https://m.weibo.cn/profile/info",
             OkUtils.cookie(weiboEntity.mobileCookie))
         return if (jsonObject.getInteger("ok") == 1) {
             val jsonArray = jsonObject.getJSONObject("data").getJSONArray("statuses")
@@ -223,8 +222,8 @@ object WeiboLogic {
         } else Result.failure("您的cookie已失效，请重新绑定微博")
     }
 
-    private fun getToken(weiboEntity: WeiboEntity): WeiboToken {
-        val response = OkHttpUtils.get("https://m.weibo.cn/api/config",
+    private suspend fun getToken(weiboEntity: WeiboEntity): WeiboToken {
+        val response = OkHttpKtUtils.get("https://m.weibo.cn/api/config",
             OkUtils.cookie(weiboEntity.mobileCookie))
         val jsonObject = OkUtils.json(response).getJSONObject("data")
         return if (jsonObject.getBoolean("login")) {
@@ -233,9 +232,9 @@ object WeiboLogic {
         } else throw WeiboCookieExpiredException("cookie已失效")
     }
 
-    fun superTalkSign(weiboEntity: WeiboEntity): Result<Void> {
+    suspend fun superTalkSign(weiboEntity: WeiboEntity): Result<Void> {
         val weiboToken = getToken(weiboEntity)
-        val response = OkHttpUtils.get("https://m.weibo.cn/api/container/getIndex?containerid=100803_-_followsuper&luicode=10000011&lfid=231093_-_chaohua",
+        val response = OkHttpKtUtils.get("https://m.weibo.cn/api/container/getIndex?containerid=100803_-_followsuper&luicode=10000011&lfid=231093_-_chaohua",
             mapOf("cookie" to weiboToken.cookie, "x-xsrf-token" to weiboToken.token)
         )
         if (response.code != 200) return Result.failure(ResultStatus.COOKIE_EXPIRED)
@@ -251,7 +250,7 @@ object WeiboLogic {
                         val buttonJsonObject = bu as JSONObject
                         if (buttonJsonObject.getString("name") == "签到") {
                             val scheme = "https://m.weibo.cn${buttonJsonObject.getString("scheme")}"
-                            val signJsonObject = OkHttpUtils.postJson(scheme,
+                            val signJsonObject = OkHttpKtUtils.postJson(scheme,
                                 mapOf("st" to weiboToken.token, "_spr" to "screen:393x851"),
                                 mapOf("x-xsrf-token" to weiboToken.token, "cookie" to weiboToken.cookie + cookie,
                                     "referer" to "https://m.weibo.cn/p/tabbar?containerid=100803_-_followsuper&luicode=10000011&lfid=231093_-_chaohua&page_type=tabbar",

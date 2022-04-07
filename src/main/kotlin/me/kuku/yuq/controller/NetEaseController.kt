@@ -20,7 +20,7 @@ class NetEaseController @Inject constructor(
 ): QQController() {
 
     @Action("网易登录")
-    fun login(qqEntity: QqEntity, qq: Long, session: ContextSession): String {
+    suspend fun login(qqEntity: QqEntity, qq: Long, session: ContextSession): String {
         reply(mif.at(qq).plus("请发送手机号").toMessage())
         val phone = session.waitNextMessage().firstString()
         reply(mif.at(qq).plus("请发送密码").toMessage())
@@ -45,21 +45,21 @@ class NetEaseController @Inject constructor(
     }
 
     @Action("网易签到")
-    fun sign(netEaseEntity: NetEaseEntity): String {
+    suspend fun sign(netEaseEntity: NetEaseEntity): String {
         val result = NetEaseLogic.sign(netEaseEntity)
         return if (result.isSuccess) "网易云音乐签到成功"
         else "网易云音乐签到失败，${result.message}"
     }
 
     @Action("网易听歌")
-    fun listenMusic(netEaseEntity: NetEaseEntity): String {
+    suspend fun listenMusic(netEaseEntity: NetEaseEntity): String {
         val result = NetEaseLogic.listenMusic(netEaseEntity)
         return if (result.isSuccess) "网易云音乐听歌成功"
         else "网易云音乐听歌失败，${result.message}"
     }
 
     @Action("网易音乐人签到")
-    fun musicianSign(netEaseEntity: NetEaseEntity): String {
+    suspend fun musicianSign(netEaseEntity: NetEaseEntity): String {
         val res = NetEaseLogic.musicianSign(netEaseEntity)
         return if (res.isSuccess) "网易云音乐人签到成功"
         else "网易云音乐人签到失败，${res.message}"
@@ -73,21 +73,21 @@ class NetEaseController @Inject constructor(
     }
 
     @Action("网易发布动态")
-    fun dy(netEaseEntity: NetEaseEntity): String {
+    suspend fun dy(netEaseEntity: NetEaseEntity): String {
         val result = NetEaseLogic.publish(netEaseEntity)
         return if (result.isSuccess) "网易云音乐发布动态成功"
         else "网易云音乐发布动态失败，${result.message}"
     }
 
     @Action("网易发布mlog")
-    fun pub(netEaseEntity: NetEaseEntity): String {
+    suspend fun pub(netEaseEntity: NetEaseEntity): String {
         val result = NetEaseLogic.publishMLog(netEaseEntity)
         return if (result.isSuccess) "网易云音乐发布mlog成功"
         else "网易云音乐发布mlog失败，${result.message}"
     }
 
     @Action("网易主创说")
-    fun commentMyMusic(netEaseEntity: NetEaseEntity): String {
+    suspend fun commentMyMusic(netEaseEntity: NetEaseEntity): String {
         val result = NetEaseLogic.myMusicComment(netEaseEntity)
         return if (result.isSuccess) "网易云音乐发布主创说成功"
         else "网易云音乐发布主创说失败，${result.message}"

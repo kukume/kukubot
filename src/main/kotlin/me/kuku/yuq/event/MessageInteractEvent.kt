@@ -44,7 +44,7 @@ class MessageInteractEvent {
         val member = e.sender
         val silent = tgBot.silent()
         val creatorId = tgBot.creatorId()
-        val messageEntity = messageService.findByMessageIdAndGroup(message.source.id, group.id)
+        val messageEntity = messageService.findByMessageIdAndGroup(message.source?.id ?: 0, group.id)
         silent.sendMd("来自【${group.name}(${group.id})】的【${member.nameCardOrName()}(${member.id})】的消息", creatorId)
         for (messageItem in message.body) {
             val messageId = when (messageItem) {

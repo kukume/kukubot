@@ -207,7 +207,7 @@ class KuGouLogic {
     suspend fun musicianSign(kuGouEntity: KuGouEntity): Result<Void> {
         // 1014
         // 1058
-        val kuGoo = kuGouEntity.kuGoo ?: return Result.failure("请重新登陆酷狗！")
+        val kuGoo = kuGouEntity.kuGoo
         val aId = MyUtils.regex("a_id=", "&", kuGoo)!!
         val time = System.currentTimeMillis().toString()
         val map = mutableMapOf("appid" to aId, "token" to kuGouEntity.token,
@@ -221,7 +221,7 @@ class KuGouLogic {
     }
 
     suspend fun listenMusic(kuGouEntity: KuGouEntity): Result<Void> {
-        val aId = MyUtils.regex("a_id=", "&", kuGouEntity.kuGoo)!!
+//        val aId = MyUtils.regex("a_id=", "&", kuGouEntity.kuGoo)!!
         val map = mutableMapOf("userid" to kuGouEntity.userid.toString(), "token" to kuGouEntity.token,
             "appid" to "3116", "clientver" to "10547", "clienttime" to (System.currentTimeMillis() / 1000).toString(),
             "mid" to kuGouEntity.mid, "uuid" to MyUtils.randomLetter(32), "dfid" to "-")

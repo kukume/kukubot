@@ -69,7 +69,7 @@ class Save @Inject constructor(
         val qq = e.sender.id
         val qqEntity = qqService.findByQq(qq) ?: return
         val message = e.message
-        val messageId = message.source.id
+        val messageId = message.source?.id ?: 0
         val ss = message.toCodeString()
         val messageEntity = PrivateMessageEntity()
         messageEntity.messageId = messageId

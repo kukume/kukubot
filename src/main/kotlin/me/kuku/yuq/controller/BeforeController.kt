@@ -70,7 +70,7 @@ class BeforeController @Inject constructor(
         }.getOrDefault("Ubuntu paste url 生成失败")
         val source = context.source
         source.sendMessage(mif.at(qq).plus("程序出现异常了，异常信息为：$url，请反馈给开发者（不是IoException）"))
-        val messageId = message.source.id
+        val messageId = message.source?.id ?: 0
         if (source is Friend) {
             val messageEntity = privateMessageService.findByMessageIdAndQq(messageId, qq) ?: return
             val exceptionLogEntity = ExceptionLogEntity()

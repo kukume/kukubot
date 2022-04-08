@@ -24,6 +24,7 @@ class BaiduJob @Inject constructor(
                 delay(1000 * 15)
                 baiduLogic.ybbWatchAd(baiduEntity)
             }
+            baiduLogic.ybbSign(baiduEntity)
         }
     }
 

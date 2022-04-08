@@ -2,6 +2,8 @@ package me.kuku.yuq.extension
 
 import me.kuku.yuq.entity.TgPushEntity
 import me.kuku.yuq.entity.TgPushService
+import me.kuku.yuq.utils.abilityDefault
+import me.kuku.yuq.utils.silent
 import org.telegram.abilitybots.api.objects.Ability
 import org.telegram.abilitybots.api.objects.Locality
 import org.telegram.abilitybots.api.objects.Privacy
@@ -17,33 +19,24 @@ class PushExtension @Inject constructor(
         return UUID.randomUUID().toString().replace("-", "")
     }
 
-    fun newKey(): Ability = Ability
-        .builder()
-        .name("new")
-        .info("create a key")
-        .input(0)
-        .locality(Locality.ALL)
-        .privacy(Privacy.PUBLIC)
-        .action {
-            val id = it.user().id
-            val userEntity = tgPushService.findByUserid(id)
-            val silent = it.bot().silent()
-            if (!Objects.isNull(userEntity)) {
-                silent.sendMd("You have already generated the key, if you need to regenerate it, you can use the /regen command",
-                    it.chatId())
-            } else {
-                val key = key()
-                tgPushService.save(TgPushEntity().also { entity ->
-                    entity.key = key
-                    entity.userid = id
-                })
-                silent.sendMd("""
+    fun newKey() = abilityDefault("new", "create a key") {
+        val id = user().id
+        val tgPushEntity = tgPushService.findByUserid(id)
+        if (tgPushEntity != null) {
+            silent().sendMd("You have already generated the key, if you need to regenerate it, you can use the /regen command",
+                chatId())
+        } else {
+            val key = key()
+            tgPushService.save(TgPushEntity().also { entity ->
+                entity.key = key
+                entity.userid = id
+            })
+            silent().sendMd("""
                     Success!
                     You key is `${key}`
-                """.trimIndent(), it.chatId())
-            }
+                """.trimIndent(), chatId())
         }
-        .build()
+    }
 
     fun regen(): Ability = Ability
         .builder()

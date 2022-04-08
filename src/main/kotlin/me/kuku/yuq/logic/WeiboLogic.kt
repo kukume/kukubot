@@ -9,6 +9,7 @@ import me.kuku.pojo.ResultStatus
 import me.kuku.pojo.UA
 import me.kuku.utils.OkHttpKtUtils
 import me.kuku.utils.OkUtils
+import me.kuku.utils.toUrlEncode
 import org.jsoup.Jsoup
 import java.net.URLEncoder
 
@@ -20,7 +21,7 @@ object WeiboLogic {
         )
         val tid = jsonObject.getJSONObject("data").getString("tid")
         val response =
-            OkHttpKtUtils.get("https://passport.weibo.com/visitor/visitor?a=incarnate&t=${URLEncoder.encode(tid, "utf-8")}&w=2&c=095&gc=&cb=cross_domain&from=weibo&_rand=${Math.random()}")
+            OkHttpKtUtils.get("https://passport.weibo.com/visitor/visitor?a=incarnate&t=${tid.toUrlEncode()}&w=2&c=095&gc=&cb=cross_domain&from=weibo&_rand=${Math.random()}")
                 .apply { close() }
         val cookie = OkUtils.cookie(response)
         val str = OkHttpKtUtils.getStr("https://s.weibo.com/top/summary", OkUtils.cookie(cookie))
@@ -43,7 +44,7 @@ object WeiboLogic {
     }
 
     suspend fun getIdByName(name: String, page: Int = 1): Result<List<WeiboPojo>> {
-        val newName = URLEncoder.encode(name, "utf-8")
+        val newName = name.toUrlEncode()
         val response = OkHttpKtUtils.get("https://m.weibo.cn/api/container/getIndex?containerid=100103type%3D3%26q%3D$newName%26t%3D0&page_type=searchall&page=$page",
             OkUtils.referer("https://m.weibo.cn/search?containerid=100103type%3D1%26q%3D$newName"))
         return if (response.code == 200) {

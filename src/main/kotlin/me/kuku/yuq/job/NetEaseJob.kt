@@ -2,6 +2,7 @@ package me.kuku.yuq.job
 
 import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
+import kotlinx.coroutines.delay
 import me.kuku.yuq.entity.NetEaseService
 import me.kuku.yuq.entity.Status
 import me.kuku.yuq.logic.NetEaseLogic
@@ -18,11 +19,17 @@ class NetEaseJob @Inject constructor(
         val list = netEaseService.findAll().filter { it.config.sign == Status.ON }
         for (netEaseEntity in list) {
             kotlin.runCatching {
-                NetEaseLogic.sign(netEaseEntity)
-                NetEaseLogic.listenMusic(netEaseEntity)
-                NetEaseLogic.musicianSign(netEaseEntity)
-                NetEaseLogic.publish(netEaseEntity)
-                NetEaseLogic.publishMLog(netEaseEntity)
+                for (i in 0..1) {
+                    NetEaseLogic.sign(netEaseEntity)
+                    delay(3000)
+                    NetEaseLogic.listenMusic(netEaseEntity)
+                    delay(3000)
+                    NetEaseLogic.musicianSign(netEaseEntity)
+                    delay(3000)
+                    NetEaseLogic.publish(netEaseEntity)
+                    delay(3000)
+                    NetEaseLogic.publishMLog(netEaseEntity)
+                }
             }
         }
     }

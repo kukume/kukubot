@@ -37,7 +37,7 @@ class MiHoYoController @Inject constructor(
         } else result.message
     }
 
-    @Before
+    @Before(except = ["login"])
     fun before(qqEntity: QqEntity): MiHoYoEntity {
         return miHoYoService.findByQqEntity(qqEntity) ?: throw mif.at(qqEntity.qq).plus("您没有绑定米哈游账号，操作失败").toThrowable()
     }

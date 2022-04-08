@@ -22,6 +22,7 @@ plugins {
 
 group = "me.kuku"
 version = "1.0-SNAPSHOT"
+java.sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
     maven("https://nexus.kuku.me/repository/maven-public/")
@@ -74,3 +75,14 @@ dependencies {
     implementation("org.jsoup:jsoup:$jsoupVersion")
     implementation("com.google.code.findbugs:jsr305:$jsr305Version")
 }
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions {
+        freeCompilerArgs = listOf("-Xjsr305=strict", "-Xcontext-receivers")
+        jvmTarget = "11"
+    }
+}
+
+//tasks.withType<Test> {
+//    useJUnitPlatform()
+//}

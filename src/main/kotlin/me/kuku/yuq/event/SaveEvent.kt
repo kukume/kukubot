@@ -121,6 +121,7 @@ class Save @Inject constructor(
         }
     }
 
+    @Event
     fun saveRecallMessage(e: GroupRecallEvent) {
         val messageId = e.messageId
         val group = e.group

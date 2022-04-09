@@ -1,11 +1,7 @@
 package me.kuku.yuq.entity
 
-import com.icecreamqaq.yuq.artqq.message.ArtGroupMessageSource
-import com.icecreamqaq.yuq.artqq.message.ArtMessageSource
-import com.icecreamqaq.yuq.artqq.message.ArtToGroupMessageSource
 import com.querydsl.core.BooleanBuilder
 import me.kuku.yuq.utils.plus
-import org.hibernate.annotations.Type
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -88,17 +84,4 @@ data class MessageSource(
     val rand: Int,
     val sendTime: Long,
     val liteMsg: String
-) {
-    fun toArtGroupMessageSource(): ArtGroupMessageSource {
-        return ArtGroupMessageSource(id, qq, groupCode, rand, sendTime, liteMsg)
-    }
-}
-
-
-fun ArtMessageSource.toMessageSource(): MessageSource? {
-    return when (this) {
-        is ArtGroupMessageSource -> MessageSource(this.id, this.qq, this. groupCode, this.rand, this.sendTime, this.liteMsg)
-        is ArtToGroupMessageSource -> MessageSource(this.id, this.qq, this. groupCode, this.rand, this.sendTime, this.liteMsg)
-        else -> null
-    }
-}
+)

@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
 import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.annotation.PathVar
+import com.icecreamqaq.yuq.annotation.PrivateController
 import com.icecreamqaq.yuq.annotation.QMsg
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.entity.Group
@@ -246,7 +247,13 @@ class ToolController @Inject constructor(
         send.reply = message.source
         return send
     }
+}
 
+@GroupController
+@PrivateController
+class MenuController @Inject constructor(
+    private val transactionTemplate: TransactionTemplate
+) {
     @Action("菜单")
     @Synonym(["帮助", "功能"])
     suspend fun menu(qqEntity: QqEntity, group: Group) {

@@ -3,6 +3,7 @@ package me.kuku.yuq.entity
 import com.alibaba.fastjson.annotation.JSONField
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.hibernate.annotations.Type
+import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import javax.inject.Inject
 import javax.persistence.*
@@ -10,6 +11,7 @@ import javax.persistence.*
 @Entity
 @Table(name = "qq")
 @JsonIgnoreProperties("groups")
+@NamedEntityGraph(name = "groups", attributeNodes = [NamedAttributeNode("groups")])
 open class QqEntity: BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,6 +36,7 @@ open class QqEntity: BaseEntity() {
 }
 
 interface QqRepository: JpaRepository<QqEntity, Int> {
+    @EntityGraph(value = "groups", type = EntityGraph.EntityGraphType.FETCH)
     fun findByQq(qq: Long): QqEntity?
 }
 

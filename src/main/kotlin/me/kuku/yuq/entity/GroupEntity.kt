@@ -7,6 +7,7 @@ import me.kuku.yuq.utils.plus
 import org.hibernate.annotations.Type
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.querydsl.QuerydslPredicateExecutor
 import javax.inject.Inject
@@ -15,6 +16,7 @@ import javax.persistence.*
 @Entity
 @Table(name=  "group_")
 @JsonIgnoreProperties("qqs")
+@NamedEntityGraph(name = "qqs", attributeNodes = [NamedAttributeNode("qqs")])
 class GroupEntity: BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,6 +40,7 @@ class GroupEntity: BaseEntity() {
 }
 
 interface GroupRepository: JpaRepository<GroupEntity, Int>, QuerydslPredicateExecutor<GroupEntity> {
+    @EntityGraph(value = "qqs", type = EntityGraph.EntityGraphType.FETCH)
     fun findByGroup(group: Long): GroupEntity?
     fun deleteByGroup(group: Long)
 }

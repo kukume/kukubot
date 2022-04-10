@@ -8,6 +8,7 @@ import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.annotation.PathVar
 import com.icecreamqaq.yuq.annotation.PrivateController
 import com.icecreamqaq.yuq.annotation.QMsg
+import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.entity.Group
 import com.icecreamqaq.yuq.message.Image
@@ -35,25 +36,6 @@ class ToolController @Inject constructor(
     private val transactionTemplate: TransactionTemplate
 ) {
 
-    @Action("摸鱼日历")
-    suspend fun fishermanCalendar(group: Group) {
-        val bytes = OkHttpKtUtils.getBytes("https://api.kukuqaq.com/tool/fishermanCalendar?preview")
-        group.sendMessage(mif.imageByByteArray(bytes))
-    }
-
-    @Action("摸鱼日历搜狗")
-    suspend fun fishermanCalendarSoGou(group: Group) {
-        val bytes = OkHttpKtUtils.getBytes("https://api.kukuqaq.com/tool/fishermanCalendar/sogou?preview")
-        group.sendMessage(mif.imageByByteArray(bytes))
-    }
-
-    @Action("色图")
-    @QMsg(recall = 3000)
-    suspend fun color(groupEntity: GroupEntity) =
-        if (groupEntity.config.loLiConR18 == Status.OFF)
-            mif.imageByUrl(OkHttpKtUtils.get("https://api.kukuqaq.com/lolicon/random?preview").also { it.close() }.header("location")!!)
-        else mif.imageByUrl(OkHttpKtUtils.getJson("https://api.lolicon.app/setu/v2?r18=1").getJSONArray("data").getJSONObject(0).getJSONObject("urls").getString("original").replace("i.pixiv.cat", "i.pixiv.re"))
-
     @Action(value = "读消息", suffix = true)
     @QMsg(reply = true)
     fun readMessage(message: Message, group: Long): String? {
@@ -62,11 +44,6 @@ class ToolController @Inject constructor(
         val messageEntity = messageService.findByMessageIdAndGroup(id, group) ?: return "没有找到该消息"
         return messageEntity.content
     }
-
-
-    @Action("百科 {text}")
-    @QMsg(reply = true)
-    suspend fun baiKe(text: String) = ToolLogic.baiKe(text)
 
     @Action("龙王")
     suspend fun dragonKing(group: Long, qq: Long, @PathVar(value = 1, type = PathVar.Type.Integer) num: Int?): Any {
@@ -134,32 +111,6 @@ class ToolController @Inject constructor(
         }
     }
 
-    @Action("读懂世界")
-    @QMsg(reply = true)
-    suspend fun readWorld(): String =
-        OkHttpKtUtils.getJson("https://api.kukuqaq.com/tool/readWorld").getJSONObject("data").getString("data")
-
-    @Action("icp {domain}")
-    @QMsg(at = true, atNewLine = true)
-    suspend fun icp(domain: String): String {
-        val jsonObject = OkHttpKtUtils.getJson("https://api.kukuqaq.com/tool/icp?keyword=${domain.toUrlEncode()}&m")
-        return if (jsonObject.getInteger("code") == 200) {
-            val jsonArray = jsonObject.getJSONArray("data")
-            if (jsonArray.isEmpty()) "该域名未查到备案信息"
-            else {
-                val singleJsonObject = jsonArray.getJSONObject(0)
-                """
-                    网站名称：${singleJsonObject.getString("name")}
-                    主办单位名称：${singleJsonObject.getString("unitName")}
-                    域名：${singleJsonObject.getString("domain")}
-                    主页：${singleJsonObject.getString("homeUrl")}
-                    备案号：${singleJsonObject.getString("licence")}
-                    更新时间：${singleJsonObject.getString("updateTime")}
-                """.trimIndent()
-            }
-        } else jsonObject.getString("message")
-    }
-
 
     @Action("查撤回 {qqNo}")
     fun queryRecall(qqNo: Long, group: Group, qq: Long, session: ContextSession): Any {
@@ -204,9 +155,6 @@ class ToolController @Inject constructor(
         return@executeBlock sb.removeSuffix("\n").toString()
     }
 
-    @Action("舔狗日记")
-    suspend fun dog() = OkHttpKtUtils.getStr("https://api.oick.cn/dog/api.php").replace("\"", "")
-
     @Action("测吉凶")
     @QMsg(at = true, atNewLine = true)
     fun qqGodLock(qq: Long): String {
@@ -220,6 +168,29 @@ class ToolController @Inject constructor(
         }
         return sb.removeSuffix("\n").toString()
     }
+}
+
+@GroupController
+@PrivateController
+class MenuController @Inject constructor(
+    private val transactionTemplate: TransactionTemplate
+) {
+    @Action("菜单")
+    @Synonym(["帮助", "功能"])
+    suspend fun menu(qqEntity: QqEntity, group: Group?) {
+        transactionTemplate.executeBlock {
+            val str = """
+                机器人帮助（命令）如下：
+                https://www.notion.so/kukubot-1d6dd31be25d4018b42d43d4997e0936
+            """.trimIndent()
+            YuqUtils.sendMessage(qqEntity, str)
+            group?.sendMessage(mif.at(qqEntity.qq).plus("机器人帮助已私信给您！"))
+        }
+    }
+
+    @Action("百科 {text}")
+    @QMsg(reply = true)
+    suspend fun baiKe(text: String) = ToolLogic.baiKe(text)
 
     @Action("oracle {email}")
     @QMsg(reply = true)
@@ -228,15 +199,15 @@ class ToolController @Inject constructor(
         else "你木的资格"
 
     @Action("dcloud上传")
-    suspend fun dCloudUpload(session: ContextSession, group: Group, qq: Long): Message {
-        group.sendMessage(mif.at(qq).plus("请发送需要上传的图片"))
+    suspend fun dCloudUpload(session: ContextSession, context: BotActionContext, qq: Long): Message {
+        context.source.sendMessage(mif.at(qq).plus("请发送需要上传的图片"))
         val message = session.waitNextMessage()
         var url: String? = null
         for (messageItem in message.body) {
             if (messageItem is Image) {
                 val tempUrl = messageItem.url
                 val jsonObject = OkHttpKtUtils.postJson("https://api.kukuqaq.com/tool/upload", MultipartBody.Builder().setType(MultipartBody.FORM)
-                    .addFormDataPart("type", "4")
+                    .addFormDataPart("type", "3")
                     .addFormDataPart("file", messageItem.id, OkUtils.streamBody(OkHttpKtUtils.getBytes(tempUrl))).build())
                 url = if (jsonObject.getInteger("code") == 200) jsonObject.getJSONObject("data").getString("url")
                 else jsonObject.getString("message")
@@ -247,25 +218,55 @@ class ToolController @Inject constructor(
         send.reply = message.source
         return send
     }
-}
 
-@GroupController
-@PrivateController
-class MenuController @Inject constructor(
-    private val transactionTemplate: TransactionTemplate
-) {
-    @Action("菜单")
-    @Synonym(["帮助", "功能"])
-    suspend fun menu(qqEntity: QqEntity, group: Group) {
-        transactionTemplate.executeBlock {
-            val str = """
-                机器人帮助（命令）如下：
-                https://www.notion.so/kukubot-1d6dd31be25d4018b42d43d4997e0936
-            """.trimIndent()
-            YuqUtils.sendMessage(qqEntity, str)
-            group.sendMessage(mif.at(qqEntity.qq).plus("机器人帮助已私信给您！"))
-        }
+    @Action("舔狗日记")
+    suspend fun dog() = OkHttpKtUtils.getStr("https://api.oick.cn/dog/api.php").replace("\"", "")
+
+    @Action("读懂世界")
+    @QMsg(reply = true)
+    suspend fun readWorld(): String =
+        OkHttpKtUtils.getJson("https://api.kukuqaq.com/tool/readWorld").getJSONObject("data").getString("data")
+
+    @Action("icp {domain}")
+    @QMsg(at = true, atNewLine = true)
+    suspend fun icp(domain: String): String {
+        val jsonObject = OkHttpKtUtils.getJson("https://api.kukuqaq.com/tool/icp?keyword=${domain.toUrlEncode()}&m")
+        return if (jsonObject.getInteger("code") == 200) {
+            val jsonArray = jsonObject.getJSONArray("data")
+            if (jsonArray.isEmpty()) "该域名未查到备案信息"
+            else {
+                val singleJsonObject = jsonArray.getJSONObject(0)
+                """
+                    网站名称：${singleJsonObject.getString("name")}
+                    主办单位名称：${singleJsonObject.getString("unitName")}
+                    域名：${singleJsonObject.getString("domain")}
+                    主页：${singleJsonObject.getString("homeUrl")}
+                    备案号：${singleJsonObject.getString("licence")}
+                    更新时间：${singleJsonObject.getString("updateTime")}
+                """.trimIndent()
+            }
+        } else jsonObject.getString("message")
     }
+
+
+    @Action("摸鱼日历")
+    suspend fun fishermanCalendar(): Image {
+        val bytes = OkHttpKtUtils.getBytes("https://api.kukuqaq.com/tool/fishermanCalendar?preview")
+        return mif.imageByByteArray(bytes)
+    }
+
+    @Action("摸鱼日历搜狗")
+    suspend fun fishermanCalendarSoGou(): Image {
+        val bytes = OkHttpKtUtils.getBytes("https://api.kukuqaq.com/tool/fishermanCalendar/sogou?preview")
+        return mif.imageByByteArray(bytes)
+    }
+
+    @Action("色图")
+    suspend fun color(groupEntity: GroupEntity?) =
+        if (groupEntity?.config?.loLiConR18 == Status.ON)
+            mif.imageByUrl(OkHttpKtUtils.getJson("https://api.lolicon.app/setu/v2?r18=1").getJSONArray("data").getJSONObject(0).getJSONObject("urls").getString("original").replace("i.pixiv.cat", "i.pixiv.re"))
+        else mif.imageByUrl(OkHttpKtUtils.get("https://api.kukuqaq.com/lolicon/random?preview").also { it.close() }.header("location")!!)
+
 }
 
 object QqGroupLogic {

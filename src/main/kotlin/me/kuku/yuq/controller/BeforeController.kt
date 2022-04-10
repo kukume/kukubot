@@ -12,11 +12,11 @@ import com.icecreamqaq.yuq.entity.Friend
 import com.icecreamqaq.yuq.entity.Group
 import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.entity.MessageAt
+import com.icecreamqaq.yuq.error.WaitNextMessageTimeoutException
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.mif
 import me.kuku.utils.OkHttpUtils
 import me.kuku.yuq.entity.*
-import org.springframework.transaction.support.TransactionTemplate
 import java.io.PrintWriter
 import java.io.StringWriter
 import javax.inject.Inject
@@ -27,20 +27,17 @@ class BeforeController @Inject constructor(
     private val qqService: QqService,
     private val messageService: MessageService,
     private val privateMessageService: PrivateMessageService,
-    private val exceptionLogService: ExceptionLogService,
-    private val transactionTemplate: TransactionTemplate
+    private val exceptionLogService: ExceptionLogService
 ){
 
     @Before(weight = -1)
     @Global
     fun before(session: ContextSession, qq: Long, group: Long?) {
-        transactionTemplate.execute {
-            val qqEntity = qqService.findByQq(qq)
-            session["qqEntity"] = qqEntity!!
-            if (group != null) {
-                val groupEntity = qqEntity.groups.first { it.group == group }
-                session["groupEntity"] = groupEntity
-            }
+        val qqEntity = qqService.findByQq(qq)
+        session["qqEntity"] = qqEntity!!
+        if (group != null) {
+            val groupEntity = qqEntity.groups.first { it.group == group }
+            session["groupEntity"] = groupEntity
         }
     }
 
@@ -55,9 +52,16 @@ class BeforeController @Inject constructor(
         }
     }
 
+    @Catch(error = WaitNextMessageTimeoutException::class)
+    @Global
+    fun waitError(exception: WaitNextMessageTimeoutException, context: BotActionContext, qq: Long) {
+        context.source.sendMessage(mif.at(qq).plus("等待您的消息超时，上下文已结束"))
+    }
+
     @Catch(error = Exception::class)
     @Global
     fun ss(exception: Exception, message: Message, context: BotActionContext, qq: Long, group: Long?) {
+        if (exception is WaitNextMessageTimeoutException) return
         val sw = StringWriter()
         val pw = PrintWriter(sw)
         exception.printStackTrace(pw)
@@ -69,7 +73,7 @@ class BeforeController @Inject constructor(
             jsonObject.getJSONObject("data").getString("url")
         }.getOrDefault("Ubuntu paste url 生成失败")
         val source = context.source
-        source.sendMessage(mif.at(qq).plus("程序出现异常了，异常信息为：$url，请反馈给开发者（不是IoException）"))
+        source.sendMessage(mif.at(qq).plus("程序出现异常了，异常信息为：$url"))
         val messageId = message.source?.id ?: 0
         if (source is Friend) {
             val messageEntity = privateMessageService.findByMessageIdAndQq(messageId, qq) ?: return

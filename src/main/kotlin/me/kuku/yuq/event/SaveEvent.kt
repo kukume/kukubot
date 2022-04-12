@@ -78,11 +78,11 @@ class Save @Inject constructor(
     }
 
     @Event(weight = Event.Weight.high)
-    fun saveBotMessage(e: SendMessageEvent.Post) {
+    fun saveBotMessage(e: SendMessageEvent.Post) = transactionTemplate.execute {
         val messageId = e.messageSource.id
         val contact = e.sendTo
         if (contact is Member || contact is Group) {
-            val groupEntity = groupService.findByGroup(contact.id) ?: return
+            val groupEntity = groupService.findByGroup(contact.id) ?: return@execute
             val botQq = yuq.botId
             var qqEntity = groupEntity.get(botQq)
             if (qqEntity == null) {

@@ -4,7 +4,7 @@ import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
 import me.kuku.yuq.entity.Status
 import me.kuku.yuq.entity.WeiboService
-import me.kuku.yuq.executeBlock
+import me.kuku.yuq.config.jpa.executeBlock
 import me.kuku.yuq.logic.WeiboLogic
 import me.kuku.yuq.logic.WeiboPojo
 import me.kuku.yuq.utils.YuqUtils
@@ -31,7 +31,7 @@ class WeiboJob @Inject constructor(
     suspend fun userMonitor() = transactionTemplate.executeBlock {
         val weiboList = weiboService.findAll().filter { it.config.push == Status.ON }
         for (weiboEntity in weiboList) {
-            val qq = weiboEntity.qqEntity.qq
+            val qq = weiboEntity.qqEntity!!.qq
             val result = WeiboLogic.friendWeibo(weiboEntity)
             val list = result.data ?: continue
             val newList = mutableListOf<WeiboPojo>()
@@ -41,7 +41,7 @@ class WeiboJob @Inject constructor(
                     newList.add(weiboPojo)
                 }
                 for (weiboPojo in newList) {
-                    YuqUtils.sendMessage(weiboEntity.qqEntity, "有新微博了！！\n${WeiboLogic.convert(weiboPojo)}")
+                    YuqUtils.sendMessage(weiboEntity.qqEntity!!, "有新微博了！！\n${WeiboLogic.convert(weiboPojo)}")
                 }
             }
             userMap[qq] = list[0].id

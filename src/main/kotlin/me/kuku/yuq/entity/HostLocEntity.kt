@@ -16,7 +16,7 @@ class HostLocEntity: BaseEntity() {
     var id: Int? = null
     @OneToOne
     @JoinColumn(name = "qq_id")
-    var qqEntity: QqEntity = QqEntity()
+    var qqEntity: QqEntity? = null
     @Column(length = 1000)
     var cookie: String = ""
     @Type(type = "json")

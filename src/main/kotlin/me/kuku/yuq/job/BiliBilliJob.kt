@@ -4,7 +4,7 @@ import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
 import me.kuku.yuq.entity.BiliBiliService
 import me.kuku.yuq.entity.Status
-import me.kuku.yuq.executeBlock
+import me.kuku.yuq.config.jpa.executeBlock
 import me.kuku.yuq.logic.BiliBiliLogic
 import me.kuku.yuq.logic.BiliBiliPojo
 import me.kuku.yuq.utils.YuqUtils
@@ -38,7 +38,7 @@ class BiliBilliJob @Inject constructor(
         for (biliBiliEntity in list) {
             val result = BiliBiliLogic.followed(biliBiliEntity)
             if (result.isFailure) continue
-            val qqEntity = biliBiliEntity.qqEntity
+            val qqEntity = biliBiliEntity.qqEntity!!
             val qq = qqEntity.qq
             if (!liveMap.containsKey(qq)) liveMap[qq] = mutableMapOf()
             val map = liveMap[qq]!!
@@ -52,7 +52,7 @@ class BiliBilliJob @Inject constructor(
                     if (map[id] != b) {
                         map[id] = b
                         val msg = if (b) "直播啦！！" else "下播了！！"
-                        YuqUtils.sendMessage(biliBiliEntity.qqEntity, """
+                        YuqUtils.sendMessage(qqEntity, """
                             哔哩哔哩开播提醒：
                             $name$msg
                             标题：${live.title}
@@ -69,7 +69,7 @@ class BiliBilliJob @Inject constructor(
     suspend fun userMonitor() = transactionTemplate.executeBlock {
         val biliBiliList = biliBiliService.findAll().filter { it.config.push == Status.ON }
         for (biliBiliEntity in biliBiliList) {
-            val qq = biliBiliEntity.qqEntity.qq
+            val qq = biliBiliEntity.qqEntity!!.qq
             val result = BiliBiliLogic.friendDynamic(biliBiliEntity)
             val list = result.data ?: continue
             val newList = mutableListOf<BiliBiliPojo>()
@@ -80,7 +80,7 @@ class BiliBilliJob @Inject constructor(
                     newList.add(biliBiliPojo)
                 }
                 for (biliBiliPojo in newList) {
-                    YuqUtils.sendMessage(biliBiliEntity.qqEntity, "哔哩哔哩有新动态了！！\n${BiliBiliLogic.convertStr(biliBiliPojo)}")
+                    YuqUtils.sendMessage(biliBiliEntity.qqEntity!!, "哔哩哔哩有新动态了！！\n${BiliBiliLogic.convertStr(biliBiliPojo)}")
                 }
             }
             userMap[qq] = list[0].id.toLong()

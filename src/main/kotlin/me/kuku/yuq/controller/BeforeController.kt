@@ -1,3 +1,5 @@
+@file:Suppress("UNUSED_PARAMETER")
+
 package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.After

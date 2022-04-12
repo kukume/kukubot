@@ -22,8 +22,8 @@ YuQ-Art + Spring-data-Jpa
 ```properties
 yu.scanPackages=me.kuku.yuq
 yu.context.mode = single
-yu.modules=me.kuku.yuq.JpaModule
-yu.[modules=me.kuku.yuq.TelegramModule
+yu.modules=me.kuku.yuq.config.jpa.JpaModule
+yu.[modules=me.kuku.yuq.config.telegram.TelegramModule
 # web 端口号
 webServer.port=8081
 # web 跨域

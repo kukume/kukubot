@@ -11,7 +11,7 @@ import com.icecreamqaq.yuq.message.Voice
 import com.icecreamqaq.yuq.mif
 import com.icecreamqaq.yuq.yuq
 import me.kuku.utils.OkHttpUtils
-import me.kuku.yuq.TgBot
+import me.kuku.yuq.config.telegram.TgBot
 import me.kuku.yuq.entity.MessageInteractEntity
 import me.kuku.yuq.entity.MessageInteractService
 import me.kuku.yuq.entity.MessageService

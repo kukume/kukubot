@@ -40,7 +40,7 @@ class HostLocJob @Inject constructor(
                     链接：${hostLocPost.url}
                     内容：${HostLocLogic.postContent(hostLocPost.url, hostLocEntity.cookie)}
                 """.trimIndent()
-                YuqUtils.sendMessage(hostLocEntity.qqEntity, str)
+                YuqUtils.sendMessage(hostLocEntity.qqEntity!!, str)
             }
         }
     }

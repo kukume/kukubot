@@ -11,7 +11,6 @@ import me.kuku.utils.OkHttpKtUtils
 import me.kuku.utils.OkUtils
 import me.kuku.utils.toUrlEncode
 import org.jsoup.Jsoup
-import java.net.URLEncoder
 
 object WeiboLogic {
 

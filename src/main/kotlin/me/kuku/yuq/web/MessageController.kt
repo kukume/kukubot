@@ -23,12 +23,12 @@ class MessageController @Inject constructor(
         Result.success(JSON.parse(JacksonUtils.toJsonString(p)))
     }
 
-    @Action("/message/recall")
-    fun recall(group: Long, id: Int): Result<*> {
-        val messageEntity = messageService.findByMessageIdAndGroup(id, group)
-            ?: return Result.failure(ResultStatus.DATA_NOT_EXISTS, null)
+//    @Action("/message/recall")
+//    fun recall(group: Long, id: Int): Result<*> {
+//        val messageEntity = messageService.findByMessageIdAndGroup(id, group)
+//            ?: return Result.failure(ResultStatus.DATA_NOT_EXISTS, null)
 //        messageEntity.messageSource?.toArtGroupMessageSource()?.recall()
-        return Result.success()
-    }
+//        return Result.success()
+//    }
 
 }

@@ -58,7 +58,7 @@ class Save @Inject constructor(
         messageEntity.qqEntity = qqEntity
         messageEntity.groupEntity = groupEntity
         messageEntity.content = ss
-        val source = e.message.source as? ArtGroupMessageSource
+//        val source = e.message.source as? ArtGroupMessageSource
 //        messageEntity.messageSource = source?.toMessageSource()
         messageService.save(messageEntity)
     }

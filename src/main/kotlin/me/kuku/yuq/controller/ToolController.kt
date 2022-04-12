@@ -20,7 +20,7 @@ import com.icecreamqaq.yuq.mif
 import me.kuku.pojo.QqLoginPojo
 import me.kuku.utils.*
 import me.kuku.yuq.entity.*
-import me.kuku.yuq.executeBlock
+import me.kuku.yuq.config.jpa.executeBlock
 import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.utils.YuqUtils
 import okhttp3.MultipartBody

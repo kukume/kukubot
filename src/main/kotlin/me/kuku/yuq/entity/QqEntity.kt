@@ -12,6 +12,17 @@ import javax.persistence.*
 @Table(name = "qq")
 @JsonIgnoreProperties("groups")
 @NamedEntityGraph(name = "groups", attributeNodes = [NamedAttributeNode("groups")])
+@NamedEntityGraph(name = "queryAll", attributeNodes = [
+    NamedAttributeNode("baiduEntity"),
+    NamedAttributeNode("biliBiliEntity"),
+    NamedAttributeNode("hostLocEntity"),
+    NamedAttributeNode("kuGouEntity"),
+    NamedAttributeNode("miHoYoEntity"),
+    NamedAttributeNode("netEaseEntity"),
+    NamedAttributeNode("oppoShopEntity"),
+    NamedAttributeNode("stepEntity"),
+    NamedAttributeNode("weiboEntity"),
+])
 open class QqEntity: BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,6 +38,25 @@ open class QqEntity: BaseEntity() {
     @Column(columnDefinition = "json")
     open var config: QqConfig = QqConfig()
 
+    @OneToOne(mappedBy = "qqEntity")
+    open var baiduEntity: BaiduEntity? = null
+    @OneToOne(mappedBy = "qqEntity")
+    open var biliBiliEntity: BiliBiliEntity? = null
+    @OneToOne(mappedBy = "qqEntity")
+    open var hostLocEntity: HostLocEntity? = null
+    @OneToOne(mappedBy = "qqEntity")
+    open var kuGouEntity: KuGouEntity? = null
+    @OneToOne(mappedBy = "qqEntity")
+    open var miHoYoEntity: MiHoYoEntity? = null
+    @OneToOne(mappedBy = "qqEntity")
+    open var netEaseEntity: NetEaseEntity? = null
+    @OneToOne(mappedBy = "qqEntity")
+    open var oppoShopEntity: OppoShopEntity? = null
+    @OneToOne(mappedBy = "qqEntity")
+    open var stepEntity: StepEntity? = null
+    @OneToOne(mappedBy = "qqEntity")
+    open var weiboEntity: WeiboEntity? = null
+
     fun get(group: Long): GroupEntity? {
         for (groupEntity in groups) {
             if (groupEntity.group == group) return groupEntity
@@ -38,6 +68,9 @@ open class QqEntity: BaseEntity() {
 interface QqRepository: JpaRepository<QqEntity, Int> {
     @EntityGraph(value = "groups", type = EntityGraph.EntityGraphType.FETCH)
     fun findByQq(qq: Long): QqEntity?
+
+    @EntityGraph(value = "queryAll", type = EntityGraph.EntityGraphType.FETCH)
+    fun findByQqOrderById(qq: Long): QqEntity?
 }
 
 class QqService @Inject constructor(
@@ -48,6 +81,8 @@ class QqService @Inject constructor(
     fun findByQq(qq: Long): QqEntity? = qqRepository.findByQq(qq)
 
     fun findAll(): MutableList<QqEntity> = qqRepository.findAll()
+
+    fun findByQqOrderById(qq: Long) = qqRepository.findByQqOrderById(qq)
 }
 
 class QqConfig {

@@ -32,4 +32,4 @@ class OppoShopService @Inject constructor(
 
 }
 
-data class OppoShopConfig(var earlyToBedClock: Status = Status.OFF)
+data class OppoShopConfig(var earlyToBedClock: Status = Status.OFF, var sign: Status = Status.OFF)

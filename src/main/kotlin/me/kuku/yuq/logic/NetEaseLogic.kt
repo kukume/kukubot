@@ -10,6 +10,7 @@ import me.kuku.pojo.Result
 import me.kuku.pojo.UA
 import me.kuku.yuq.entity.NetEaseEntity
 import okhttp3.internal.toHexString
+import java.math.BigInteger
 
 object NetEaseLogic {
 
@@ -28,9 +29,12 @@ object NetEaseLogic {
 
     private fun prepare(json: String, netEaseEntity: NetEaseEntity? = null): Map<String, String> {
         val nonce = "0CoJUm6Qyw8W8jud"
-        val secretKey = "TA3YiYCfY2dDJQgg"
-        val encSecKey =
-            "84ca47bca10bad09a6b04c5c927ef077d9b9f1e37098aa3eac6ea70eb59df0aa28b691b7e75e4f1f9831754919ea784c8f74fbfadf2898b0be17849fd656060162857830e241aba44991601f137624094c114ea8d17bce815b0cd4e5b8e2fbaba978c6d1d14dc3d1faf852bdd28818031ccdaaa13a6018e1024e2aae98844210"
+        val secretKey = MyUtils.randomLetterLowerNum(16)
+        val ss = BigInteger(HexUtils.byteArrayToHex(secretKey.reversed().toByteArray()), 16)
+            .pow("010001".toInt(16))
+        val sss = BigInteger("00e0b509f6259df8642dbc35662901477df22677ec152b5ff68ace615bb7b725152b3ab17a876aea8a5aa76d2e417629ec4ee341f56135fccf695280104e0312ecbda92557c93870114af6c9d05c4f7f0c3685b7a46bee255932575cce10b424d813cfe4875d3e82047b97ddef52741d546b8e289dc6935b3ece0462db0a22b8e7", 16)
+        val d = ss.divideAndRemainder(sss)[1]
+        val encSecKey = d.toString(16)
         val jsonObject = JSON.parseObject(json)
         netEaseEntity?.let {
             jsonObject["csrf_token"] = netEaseEntity.csrf
@@ -41,10 +45,12 @@ object NetEaseLogic {
     }
 
     suspend fun login(phone: String, password: String): Result<NetEaseEntity> {
-        val map = mapOf("checkToken" to "9ca17ae2e6ffcda170e2e6ee8dd53df59ab694c65efcbc8fa6d55b938f8faaf17eedbaf783d944ac8aa494bb2af0feaec3b92a9699a392aa61fc9e9c95c55b938f9aa7d44a8fafbf96ce7caf8b9893b85be994ee9e",
+        val map = mapOf("checkToken" to "9ca17ae2e6ffcda170e2e6ee97e959b7eafeb0e848ad928aa6d44e879b8aacd85e919ebd92e93af2ab9ad4bb2af0feaec3b92ab2af9cbae570ae95bca6f74f878e8fb7d15e949e8aa8c57eb0878f98bb54a6baee9e",
             "countrycode" to "86", "password" to if (password.length == 32) password else password.md5(), "phone" to phone,
             "rememberLogin" to "true")
-        val response = OkHttpKtUtils.post("$domain/weapi/login/cellphone", prepare(map))
+        val response = OkHttpKtUtils.post("$domain/weapi/login/cellphone", prepare(map),
+            mapOf("crypto" to "weapi",
+                "Referer" to "https://music.163.com", "User-Agent" to "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36"))
         val jsonObject = OkUtils.json(response)
         return if (jsonObject.getInteger("code") == 200) {
             val cookie = OkUtils.cookie(response)
@@ -54,7 +60,32 @@ object NetEaseLogic {
                 it.csrf = csrf!!
                 it.musicU = musicU!!
             })
-        } else Result.failure(jsonObject.getString("msg"))
+        } else Result.failure(jsonObject.getString("message"))
+    }
+
+    suspend fun qrcode(): String {
+        val jsonObject = OkHttpKtUtils.postJson("$domain/weapi/login/qrcode/unikey", prepare("""{"type": 1}"""))
+        return jsonObject.getString("unikey")
+    }
+
+    suspend fun checkQrcode(key: String): Result<NetEaseEntity> {
+        val response = OkHttpKtUtils.post("https://music.163.com/weapi/login/qrcode/client/login", prepare("""{"type":1,"key":"$key"}"""), mapOf("crypto" to "weapi"))
+        val jsonObject = OkUtils.json(response)
+        return when (jsonObject.getInteger("code")) {
+            803 -> {
+                val cookie = OkUtils.cookie(response)
+                val csrf = OkUtils.cookie(cookie, "__csrf")
+                val musicU = OkUtils.cookie(cookie, "MUSIC_U")
+                Result.success(NetEaseEntity().also {
+                    it.csrf = csrf!!
+                    it.musicU = musicU!!
+                })
+            }
+            801 -> Result.failure(0, "等待扫码")
+            802 -> Result.failure(1, "${jsonObject.getString("nickname")}已扫码，等待确认登陆")
+            800 -> Result.failure("二维码已过期")
+            else -> Result.failure(jsonObject.getString("message"))
+        }
     }
 
     suspend fun sign(netEaseEntity: NetEaseEntity): Result<Void> {
@@ -63,7 +94,7 @@ object NetEaseLogic {
             OkUtils.cookie(netEaseEntity.cookie()))
         val code = jsonObject.getInteger("code")
         return if (code == 200 || code == -2) Result.success()
-        else Result.failure(jsonObject.getString("msg"))
+        else Result.failure(jsonObject.getString("message"))
     }
 
     private suspend fun recommend(netEaseEntity: NetEaseEntity): Result<MutableList<String>> {
@@ -78,7 +109,7 @@ object NetEaseLogic {
                 return Result.success(list)
             }
             301 -> Result.failure("您的网易云音乐cookie已失效", null)
-            else -> Result.failure(jsonObject.getString("msg"))
+            else -> Result.failure(jsonObject.getString("message"))
         }
     }
 
@@ -131,7 +162,7 @@ object NetEaseLogic {
                 list.add(Mission(it.getLong("userMissionId"), it.getInteger("period"), it.getInteger("type"), it.getString("description")))
             }
             Result.success(list)
-        } else Result.failure(jsonObject.getString("msg"))
+        } else Result.failure(jsonObject.getString("message"))
     }
 
     suspend fun musicianCycleMission(netEaseEntity: NetEaseEntity): Result<List<Mission>> {
@@ -145,7 +176,7 @@ object NetEaseLogic {
                 list.add(Mission(it.getLong("userMissionId"), it.getInteger("period"), it.getInteger("type"), it.getString("description")))
             }
             Result.success(list)
-        } else Result.failure(jsonObject.getString("msg"))
+        } else Result.failure(jsonObject.getString("message"))
     }
 
     suspend fun musicianReceive(netEaseEntity: NetEaseEntity, mission: Mission): Result<Void> {
@@ -156,13 +187,13 @@ object NetEaseLogic {
         )
         val code = jsonObject.getInteger("code")
         return if (code == 200 || code == -2) Result.success()
-        else Result.failure(jsonObject.getString("msg"))
+        else Result.failure(jsonObject.getString("message"))
     }
 
     suspend fun userAccess(netEaseEntity: NetEaseEntity): Result<Void> {
         val jsonObject = OkHttpKtUtils.postJson("$domain/weapi/creator/user/access", prepare(mapOf()), OkUtils.headers(netEaseEntity.cookie(), domain, UA.PC))
         return if (jsonObject.getInteger("code") == 200) Result.success()
-        else Result.failure(jsonObject.getString("msg"))
+        else Result.failure(jsonObject.getString("message"))
     }
 
     suspend fun musicianSign(netEaseEntity: NetEaseEntity): Result<Void> {
@@ -207,9 +238,9 @@ object NetEaseLogic {
         } else Result.failure(jsonObject.getString("message") ?: "获取失败")
     }
 
-    suspend fun shareResource(netEaseEntity: NetEaseEntity, id: Long, msg: String = "每日分享"): Result<Long> {
+    suspend fun shareResource(netEaseEntity: NetEaseEntity, id: Long, message: String = "每日分享"): Result<Long> {
         val jsonObject = OkHttpKtUtils.postJson("$domain/weapi/share/friends/resource",
-            prepare(mapOf("type" to "playlist", "id" to id.toString(), "msg" to msg)),
+            prepare(mapOf("type" to "playlist", "id" to id.toString(), "message" to message)),
             mapOf("cookie" to netEaseEntity.cookie(), "referer" to domain, "user-agent" to UA.PC.value)
         )
         return if (jsonObject.getInteger("code") == 200)
@@ -377,6 +408,6 @@ data class Play(val name: String, val id: Long, val playCount: Long)
 
 data class MLogInfo(val resourceId: Long, val objectKey: String, val token: String, val bucket: String, val byteArray: ByteArray)
 
-data class UploadFileInfo(val callbackRetMsg: String, val offset: Long, val requestId: String, val context: String)
+data class UploadFileInfo(val callbackRetmessage: String, val offset: Long, val requestId: String, val context: String)
 
 data class SongDetail(val name: String, val artistName: String, val pic: String)

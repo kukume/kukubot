@@ -3,6 +3,7 @@ package me.kuku.yuq.extension
 import me.kuku.yuq.entity.TgPushEntity
 import me.kuku.yuq.entity.TgPushService
 import me.kuku.yuq.utils.abilityDefault
+import me.kuku.yuq.utils.sendMd
 import me.kuku.yuq.utils.silent
 import org.telegram.abilitybots.api.objects.Ability
 import org.telegram.abilitybots.api.objects.Locality
@@ -31,10 +32,10 @@ class PushExtension @Inject constructor(
                 entity.key = key
                 entity.userid = id
             })
-            silent().sendMd("""
+            sendMd("""
                     Success!
                     You key is `${key}`
-                """.trimIndent(), chatId())
+                """.trimIndent())
         }
     }
 

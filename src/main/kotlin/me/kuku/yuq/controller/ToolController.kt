@@ -265,7 +265,7 @@ class MenuController @Inject constructor(
     suspend fun color(groupEntity: GroupEntity?) =
         if (groupEntity?.config?.loLiConR18 == Status.ON)
             mif.imageByUrl(OkHttpKtUtils.getJson("https://api.lolicon.app/setu/v2?r18=1").getJSONArray("data").getJSONObject(0).getJSONObject("urls").getString("original").replace("i.pixiv.cat", "i.pixiv.re"))
-        else mif.imageByUrl(OkHttpKtUtils.get("https://api.kukuqaq.com/lolicon/random?preview").also { it.close() }.header("location")!!)
+        else mif.imageByUrl(OkHttpKtUtils.get("https://api.kukuqaq.com/lolicon/random?preview=1").also { it.close() }.header("location")!!)
 
 }
 

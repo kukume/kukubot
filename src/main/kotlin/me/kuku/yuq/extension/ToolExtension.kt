@@ -2,7 +2,7 @@ package me.kuku.yuq.extension
 
 import me.kuku.utils.OkHttpKtUtils
 import me.kuku.yuq.utils.abilityDefault
-import me.kuku.yuq.utils.silent
+import me.kuku.yuq.utils.send
 import org.telegram.abilitybots.api.util.AbilityExtension
 
 class ToolExtension: AbilityExtension {
@@ -12,7 +12,7 @@ class ToolExtension: AbilityExtension {
         val email = arguments()[0]
         val ss = if (OkHttpKtUtils.getJson("https://api.kukuqaq.com/tool/oracle/promotion?email=$email").getJSONArray("items")?.isNotEmpty() == true) "有资格了"
         else "你木的资格"
-        silent().send("$email：$ss", user().id)
+        send("$email：$ss")
     }
 
 

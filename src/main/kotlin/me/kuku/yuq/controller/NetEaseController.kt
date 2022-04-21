@@ -7,6 +7,8 @@ import com.icecreamqaq.yuq.annotation.PrivateController
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.controller.QQController
 import com.icecreamqaq.yuq.message.Message.Companion.firstString
+import kotlinx.coroutines.delay
+import me.kuku.utils.toUrlEncode
 import me.kuku.yuq.entity.NetEaseEntity
 import me.kuku.yuq.entity.NetEaseService
 import me.kuku.yuq.entity.QqEntity
@@ -20,23 +22,63 @@ class NetEaseController @Inject constructor(
 ): QQController() {
 
     @Action("网易登录")
-    suspend fun login(qqEntity: QqEntity, qq: Long, session: ContextSession): String {
-        reply(mif.at(qq).plus("请发送手机号").toMessage())
-        val phone = session.waitNextMessage().firstString()
-        reply(mif.at(qq).plus("请发送密码").toMessage())
-        val password = session.waitNextMessage().firstString()
-        val result = NetEaseLogic.login(phone, password)
-        return if (result.isSuccess) {
-            val netEaseEntity = result.data
-            val newEntity = netEaseService.findByQqEntity(qqEntity) ?: NetEaseEntity().also {
-                it.qqEntity = qqEntity
+    suspend fun login(qqEntity: QqEntity, qq: Long, session: ContextSession): String? {
+        reply(mif.at(qq).plus("请选择扫码登陆or密码登陆，1为扫码，2为密码").toMessage())
+        val ss = session.waitNextMessage().firstString()
+        if (ss.toInt() == 1) {
+            val key = NetEaseLogic.qrcode()
+            val url = "http://music.163.com/login?codekey=$key"
+            val newUrl =
+                "https://tool.lu/qrcode/basic.html?text=${url.toUrlEncode()}&tolerance=15&size=250&margin=0&front_color=%23000000&background_color=%23ffffff"
+            reply(mif.at(qq).plus(mif.imageByUrl(newUrl)).plus("请使用网易云音乐APP扫码登陆").toMessage())
+            var scan = true
+            while (true) {
+                delay(3000)
+                val result = NetEaseLogic.checkQrcode(key)
+                when (result.code) {
+                    200 -> {
+                        val netEaseEntity = result.data
+                        val newEntity = netEaseService.findByQqEntity(qqEntity) ?: NetEaseEntity().also {
+                            it.qqEntity = qqEntity
+                        }
+                        newEntity.csrf = netEaseEntity.csrf
+                        newEntity.musicU = netEaseEntity.musicU
+                        netEaseService.save(newEntity)
+                        reply(mif.at(qq).plus("绑定网易云音乐成功").toMessage())
+                        break
+                    }
+                    500 -> {
+                        reply(mif.at(qq).plus(result.message).toMessage())
+                        break
+                    }
+                    1 -> {
+                        if (scan) {
+                            reply(mif.at(qq).plus(result.message).toMessage())
+                            scan = false
+                        }
+                    }
+                }
             }
-            newEntity.csrf = netEaseEntity.csrf
-            newEntity.musicU = netEaseEntity.musicU
-            netEaseService.save(newEntity)
-            "绑定网易云音乐成功"
-        } else result.message
+            return null
+        } else {
+            reply(mif.at(qq).plus("请发送手机号").toMessage())
+            val phone = session.waitNextMessage().firstString()
+            reply(mif.at(qq).plus("请发送密码").toMessage())
+            val password = session.waitNextMessage().firstString()
+            val result = NetEaseLogic.login(phone, password)
+            return if (result.isSuccess) {
+                val netEaseEntity = result.data
+                val newEntity = netEaseService.findByQqEntity(qqEntity) ?: NetEaseEntity().also {
+                    it.qqEntity = qqEntity
+                }
+                newEntity.csrf = netEaseEntity.csrf
+                newEntity.musicU = netEaseEntity.musicU
+                netEaseService.save(newEntity)
+                "绑定网易云音乐成功"
+            } else result.message
+        }
     }
+
 
     @Before(except = ["login"])
     fun before(qqEntity: QqEntity): NetEaseEntity {

@@ -20,3 +20,13 @@ fun abilityDefault(name: String, info: String, input: Int = 0, block: suspend Me
 }
 
 fun MessageContext.silent(): SilentSender = this.bot().silent()
+
+context(MessageContext)
+fun sendMd(message: String) {
+    silent().sendMd(message, chatId())
+}
+
+context(MessageContext)
+fun send(message: String) {
+    silent().send(message, chatId())
+}

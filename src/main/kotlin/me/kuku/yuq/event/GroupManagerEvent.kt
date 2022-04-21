@@ -1,5 +1,6 @@
 package me.kuku.yuq.event
 
+import com.IceCreamQAQ.Yu.annotation.Config
 import com.IceCreamQAQ.Yu.annotation.Event
 import com.IceCreamQAQ.Yu.annotation.EventListener
 import com.icecreamqaq.yuq.event.*
@@ -22,7 +23,8 @@ class GroupManagerEvent @Inject constructor(
     private val groupService: GroupService,
     private val qqGroupService: QqGroupService,
     private val messageService: MessageService,
-    private val transactionTemplate: TransactionTemplate
+    private val transactionTemplate: TransactionTemplate,
+    @Config("YuQ.ArtQQ.master") private val master: String
 ) {
 
     private val lastMessage = ConcurrentHashMap<Long, String>()
@@ -160,11 +162,11 @@ class GroupManagerEvent @Inject constructor(
 
     @Event
     fun friend(e: NewFriendRequestEvent) {
-        if (e.qq.level > 32) {
+        if (e.message == master) {
             e.accept = true
         } else {
             e.accept = false
-            e.rejectMessage = "您的qq登陆没有32级，升级了再来把"
+            e.rejectMessage = "验证信息不正确"
         }
         e.cancel = true
     }

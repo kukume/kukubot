@@ -45,11 +45,13 @@ class BeforeController @Inject constructor(
 
     @After
     @Global
-    fun after(message: Message, context: BotActionContext, qq: Long) {
-        val source = context.source
-        if (source is Member || source is Group) {
-            if (message.at == null) {
-                message.at = MessageAt(qq, true)
+    fun after(context: BotActionContext, qq: Long) {
+        context.reMessage?.let { message ->
+            val source = context.source
+            if (source is Member || source is Group) {
+                if (message.at == null) {
+                    message.at = MessageAt(qq, true)
+                }
             }
         }
     }

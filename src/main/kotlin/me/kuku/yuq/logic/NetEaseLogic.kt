@@ -45,8 +45,7 @@ object NetEaseLogic {
     }
 
     suspend fun login(phone: String, password: String): Result<NetEaseEntity> {
-        val map = mapOf("checkToken" to "9ca17ae2e6ffcda170e2e6ee97e959b7eafeb0e848ad928aa6d44e879b8aacd85e919ebd92e93af2ab9ad4bb2af0feaec3b92ab2af9cbae570ae95bca6f74f878e8fb7d15e949e8aa8c57eb0878f98bb54a6baee9e",
-            "countrycode" to "86", "password" to if (password.length == 32) password else password.md5(), "phone" to phone,
+        val map = mapOf("countrycode" to "86", "password" to if (password.length == 32) password else password.md5(), "phone" to phone,
             "rememberLogin" to "true")
         val response = OkHttpKtUtils.post("$domain/weapi/login/cellphone", prepare(map),
             mapOf("crypto" to "weapi",

@@ -8,6 +8,7 @@ import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.controller.QQController
 import com.icecreamqaq.yuq.message.Message.Companion.firstString
 import kotlinx.coroutines.delay
+import me.kuku.utils.MyUtils
 import me.kuku.utils.toUrlEncode
 import me.kuku.yuq.entity.NetEaseEntity
 import me.kuku.yuq.entity.NetEaseService
@@ -23,7 +24,7 @@ class NetEaseController @Inject constructor(
 
     @Action("网易登录")
     suspend fun login(qqEntity: QqEntity, qq: Long, session: ContextSession): String? {
-        reply(mif.at(qq).plus("请选择扫码登陆or密码登陆，1为扫码，2为密码").toMessage())
+        reply(mif.at(qq).plus("请选择扫码登陆or密码登陆or手动绑定，1为扫码，2为密码，3为手动绑定").toMessage())
         val ss = session.waitNextMessage().firstString()
         if (ss.toInt() == 1) {
             val key = NetEaseLogic.qrcode()
@@ -60,7 +61,7 @@ class NetEaseController @Inject constructor(
                 }
             }
             return null
-        } else {
+        } else if (ss.toInt() == 2) {
             reply(mif.at(qq).plus("请发送手机号").toMessage())
             val phone = session.waitNextMessage().firstString()
             reply(mif.at(qq).plus("请发送密码").toMessage())
@@ -76,6 +77,21 @@ class NetEaseController @Inject constructor(
                 netEaseService.save(newEntity)
                 "绑定网易云音乐成功"
             } else result.message
+        } else {
+            reply(mif.at(qq).plus("请发送网易云音乐的cookie").toMessage())
+            val cookie = session.waitNextMessage().firstString()
+            val musicU = MyUtils.regex("MUSIC_U=", ";", cookie)
+            val csrf = MyUtils.regex("__csrf=", ";", cookie)
+            return if (musicU == null || csrf == null) "cookie格式不正确"
+            else {
+                val newEntity = netEaseService.findByQqEntity(qqEntity) ?: NetEaseEntity().also {
+                    it.qqEntity = qqEntity
+                }
+                newEntity.musicU = musicU
+                newEntity.csrf = csrf
+                netEaseService.save(newEntity)
+                "绑定网易云音乐成功"
+            }
         }
     }
 

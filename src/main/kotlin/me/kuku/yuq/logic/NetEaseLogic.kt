@@ -28,8 +28,19 @@ object NetEaseLogic {
     }
 
     private fun prepare(json: String, netEaseEntity: NetEaseEntity? = null): Map<String, String> {
+//        val nonce = "0CoJUm6Qyw8W8jud"
+//        val secretKey = "TA3YiYCfY2dDJQgg"
+//        val encSecKey =
+//            "84ca47bca10bad09a6b04c5c927ef077d9b9f1e37098aa3eac6ea70eb59df0aa28b691b7e75e4f1f9831754919ea784c8f74fbfadf2898b0be17849fd656060162857830e241aba44991601f137624094c114ea8d17bce815b0cd4e5b8e2fbaba978c6d1d14dc3d1faf852bdd28818031ccdaaa13a6018e1024e2aae98844210"
+//        val jsonObject = JSON.parseObject(json)
+//        netEaseEntity?.let {
+//            jsonObject["csrf_token"] = netEaseEntity.csrf
+//        }
+//        var param = aesEncode(jsonObject.toString(), nonce)
+//        param = aesEncode(param, secretKey)
+//        return mapOf("params" to param, "encSecKey" to encSecKey)
         val nonce = "0CoJUm6Qyw8W8jud"
-        val secretKey = MyUtils.randomLetterLowerNum(16)
+        val secretKey = MyUtils.randomLetterLowerNum(16).toByteArray().hex().substring(0, 16)
         val ss = BigInteger(HexUtils.byteArrayToHex(secretKey.reversed().toByteArray()), 16)
             .pow("010001".toInt(16))
         val sss = BigInteger("00e0b509f6259df8642dbc35662901477df22677ec152b5ff68ace615bb7b725152b3ab17a876aea8a5aa76d2e417629ec4ee341f56135fccf695280104e0312ecbda92557c93870114af6c9d05c4f7f0c3685b7a46bee255932575cce10b424d813cfe4875d3e82047b97ddef52741d546b8e289dc6935b3ece0462db0a22b8e7", 16)

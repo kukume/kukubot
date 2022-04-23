@@ -35,10 +35,10 @@ object BiliBiliLogic {
     private fun convert(jsonObject: JSONObject): BiliBiliPojo {
         val biliBiliPojo = BiliBiliPojo()
         val descJsonObject = jsonObject.getJSONObject("desc")
-        val infoJsonObject = descJsonObject.getJSONObject("user_profile").getJSONObject("info")
+        val infoJsonObject = descJsonObject.getJSONObject("user_profile")?.getJSONObject("info")
         val forwardJsonObject = descJsonObject.getJSONObject("origin")
-        biliBiliPojo.userId = infoJsonObject.getString("uid")
-        biliBiliPojo.name = infoJsonObject.getString("uname")
+        biliBiliPojo.userId = infoJsonObject?.getString("uid") ?: ""
+        biliBiliPojo.name = infoJsonObject?.getString("uname") ?: ""
         biliBiliPojo.id = descJsonObject.getString("dynamic_id")
         biliBiliPojo.rid = descJsonObject.getString("rid")
         biliBiliPojo.time = (descJsonObject.getString("timestamp") + "000").toLong()
@@ -55,6 +55,11 @@ object BiliBiliLogic {
         val cardJsonObject = JSON.parseObject(cardStr)
         var text: String? = null
         if (cardJsonObject != null) {
+            if (biliBiliPojo.userId.isEmpty()) {
+                val collectionJsonObject = cardJsonObject.getJSONObject("collection")
+                biliBiliPojo.userId = collectionJsonObject.getString("id")
+                biliBiliPojo.name = collectionJsonObject.getString("name")
+            }
             val itemJsonObject = cardJsonObject.getJSONObject("item")
             text = cardJsonObject.getString("dynamic")
             val picList = biliBiliPojo.picList

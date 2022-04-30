@@ -3,6 +3,7 @@ package me.kuku.yuq.entity
 import com.alibaba.fastjson.annotation.JSONField
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.hibernate.annotations.Type
+import org.springframework.cache.annotation.CachePut
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Service
@@ -77,8 +78,10 @@ interface QqRepository: JpaRepository<QqEntity, Int> {
 class QqService (
     private val qqRepository: QqRepository
 ){
+    @CachePut(value = ["database"], key = "'qq' + #qqEntity.qq")
     fun save(qqEntity: QqEntity): QqEntity = qqRepository.save(qqEntity)
 
+    @org.springframework.cache.annotation.Cacheable(value = ["database"], key = "'qq' + #qq")
     fun findByQq(qq: Long): QqEntity? = qqRepository.findByQq(qq)
 
     fun findAll(): MutableList<QqEntity> = qqRepository.findAll()

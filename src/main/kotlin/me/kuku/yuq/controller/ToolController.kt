@@ -19,12 +19,12 @@ import com.icecreamqaq.yuq.mif
 import me.kuku.pojo.QqLoginPojo
 import me.kuku.utils.*
 import me.kuku.yuq.entity.*
-import me.kuku.yuq.config.executeBlock
 import me.kuku.yuq.logic.ToolLogic
 import me.kuku.yuq.utils.YuqUtils
 import okhttp3.MultipartBody
 import org.jsoup.Jsoup
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.TransactionTemplate
 import java.time.LocalDate
 
@@ -32,8 +32,7 @@ import java.time.LocalDate
 @Component
 class ToolController (
     private val messageService: MessageService,
-    private val recallService: RecallService,
-    private val transactionTemplate: TransactionTemplate
+    private val recallService: RecallService
 ) {
 
     @Action(value = "读消息", suffix = true)
@@ -136,7 +135,8 @@ class ToolController (
     }
 
     @Action("查发言数")
-    suspend fun queryMessage(group: Group) = transactionTemplate.executeBlock {
+    @Transactional
+    suspend fun queryMessage(group: Group): String {
         val list = messageService.findByGroupAndLocalDateTimeAfter(group.id, LocalDate.now().atStartOfDay())
         val map = mutableMapOf<Long, Int>()
         for (messageEntity in list) {
@@ -151,7 +151,7 @@ class ToolController (
             if (++i == 5) break
             sb.append(group[k].nameCardOrName()).append("（").append(k).append("）").append(" - ").append(v).appendLine("条")
         }
-        return@executeBlock sb.removeSuffix("\n").toString()
+        return sb.removeSuffix("\n").toString()
     }
 
     @Action("测吉凶")
@@ -171,20 +171,18 @@ class ToolController (
 @GroupController
 @PrivateController
 @Component
-class MenuController (
-    private val transactionTemplate: TransactionTemplate
-) {
+class ToolAllController {
+
     @Action("菜单")
     @Synonym(["帮助", "功能"])
+    @Transactional
     suspend fun menu(qqEntity: QqEntity, group: Group?) {
-        transactionTemplate.executeBlock {
-            val str = """
-                机器人帮助（命令）如下：
-                https://outline.kuku.me/share/2e461ea5-19fb-4326-be24-ba23367ff72d
-            """.trimIndent()
-            YuqUtils.sendMessage(qqEntity, str)
-            group?.sendMessage(mif.at(qqEntity.qq).plus("机器人帮助已私信给您！"))
-        }
+        val str = """
+            机器人帮助（命令）如下：
+            https://outline.kuku.me/share/2e461ea5-19fb-4326-be24-ba23367ff72d
+        """.trimIndent()
+        YuqUtils.sendMessage(qqEntity, str)
+        group?.sendMessage(mif.at(qqEntity.qq).plus("机器人帮助已私信给您！"))
     }
 
     @Action("百科 {text}")
@@ -261,6 +259,9 @@ class MenuController (
         if (groupEntity?.config?.loLiConR18 == Status.ON)
             mif.imageByUrl(OkHttpKtUtils.getJson("https://api.lolicon.app/setu/v2?r18=1").getJSONArray("data").getJSONObject(0).getJSONObject("urls").getString("original").replace("i.pixiv.cat", "i.pixiv.re"))
         else mif.imageByUrl(OkHttpKtUtils.get("https://api.kukuqaq.com/lolicon/random?preview=1").also { it.close() }.header("location")!!)
+
+    @Action("音乐人代认证")
+    fun ss() = "音乐人代认证地址：\nhttps://store.cols.ro"
 
 }
 

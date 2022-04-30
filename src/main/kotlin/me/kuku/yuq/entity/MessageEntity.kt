@@ -1,7 +1,9 @@
 package me.kuku.yuq.entity
 
+import com.icecreamqaq.yuq.artqq.message.ArtGroupMessageSource
 import com.querydsl.core.BooleanBuilder
 import me.kuku.yuq.utils.plus
+import org.hibernate.annotations.Type
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -28,9 +30,9 @@ class MessageEntity: BaseEntity() {
     @Lob
     @Column(columnDefinition = "text")
     var content: String = ""
-//    @Type(type = "json")
-//    @Column(columnDefinition = "json")
-//    var messageSource: MessageSource? = null
+    @Type(type = "json")
+    @Column(columnDefinition = "json")
+    var messageSource: MessageSource? = null
 }
 
 interface MessageRepository: JpaRepository<MessageEntity, Int>, QuerydslPredicateExecutor<MessageEntity> {
@@ -81,9 +83,12 @@ class MessageService (
 
 data class MessageSource(
     val id: Int,
-    val qq: Long,
     val groupCode: Long,
-    val rand: Int,
-    val sendTime: Long,
-    val liteMsg: String
-)
+    val rand: Int
+) {
+
+    fun recall() {
+        ArtGroupMessageSource(id, rand, groupCode, 0, 0, 0, "").recall()
+    }
+
+}

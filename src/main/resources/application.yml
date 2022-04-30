@@ -8,6 +8,9 @@ spring:
     hibernate:
       ddl-auto: update
     open-in-view: false
+  cache:
+    ehcache:
+      config: classpath:ehcache.xml
 
 yuq:
   art:

@@ -10,7 +10,6 @@ import me.kuku.pojo.Result
 import me.kuku.pojo.UA
 import me.kuku.yuq.entity.NetEaseEntity
 import okhttp3.internal.toHexString
-import java.math.BigInteger
 
 object NetEaseLogic {
 
@@ -28,24 +27,10 @@ object NetEaseLogic {
     }
 
     private fun prepare(json: String, netEaseEntity: NetEaseEntity? = null): Map<String, String> {
-//        val nonce = "0CoJUm6Qyw8W8jud"
-//        val secretKey = "TA3YiYCfY2dDJQgg"
-//        val encSecKey =
-//            "84ca47bca10bad09a6b04c5c927ef077d9b9f1e37098aa3eac6ea70eb59df0aa28b691b7e75e4f1f9831754919ea784c8f74fbfadf2898b0be17849fd656060162857830e241aba44991601f137624094c114ea8d17bce815b0cd4e5b8e2fbaba978c6d1d14dc3d1faf852bdd28818031ccdaaa13a6018e1024e2aae98844210"
-//        val jsonObject = JSON.parseObject(json)
-//        netEaseEntity?.let {
-//            jsonObject["csrf_token"] = netEaseEntity.csrf
-//        }
-//        var param = aesEncode(jsonObject.toString(), nonce)
-//        param = aesEncode(param, secretKey)
-//        return mapOf("params" to param, "encSecKey" to encSecKey)
         val nonce = "0CoJUm6Qyw8W8jud"
-        val secretKey = MyUtils.randomLetterLowerNum(16).toByteArray().hex().substring(0, 16)
-        val ss = BigInteger(HexUtils.byteArrayToHex(secretKey.reversed().toByteArray()), 16)
-            .pow("010001".toInt(16))
-        val sss = BigInteger("00e0b509f6259df8642dbc35662901477df22677ec152b5ff68ace615bb7b725152b3ab17a876aea8a5aa76d2e417629ec4ee341f56135fccf695280104e0312ecbda92557c93870114af6c9d05c4f7f0c3685b7a46bee255932575cce10b424d813cfe4875d3e82047b97ddef52741d546b8e289dc6935b3ece0462db0a22b8e7", 16)
-        val d = ss.divideAndRemainder(sss)[1]
-        val encSecKey = d.toString(16)
+        val secretKey = "TA3YiYCfY2dDJQgg"
+        val encSecKey =
+            "84ca47bca10bad09a6b04c5c927ef077d9b9f1e37098aa3eac6ea70eb59df0aa28b691b7e75e4f1f9831754919ea784c8f74fbfadf2898b0be17849fd656060162857830e241aba44991601f137624094c114ea8d17bce815b0cd4e5b8e2fbaba978c6d1d14dc3d1faf852bdd28818031ccdaaa13a6018e1024e2aae98844210"
         val jsonObject = JSON.parseObject(json)
         netEaseEntity?.let {
             jsonObject["csrf_token"] = netEaseEntity.csrf
@@ -53,6 +38,20 @@ object NetEaseLogic {
         var param = aesEncode(jsonObject.toString(), nonce)
         param = aesEncode(param, secretKey)
         return mapOf("params" to param, "encSecKey" to encSecKey)
+//        val nonce = "0CoJUm6Qyw8W8jud"
+//        val secretKey = MyUtils.randomLetterLowerNum(16).toByteArray().hex().substring(0, 16)
+//        val ss = BigInteger(HexUtils.byteArrayToHex(secretKey.reversed().toByteArray()), 16)
+//            .pow("010001".toInt(16))
+//        val sss = BigInteger("00e0b509f6259df8642dbc35662901477df22677ec152b5ff68ace615bb7b725152b3ab17a876aea8a5aa76d2e417629ec4ee341f56135fccf695280104e0312ecbda92557c93870114af6c9d05c4f7f0c3685b7a46bee255932575cce10b424d813cfe4875d3e82047b97ddef52741d546b8e289dc6935b3ece0462db0a22b8e7", 16)
+//        val d = ss.divideAndRemainder(sss)[1]
+//        val encSecKey = d.toString(16)
+//        val jsonObject = JSON.parseObject(json)
+//        netEaseEntity?.let {
+//            jsonObject["csrf_token"] = netEaseEntity.csrf
+//        }
+//        var param = aesEncode(jsonObject.toString(), nonce)
+//        param = aesEncode(param, secretKey)
+//        return mapOf("params" to param, "encSecKey" to encSecKey)
     }
 
     suspend fun login(phone: String, password: String): Result<NetEaseEntity> {
@@ -220,6 +219,21 @@ object NetEaseLogic {
             }
             Result.failure("没有找到音乐人签到任务")
         } else Result.failure(result.message)
+    }
+
+    suspend fun anotherMusicianSign(netEaseEntity: NetEaseEntity): Result<Void> {
+        val listJsonObject = OkHttpKtUtils.postJson("https://music.163.com/weapi/nmusician/workbench/mission/cycle/list?csrf_token=${netEaseEntity.csrf}",
+            prepare("""{"actionType": 102, "platform": 200}"""), OkUtils.headers(netEaseEntity.cookie()))
+        return if (listJsonObject.getInteger("code") == 200) {
+            val ss = listJsonObject.getJSONObject("data").getJSONArray("list").map { it as JSONObject }
+                .firstOrNull { it.getString("description") == "音乐人中心签到" } ?: return Result.failure("没有找到音乐人签到任务")
+            val userMissionId = ss.getLong("userMissionId")
+            val period = ss.getInteger("period")
+            val jsonObject = OkHttpKtUtils.postJson("https://music.163.com/weapi/nmusician/workbench/mission/reward/obtain/new?csrf_token=${netEaseEntity.csrf}",
+                prepare("""{userMissionId: $userMissionId, period: $period}"""), OkUtils.headers(netEaseEntity.cookie()))
+            if (jsonObject.getInteger("code") == 200) Result.success()
+            else Result.failure(jsonObject.getString("message"))
+        }else Result.failure(listJsonObject.getString("message"))
     }
 
     suspend fun myMusic(netEaseEntity: NetEaseEntity): Result<List<NetEaseSong>> {
@@ -418,6 +432,6 @@ data class Play(val name: String, val id: Long, val playCount: Long)
 
 data class MLogInfo(val resourceId: Long, val objectKey: String, val token: String, val bucket: String, val byteArray: ByteArray)
 
-data class UploadFileInfo(val callbackRetmessage: String, val offset: Long, val requestId: String, val context: String)
+data class UploadFileInfo(var callbackRetmessage: String = "", var offset: Long = 0, var requestId: String = "", var context: String = "", var callbackRetMsg: String = "")
 
 data class SongDetail(val name: String, val artistName: String, val pic: String)

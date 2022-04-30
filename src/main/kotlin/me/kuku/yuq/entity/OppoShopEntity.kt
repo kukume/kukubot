@@ -23,14 +23,18 @@ class OppoShopEntity: BaseEntity() {
 }
 
 interface OppoShopRepository: JpaRepository<OppoShopEntity, Int> {
-
+    fun findByQqEntity(qqEntity: QqEntity): OppoShopEntity?
 }
 
 @Service
 class OppoShopService (
     private val oppoShopRepository: OppoShopRepository
 ) {
+    fun findByQqEntity(qqEntity: QqEntity) = oppoShopRepository.findByQqEntity(qqEntity)
 
+    fun save(oppoShopEntity: OppoShopEntity) = oppoShopRepository.save(oppoShopEntity)
+
+    fun findAll(): List<OppoShopEntity> = oppoShopRepository.findAll()
 }
 
 data class OppoShopConfig(var earlyToBedClock: Status = Status.OFF, var sign: Status = Status.OFF)

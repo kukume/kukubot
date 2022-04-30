@@ -80,14 +80,14 @@ class BeforeController (
         val source = context.source
         source.sendMessage(mif.at(qq).plus("程序出现异常了，异常信息为：$url"))
         val messageId = message.source?.id ?: 0
-        if (source is Friend) {
+        if (source is Friend || source is Member) {
             val messageEntity = privateMessageService.findByMessageIdAndQq(messageId, qq) ?: return
             val exceptionLogEntity = ExceptionLogEntity()
             exceptionLogEntity.privateMessageEntity = messageEntity
             exceptionLogEntity.stackTrace = exceptionStackTrace
             exceptionLogEntity.url = url
             exceptionLogService.save(exceptionLogEntity)
-        } else if (source is Group || source is Member) {
+        } else if (source is Group) {
             val messageEntity =  messageService.findByMessageIdAndGroup(messageId, group!!) ?: return
             val exceptionLogEntity = ExceptionLogEntity()
             exceptionLogEntity.messageEntity = messageEntity

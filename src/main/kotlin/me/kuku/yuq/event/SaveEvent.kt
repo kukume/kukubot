@@ -5,7 +5,6 @@ import com.IceCreamQAQ.Yu.annotation.EventListener
 import com.icecreamqaq.yuq.artqq.message.ArtGroupMessageSource
 import com.icecreamqaq.yuq.entity.Friend
 import com.icecreamqaq.yuq.entity.Group
-import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.event.*
 import com.icecreamqaq.yuq.message.FlashImage
 import com.icecreamqaq.yuq.message.Message.Companion.toCodeString
@@ -14,8 +13,7 @@ import com.icecreamqaq.yuq.mif
 import com.icecreamqaq.yuq.yuq
 import me.kuku.yuq.entity.*
 import org.springframework.stereotype.Service
-import org.springframework.transaction.support.TransactionTemplate
-import javax.inject.Inject
+import org.springframework.transaction.annotation.Transactional
 
 @EventListener
 @Service
@@ -24,30 +22,35 @@ class Save (
     private val qqService: QqService,
     private val messageService: MessageService,
     private val recallService: RecallService,
-    private val privateMessageService: PrivateMessageService,
-    private val transactionTemplate: TransactionTemplate
+    private val privateMessageService: PrivateMessageService
 ) {
 
     @Event(weight = Event.Weight.highest)
-    fun savePeople(e: MessageEvent) = transactionTemplate.execute {
+    @Transactional
+    fun savePeople(e: MessageEvent) {
         val qq = e.sender.id
         var isSave = false
-        val qqEntity = qqService.findByQq(qq) ?: QqEntity().also {
+        var qqEntity = qqService.findByQq(qq) ?: QqEntity().also {
             it.qq = qq
             isSave = true
         }
         if (e is GroupMessageEvent) {
             val group = e.group.id
             if (!qqEntity.groups.any { it.group == group }) {
-                val groupEntity = groupService.findByGroup(group) ?: GroupEntity().also {
+                var groupEntity = groupService.findByGroup(group) ?: GroupEntity().also {
                     it.group = group
                     isSave = true
                 }
+                qqEntity = qqService.save(qqEntity)
+                groupEntity = groupService.save(groupEntity)
                 qqEntity.groups.add(groupEntity)
+                groupEntity.qqs.add(qqEntity)
                 isSave = true
             }
         }
-        if (isSave) qqService.save(qqEntity)
+        if (isSave) {
+            qqService.save(qqEntity)
+        }
     }
 
     @Event(weight = Event.Weight.high)
@@ -60,8 +63,11 @@ class Save (
         messageEntity.qqEntity = qqEntity
         messageEntity.groupEntity = groupEntity
         messageEntity.content = ss
-//        val source = e.message.source as? ArtGroupMessageSource
-//        messageEntity.messageSource = source?.toMessageSource()
+        e.message.source
+        val source = e.message.source as? ArtGroupMessageSource
+        source?.let {
+            messageEntity.messageSource = MessageSource(it.id, it.groupCode, it.rand)
+        }
         messageService.save(messageEntity)
     }
 
@@ -80,11 +86,12 @@ class Save (
     }
 
     @Event(weight = Event.Weight.high)
-    fun saveBotMessage(e: SendMessageEvent.Post) = transactionTemplate.execute {
+    @Transactional
+    fun saveBotMessage(e: SendMessageEvent.Post) {
         val messageId = e.messageSource.id
         val contact = e.sendTo
-        if (contact is Member || contact is Group) {
-            val groupEntity = groupService.findByGroup(contact.id) ?: return@execute
+        if (contact is Group) {
+            val groupEntity = groupService.findByGroup(contact.id) ?: return
             val botQq = yuq.botId
             var qqEntity = groupEntity.get(botQq)
             if (qqEntity == null) {
@@ -101,6 +108,10 @@ class Save (
             messageEntity.qqEntity = qqEntity
             messageEntity.groupEntity = groupEntity
             messageEntity.content = e.message.toCodeString()
+            val source = e.messageSource as? ArtGroupMessageSource
+            source?.let {
+                messageEntity.messageSource = MessageSource(it.id, it.groupCode, it.rand)
+            }
             messageService.save(messageEntity)
         }
     }

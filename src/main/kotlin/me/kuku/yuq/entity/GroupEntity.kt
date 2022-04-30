@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.querydsl.core.BooleanBuilder
 import me.kuku.yuq.utils.plus
 import org.hibernate.annotations.Type
+import org.springframework.cache.annotation.CachePut
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.EntityGraph
@@ -49,8 +50,10 @@ interface GroupRepository: JpaRepository<GroupEntity, Int>, QuerydslPredicateExe
 class GroupService (
     private val groupRepository: GroupRepository
 ){
+    @CachePut(value = ["database"], key = "'group' + #groupEntity.group")
     fun save(groupEntity: GroupEntity): GroupEntity = groupRepository.save(groupEntity)
 
+    @org.springframework.cache.annotation.Cacheable(value = ["database"], key = "'group' + #group")
     fun findByGroup(group: Long) = groupRepository.findByGroup(group)
 
     fun findById(id: Int): GroupEntity? = groupRepository.findById(id).orElse(null)
@@ -76,6 +79,9 @@ class GroupConfig{
     var leaveToBlack: Status = Status.OFF
     var loLiConR18: Status = Status.OFF
     var entryVerification: Status = Status.OFF
+    var adminCanExecute: Status = Status.OFF
+    var interceptList: MutableSet<String> = mutableSetOf()
+    var adminList: MutableSet<Long> = mutableSetOf()
     var prohibitedWords: MutableSet<String> = mutableSetOf()
     var blackList: MutableSet<Long> = mutableSetOf()
     var qaList: MutableList<Qa> = mutableListOf()

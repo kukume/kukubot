@@ -38,3 +38,4 @@ out/
 
 tmp/
 db/
+application.yml

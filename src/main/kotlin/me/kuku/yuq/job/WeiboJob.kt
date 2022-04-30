@@ -4,18 +4,16 @@ import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
 import me.kuku.yuq.entity.Status
 import me.kuku.yuq.entity.WeiboService
-import me.kuku.yuq.config.executeBlock
 import me.kuku.yuq.logic.WeiboLogic
 import me.kuku.yuq.logic.WeiboPojo
 import me.kuku.yuq.utils.YuqUtils
 import org.springframework.stereotype.Component
-import org.springframework.transaction.support.TransactionTemplate
+import org.springframework.transaction.annotation.Transactional
 
 @JobCenter
 @Component
 class WeiboJob (
-    private val weiboService: WeiboService,
-    private val transactionTemplate: TransactionTemplate
+    private val weiboService: WeiboService
 ) {
 
     private val userMap = mutableMapOf<Long, Long>()
@@ -29,7 +27,8 @@ class WeiboJob (
     }
 
     @Cron("2m")
-    suspend fun userMonitor() = transactionTemplate.executeBlock {
+    @Transactional
+    suspend fun userMonitor() {
         val weiboList = weiboService.findAll().filter { it.config.push == Status.ON }
         for (weiboEntity in weiboList) {
             val qq = weiboEntity.qqEntity!!.qq
@@ -47,7 +46,6 @@ class WeiboJob (
             }
             userMap[qq] = list[0].id
         }
-        null
     }
 
 }

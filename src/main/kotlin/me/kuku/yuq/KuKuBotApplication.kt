@@ -2,9 +2,11 @@ package me.kuku.yuq
 
 import com.IceCreamQAQ.Yu.loader.AppClassloader
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.cache.annotation.EnableCaching
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing
 
 @SpringBootApplication
+@EnableCaching
 @EnableJpaAuditing
 class KuKuBotApplication
 

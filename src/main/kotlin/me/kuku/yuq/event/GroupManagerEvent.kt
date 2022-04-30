@@ -15,7 +15,7 @@ import me.kuku.yuq.controller.toStatus
 import me.kuku.yuq.entity.*
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import org.springframework.transaction.support.TransactionTemplate
+import org.springframework.transaction.annotation.Transactional
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
@@ -23,9 +23,8 @@ import javax.inject.Inject
 @Service
 class GroupManagerEvent @Inject constructor(
     private val groupService: GroupService,
-    private val qqGroupService: QqGroupService,
+    private val qqGroupConfigService: QqGroupConfigService,
     private val messageService: MessageService,
-    private val transactionTemplate: TransactionTemplate,
     @Value("\${yuq.art.master}") private val master: String
 ) {
 
@@ -36,13 +35,14 @@ class GroupManagerEvent @Inject constructor(
     private val verifyMap = ConcurrentHashMap<String, Boolean>()
 
     @Event
-    fun inter(e: GroupMessageEvent) = transactionTemplate.execute {
+    @Transactional
+    fun inter(e: GroupMessageEvent) {
         val group = e.group
         val groupNum = group.id
         val sender = e.sender
         val qq = sender.id
-        val groupEntity = groupService.findByGroup(groupNum) ?: return@execute
-        val qqEntity = groupEntity.get(qq) ?: return@execute
+        val groupEntity = groupService.findByGroup(groupNum) ?: return
+        val qqEntity = groupEntity.get(qq) ?: return
         val codeString = e.message.toCodeString()
         val config = groupEntity.config
         val prohibitedWords = config.prohibitedWords
@@ -50,17 +50,29 @@ class GroupManagerEvent @Inject constructor(
             if (codeString.contains(prohibitedWord)) {
                 kotlin.runCatching {
                     sender.ban(60 * 10)
-                    val qqGroupEntity = qqGroupService.findByQqGroupId(QqGroupId(qqEntity.id!!, groupEntity.id!!))!!
+                    val qqGroupEntity = qqGroupConfigService.findByGroupAndQq(groupNum, qq) ?: QqGroupConfigEntity().also {
+                        it.groupEntity = groupEntity
+                        it.qqEntity = qqEntity
+                    }
                     group.sendMessage(mif.at(qq).plus("""
                         您已触发违禁词"$prohibitedWord"，您已被禁言10分钟。
-                        您已违规${qqGroupEntity.config.prohibitedCount}次
+                        您已违规${qqGroupEntity.config.violationsNum}次
                     """.trimIndent()))
-                    qqGroupEntity.config.prohibitedCount += 1
-                    qqGroupService.save(qqGroupEntity)
+                    qqGroupEntity.config.violationsNum += 1
+                    qqGroupConfigService.save(qqGroupEntity)
                     e.cancel = true
-                    return@execute
+                    return
                 }
             }
+        }
+    }
+
+    @Event(weight = Event.Weight.lowest)
+    fun interceptor(e: GroupMessageEvent) {
+        val first = e.message.toPath().getOrNull(0) ?: return
+        val groupEntity = groupService.findByGroup(e.group.id) ?: return
+        if (groupEntity.config.interceptList.contains(first)) {
+            e.cancel = true
         }
     }
 

@@ -4,11 +4,11 @@ import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
 import me.kuku.yuq.entity.BiliBiliService
 import me.kuku.yuq.entity.Status
-import me.kuku.yuq.config.executeBlock
 import me.kuku.yuq.logic.BiliBiliLogic
 import me.kuku.yuq.logic.BiliBiliPojo
 import me.kuku.yuq.utils.YuqUtils
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.TransactionTemplate
 
 @JobCenter
@@ -34,7 +34,8 @@ class BiliBilliJob (
     }
 
     @Cron("2m")
-    suspend fun liveMonitor() = transactionTemplate.executeBlock {
+    @Transactional
+    suspend fun liveMonitor() {
         val list = biliBiliService.findAll().filter { it.config.live == Status.ON }
         for (biliBiliEntity in list) {
             val result = BiliBiliLogic.followed(biliBiliEntity)
@@ -67,7 +68,8 @@ class BiliBilliJob (
 
 
     @Cron("2m")
-    suspend fun userMonitor() = transactionTemplate.executeBlock {
+    @Transactional
+    suspend fun userMonitor() {
         val biliBiliList = biliBiliService.findAll().filter { it.config.push == Status.ON }
         for (biliBiliEntity in biliBiliList) {
             val qq = biliBiliEntity.qqEntity!!.qq
@@ -86,7 +88,6 @@ class BiliBilliJob (
             }
             userMap[qq] = list[0].id.toLong()
         }
-        null
     }
 
 }

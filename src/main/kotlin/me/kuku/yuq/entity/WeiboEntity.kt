@@ -1,12 +1,15 @@
 package me.kuku.yuq.entity
 
 import org.hibernate.annotations.Type
+import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Service
 import javax.persistence.*
 
 @Entity
 @Table(name = "weibo")
+@NamedEntityGraph(name = "weibo_qq", attributeNodes = [NamedAttributeNode(value = "qqEntity", subgraph = "qqEntity")],
+    subgraphs = [NamedSubgraph(name = "qqEntity", attributeNodes = [NamedAttributeNode("groups")])])
 class WeiboEntity: BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,6 +28,9 @@ class WeiboEntity: BaseEntity() {
 
 interface WeiboRepository: JpaRepository<WeiboEntity, Int> {
     fun findByQqEntity(qqEntity: QqEntity): WeiboEntity?
+
+    @EntityGraph(value = "weibo_qq", type = EntityGraph.EntityGraphType.FETCH)
+    override fun findAll(): List<WeiboEntity>
 }
 
 @Service

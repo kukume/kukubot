@@ -25,10 +25,10 @@ class StepController (
 ) {
 
     @Action("乐心运动登录")
-    suspend fun leXinLogin(qqEntity: QqEntity, session: ContextSession, action: BotActionContext): String {
-        action.source.sendMessage(mif.at(qqEntity.qq).plus("请发送手机号").toMessage())
+    suspend fun leXinLogin(qqEntity: QqEntity, session: ContextSession, context: BotActionContext): String {
+        context.source.sendMessage(mif.at(qqEntity.qq).plus("请发送手机号").toMessage())
         val phone = session.waitNextMessage().firstString()
-        action.source.sendMessage(mif.at(qqEntity.qq).plus("请发送密码").toMessage())
+        context.source.sendMessage(mif.at(qqEntity.qq).plus("请发送密码").toMessage())
         val password = session.waitNextMessage().firstString()
         val result = LeXinStepLogic.login(phone, password)
         return if (result.isSuccess) {
@@ -45,10 +45,10 @@ class StepController (
     }
 
     @Action("小米运动登录")
-    suspend fun miLogin(qqEntity: QqEntity, session: ContextSession, action: BotActionContext): String {
-        action.source.sendMessage(mif.at(qqEntity.qq).plus("请发送手机号").toMessage())
+    suspend fun miLogin(qqEntity: QqEntity, session: ContextSession, context: BotActionContext): String {
+        context.source.sendMessage(mif.at(qqEntity.qq).plus("请发送手机号").toMessage())
         val phone = session.waitNextMessage().firstString()
-        action.source.sendMessage(mif.at(qqEntity.qq).plus("请发送密码").toMessage())
+        context.source.sendMessage(mif.at(qqEntity.qq).plus("请发送密码").toMessage())
         val password = session.waitNextMessage().firstString()
         val result = XiaomiStepLogic.login(phone, password)
         return if (result.isSuccess) {
@@ -68,8 +68,8 @@ class StepController (
     }
 
     @Action("乐心运动步数")
-    suspend fun leXinStep(stepEntity: StepEntity, qq: Long, session: ContextSession, action: BotActionContext): String {
-        action.source.sendMessage(mif.at(qq).plus("请发送需要修改的步数").toMessage())
+    suspend fun leXinStep(stepEntity: StepEntity, qq: Long, session: ContextSession, context: BotActionContext): String {
+        context.source.sendMessage(mif.at(qq).plus("请发送需要修改的步数").toMessage())
         val s = session.waitNextMessage().firstString().toIntOrNull() ?: return "发送的步数有误"
         val result = LeXinStepLogic.modifyStepCount(stepEntity, s)
         return if (result.isSuccess) "修改步数成功"
@@ -77,8 +77,8 @@ class StepController (
     }
 
     @Action("小米运动步数")
-    suspend fun miStep(stepEntity: StepEntity, qq: Long, session: ContextSession, action: BotActionContext): String {
-        action.source.sendMessage(mif.at(qq).plus("请发送需要修改的步数").toMessage())
+    suspend fun miStep(stepEntity: StepEntity, qq: Long, session: ContextSession, context: BotActionContext): String {
+        context.source.sendMessage(mif.at(qq).plus("请发送需要修改的步数").toMessage())
         val s = session.waitNextMessage().firstString().toIntOrNull() ?: return "发送的步数有误"
         val result = XiaomiStepLogic.modifyStepCount(stepEntity, s)
         return if (result.isSuccess) "修改步数成功"
@@ -86,8 +86,8 @@ class StepController (
     }
 
     @Action("步数自动修改")
-    fun modifyStep(stepEntity: StepEntity, session: ContextSession, qq: Long, action: BotActionContext): String {
-        action.source.sendMessage(mif.at(qq).plus("请发送需要每日自动修改的步数").toMessage())
+    fun modifyStep(stepEntity: StepEntity, session: ContextSession, qq: Long, context: BotActionContext): String {
+        context.source.sendMessage(mif.at(qq).plus("请发送需要每日自动修改的步数").toMessage())
         val s = session.waitNextMessage().firstString().toIntOrNull() ?: return "发送的步数有误"
         stepEntity.config.step = s
         stepService.save(stepEntity)

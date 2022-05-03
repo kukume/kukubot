@@ -8,7 +8,7 @@ import javax.persistence.*
 
 @Entity
 @Table(name = "host_loc")
-@NamedEntityGraph(name = "qq_graph", attributeNodes = [NamedAttributeNode(value = "qqEntity", subgraph = "qqEntity")],
+@NamedEntityGraph(name = "hostLoc_qq_graph", attributeNodes = [NamedAttributeNode(value = "qqEntity", subgraph = "qqEntity")],
     subgraphs = [NamedSubgraph(name = "qqEntity", attributeNodes = [NamedAttributeNode("groups")])])
 class HostLocEntity: BaseEntity() {
     @Id
@@ -27,7 +27,7 @@ class HostLocEntity: BaseEntity() {
 interface HostLocRepository: JpaRepository<HostLocEntity, Int> {
     fun findByQqEntity(qqEntity: QqEntity): HostLocEntity?
 
-    @EntityGraph(value = "qq_graph", type = EntityGraph.EntityGraphType.FETCH)
+    @EntityGraph(value = "hostLoc_qq_graph", type = EntityGraph.EntityGraphType.FETCH)
     fun findByStatus(status: Status): List<HostLocEntity>
 
 }

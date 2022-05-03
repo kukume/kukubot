@@ -9,13 +9,11 @@ import me.kuku.yuq.logic.BiliBiliPojo
 import me.kuku.yuq.utils.YuqUtils
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.transaction.support.TransactionTemplate
 
 @JobCenter
 @Component
 class BiliBilliJob (
-    private val biliBiliService: BiliBiliService,
-    private val transactionTemplate: TransactionTemplate
+    private val biliBiliService: BiliBiliService
 ) {
 
     private val liveMap = mutableMapOf<Long, MutableMap<Long, Boolean>>()

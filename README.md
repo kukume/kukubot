@@ -23,6 +23,8 @@ https://github.com/IceCream-QAQ/Rain
 - [x] 原神自动签到
 - [x] oppo商城（欢太）自动签到
 - [x] 修改微信、支付宝步数
+- [x] 斗鱼开播提醒
+- [x] 虎牙开播提醒
 
 
 ## 配置文件

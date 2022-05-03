@@ -244,13 +244,13 @@ class ToolAllController {
 
     @Action("摸鱼日历")
     suspend fun fishermanCalendar(): Image {
-        val bytes = OkHttpKtUtils.getBytes("https://api.kukuqaq.com/tool/fishermanCalendar?preview")
+        val bytes = OkHttpKtUtils.getBytes("https://api.kukuqaq.com/tool/fishermanCalendar?preview=1")
         return mif.imageByByteArray(bytes)
     }
 
     @Action("摸鱼日历搜狗")
     suspend fun fishermanCalendarSoGou(): Image {
-        val bytes = OkHttpKtUtils.getBytes("https://api.kukuqaq.com/tool/fishermanCalendar/sogou?preview")
+        val bytes = OkHttpKtUtils.getBytes("https://api.kukuqaq.com/tool/fishermanCalendar/sogou?preview=1")
         return mif.imageByByteArray(bytes)
     }
 
@@ -261,7 +261,7 @@ class ToolAllController {
         else mif.imageByUrl(OkHttpKtUtils.get("https://api.kukuqaq.com/lolicon/random?preview=1").also { it.close() }.header("location")!!)
 
     @Action("音乐人代认证")
-    fun ss() = "音乐人代认证地址：\nhttps://store.cols.ro"
+    fun ss() = "音乐人代认证地址：\nhttps://store.cols.ro?kuku"
 
 }
 

@@ -34,7 +34,7 @@ dependencies {
     implementation("com.h2database:h2")
     implementation("org.jsoup:jsoup:1.14.3")
     implementation("com.google.code.findbugs:jsr305:3.0.2")
-    implementation("com.vladmihalcea:hibernate-types-55:2.16.1")
+    implementation("com.vladmihalcea:hibernate-types-55:2.16.2")
     implementation("com.querydsl:querydsl-core:$queryDslVersion")
     implementation("com.querydsl:querydsl-jpa:$queryDslVersion")
     kapt("com.querydsl:querydsl-apt:$queryDslVersion:jpa")

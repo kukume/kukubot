@@ -47,7 +47,7 @@ class HuYaLogic {
                         ss.getInteger("iIsLive") == 1, ss.getString("sNick"), ss.getString("sVideoCaptureUrl"), "https://www.huya.com/${ss.getLong("iRoomId")}")
                     resultList.add(huYaLive)
                 }
-            } else return BaseResult.failure("查询失败，可能cookie已失效")
+            } else return BaseResult.failure<List<HuYaLive>>("查询失败，可能cookie已失效").also { response.close() }
         }
         return BaseResult.success(resultList)
     }

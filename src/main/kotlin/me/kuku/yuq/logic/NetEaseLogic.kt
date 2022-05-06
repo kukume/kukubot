@@ -372,6 +372,7 @@ object NetEaseLogic {
 
     suspend fun publishMLog(netEaseEntity: NetEaseEntity): Result<Void> {
         val musicResult = myMusic(netEaseEntity)
+        if (musicResult.isFailure) return Result.failure("获取您的歌曲失败，可能您没有歌曲或者cookie已失效")
         val songId = musicResult.data.random().songId
         val songDetailResult = songDetail(netEaseEntity, songId)
         val songDetail = songDetailResult.data

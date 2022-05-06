@@ -23,6 +23,8 @@ import javax.persistence.*
     NamedAttributeNode("oppoShopEntity"),
     NamedAttributeNode("stepEntity"),
     NamedAttributeNode("weiboEntity"),
+    NamedAttributeNode("douYuEntity"),
+    NamedAttributeNode("huYaEntity")
 ])
 open class QqEntity: BaseEntity() {
     @Id
@@ -57,6 +59,10 @@ open class QqEntity: BaseEntity() {
     open var stepEntity: StepEntity? = null
     @OneToOne(mappedBy = "qqEntity")
     open var weiboEntity: WeiboEntity? = null
+    @OneToOne(mappedBy = "qqEntity")
+    open var douYuEntity: DouYuEntity? = null
+    @OneToOne(mappedBy = "qqEntity")
+    open var huYaEntity: HuYaEntity? = null
 
     fun get(group: Long): GroupEntity? {
         for (groupEntity in groups) {

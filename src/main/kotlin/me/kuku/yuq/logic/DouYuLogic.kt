@@ -51,7 +51,7 @@ class DouYuLogic {
                 val list = jsonObject.getJSONObject("data").getJSONArray("list")?.map { it as JSONObject } ?: break
                 for (singleJsonObject in list) {
                     val douYuRoom = DouYuRoom(singleJsonObject.getString("room_name"), singleJsonObject.getString("nickname"),
-                        "https://www.douyu.com${singleJsonObject.getString("url")}", singleJsonObject.getString("game_name"), singleJsonObject.getInteger("show_status") == 2,
+                        "https://www.douyu.com${singleJsonObject.getString("url")}", singleJsonObject.getString("game_name"), singleJsonObject.getInteger("show_status") == 1,
                         singleJsonObject.getString("online"), singleJsonObject.getLong("room_id"))
                     resultList.add(douYuRoom)
                 }

@@ -108,25 +108,31 @@ class BaiduLogic (
     private suspend fun getSToken(baiduEntity: BaiduEntity, url: String): String {
         val cookie = baiduEntity.cookie
         val response = OkHttpKtUtils.get(url, OkUtils.cookie(cookie)).apply { close() }
-        if (response.code != 302) throw RuntimeException("您的百度cookie已失效！")
+        if (response.code !in listOf(302, 301)) throw RuntimeException("您的百度cookie已失效！")
         val firstUrl = response.header("location")!!
         val firstResponse = OkHttpKtUtils.get(firstUrl, OkUtils.cookie(cookie)).apply { close() }
-        val finallyUrl = firstResponse.header("location")!!
+        val secondUrl = firstResponse.header("location")!!
+        val secondResponse = OkHttpKtUtils.get(secondUrl, OkUtils.cookie(cookie)).apply { close() }
+        val finallyUrl = secondResponse.header("location")!!
         val finallyResponse = OkHttpKtUtils.get(finallyUrl, OkUtils.cookie(cookie)).apply { close() }
         return OkUtils.cookie(finallyResponse, "STOKEN")!!
     }
 
+    private suspend fun saveSToken(baiduEntity: BaiduEntity, url: String): String {
+        val sToken = getSToken(baiduEntity, url)
+        baiduEntity.config.tieBaSToken = sToken
+        baiduService.save(baiduEntity)
+        return sToken
+    }
+
     suspend fun tieBaSign(baiduEntity: BaiduEntity): Result<Void> {
-        var sToken = baiduEntity.config.tieBaSToken
-        val url = "http://tieba.baidu.com/f/like/mylike?v=${System.currentTimeMillis()}"
-        if (sToken.isEmpty()){
-            sToken = getSToken(baiduEntity, url)
-            baiduEntity.config.tieBaSToken = sToken
-            baiduService.save(baiduEntity)
-        }
-        val headers = mapOf("user-agent" to UA.PC.value, "cookie" to baiduEntity.config.tieBaSToken)
+        val sToken = baiduEntity.config.tieBaSToken
+        val url = "https://tieba.baidu.com/f/like/mylike?v=${System.currentTimeMillis()}"
+        if (sToken.isEmpty()) baiduEntity.sToken = saveSToken(baiduEntity, url)
+        val headers = mapOf("user-agent" to UA.PC.value, "cookie" to baiduEntity.teiBaCookie())
         val likeHtml = OkHttpKtUtils.getStr(url,
             headers)
+        if (likeHtml.isEmpty()) baiduEntity.sToken = saveSToken(baiduEntity, url)
         val trElements = Jsoup.parse(likeHtml).getElementsByTag("tr")
         val list = mutableListOf<String>()
         for (tr in trElements) {

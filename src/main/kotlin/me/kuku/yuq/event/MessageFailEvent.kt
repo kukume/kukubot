@@ -4,7 +4,6 @@ import com.IceCreamQAQ.Yu.annotation.Event
 import com.IceCreamQAQ.Yu.annotation.EventListener
 import com.icecreamqaq.yuq.event.SendMessageInvalidEvent
 import com.icecreamqaq.yuq.message.Message.Companion.toCodeString
-import com.icecreamqaq.yuq.yuq
 import me.kuku.utils.JobManager
 import me.kuku.utils.OkHttpUtils
 import org.springframework.stereotype.Service
@@ -15,9 +14,9 @@ class MessageFailEvent {
 
     @Event
     fun ss(e: SendMessageInvalidEvent) {
-        if (yuq.botInfo.canSendMessage()) {
+        val sendTo = e.sendTo
+        if (sendTo.canSendMessage()) {
             val message = e.message
-            val sendTo = e.sendTo
             val ss = message.toCodeString()
             JobManager.now {
                 val url = kotlin.runCatching {

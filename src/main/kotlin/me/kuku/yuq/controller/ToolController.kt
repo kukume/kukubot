@@ -154,18 +154,6 @@ class ToolController (
         return sb.removeSuffix("\n").toString()
     }
 
-    @Action("测吉凶")
-    fun qqGodLock(qq: Long): String {
-        val doc = Jsoup.connect("http://qq.link114.cn/$qq").get()
-        val ele = doc.getElementById("main")?.getElementsByClass("listpage_content")?.first()
-        val elements = ele?.getElementsByTag("dl") ?: return "没查询到信息"
-        val sb = StringBuilder()
-        for (element in elements) {
-            sb.append(element.getElementsByTag("dt").first()?.text())
-                .appendLine(element.getElementsByTag("dd").text())
-        }
-        return sb.removeSuffix("\n").toString()
-    }
 }
 
 @GroupController
@@ -263,6 +251,18 @@ class ToolAllController {
     @Action("音乐人代认证")
     fun ss() = "音乐人代认证地址：\nhttps://store.cols.ro?kuku"
 
+    @Action("测吉凶")
+    fun qqGodLock(qq: Long): String {
+        val doc = Jsoup.connect("http://qq.link114.cn/$qq").get()
+        val ele = doc.getElementById("main")?.getElementsByClass("listpage_content")?.first()
+        val elements = ele?.getElementsByTag("dl") ?: return "没查询到信息"
+        val sb = StringBuilder()
+        for (element in elements) {
+            sb.append(element.getElementsByTag("dt").first()?.text())
+                .appendLine(element.getElementsByTag("dd").text())
+        }
+        return sb.removeSuffix("\n").toString()
+    }
 }
 
 object QqGroupLogic {

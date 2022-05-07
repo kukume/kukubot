@@ -18,6 +18,7 @@ import com.icecreamqaq.yuq.error.WaitNextMessageTimeoutException
 import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.mif
 import me.kuku.utils.OkHttpUtils
+import me.kuku.yuq.config.VerificationFailureException
 import me.kuku.yuq.entity.*
 import org.springframework.stereotype.Component
 import java.io.PrintWriter
@@ -59,14 +60,20 @@ class BeforeController (
 
     @Catch(error = WaitNextMessageTimeoutException::class)
     @Global
-    fun waitError(exception: WaitNextMessageTimeoutException, context: BotActionContext, qq: Long) {
-        context.source.sendMessage(mif.at(qq).plus("等待您的消息超时，上下文已结束"))
+    fun waitError(exception: WaitNextMessageTimeoutException, qq: Long) {
+        throw mif.at(qq).plus("等待您的消息超时，上下文已结束").toThrowable()
+    }
+
+    @Catch(error = VerificationFailureException::class)
+    @Global
+    fun ss(exception: VerificationFailureException, qq: Long) {
+        throw mif.at(qq).plus(exception.message).toThrowable()
     }
 
     @Catch(error = Exception::class)
     @Global
     fun ss(exception: Exception, message: Message, context: BotActionContext, qq: Long, group: Long?) {
-        if (exception is WaitNextMessageTimeoutException) return
+        if (exception is WaitNextMessageTimeoutException || exception is VerificationFailureException) return
         val sw = StringWriter()
         val pw = PrintWriter(sw)
         exception.printStackTrace(pw)

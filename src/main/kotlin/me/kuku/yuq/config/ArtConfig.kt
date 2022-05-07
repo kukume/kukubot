@@ -176,3 +176,5 @@ class HookYuQArtQQModule: HookRunnable {
         return true
     }
 }
+
+class VerificationFailureException(override val message: String): RuntimeException(message)

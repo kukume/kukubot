@@ -241,3 +241,9 @@ class ManagerController (
 
 fun Boolean.toStatus() = if (this) Status.ON else Status.OFF
 
+fun valid(groupEntity: GroupEntity, qq: Member, master: Long): Boolean {
+    val b = groupEntity.config.adminCanExecute == Status.ON && qq.isAdmin()
+    val bb = qq.id == master
+    val bbb = groupEntity.config.adminList.firstOrNull { it == qq.id } != null
+    return b || bb || bbb
+}

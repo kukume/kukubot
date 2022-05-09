@@ -50,6 +50,7 @@ class StatusController (
         }
         qqEntity.netEaseEntity?.config?.let {
             sb.appendLine("网易云音乐自动签到：${it.sign.str()}")
+            sb.appendLine("网易云音乐人自动签到：${it.musicianSign.str()}")
         }
         qqEntity.douYuEntity?.config?.let {
             sb.appendLine("斗鱼开播提醒：${it.live.str()}")

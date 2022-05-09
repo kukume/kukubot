@@ -32,6 +32,7 @@ import me.kuku.yuq.utils.YuqUtils
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZoneOffset
 import kotlin.math.abs
 
@@ -47,16 +48,15 @@ class JobController(
     private val jobMap = mutableMapOf<Int, Job>()
 
     @Before(only = ["add", "delete"])
-    fun valid(context: BotActionContext, groupEntity: GroupEntity?, qq: Member) {
+    fun before(context: BotActionContext, groupEntity: GroupEntity?, qq: Member?) {
         if (context.source is Group) {
-            if (!valid(groupEntity!!, qq, master)) throw mif.at(qq).plus("权限不足，无法执行").toThrowable()
+            if (!valid(groupEntity!!, qq!!, master)) throw mif.at(qq).plus("权限不足，无法执行").toThrowable()
         }
     }
 
     @Action("添加任务")
-    fun add(session: ContextSession, qqEntity: QqEntity, context: BotActionContext, groupEntity: GroupEntity?, qq: Member): String {
-        val qqNo = qq.id
-        context.source.sendMessage(mif.at(qqNo).plus("""
+    fun add(session: ContextSession, qqEntity: QqEntity, context: BotActionContext, groupEntity: GroupEntity?, qq: Long): String {
+        context.source.sendMessage(mif.at(qq).plus("""
             请发送cron，格式
             HH:mm:ss 或者 HH:mm  - 表示每天的这个时间段执行
             yyyy-MM-dd HH:mm:ss - 表示该时间执行一次，之后删除此任务
@@ -64,7 +64,7 @@ class JobController(
         """.trimIndent()))
         val str = session.waitNextMessage().firstString()
         val interval = parse(str)
-        context.source.sendMessage(mif.at(qqNo).plus("请发送需要发送的消息（RainCode码），当然，接口也可以，机器人会直接把接口的返回值定时发送"))
+        context.source.sendMessage(mif.at(qq).plus("请发送需要发送的消息（RainCode码）"))
         val ss = session.waitNextMessage().toCodeString()
         val jobEntity = JobEntity().also {
             it.cron = str
@@ -90,7 +90,7 @@ class JobController(
 
     @Action("删除任务")
     @Synonym(["开始任务", "停止任务"])
-    fun delete(session: ContextSession, context: BotActionContext, qqEntity: QqEntity, groupEntity: GroupEntity?, qq: Member, @PathVar(0) type: String): String {
+    fun delete(session: ContextSession, context: BotActionContext, qqEntity: QqEntity, groupEntity: GroupEntity?, qq: Long, @PathVar(0) type: String): String {
         context.source.sendMessage(mif.at(qq).plus("请发送任务的id"))
         val id = session.waitNextMessage().firstString().toIntOrNull() ?: return "您发送的不为数字"
         val ss = jobService.findByIdOrderById(id) ?: return "该任务不存在"
@@ -142,7 +142,9 @@ class JobController(
         return try {
             val now = LocalDate.now()
             val ss = DateTimeFormatterUtils.parseToLocalTime(newStr, "HH:mm:ss")
-            val ssss = ss.atDate(now).toInstant(ZoneOffset.of("+8")).toEpochMilli()
+            val nowTime = LocalTime.now()
+            val sss = if (nowTime.isAfter(ss)) now.plusDays(1) else now
+            val ssss = ss.atDate(sss).toInstant(ZoneOffset.of("+8")).toEpochMilli()
             Interval(abs(System.currentTimeMillis() - ssss), 1000 * 60 * 60 * 24)
         } catch (e: Exception) {
             try {

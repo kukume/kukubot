@@ -40,4 +40,4 @@ class NetEaseService (
     fun findAll(): List<NetEaseEntity> = netEaseRepository.findAll()
 }
 
-data class NetEaseConfig(var sign: Status = Status.OFF)
+data class NetEaseConfig(var sign: Status = Status.OFF, var musicianSign: Status = Status.OFF)

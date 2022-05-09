@@ -20,10 +20,20 @@ class NetEaseJob (
         val list = netEaseService.findAll().filter { it.config.sign == Status.ON }
         for (netEaseEntity in list) {
             kotlin.runCatching {
+                delay(3000)
+                NetEaseLogic.sign(netEaseEntity)
+                delay(3000)
+                NetEaseLogic.listenMusic(netEaseEntity)
+            }
+        }
+    }
+
+    @Cron("08:32")
+    suspend fun musicianSign() {
+        val list = netEaseService.findAll().filter { it.config.musicianSign == Status.ON }
+        for (netEaseEntity in list) {
+            kotlin.runCatching {
                 for (i in 0..1) {
-                    NetEaseLogic.sign(netEaseEntity)
-                    delay(3000)
-                    NetEaseLogic.listenMusic(netEaseEntity)
                     delay(3000)
                     NetEaseLogic.musicianSign(netEaseEntity)
                     delay(3000)

@@ -7,7 +7,6 @@ import com.icecreamqaq.yuq.annotation.PrivateController
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.mif
 import kotlinx.coroutines.delay
-import me.kuku.utils.base64Decode
 import me.kuku.yuq.entity.HuYaEntity
 import me.kuku.yuq.entity.HuYaService
 import me.kuku.yuq.entity.QqEntity
@@ -25,8 +24,7 @@ class HuYaController(
     @Action("虎牙登录")
     suspend fun login(qqEntity: QqEntity, context: BotActionContext, qq: Long): String {
         val qrcode = huYaLogic.getQrcode()
-        val imageBase = qrcode.qqLoginQrcode.imageBase
-        context.source.sendMessage(mif.at(qq).plus(mif.imageByByteArray(imageBase.base64Decode()).plus(mif.text("请使用虎牙绑定qq，然后使用qq扫码登录"))))
+        context.source.sendMessage(mif.at(qq).plus(mif.imageByUrl(qrcode.url).plus(mif.text("请使用虎牙App扫码登录"))))
         while (true) {
             delay(3000)
             val result = huYaLogic.checkQrcode(qrcode)

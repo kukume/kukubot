@@ -132,6 +132,13 @@ class NetEaseController (
         return "网易云音乐自动签到${if (status) "开启" else "关闭"}成功"
     }
 
+    @Action("网易音乐人自动签到 {status}")
+    fun musicianSignOpen(status: Boolean, netEaseEntity: NetEaseEntity): String {
+        netEaseEntity.config.musicianSign = status.toStatus()
+        netEaseService.save(netEaseEntity)
+        return "网易云音乐人自动签到${if (status) "开启" else "失败"}成功"
+    }
+
     @Action("网易发布动态")
     suspend fun dy(netEaseEntity: NetEaseEntity): String {
         val result = NetEaseLogic.publish(netEaseEntity)

@@ -25,7 +25,6 @@ import okhttp3.MultipartBody
 import org.jsoup.Jsoup
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.transaction.support.TransactionTemplate
 import java.time.LocalDate
 
 @GroupController
@@ -35,7 +34,7 @@ class ToolController (
     private val recallService: RecallService
 ) {
 
-    @Action(value = "读消息", suffix = true)
+    @Action(value = "\\.*读消息$\\")
     fun readMessage(message: Message, group: Long): String? {
         val messageSource = message.reply ?: return null
         val id = messageSource.id

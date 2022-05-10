@@ -263,9 +263,10 @@ class ManagerController (
     fun shutUp(qq: Member, qqNo: Long, @PathVar(2) timeStr: String?): String {
         val time = if (timeStr == null) 0
         else {
-            if (timeStr.length == 1) return "未发言时间单位，单位可为s,m,h,d"
-            val num = timeStr.substring(0, timeStr.length - 2).toIntOrNull() ?: return "发送的时间不为数字"
-            when (timeStr.last()) {
+            val newTime = timeStr.trim()
+            if (newTime.length == 1) return "未发言时间单位，单位可为s,m,h,d"
+            val num = newTime.substring(0, newTime.length - 1).toIntOrNull() ?: return "发送的时间不为数字"
+            when (newTime.last()) {
                 's' -> num
                 'm' -> num * 60
                 'h' -> num * 60 * 60

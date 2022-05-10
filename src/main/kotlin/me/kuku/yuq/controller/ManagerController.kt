@@ -100,6 +100,16 @@ class ManagerController (
                 val ss = session.waitNextMessage().firstString()
                 groupEntity.config.interceptList.addAll(ss.split(" "))
             }
+            "指令限制" -> {
+                group.sendMessage(mif.at(qq).plus("请发送需要限制的指令"))
+                val command = session.waitNextMessage().firstString()
+                group.sendMessage(mif.at(qq).plus("请发送该指令限制的次数（每十分钟限制次数）"))
+                val count = session.waitNextMessage().firstString().toIntOrNull() ?: return "您发送的不为数字，退出上下文"
+                group.sendMessage(mif.at(qq).plus("请发送该指令限制针对群还是针对群员，1为针对群，2为针对群员"))
+                val ty = session.waitNextMessage().firstString().toIntOrNull() ?: return "您发送的不为数字，退出上下文"
+                val type = if (ty == 1) CommandLimitType.GROUP else CommandLimitType.QQ
+                groupEntity.config.commandLimitList.add(CommandLimit(command, count, type))
+            }
             else -> return null
         }
         before(qq, groupEntity)
@@ -150,10 +160,15 @@ class ManagerController (
                 config.adminList.removeAll(set)
             }
             "拦截" -> {
-                group.sendMessage(mif.at(qq).plus("请发送需要拦截的指令"))
+                group.sendMessage(mif.at(qq).plus("请发送需要删除的指令"))
                 val ss = session.waitNextMessage().firstString()
                 config.interceptList.removeAll(ss.split(" ").toSet())
-
+            }
+            "指令限制" -> {
+                group.sendMessage(mif.at(qq).plus("请发送需要删除的指令"))
+                val remove = session.waitNextMessage().firstString().split(" ")
+                val removeList = config.commandLimitList.filter { remove.contains(it.command) }
+                config.commandLimitList.removeAll(removeList.toSet())
             }
             else -> return null
         }
@@ -185,6 +200,12 @@ class ManagerController (
             }
             "拦截" -> {
                 config.interceptList.forEach { sb.append(it).append(" ") }
+                sb.toString()
+            }
+            "指令限制" -> {
+                config.commandLimitList.forEach {
+                    sb.appendLine("${it.command}-${it.type}-${it.limit}")
+                }
                 sb.toString()
             }
             else -> return null
@@ -236,6 +257,31 @@ class ManagerController (
             }
         }
         return "撤回成功"
+    }
+
+    @Action("禁言 {qqNo}")
+    fun shutUp(qq: Member, qqNo: Long, @PathVar(2) timeStr: String?): String {
+        val time = if (timeStr == null) 0
+        else {
+            if (timeStr.length == 1) return "未发言时间单位，单位可为s,m,h,d"
+            val num = timeStr.substring(0, timeStr.length - 2).toIntOrNull() ?: return "发送的时间不为数字"
+            when (timeStr.last()) {
+                's' -> num
+                'm' -> num * 60
+                'h' -> num * 60 * 60
+                'd' -> num * 60 * 60 * 24
+                else -> return "禁言时间格式不正确"
+            }
+        }
+        qq.ban(time)
+        return "禁言成功"
+    }
+
+    @Action("全体禁言 {status}")
+    fun allShutUp(status: Boolean, group: Group): String {
+        if (status) group.banAll()
+        else group.unBanAll()
+        return "全体禁言${if (status) "开启" else "关闭"}成功"
     }
 }
 

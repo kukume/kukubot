@@ -74,6 +74,7 @@ class StatusController (
             退群拉黑：${config.leaveToBlack.str()}
             r18：${config.loLiConR18.str()}
             进群验证：${config.entryVerification.str()}
+            群管权限：${config.adminCanExecute.str()}
         """.trimIndent()
     }
 

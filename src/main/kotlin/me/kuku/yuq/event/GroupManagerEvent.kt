@@ -14,6 +14,7 @@ import me.kuku.utils.MyUtils
 import me.kuku.yuq.controller.toStatus
 import me.kuku.yuq.entity.*
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cache.CacheManager
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.concurrent.ConcurrentHashMap
@@ -25,12 +26,15 @@ class GroupManagerEvent @Inject constructor(
     private val groupService: GroupService,
     private val qqGroupConfigService: QqGroupConfigService,
     private val messageService: MessageService,
+    @Suppress("SpringJavaInjectionPointsAutowiringInspection") cacheManager: CacheManager,
     @Value("\${yuq.art.master}") private val master: String
 ) {
 
     private val lastMessage = ConcurrentHashMap<Long, String>()
     private val lastQq = ConcurrentHashMap<Long, Long>()
     private val lastRepeatMessage = ConcurrentHashMap<Long, String>()
+
+    private val cache = cacheManager.getCache("CommandLimit")!!
 
     private val verifyMap = ConcurrentHashMap<String, Boolean>()
 
@@ -73,6 +77,26 @@ class GroupManagerEvent @Inject constructor(
         val groupEntity = groupService.findByGroup(e.group.id) ?: return
         if (groupEntity.config.interceptList.contains(first)) {
             e.cancel = true
+        }
+    }
+
+    @Event(weight = Event.Weight.lowest)
+    fun commandLine(e: GroupMessageEvent) {
+        val first = e.message.toPath().getOrNull(0) ?: return
+        val groupEntity = groupService.findByGroup(e.group.id) ?: return
+        val ss = groupEntity.config.commandLimitList
+        for (s in ss) {
+            if (s.command == first) {
+                val key = if (s.type == CommandLimitType.GROUP) "group${e.group.id}$first"
+                else "group${e.group.id}qq${e.sender.id}$first"
+                var count = cache.get(key)?.get() as? Int ?: 0
+                count += 1
+                if (count > s.limit) {
+                    e.cancel = true
+                    return
+                }
+                cache.put(key, count)
+            }
         }
     }
 

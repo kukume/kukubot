@@ -85,6 +85,7 @@ class GroupConfig{
     var prohibitedWords: MutableSet<String> = mutableSetOf()
     var blackList: MutableSet<Long> = mutableSetOf()
     var qaList: MutableList<Qa> = mutableListOf()
+    var commandLimitList: MutableSet<CommandLimit> = mutableSetOf()
 }
 
 data class Qa(
@@ -100,4 +101,32 @@ enum class QaType {
 
 enum class Status {
     OFF,ON;
+}
+
+enum class CommandLimitType {
+    QQ, GROUP
+}
+
+data class CommandLimit(
+    var command: String = "",
+    var limit: Int = 0,
+    var type: CommandLimitType = CommandLimitType.GROUP
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as CommandLimit
+
+        if (command != other.command) return false
+        if (type != other.type) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = command.hashCode()
+        result = 31 * result + type.hashCode()
+        return result
+    }
 }

@@ -247,9 +247,6 @@ class ToolAllController {
             mif.imageByUrl(OkHttpKtUtils.getJson("https://api.lolicon.app/setu/v2?r18=1").getJSONArray("data").getJSONObject(0).getJSONObject("urls").getString("original").replace("i.pixiv.cat", "i.pixiv.re"))
         else mif.imageByUrl(OkHttpKtUtils.get("https://api.kukuqaq.com/lolicon/random?preview=1").also { it.close() }.header("location")!!)
 
-    @Action("音乐人代认证")
-    fun ss() = "音乐人代认证地址：\nhttps://store.cols.ro?kuku"
-
     @Action("测吉凶")
     fun qqGodLock(qq: Long): String {
         val doc = Jsoup.connect("http://qq.link114.cn/$qq").get()

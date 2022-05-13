@@ -6,6 +6,7 @@ import com.icecreamqaq.yuq.message.Message.Companion.toMessage
 import com.icecreamqaq.yuq.yuq
 import me.kuku.utils.OkHttpUtils
 import me.kuku.pojo.QqLoginPojo
+import me.kuku.utils.OkHttpKtUtils
 import me.kuku.yuq.entity.GroupEntity
 import me.kuku.yuq.entity.QqEntity
 
@@ -57,3 +58,5 @@ object YuqUtils {
 fun Boolean.openOrClose(): String {
     return if (this) "开启" else "关闭"
 }
+
+suspend fun hitokoto() = OkHttpKtUtils.getStr("https://v1.hitokoto.cn/?encode=text")

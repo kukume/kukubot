@@ -119,7 +119,7 @@ class ForwardEvent(
         }
     }
 
-    @Event
+//    @Event
     fun resumeForward(e: GroupMessageEvent) {
         val group = e.group.id
         val qq = e.sender.id

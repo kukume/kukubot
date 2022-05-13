@@ -58,6 +58,10 @@ class StatusController (
         qqEntity.huYaEntity?.config?.let {
             sb.appendLine("虎牙开播提醒：${it.live.str()}")
         }
+        qqEntity.qqMusicEntity?.config?.let {
+            sb.appendLine("qq音乐自动回复评论：${it.comment.str()}")
+            sb.appendLine("qq音乐自动发布动态：${it.view.str()}")
+        }
 
         return sb.removeSuffix("\n").toString()
     }

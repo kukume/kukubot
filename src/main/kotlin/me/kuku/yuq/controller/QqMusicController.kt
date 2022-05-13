@@ -47,7 +47,7 @@ class QqMusicController(
                     return when (result.code) {
                         200 -> {
                             val newEntity = result.data
-                            qqMusicEntity.qqMusicKey = newEntity.qqMusicKey
+                            qqMusicEntity.cookie = newEntity.cookie
                             qqMusicService.save(qqMusicEntity)
                             "绑定qq音乐成功"
                         }

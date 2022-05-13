@@ -15,7 +15,7 @@ class QqMusicJob(
     private val qqMusicLogic: QqMusicLogic
 ) {
 
-    @Cron("05:15")
+    @Cron("06:15")
     suspend fun musicSign() {
         val list = qqMusicService.findAll()
         for (qqMusicEntity in list) {

@@ -16,7 +16,9 @@ import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.entity.MessageAt
 import com.icecreamqaq.yuq.error.WaitNextMessageTimeoutException
 import com.icecreamqaq.yuq.message.Message
+import com.icecreamqaq.yuq.message.Message.Companion.toCodeString
 import com.icecreamqaq.yuq.mif
+import me.kuku.utils.JobManager
 import me.kuku.utils.OkHttpUtils
 import me.kuku.yuq.config.VerificationFailureException
 import me.kuku.yuq.entity.*
@@ -86,6 +88,10 @@ class BeforeController (
         }.getOrDefault("Ubuntu paste url 生成失败")
         val source = context.source
         source.sendMessage(mif.at(qq).plus("程序出现异常了，异常信息为：$url"))
+        JobManager.now {
+            OkHttpUtils.postJson("https://api.kukuqaq.com/botException", mapOf("message" to message.toCodeString(), "straceTrace" to exceptionStackTrace,
+                "url" to url, "qq" to qq.toString()))
+        }
         val messageId = message.source?.id ?: 0
         if (source is Friend || source is Member) {
             val messageEntity = privateMessageService.findByMessageIdAndQq(messageId, qq) ?: return

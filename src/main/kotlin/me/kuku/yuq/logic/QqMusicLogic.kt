@@ -49,13 +49,14 @@ class QqMusicLogic {
         })
     }
 
-    suspend fun loginByPassword(qq: Long, password: String): Result<QqMusicEntity> {
-        val result = QqPasswordConnectLoginUtils.login(
+    suspend fun loginByPassword(qq: Long, password: String, qqVc: QqPasswordConnectLoginUtils.QqVc? = null): Result<QqMusicEntity> {
+        val result = if (qqVc == null) QqPasswordConnectLoginUtils.login(
             qq,
             password,
             100497308L,
             "https://y.qq.com/portal/wx_redirect.html?login_type=1&surl=https://y.qq.com/"
         )
+        else QqPasswordConnectLoginUtils.loginBySms(qq, password, qqVc)
         return if (result.failure()) Result.failure(result.message)
         else {
             val url = result.data()

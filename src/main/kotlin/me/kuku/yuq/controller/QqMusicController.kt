@@ -10,6 +10,7 @@ import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.ContextSession
 import com.icecreamqaq.yuq.message.Message.Companion.firstString
 import com.icecreamqaq.yuq.mif
+import me.kuku.pojo.QqConnectLoginNeedSmsException
 import me.kuku.utils.base64Decode
 import me.kuku.yuq.entity.QqEntity
 import me.kuku.yuq.entity.QqMusicEntity
@@ -59,7 +60,15 @@ class QqMusicController(
             2 -> {
                 context.source.sendMessage(mif.at(qq).plus("请发送qq密码"))
                 val password = session.waitNextMessage().firstString()
-                val result = qqMusicLogic.loginByPassword(qq, password)
+                val result = try {
+                    qqMusicLogic.loginByPassword(qq, password)
+                } catch (e: QqConnectLoginNeedSmsException) {
+                    val qqVc = e.qqVc
+                    context.source.sendMessage(mif.at(qq).plus("登录需要短信验证码，请发送手机号${e.phone}的短信验证码"))
+                    val code = session.waitNextMessage(1000 * 60 * 5).firstString()
+                    qqVc.smsCode = code
+                    qqMusicLogic.loginByPassword(qq, password, qqVc)
+                }
                 if (result.isFailure) {
                     "登录失败，${result.message}"
                 } else {

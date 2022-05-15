@@ -30,7 +30,7 @@ class ManagerController (
     fun before(qq: Member, groupEntity: GroupEntity) {
         val b = groupEntity.config.adminCanExecute == Status.ON && qq.isAdmin()
         val bb = qq.id == master.toLong()
-        val bbb = groupEntity.config.adminList.firstOrNull { it == qq.id } != null
+        val bbb = groupEntity.config.adminList.contains(qq.id)
         if (!(b || bb || bbb)) throw mif.at(qq).plus("权限不足，无法执行").toThrowable()
     }
 
@@ -291,6 +291,6 @@ fun Boolean.toStatus() = if (this) Status.ON else Status.OFF
 fun valid(groupEntity: GroupEntity, qq: Member, master: Long): Boolean {
     val b = groupEntity.config.adminCanExecute == Status.ON && qq.isAdmin()
     val bb = qq.id == master
-    val bbb = groupEntity.config.adminList.firstOrNull { it == qq.id } != null
+    val bbb = groupEntity.config.adminList.contains(qq.id)
     return b || bb || bbb
 }

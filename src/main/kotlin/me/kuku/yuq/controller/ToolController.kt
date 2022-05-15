@@ -25,6 +25,7 @@ import okhttp3.MultipartBody
 import org.jsoup.Jsoup
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.time.DayOfWeek
 import java.time.LocalDate
 
 @GroupController
@@ -230,13 +231,15 @@ class ToolAllController {
 
 
     @Action("摸鱼日历")
-    suspend fun fishermanCalendar(): Image {
+    suspend fun fishermanCalendar(): Any {
+        if (LocalDate.now().dayOfWeek == DayOfWeek.SUNDAY) return "周日不摸鱼"
         val bytes = OkHttpKtUtils.getBytes("https://api.kukuqaq.com/tool/fishermanCalendar?preview=1")
         return mif.imageByByteArray(bytes)
     }
 
     @Action("摸鱼日历搜狗")
-    suspend fun fishermanCalendarSoGou(): Image {
+    suspend fun fishermanCalendarSoGou(): Any {
+        if (LocalDate.now().dayOfWeek == DayOfWeek.SUNDAY) return "周日不摸鱼"
         val bytes = OkHttpKtUtils.getBytes("https://api.kukuqaq.com/tool/fishermanCalendar/sogou?preview=1")
         return mif.imageByByteArray(bytes)
     }

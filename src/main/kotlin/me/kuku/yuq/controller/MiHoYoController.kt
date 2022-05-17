@@ -22,10 +22,10 @@ class MiHoYoController (
 ) {
 
     @Action("米哈游登录")
-    suspend fun login(session: ContextSession, qqEntity: QqEntity, action: BotActionContext): String {
-        action.source.sendMessage("请发送手机号")
+    suspend fun login(session: ContextSession, qqEntity: QqEntity, context: BotActionContext): String {
+        context.source.sendMessage("请发送手机号")
         val phone = session.waitNextMessage().firstString()
-        action.source.sendMessage("请发送密码")
+        context.source.sendMessage("请发送密码")
         val password = session.waitNextMessage().firstString()
         val result = MiHoYoLogic.login(phone, password)
         return if (result.isSuccess) {

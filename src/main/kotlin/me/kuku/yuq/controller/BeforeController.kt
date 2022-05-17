@@ -31,6 +31,7 @@ import java.io.StringWriter
 @Component
 class BeforeController (
     private val qqService: QqService,
+    private val groupService: GroupService,
     private val messageService: MessageService,
     private val privateMessageService: PrivateMessageService,
     private val exceptionLogService: ExceptionLogService
@@ -42,8 +43,8 @@ class BeforeController (
         val qqEntity = qqService.findByQq(qq)
         session["qqEntity"] = qqEntity!!
         if (group != null) {
-            val groupEntity = qqEntity.groups.first { it.group == group }
-            session["groupEntity"] = groupEntity
+            val groupEntity = groupService.findByGroup(group)
+            session["groupEntity"] = groupEntity!!
         }
     }
 

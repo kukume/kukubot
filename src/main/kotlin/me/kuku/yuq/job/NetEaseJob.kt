@@ -34,12 +34,12 @@ class NetEaseJob (
         for (netEaseEntity in list) {
             kotlin.runCatching {
                 for (i in 0..1) {
-                    delay(3000)
                     NetEaseLogic.musicianSign(netEaseEntity)
                     delay(3000)
                     NetEaseLogic.publish(netEaseEntity)
                     delay(3000)
                     NetEaseLogic.publishMLog(netEaseEntity)
+                    delay(1000 * 60)
                 }
             }
         }

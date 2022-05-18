@@ -40,6 +40,9 @@ yuq:
     password: 
     # 机器人主人
     master: 734669014
+    # https://saucenao.com/ 的apikey
+    saucenao:
+      key:
 ```
 
 ## 机器人菜单

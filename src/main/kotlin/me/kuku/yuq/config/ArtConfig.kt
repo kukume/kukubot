@@ -96,6 +96,12 @@ class ArtConfig {
     var master: Long = 0
 }
 
+@ConfigurationProperties(prefix = "yuq.art.saucenao")
+@Component
+class SauceNaoConfig {
+    var key: String = ""
+}
+
 class HookCaptchaUtils : HookRunnable {
     override fun init(info: HookInfo) {
 

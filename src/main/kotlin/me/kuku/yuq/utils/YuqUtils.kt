@@ -37,7 +37,7 @@ object YuqUtils {
 
     fun shortUrl(url: String): String {
         val newUrl = if (url.startsWith("http")) url else "http://$url"
-        val jsonObject = OkHttpUtils.postJson("https://tool.jpa.cc/api/short_url/generate", mapOf("type" to "d_naccl_top", "url" to newUrl))
+        val jsonObject = OkHttpUtils.postJson("https://tool.jpa.cc/api/short_url/generate", mapOf("type" to "is_gd", "url" to newUrl))
         return if (jsonObject.getString("status") == "ok")
             jsonObject.getJSONObject("data").getString("short_url")
         else jsonObject.getString("message")

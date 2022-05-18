@@ -15,6 +15,7 @@ import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.Message.Companion.firstString
 import com.icecreamqaq.yuq.message.Message.Companion.toMessage
 import com.icecreamqaq.yuq.message.Message.Companion.toMessageByRainCode
+import com.icecreamqaq.yuq.message.MessagePackage
 import com.icecreamqaq.yuq.mif
 import me.kuku.pojo.QqLoginPojo
 import me.kuku.utils.*
@@ -159,7 +160,9 @@ class ToolController (
 @GroupController
 @PrivateController
 @Component
-class ToolAllController {
+class ToolAllController(
+    private val toolLogic: ToolLogic
+) {
 
     @Action("菜单")
     @Synonym(["帮助", "功能"])
@@ -174,7 +177,7 @@ class ToolAllController {
     }
 
     @Action("百科 {text}")
-    suspend fun baiKe(text: String) = ToolLogic.baiKe(text)
+    suspend fun baiKe(text: String) = toolLogic.baiKe(text)
 
     @Action("oracle {email}")
     suspend fun oracle(email: String) =
@@ -261,6 +264,29 @@ class ToolAllController {
                 .appendLine(element.getElementsByTag("dd").text())
         }
         return sb.removeSuffix("\n").toString()
+    }
+
+    @Action("搜图 {img}")
+    suspend fun ss(img: Image): Message {
+        val list = toolLogic.saucenao(img.url)
+        val message = Message()
+        for ((i, result) in list.withIndex()) {
+            val ss = mif.text(
+                """
+                相似度：${result.similarity}
+                名字：${result.indexName}
+                标题：${result.title}
+                预览链接：${YuqUtils.shortUrl(result.thumbnail)}
+                源链接：${result.extUrls}
+                作者：${result.author} 
+                作者主页：${result.authUrl}
+                ==============================
+            """.trimIndent()
+            ).plus("\n")
+            message.plus(ss)
+            if (i + 1 > 1) break
+        }
+        return message
     }
 }
 

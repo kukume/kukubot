@@ -22,7 +22,7 @@ class MessageFailEvent {
                 JobManager.now {
                     val url = kotlin.runCatching {
                         val jsonObject = OkHttpUtils.postJson(
-                            "https://api.kukuqaq.com/tool/paste",
+                            "https://api.kukuqaq.com/paste",
                             mapOf("poster" to "kuku", "syntax" to "text", "content" to ss)
                         )
                         jsonObject.getJSONObject("data").getString("url")

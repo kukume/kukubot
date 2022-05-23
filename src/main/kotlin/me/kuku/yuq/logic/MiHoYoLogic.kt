@@ -17,7 +17,7 @@ object MiHoYoLogic {
         val challenge = dataJsonObject.getString("challenge")
         val gt = dataJsonObject.getString("gt")
         val mmtKey = dataJsonObject.getString("mmt_key")
-        val jsonObject = OkHttpKtUtils.postJson("https://api.kukuqaq.com/tool/geetest",
+        val jsonObject = OkHttpKtUtils.postJson("https://api.kukuqaq.com/geetest",
             mapOf("challenge" to challenge, "gt" to gt, "referer" to "https://bbs.mihoyo.com/ys/"))
         if (jsonObject.getInteger("code") != 200) return Result.failure("验证码识别失败，请重试")
         val myDataJsonObject = jsonObject.getJSONObject("data")

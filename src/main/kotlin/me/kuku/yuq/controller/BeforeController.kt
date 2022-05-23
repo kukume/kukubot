@@ -82,7 +82,7 @@ class BeforeController (
         exception.printStackTrace(pw)
         val exceptionStackTrace = sw.toString()
         val url = kotlin.runCatching {
-            val jsonObject = OkHttpUtils.postJson("https://api.kukuqaq.com/tool/paste",
+            val jsonObject = OkHttpUtils.postJson("https://api.kukuqaq.com/paste",
                 mapOf("poster" to "kuku", "syntax" to "java", "content" to exceptionStackTrace)
             )
             jsonObject.getJSONObject("data").getString("url")
@@ -90,7 +90,7 @@ class BeforeController (
         val source = context.source
         source.sendMessage(mif.at(qq).plus("程序出现异常了，异常信息为：$url"))
         JobManager.now {
-            OkHttpUtils.postJson("https://api.kukuqaq.com/botException", mapOf("message" to message.toCodeString(), "straceTrace" to exceptionStackTrace,
+            OkHttpUtils.postJson("https://api.kukuqaq.com/botException", mapOf("message" to message.toCodeString(), "stackTrace" to exceptionStackTrace,
                 "url" to url, "qq" to qq.toString()))
         }
         val messageId = message.source?.id ?: 0

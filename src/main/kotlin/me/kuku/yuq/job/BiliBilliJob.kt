@@ -88,4 +88,17 @@ class BiliBilliJob (
         }
     }
 
+    @Cron("05:21")
+    suspend fun tossCoin() {
+        val list = biliBiliService.findAll().filter { it.config.coin == Status.ON }
+        for (biliBiliEntity in list) {
+            val ranking = BiliBiliLogic.ranking()
+            val arr = arrayOf(2, 2, 1)
+            for (i in 0 until 3) {
+                BiliBiliLogic.tossCoin(biliBiliEntity, ranking.random().aid, arr[i])
+            }
+        }
+
+    }
+
 }

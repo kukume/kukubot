@@ -18,6 +18,7 @@ https://github.com/IceCream-QAQ/Rain
 - [x] 哔哩哔哩自动签到+哔哩哔哩动态推送+哔哩哔哩开播提醒
 - [x] 网易云音乐自动签到
 - [x] 微博超话自动签到+微博推送
+- [x] HostLoc自动签到+HostLoc新帖推送
 - [x] 百度贴吧自动签到
 - [x] 酷狗音乐自动签到
 - [x] 原神自动签到
@@ -47,7 +48,7 @@ yuq:
 
 ## 机器人菜单
 
-https://outline.kuku.me/share/2e461ea5-19fb-4326-be24-ba23367ff72d
+http://kkb.im
 
 ## 部署教程
 

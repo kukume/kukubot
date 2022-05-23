@@ -228,7 +228,7 @@ class QqMusicLogic {
         val strCode = preDataJsonObject.getString("strCode")
         val strPic = preDataJsonObject.getString("strPic")
         val position = preDataJsonObject.getString("position")
-        val identifyJsonObject = OkHttpKtUtils.postJson("https://api.kukuqaq.com/tool/qqMusicCaptchaByTt", mapOf("image" to strPic))
+        val identifyJsonObject = OkHttpKtUtils.postJson("https://api.kukuqaq.com/qqMusicCaptchaByTt", mapOf("image" to strPic))
         if (identifyJsonObject.getInteger("code") != 200) return Result.failure(identifyJsonObject.getString("message"))
         val width = identifyJsonObject.getJSONObject("data").getInteger("data") + 26
         val height = MyUtils.regex(",", "]", position)!!.trim()

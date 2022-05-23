@@ -118,7 +118,7 @@ class HookCaptchaUtils : HookRunnable {
             var ticket: String? = null
             for (i in 0..3) {
                 log.info("正在尝试第${i + 1}次自动过验证码~~~")
-                val jsonObject = OkHttpUtils.postJson("https://api.kukuqaq.com/tool/captcha", mapOf("url" to url))
+                val jsonObject = OkHttpUtils.postJson("https://api.kukuqaq.com/captcha", mapOf("url" to url))
                 if (jsonObject.getInteger("code") == 200) {
                     ticket = jsonObject.getJSONObject("data").getString("ticket")
                     log.info("自动过验证码成功")

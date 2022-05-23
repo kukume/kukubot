@@ -79,6 +79,13 @@ class BiliBiliController (
         return "哔哩哔哩自动签到${status.openOrClose()}成功"
     }
 
+    @Action("哔哩哔哩自动投币 {status}")
+    fun autoCoin(status: Boolean, biliBiliEntity: BiliBiliEntity): String {
+        biliBiliEntity.config.coin = status.toStatus()
+        biliBiliService.save(biliBiliEntity)
+        return "哔哩哔哩自动投币${status.openOrClose()}成功"
+    }
+
     @Action("哔哩哔哩推送 {status}")
     fun biliBiliPush(status: Boolean, biliBiliEntity: BiliBiliEntity): String {
         biliBiliEntity.config.push = status.toStatus()

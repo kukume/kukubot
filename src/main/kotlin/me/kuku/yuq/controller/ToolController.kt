@@ -90,13 +90,13 @@ class ToolController (
     fun peeping(group: Group) {
         val api = "https://api.kukuqaq.com"
         val random = MyUtils.random(5)
-        val check = "$api/tool/peeping/check/$random"
+        val check = "$api/peeping/check/$random"
         val jsonStr = """
             <?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="108" templateID="1" action="web" brief="窥屏检测中..." sourcePublicUin="2747277822" sourceMsgId="0" url="https://youxi.gamecenter.qq.com/" flag="0" adverSign="0" multiMsgFlag="0"><item layout="2" advertiser_id="0" aid="0"><picture cover="$check" w="0" h="0" /><title>窥屏检测</title><summary>检测中, 请稍候(电脑端窥屏暂时无法检测)</summary></item><source name="窥屏检测中..." icon="https://url.cn/JS8oE7" action="plugin" a_actionData="mqqapi://app/action?pkg=com.tencent.mobileqq&amp;cmp=com.tencent.biz.pubaccount.AccountDetail.activity.api.impl.AccountDetailActivity&amp;uin=2747277822" i_actionData="mqqapi://card/show_pslcard?src_type=internal&amp;card_type=public_account&amp;uin=2747277822&amp;version=1" appid="-1" /></msg>
         """.trimIndent()
         group.sendMessage(mif.xmlEx(108, jsonStr))
         JobManager.delay(1000 * 15) {
-            val jsonObject = OkHttpKtUtils.getJson("$api/tool/peeping/result/$random")
+            val jsonObject = OkHttpKtUtils.getJson("$api/peeping/result/$random")
             if (jsonObject.getInteger("code") == 200) {
                 val sb = StringBuilder()
                 val jsonArray = jsonObject.getJSONObject("data").getJSONArray("list")
@@ -170,7 +170,7 @@ class ToolAllController(
     suspend fun menu(qqEntity: QqEntity, group: Group?) {
         val str = """
             机器人帮助（命令）如下：
-            https://outline.kuku.me/share/2e461ea5-19fb-4326-be24-ba23367ff72d
+            http://kkb.im
         """.trimIndent()
         YuqUtils.sendMessage(qqEntity, str)
         group?.sendMessage(mif.at(qqEntity.qq).plus("机器人帮助已私信给您！"))
@@ -181,7 +181,7 @@ class ToolAllController(
 
     @Action("oracle {email}")
     suspend fun oracle(email: String) =
-        if (OkHttpKtUtils.getJson("https://api.kukuqaq.com/tool/oracle/promotion?email=$email").getJSONArray("items")?.isNotEmpty() == true) "有资格了"
+        if (OkHttpKtUtils.getJson("https://api.kukuqaq.com/oracle/promotion?email=$email").getJSONArray("items")?.isNotEmpty() == true) "有资格了"
         else "你木的资格"
 
     @Action("dcloud上传")
@@ -192,7 +192,7 @@ class ToolAllController(
         for (messageItem in message.body) {
             if (messageItem is Image) {
                 val tempUrl = messageItem.url
-                val jsonObject = OkHttpKtUtils.postJson("https://api.kukuqaq.com/tool/upload", MultipartBody.Builder().setType(MultipartBody.FORM)
+                val jsonObject = OkHttpKtUtils.postJson("https://api.kukuqaq.com/upload", MultipartBody.Builder().setType(MultipartBody.FORM)
                     .addFormDataPart("type", "3")
                     .addFormDataPart("file", messageItem.id, OkUtils.streamBody(OkHttpKtUtils.getBytes(tempUrl))).build())
                 url = if (jsonObject.getInteger("code") == 200) jsonObject.getJSONObject("data").getString("url")
@@ -210,11 +210,11 @@ class ToolAllController(
 
     @Action("读懂世界")
     suspend fun readWorld(): String =
-        OkHttpKtUtils.getJson("https://api.kukuqaq.com/tool/readWorld").getJSONObject("data").getString("data")
+        OkHttpKtUtils.getJson("https://api.kukuqaq.com/readWorld").getJSONObject("data").getString("data")
 
     @Action("icp {domain}")
     suspend fun icp(domain: String): String {
-        val jsonObject = OkHttpKtUtils.getJson("https://api.kukuqaq.com/tool/icp?keyword=${domain.toUrlEncode()}&m")
+        val jsonObject = OkHttpKtUtils.getJson("https://api.kukuqaq.com/icp?keyword=${domain.toUrlEncode()}&m")
         return if (jsonObject.getInteger("code") == 200) {
             val jsonArray = jsonObject.getJSONArray("data")
             if (jsonArray.isEmpty()) "该域名未查到备案信息"
@@ -236,14 +236,14 @@ class ToolAllController(
     @Action("摸鱼日历")
     suspend fun fishermanCalendar(): Any {
         if (LocalDate.now().dayOfWeek == DayOfWeek.SUNDAY) return "周日不摸鱼"
-        val bytes = OkHttpKtUtils.getBytes("https://api.kukuqaq.com/tool/fishermanCalendar?preview=1")
+        val bytes = OkHttpKtUtils.getBytes("https://api.kukuqaq.com/fishermanCalendar?preview=1")
         return mif.imageByByteArray(bytes)
     }
 
     @Action("摸鱼日历搜狗")
     suspend fun fishermanCalendarSoGou(): Any {
         if (LocalDate.now().dayOfWeek == DayOfWeek.SUNDAY) return "周日不摸鱼"
-        val bytes = OkHttpKtUtils.getBytes("https://api.kukuqaq.com/tool/fishermanCalendar/sogou?preview=1")
+        val bytes = OkHttpKtUtils.getBytes("https://api.kukuqaq.com/fishermanCalendar/sogou?preview=1")
         return mif.imageByByteArray(bytes)
     }
 

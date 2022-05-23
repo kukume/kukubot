@@ -45,4 +45,4 @@ class BiliBiliService (
 
 }
 
-data class BiliBiliConfig(var push: Status = Status.OFF, var sign: Status = Status.OFF, var live: Status = Status.OFF)
+data class BiliBiliConfig(var push: Status = Status.OFF, var sign: Status = Status.OFF, var live: Status = Status.OFF, var coin: Status = Status.OFF)

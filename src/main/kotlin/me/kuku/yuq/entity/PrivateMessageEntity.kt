@@ -15,7 +15,6 @@ class PrivateMessageEntity: BaseEntity() {
     @OneToOne
     @JoinColumn(name = "qq_id")
     var qqEntity: QqEntity = QqEntity()
-    @Lob
     @Column(columnDefinition = "text")
     var content: String = ""
     var type: PrivateMessageType = PrivateMessageType.RECEIVE

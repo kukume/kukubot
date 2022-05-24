@@ -5,15 +5,17 @@ import com.IceCreamQAQ.Yu.annotation.Before
 import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.annotation.PrivateController
 import com.icecreamqaq.yuq.controller.BotActionContext
+import com.icecreamqaq.yuq.controller.ContextSession
+import com.icecreamqaq.yuq.message.Message.Companion.firstString
 import com.icecreamqaq.yuq.mif
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeoutOrNull
+import me.kuku.utils.MyUtils
 import me.kuku.yuq.entity.BaiduEntity
 import me.kuku.yuq.entity.BaiduService
 import me.kuku.yuq.entity.QqEntity
 import me.kuku.yuq.logic.BaiduLogic
 import me.kuku.yuq.utils.openOrClose
 import org.springframework.stereotype.Service
-import java.util.Base64
 
 @GroupController
 @PrivateController
@@ -24,34 +26,42 @@ class BaiduController (
 ) {
 
     @Action("百度登录")
-    suspend fun baiduLogin(qqEntity: QqEntity, context: BotActionContext) {
-        val qrcode = baiduLogic.getQrcode()
-        context.source.sendMessage(
-            mif.at(qqEntity.qq)
-                .plus(mif.imageByByteArray(Base64.getDecoder().decode(qrcode.imageBase)).plus("请使用qq扫码登录百度"))
-        )
-        while (true) {
-            delay(3000)
-            val result = baiduLogic.checkQrcode(qrcode)
-            when (result.code) {
-                0 -> continue
-                200 -> {
-                    val newBaiduEntity = result.data
-                    val baiduEntity = baiduService.findByQqEntity(qqEntity) ?: BaiduEntity().also {
-                        it.qqEntity = qqEntity
+    suspend fun baiduLogin(qqEntity: QqEntity, context: BotActionContext, session: ContextSession): String {
+        context.source.sendMessage(mif.at(qqEntity.qq).plus("请发送登陆方式，1为扫码登陆，2为手动绑定"))
+        val baiduEntity = baiduService.findByQqEntity(qqEntity) ?: BaiduEntity().also {
+            it.qqEntity = qqEntity
+        }
+        return when (session.waitNextMessage().firstString().toIntOrNull()) {
+            1 -> {
+                val qrcode = baiduLogic.getQrcode()
+                context.source.sendMessage(mif.at(qqEntity.qq).plus(mif.imageByUrl(qrcode.image).plus("请使用百度APP扫码登陆，百度网盘等均可")))
+                withTimeoutOrNull(1000 * 60 * 2) {
+                    while (true) {
+                        try {
+                            val result = baiduLogic.checkQrcode(qrcode)
+                            if (result.success()) {
+                                val newEntity = result.data()
+                                baiduEntity.cookie = newEntity.cookie
+                                baiduService.save(baiduEntity)
+                                return@withTimeoutOrNull "绑定百度成功"
+                            }
+                        } catch (ignore: Exception) {}
                     }
-                    baiduEntity.cookie = newBaiduEntity.cookie
-                    baiduEntity.sToken = newBaiduEntity.sToken
-                    baiduEntity.bdUss = newBaiduEntity.bdUss
-                    baiduService.save(baiduEntity)
-                    context.source.sendMessage(mif.at(qqEntity.qq).plus("绑定百度成功"))
-                    break
-                }
-                else -> {
-                    context.source.sendMessage(mif.at(qqEntity.qq).plus(result.message))
-                    break
-                }
+                } as? String ?: ""
             }
+            2 -> {
+                context.source.sendMessage(mif.at(qqEntity.qq).plus("请发送百度的cookie，cookie中应包含BDUSS和STOKEN"))
+                val cookie = session.waitNextMessage().toString()
+                val bdUss = MyUtils.regex("BDUSS=", ";", cookie)
+                val sToken= MyUtils.regex("STOKEN=", ";", cookie)
+                if (bdUss == null || sToken == null) {
+                    return "cookie格式不正确，cookie应包含BDUSS和BAIDUID"
+                }
+                baiduEntity.cookie = "BDUSS=$bdUss; STOKEN=$sToken; "
+                baiduService.save(baiduEntity)
+                "绑定百度成功"
+            }
+            else -> "已退出"
         }
     }
 

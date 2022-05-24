@@ -22,7 +22,7 @@ class WeiboEntity: BaseEntity() {
     @Column(length = 2000)
     var mobileCookie: String= ""
     @Type(type = "json")
-    @Column(columnDefinition = "json")
+    @Column(columnDefinition = "text")
     var config: WeiboConfig = WeiboConfig()
 }
 

@@ -19,7 +19,7 @@ class QqGroupConfigEntity {
     @JoinColumn(name = "group_id")
     var groupEntity: GroupEntity? = null
     @Type(type = "json")
-    @Column(columnDefinition = "json")
+    @Column(columnDefinition = "text")
     var config: QqGroupConfig = QqGroupConfig()
 }
 

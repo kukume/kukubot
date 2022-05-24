@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 val queryDslVersion = "5.0.0"
 
 plugins {
-    id("org.springframework.boot") version "2.6.7"
+    id("org.springframework.boot") version "2.7.0"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
     val kotlinVersion = "1.6.21"
     kotlin("jvm") version kotlinVersion
@@ -18,6 +18,7 @@ java.sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
     maven("https://nexus.kuku.me/repository/maven-public/")
+    maven("https://maven.icecreamqaq.com/repository/maven-public/")
     mavenCentral()
 }
 
@@ -29,9 +30,9 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.9.3")
     implementation("me.kuku:utils-fastjson:0.0.2")
 //    implementation("me.kuku:ktor-spring-boot-starter:0.0.8")
-    implementation("com.IceCreamQAQ.YuQ:YuQ-ArtQQ:0.1.0.0-DEV17")
-    implementation("com.IceCreamQAQ:Yu-Core:0.2.0.0-DEV23")
-    implementation("com.IceCreamQAQ:YuQ:0.1.0.0-DEV31")
+    implementation("com.IceCreamQAQ.YuQ:YuQ-ArtQQ:0.1.0.0-DEV18")
+//    implementation("com.IceCreamQAQ:Yu-Core:0.2.0.0-DEV23")
+//    implementation("com.IceCreamQAQ:YuQ:0.1.0.0-DEV31")
     implementation("com.h2database:h2")
     implementation("org.jsoup:jsoup:1.14.3")
     implementation("com.google.code.findbugs:jsr305:3.0.2")

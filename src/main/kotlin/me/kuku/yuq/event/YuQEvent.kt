@@ -10,14 +10,15 @@ import org.springframework.stereotype.Component
 
 @Component
 @EventListener
+@org.springframework.context.annotation.Lazy
 class YuQEvent(
-    private val context: YuContext?
+    private val context: YuContext
 ) {
 
 
     @Event
     fun start(e: AppStartEvent) {
-        YuqUtils.web = context!!.getBean(OkHttpWebImpl::class.java)
+        YuqUtils.web = context.getBean(OkHttpWebImpl::class.java)
     }
 
 

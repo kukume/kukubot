@@ -27,7 +27,6 @@ class ExceptionLogEntity: BaseEntity() {
     @OneToOne
     @JoinColumn(name = "private_message_id")
     var privateMessageEntity: PrivateMessageEntity? = null
-    @Lob
     @Column(columnDefinition = "text")
     @JSONField(serialize = false)
     var stackTrace: String = ""

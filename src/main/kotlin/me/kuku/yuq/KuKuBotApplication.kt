@@ -2,6 +2,7 @@ package me.kuku.yuq
 
 import com.IceCreamQAQ.Yu.loader.AppClassloader
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.runApplication
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing
 
@@ -15,7 +16,8 @@ fun main(args: Array<String>) {
         "org.springframework", "org.hibernate", "org.aopalliance", "com.querydsl"))
     val appClassLoader = AppClassloader(KuKuBotApplication::class.java.classLoader)
     Thread.currentThread().contextClassLoader = appClassLoader
-    val clazz = appClassLoader.loadClass("org.springframework.boot.SpringApplication")
-    val method = clazz.getMethod("run", Class::class.java, Array<String>::class.java)
-    method.invoke(null, KuKuBotApplication::class.java, args)
+//    val clazz = appClassLoader.loadClass("org.springframework.boot.SpringApplication")
+//    val method = clazz.getMethod("run", Class::class.java, Array<String>::class.java)
+//    method.invoke(null, KuKuBotApplication::class.java, args)
+    runApplication<KuKuBotApplication>(*args)
 }

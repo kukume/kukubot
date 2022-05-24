@@ -39,7 +39,7 @@ open class QqEntity: BaseEntity() {
     @JSONField(serialize = false)
     open var groups: MutableSet<GroupEntity> = linkedSetOf()
     @Type(type = "json")
-    @Column(columnDefinition = "json")
+    @Column(columnDefinition = "text")
     open var config: QqConfig = QqConfig()
 
     @OneToOne(mappedBy = "qqEntity")

@@ -17,7 +17,7 @@ class MiHoYoEntity: BaseEntity() {
     @Column(length = 2000)
     var cookie: String = ""
     @Type(type = "json")
-    @Column(columnDefinition = "json")
+    @Column(columnDefinition = "text")
     var config: MiHoYoConfig = MiHoYoConfig()
 }
 

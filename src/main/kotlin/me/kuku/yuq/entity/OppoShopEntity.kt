@@ -17,7 +17,7 @@ class OppoShopEntity: BaseEntity() {
     @Column(length = 6000)
     var cookie: String = ""
     @Type(type = "json")
-    @Column(columnDefinition = "json")
+    @Column(columnDefinition = "text")
     var config: OppoShopConfig = OppoShopConfig()
 
 }

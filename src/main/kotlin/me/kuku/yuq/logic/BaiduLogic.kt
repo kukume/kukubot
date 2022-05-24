@@ -2,6 +2,7 @@ package me.kuku.yuq.logic
 
 import com.alibaba.fastjson.JSONObject
 import kotlinx.coroutines.delay
+import me.kuku.pojo.BaseResult
 import me.kuku.yuq.entity.BaiduEntity
 import me.kuku.yuq.entity.BaiduService
 import me.kuku.pojo.Result
@@ -9,52 +10,38 @@ import me.kuku.pojo.UA
 import me.kuku.utils.*
 import org.jsoup.Jsoup
 import org.springframework.stereotype.Service
+import java.util.UUID
 
 @Service
 class BaiduLogic (
     private val baiduService: BaiduService
 ) {
-    private val appId = 716027609L
-    private val daId = 383
-    private val ptAid = 100312028L
 
-    suspend fun getQrcode(): QqLoginQrcode {
-        return QqQrCodeLoginUtils.getQrCode(appId, daId, ptAid)
+    suspend fun getQrcode(): BaiduQrcode {
+        val uuid = UUID.randomUUID().toString()
+        val jsonObject = OkHttpKtUtils.getJsonp("https://passport.baidu.com/v2/api/getqrcode?lp=pc&qrloginfrom=pc&gid=$uuid&callback=tangram_guid_${System.currentTimeMillis()}&apiver=v3&tt=${System.currentTimeMillis()}&tpl=mn&logPage=traceId:pc_loginv5_1653405990,logPage:loginv5&_=${System.currentTimeMillis()}")
+        val url = "https://" + jsonObject.getString("imgurl")
+        val sign = jsonObject.getString("sign")
+        return BaiduQrcode(url, sign, uuid)
     }
 
-    suspend fun checkQrcode(qrcode: QqLoginQrcode): Result<BaiduEntity> {
-        val checkRes = QqQrCodeLoginUtils.checkQrCode(appId, daId, ptAid,
-            "https://graph.qq.com/oauth2.0/login_jump", qrcode.sig)
-        if (checkRes.isFailure) return Result.failure(checkRes.code, checkRes.message)
-        else {
-            val response =
-                OkHttpKtUtils.get("https://passport.baidu.com/phoenix/account/startlogin?type=15&tpl=mn&u=https%3A%2F%2Fwww.baidu.com%2F&display=page&act=implicit&xd=https%3A%2F%2Fwww.baidu.com%2Fcache%2Fuser%2Fhtml%2Fxd.html%23display%3Dpopup&fire_failure=1")
-            response.close()
-            val cookie = OkUtils.cookie(response)
-            val mKey = OkUtils.cookie(cookie, "mkey")
-            val qqLoginPojo = checkRes.data
-            val result = QqQrCodeLoginUtils.authorize(
-                qqLoginPojo,
-                ptAid,
-                System.currentTimeMillis().toString(),
-                "https://passport.baidu.com/phoenix/account/afterauth?mkey=$mKey&tpl=mn"
-            )
-            if (result.isFailure) return Result.failure(result.message)
-            else {
-                val url = result.data
-                val baiduResponse = OkHttpKtUtils.get(url, mapOf("referer" to "https://graph.qq.com/",
-                    "cookie" to cookie, "user-agent" to UA.PC.value)
-                )
-                baiduResponse.close()
-                val resCookie = OkUtils.cookie(baiduResponse)
-                val sToken = OkUtils.cookie(resCookie, "STOKEN")!!
-                val bdUss = OkUtils.cookie(resCookie, "BDUSS")!!
-                return Result.success(BaiduEntity().also {
-                    it.cookie = resCookie
-                    it.sToken = sToken
-                    it.bdUss = bdUss
-                })
+    suspend fun checkQrcode(baiduQrcode: BaiduQrcode): BaseResult<BaiduEntity> {
+        val jsonObject =
+            OkHttpKtUtils.getJsonp("https://passport.baidu.com/channel/unicast?channel_id=${baiduQrcode.sign}&gid=${baiduQrcode.uuid}&tpl=mn&_sdkFrom=1&callback=tangram_guid_${System.currentTimeMillis()}&apiver=v3&tt=${System.currentTimeMillis()}&_=${System.currentTimeMillis()}")
+        return when (jsonObject.getInteger("errno")) {
+            1 -> BaseResult.failure("未扫码或已失效")
+            0 -> {
+                val ss = jsonObject.getString("channel_v").toJSONObject()
+                if (ss.getInteger("status") == 0) {
+                    val v = ss.getString("v")
+                    val response = OkHttpKtUtils.get("https://passport.baidu.com/v3/login/main/qrbdusslogin?v=${System.currentTimeMillis()}&bduss=$v").apply { close() }
+                    val cookie = OkUtils.cookie(response)
+                    BaseResult.success(BaiduEntity().also {
+                        it.cookie = cookie
+                    })
+                } else BaseResult.failure("已扫码")
             }
+            else -> BaseResult.failure("未知错误")
         }
     }
 
@@ -107,15 +94,12 @@ class BaiduLogic (
 
     private suspend fun getSToken(baiduEntity: BaiduEntity, url: String): String {
         val cookie = baiduEntity.cookie
-        val response = OkHttpKtUtils.get(url, OkUtils.cookie(cookie)).apply { close() }
+        val headers = mapOf("cookie" to cookie, "user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.67 Safari/537.36")
+        val response = OkHttpKtUtils.get("https://wappass.baidu.com/v3/login/api/auth?jump=&notjump=1&return_type=3&tpl=tb&u=${url.toUrlEncode()}", headers).apply { close() }
         if (response.code !in listOf(302, 301)) throw RuntimeException("您的百度cookie已失效！")
         val firstUrl = response.header("location")!!
-        val firstResponse = OkHttpKtUtils.get(firstUrl, OkUtils.cookie(cookie)).apply { close() }
-        val secondUrl = firstResponse.header("location")!!
-        val secondResponse = OkHttpKtUtils.get(secondUrl, OkUtils.cookie(cookie)).apply { close() }
-        val finallyUrl = secondResponse.header("location")!!
-        val finallyResponse = OkHttpKtUtils.get(finallyUrl, OkUtils.cookie(cookie)).apply { close() }
-        return OkUtils.cookie(finallyResponse, "STOKEN")!!
+        val firstResponse = OkHttpKtUtils.get(firstUrl, headers).apply { close() }
+        return OkUtils.cookie(firstResponse, "STOKEN")!!
     }
 
     private suspend fun saveSToken(baiduEntity: BaiduEntity, url: String): String {
@@ -128,11 +112,11 @@ class BaiduLogic (
     suspend fun tieBaSign(baiduEntity: BaiduEntity): Result<Void> {
         val sToken = baiduEntity.config.tieBaSToken
         val url = "https://tieba.baidu.com/f/like/mylike?v=${System.currentTimeMillis()}"
-        if (sToken.isEmpty()) baiduEntity.sToken = saveSToken(baiduEntity, url)
+        if (sToken.isEmpty()) saveSToken(baiduEntity, url)
         val headers = mapOf("user-agent" to UA.PC.value, "cookie" to baiduEntity.teiBaCookie())
         val likeHtml = OkHttpKtUtils.getStr(url,
             headers)
-        if (likeHtml.isEmpty()) baiduEntity.sToken = saveSToken(baiduEntity, url)
+        if (likeHtml.isEmpty()) saveSToken(baiduEntity, url)
         val trElements = Jsoup.parse(likeHtml).getElementsByTag("tr")
         val list = mutableListOf<String>()
         for (tr in trElements) {
@@ -151,3 +135,5 @@ class BaiduLogic (
         return Result.success("贴吧签到成功！", null)
     }
 }
+
+data class BaiduQrcode(val image: String, val sign: String, val uuid: String)

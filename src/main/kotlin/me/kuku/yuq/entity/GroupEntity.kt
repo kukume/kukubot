@@ -28,7 +28,7 @@ class GroupEntity: BaseEntity() {
     @JSONField(serialize = false)
     var qqs: MutableSet<QqEntity> = linkedSetOf()
     @Type(type = "json")
-    @Column(columnDefinition = "json")
+    @Column(columnDefinition = "text")
     var config: GroupConfig = GroupConfig()
 
     fun get(qq: Long): QqEntity? {

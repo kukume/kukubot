@@ -20,7 +20,7 @@ class KuGouEntity: BaseEntity() {
     var kuGoo: String = ""
     var mid: String = ""
     @Type(type = "json")
-    @Column(columnDefinition = "json")
+    @Column(columnDefinition = "text")
     var config: KuGouConfig = KuGouConfig()
 }
 

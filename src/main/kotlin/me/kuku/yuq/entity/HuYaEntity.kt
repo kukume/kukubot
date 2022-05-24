@@ -21,7 +21,7 @@ class HuYaEntity {
     @Column(length = 3000)
     var cookie: String = ""
     @Type(type = "json")
-    @Column(columnDefinition = "json")
+    @Column(columnDefinition = "text")
     var config: HuYaConfig = HuYaConfig()
 }
 

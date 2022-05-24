@@ -1,5 +1,6 @@
 package me.kuku.yuq.entity
 
+import me.kuku.utils.OkUtils
 import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.querydsl.QuerydslPredicateExecutor
@@ -17,14 +18,12 @@ class BaiduEntity: BaseEntity() {
     var qqEntity: QqEntity? = null
     @Column(length = 2000)
     var cookie: String = ""
-    var bdUss: String = ""
-    var sToken: String = ""
     @Type(type = "json")
-    @Column(columnDefinition = "json")
+    @Column(columnDefinition = "text")
     var config: BaiduConfig = BaiduConfig()
 
     fun otherCookie(sToken: String): String {
-        return cookie.replace("STOKEN=" + this.sToken + "; ", "STOKEN=$sToken; ")
+        return OkUtils.cookieStr(cookie, "BDUSS") + "STOKEN=$sToken; "
     }
 
     fun teiBaCookie(): String {

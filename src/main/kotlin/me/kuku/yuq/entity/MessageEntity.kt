@@ -31,7 +31,7 @@ class MessageEntity: BaseEntity() {
     @Column(columnDefinition = "text")
     var content: String = ""
     @Type(type = "json")
-    @Column(columnDefinition = "json")
+    @Column(columnDefinition = "text")
     var messageSource: MessageSource? = null
 }
 

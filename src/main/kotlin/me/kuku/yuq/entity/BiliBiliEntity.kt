@@ -22,7 +22,7 @@ class BiliBiliEntity: BaseEntity() {
     var userid: String = ""
     var token: String = ""
     @Type(type = "json")
-    @Column(columnDefinition = "json")
+    @Column(columnDefinition = "text")
     var config: BiliBiliConfig = BiliBiliConfig()
 }
 

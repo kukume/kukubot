@@ -36,6 +36,8 @@ class ArtInit(
 
     private var app: DefaultApp? = null
 
+    private val log = LoggerFactory.getLogger(ArtInit::class.java)
+
     override fun run(args: ApplicationArguments?) {
         System.getProperties()["yuq.art.noUI"] = "${artConfig.qq}|${artConfig.password}|0"
         YuHook.put(
@@ -45,8 +47,17 @@ class ArtInit(
                 "me.kuku.yuq.config.HookYuQArtQQModule"
             )
         )
+        val startTime = System.currentTimeMillis()
         app = DefaultApp()
         app?.start()
+        val overTime = System.currentTimeMillis()
+        log.info("Done! ${(overTime - startTime).toDouble() / 1000}s.")
+
+        println(" __  __     ____ \n" +
+                " \\ \\/ /_ __/ __ \\\n" +
+                "  \\  / // / /_/ /\n" +
+                "  /_/\\_,_/\\___\\_\\\n")
+        println("感谢您使用 YuQ 进行开发，在您使用中如果遇到任何问题，可以到 Github，Gitee 提出 issue，您也可以添加 YuQ 的开发交流群（696129128）进行交流。")
     }
 
     @PreDestroy

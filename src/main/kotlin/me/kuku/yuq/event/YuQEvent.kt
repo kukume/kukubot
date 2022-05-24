@@ -11,13 +11,13 @@ import org.springframework.stereotype.Component
 @Component
 @EventListener
 class YuQEvent(
-    private val context: YuContext
+    private val context: YuContext?
 ) {
 
 
     @Event
     fun start(e: AppStartEvent) {
-        YuqUtils.web = context.getBean(OkHttpWebImpl::class.java)
+        YuqUtils.web = context!!.getBean(OkHttpWebImpl::class.java)
     }
 
 

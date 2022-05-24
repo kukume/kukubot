@@ -12,11 +12,11 @@ import com.icecreamqaq.yuq.message.Message.Companion.toMessageByRainCode
 import com.icecreamqaq.yuq.mif
 import com.icecreamqaq.yuq.yuq
 import me.kuku.yuq.entity.*
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 @EventListener
-@Service
+@Component
 class Save (
     private val groupService: GroupService,
     private val qqService: QqService,

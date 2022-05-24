@@ -15,14 +15,13 @@ import me.kuku.yuq.controller.toStatus
 import me.kuku.yuq.entity.*
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.CacheManager
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.util.concurrent.ConcurrentHashMap
-import javax.inject.Inject
 
 @EventListener
-@Service
-class GroupManagerEvent @Inject constructor(
+@Component
+class GroupManagerEvent (
     private val groupService: GroupService,
     private val qqGroupConfigService: QqGroupConfigService,
     private val messageService: MessageService,

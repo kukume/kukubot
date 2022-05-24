@@ -20,24 +20,23 @@ import me.kuku.utils.OkHttpUtils
 import me.kuku.yuq.utils.SpringUtils
 import org.artqq.util.CommonResult
 import org.slf4j.LoggerFactory
+import org.springframework.boot.ApplicationArguments
+import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.stereotype.Component
 import java.util.function.Supplier
-import javax.annotation.PostConstruct
 import javax.annotation.PreDestroy
 import javax.inject.Inject
 
 @Component
 class ArtInit(
-    @Suppress("unused") private val springUtils: SpringUtils,
     private val artConfig: ArtConfig
-) {
+): ApplicationRunner {
 
     private var app: DefaultApp? = null
 
-    @PostConstruct
-    fun defaultApp() {
+    override fun run(args: ApplicationArguments?) {
         System.getProperties()["yuq.art.noUI"] = "${artConfig.qq}|${artConfig.password}|0"
         YuHook.put(
             HookItem(
@@ -69,10 +68,14 @@ class SpringModule: com.IceCreamQAQ.Yu.module.Module {
         val names = applicationContext.beanDefinitionNames
         val clazzList = mutableListOf<Class<*>>()
         for (name in names) {
-            val clazz = applicationContext.getType(name)
-            if (clazz?.isAnnotationPresent(GroupController::class.java) == true || clazz?.isAnnotationPresent(PrivateController::class.java) == true ||
+            val clazzTemp = applicationContext.getType(name)
+            val ss = clazzTemp?.superclass
+            val list = listOf(clazzTemp, ss)
+            for (clazz in list) {
+                if (clazz?.isAnnotationPresent(GroupController::class.java) == true || clazz?.isAnnotationPresent(PrivateController::class.java) == true ||
                     clazz?.isAnnotationPresent(EventListener::class.java) == true || clazz?.isAnnotationPresent(JobCenter::class.java) == true) {
-                clazzList.add(clazz)
+                    clazzList.add(clazz)
+                }
             }
         }
         val classContextMap = context::class.java.declaredFields.first { it.name == "classContextMap" }

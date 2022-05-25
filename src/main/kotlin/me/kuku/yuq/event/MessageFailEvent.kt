@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service
 @Service
 class MessageFailEvent {
 
-    @Event
+//    @Event
     fun ss(e: SendMessageInvalidEvent) {
         kotlin.runCatching {
             val sendTo = e.sendTo

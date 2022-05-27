@@ -1,6 +1,9 @@
 package me.kuku.yuq.entity
 
 import com.alibaba.fastjson.annotation.JSONField
+import me.kuku.utils.OkHttpKtUtils
+import me.kuku.utils.OkHttpUtils
+import me.kuku.yuq.utils.SpringUtils
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.EntityGraph
@@ -50,4 +53,20 @@ class ExceptionLogService (
 
     fun findAll(pageable: Pageable) = exceptionLogRepository.findAll(pageable)
 
+}
+
+suspend fun Throwable.save(url: String? = null) {
+    val exceptionLogService = SpringUtils.getBean<ExceptionLogService>()
+    exceptionLogService.save(ExceptionLogEntity().also {
+        it.stackTrace = this.stackTraceToString()
+        it.url = url ?: this.toUrl()
+    })
+}
+suspend fun Throwable.toUrl(): String {
+    return kotlin.runCatching {
+        val jsonObject = OkHttpKtUtils.postJson("https://api.kukuqaq.com/paste",
+            mapOf("poster" to "kuku", "syntax" to "java", "content" to this.stackTraceToString())
+        )
+        jsonObject.getJSONObject("data").getString("url")
+    }.getOrDefault("Ubuntu paste url 生成失败")
 }

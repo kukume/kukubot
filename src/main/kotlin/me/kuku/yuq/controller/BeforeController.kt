@@ -16,16 +16,12 @@ import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.entity.MessageAt
 import com.icecreamqaq.yuq.error.WaitNextMessageTimeoutException
 import com.icecreamqaq.yuq.message.Message
-import com.icecreamqaq.yuq.message.Message.Companion.toCodeString
 import com.icecreamqaq.yuq.mif
-import com.icecreamqaq.yuq.yuq
+import kotlinx.coroutines.runBlocking
 import me.kuku.utils.JobManager
-import me.kuku.utils.OkHttpUtils
 import me.kuku.yuq.config.VerificationFailureException
 import me.kuku.yuq.entity.*
 import org.springframework.stereotype.Component
-import java.io.PrintWriter
-import java.io.StringWriter
 
 @PrivateController
 @GroupController
@@ -78,21 +74,14 @@ class BeforeController (
     @Global
     fun ss(exception: Exception, message: Message, context: BotActionContext, qq: Long, group: Long?) {
         if (exception is WaitNextMessageTimeoutException || exception is VerificationFailureException) return
-        val sw = StringWriter()
-        val pw = PrintWriter(sw)
-        exception.printStackTrace(pw)
-        val exceptionStackTrace = sw.toString()
-        val url = kotlin.runCatching {
-            val jsonObject = OkHttpUtils.postJson("https://api.kukuqaq.com/paste",
-                mapOf("poster" to "kuku", "syntax" to "java", "content" to exceptionStackTrace)
-            )
-            jsonObject.getJSONObject("data").getString("url")
-        }.getOrDefault("Ubuntu paste url 生成失败")
+        val exceptionStackTrace = exception.stackTraceToString()
+        val url = runBlocking {
+            exception.toUrl()
+        }
         val source = context.source
         source.sendMessage(mif.at(qq).plus("程序出现异常了，异常信息为：$url"))
         JobManager.now {
-            OkHttpUtils.postJson("https://api.kukuqaq.com/botException", mapOf("message" to message.toCodeString(), "stackTrace" to exceptionStackTrace,
-                "url" to url, "qq" to yuq.botId.toString()))
+            exception.save(url)
         }
         val messageId = message.source?.id ?: 0
         if (source is Friend || source is Member) {

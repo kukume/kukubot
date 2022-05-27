@@ -26,7 +26,7 @@ class GroupManagerEvent (
     private val qqGroupConfigService: QqGroupConfigService,
     private val messageService: MessageService,
     @Suppress("SpringJavaInjectionPointsAutowiringInspection") cacheManager: CacheManager,
-    @Value("\${yuq.art.master}") private val master: String
+    @Value("\${yuq.art.master}") private val master: Long
 ) {
 
     private val lastMessage = ConcurrentHashMap<Long, String>()
@@ -127,11 +127,16 @@ class GroupManagerEvent (
         val group = e.group
         val groupId = group.id
         val groupEntity = groupService.findByGroup(groupId) ?: return
-        if (ss in listOf("bot开", "bot关")) {
+        if (ss in listOf("bot开", "bot关", "bot 开", "bot 关")) {
+            val qq = e.sender.id
+            if (qq != master) {
+                group.sendMessage(mif.at(qq).plus("您的权限不足，无法执行"))
+                return
+            }
             val sss = ss.contains("开")
             groupEntity.config.switch = sss.toStatus()
             groupService.save(groupEntity)
-            group.sendMessage("bot${if (sss) "开启" else "关闭"}成功")
+            group.sendMessage(mif.at(qq).plus("bot${if (sss) "开启" else "关闭"}成功"))
         } else {
             if (groupEntity.config.switch == Status.OFF) {
                 e.cancel = true
@@ -199,11 +204,22 @@ class GroupManagerEvent (
 
     @Event
     fun friend(e: NewFriendRequestEvent) {
-        if (e.message == master) {
+        if (e.message == master.toString()) {
             e.accept = true
         } else {
             e.accept = false
             e.rejectMessage = "验证信息不正确"
+        }
+        e.cancel = true
+    }
+
+    @Event
+    fun inGroup(e: GroupInviteEvent) {
+        if (e.qq.isFriend()) {
+            e.accept = true
+        } else {
+            e.accept = false
+            e.rejectMessage = "你不是我的好友，我不能进群"
         }
         e.cancel = true
     }

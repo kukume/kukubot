@@ -33,6 +33,7 @@ dependencies {
     implementation("com.IceCreamQAQ.YuQ:YuQ-ArtQQ:0.1.0.0-DEV18")
 //    implementation("com.IceCreamQAQ:Yu-Core:0.2.0.0-DEV23")
 //    implementation("com.IceCreamQAQ:YuQ:0.1.0.0-DEV31")
+    implementation("com.artqq:ArtQQ:1.5.1")
     implementation("com.h2database:h2")
     implementation("org.jsoup:jsoup:1.14.3")
     implementation("com.google.code.findbugs:jsr305:3.0.2")

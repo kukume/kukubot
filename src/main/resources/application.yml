@@ -1,4 +1,6 @@
 spring:
+  main:
+    lazy-initialization: true
   datasource:
     driver-class-name: org.h2.Driver
     url: jdbc:h2:./db/yuq;AUTO_SERVER=TRUE

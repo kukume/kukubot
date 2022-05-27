@@ -3,18 +3,11 @@
 package me.kuku.yuq.config
 
 import com.IceCreamQAQ.Yu.DefaultApp
-import com.IceCreamQAQ.Yu.annotation.EventListener
-import com.IceCreamQAQ.Yu.annotation.JobCenter
 import com.IceCreamQAQ.Yu.di.ClassContext
 import com.IceCreamQAQ.Yu.di.YuContext
+import com.IceCreamQAQ.Yu.di.context
 import com.IceCreamQAQ.Yu.hook.*
-import com.IceCreamQAQ.Yu.loader.AppClassloader
-import com.icecreamqaq.yuq.annotation.GroupController
-import com.icecreamqaq.yuq.annotation.PrivateController
 import com.icecreamqaq.yuq.artqq.HookCaptchaUtils
-import com.icecreamqaq.yuq.artqq.YuQArtQQModule
-import com.icecreamqaq.yuq.artqq.YuQInternalFunArtQQImpl
-import com.icecreamqaq.yuq.util.YuQInternalFun
 import kotlinx.coroutines.runBlocking
 import me.kuku.utils.OkHttpUtils
 import me.kuku.yuq.utils.SpringUtils
@@ -25,12 +18,15 @@ import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.stereotype.Component
+import org.springframework.stereotype.Controller
+import org.springframework.stereotype.Service
 import java.util.function.Supplier
 import javax.annotation.PreDestroy
 import javax.inject.Inject
 
 @Component
 class ArtInit(
+    @Suppress("unused") private val springUtils: SpringUtils,
     private val artConfig: ArtConfig
 ): ApplicationRunner {
 
@@ -42,9 +38,9 @@ class ArtInit(
         System.getProperties()["yuq.art.noUI"] = "${artConfig.qq}|${artConfig.password}|0"
         YuHook.put(
             HookItem(
-                "com.icecreamqaq.yuq.artqq.YuQArtQQModule",
-                "onLoad",
-                "me.kuku.yuq.config.HookYuQArtQQModule"
+                "org.artqq.util.TenCentCaptchaUtils",
+                "identifyByUrl",
+                "me.kuku.yuq.config.HookCaptchaUtils"
             )
         )
         val startTime = System.currentTimeMillis()
@@ -70,12 +66,12 @@ class ArtInit(
 class SpringModule: com.IceCreamQAQ.Yu.module.Module {
 
     @Inject
-    private lateinit var context: YuContext
+    private lateinit var yuContext: YuContext
 
     override fun onLoad() {
         val applicationContext = SpringUtils.applicationContext
         val annotationConfigApplicationContext = applicationContext as AnnotationConfigApplicationContext
-        annotationConfigApplicationContext.registerBean("context", YuContext::class.java, Supplier { context })
+        annotationConfigApplicationContext.registerBean("context", YuContext::class.java, Supplier { yuContext })
         val names = applicationContext.beanDefinitionNames
         val clazzList = mutableListOf<Class<*>>()
         for (name in names) {
@@ -83,18 +79,23 @@ class SpringModule: com.IceCreamQAQ.Yu.module.Module {
             val ss = clazzTemp?.superclass
             val list = listOf(clazzTemp, ss)
             for (clazz in list) {
-                if (clazz?.isAnnotationPresent(GroupController::class.java) == true || clazz?.isAnnotationPresent(PrivateController::class.java) == true ||
-                    clazz?.isAnnotationPresent(EventListener::class.java) == true || clazz?.isAnnotationPresent(JobCenter::class.java) == true) {
+//                if (clazz?.isAnnotationPresent(GroupController::class.java) == true || clazz?.isAnnotationPresent(PrivateController::class.java) == true ||
+//                    clazz?.isAnnotationPresent(EventListener::class.java) == true || clazz?.isAnnotationPresent(JobCenter::class.java) == true) {
+//                    clazzList.add(clazz)
+//                }
+                if (clazz?.isAnnotationPresent(Component::class.java) == true || clazz?.isAnnotationPresent(Controller::class.java) == true ||
+                    clazz?.isAnnotationPresent(Service::class.java) == true) {
                     clazzList.add(clazz)
                 }
             }
         }
-        val classContextMap = context::class.java.declaredFields.first { it.name == "classContextMap" }
-            .also { it.isAccessible = true }.get(context) as MutableMap<String, ClassContext>
+        val classContextMap = yuContext::class.java.declaredFields.first { it.name == "classContextMap" }
+            .also { it.isAccessible = true }.get(yuContext) as MutableMap<String, ClassContext>
         for (clazz in clazzList) {
             val bean = applicationContext.getBean(clazz)
             val name = clazz.name
             val beanClazz = bean::class.java
+            yuContext.injectBean(bean)
             val classContext =
                 ClassContext(name, beanClazz, false, null, bean, mutableMapOf("" to bean), null, null)
             classContextMap[name] = classContext
@@ -156,45 +157,6 @@ class HookCaptchaUtils : HookRunnable {
 
     override fun onError(method: HookMethod) = false
 
-}
-
-class HookYuQArtQQModule: HookRunnable {
-
-    override fun preRun(method: HookMethod): Boolean {
-        val yuQArtQQModule = method.paras[0] as YuQArtQQModule
-        val context = yuQArtQQModule::class.java.declaredFields[0].also { it.isAccessible = true }
-            .get(yuQArtQQModule) as YuContext
-        context.putBean(YuQInternalFun::class.java, "", YuQInternalFunArtQQImpl())
-        AppClassloader.registerBackList(
-            arrayListOf(
-                "javafx.",
-                "org.w3c",
-                "jdk.internal.",
-            )
-        )
-        YuHook.put(
-            HookItem(
-                "org.artqq.util.TenCentCaptchaUtils",
-                "identifyByUrl",
-                "me.kuku.yuq.config.HookCaptchaUtils"
-            )
-        )
-        YuHook.put(
-            HookItem(
-                "org.artqq.Wtlogin._Login",
-                "onSuccessSendVC",
-                "com.icecreamqaq.yuq.artqq.HookPhoneCap"
-            )
-        )
-        YuHook.put(
-            HookItem(
-                "com.baidu.bjf.remoting.protobuf.utils.JDKCompilerHelper",
-                "getJdkCompiler",
-                "com.icecreamqaq.yuq.artqq.HookProto"
-            )
-        )
-        return true
-    }
 }
 
 class VerificationFailureException(override val message: String): RuntimeException(message)

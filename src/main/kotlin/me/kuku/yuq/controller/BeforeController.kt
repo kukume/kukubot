@@ -15,7 +15,7 @@ import com.icecreamqaq.yuq.entity.Group
 import com.icecreamqaq.yuq.entity.Member
 import com.icecreamqaq.yuq.entity.MessageAt
 import com.icecreamqaq.yuq.error.WaitNextMessageTimeoutException
-import com.icecreamqaq.yuq.message.Message
+import com.icecreamqaq.yuq.message.*
 import com.icecreamqaq.yuq.mif
 import kotlinx.coroutines.runBlocking
 import me.kuku.utils.JobManager
@@ -51,8 +51,19 @@ class BeforeController (
         context.reMessage?.let { message ->
             val source = context.source
             if (source is Member || source is Group) {
-                if (message.at == null) {
+                if (message.at == null && message.body.find { it is At } == null) {
                     message.at = MessageAt(qq, true)
+                } else {
+                    kotlin.runCatching {
+                        var m: MessagePlus? = null
+                        for (messageItem in message.body) {
+                            m = m?.plus(messageItem) ?: messageItem
+                            if (messageItem is At) {
+                                m = m.plus("\n")
+                            }
+                        }
+                        context.reMessage = (m as MessageItemChain).toMessage()
+                    }
                 }
             }
         }

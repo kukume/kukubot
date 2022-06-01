@@ -67,6 +67,6 @@ suspend fun Throwable.toUrl(): String {
         val jsonObject = OkHttpKtUtils.postJson("https://api.kukuqaq.com/paste",
             mapOf("poster" to "kuku", "syntax" to "java", "content" to this.stackTraceToString())
         )
-        jsonObject.getJSONObject("data").getString("url")
+        jsonObject.getString("url")
     }.getOrDefault("Ubuntu paste url 生成失败")
 }

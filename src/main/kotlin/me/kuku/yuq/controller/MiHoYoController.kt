@@ -28,8 +28,8 @@ class MiHoYoController (
         context.source.sendMessage("请发送密码")
         val password = session.waitNextMessage().firstString()
         val result = MiHoYoLogic.login(phone, password)
-        return if (result.isSuccess) {
-            val miHoYoEntity = result.data
+        return if (result.success()) {
+            val miHoYoEntity = result.data()
             val newEntity = miHoYoService.findByQqEntity(qqEntity) ?: MiHoYoEntity().also {
                 it.qqEntity = qqEntity
             }
@@ -47,7 +47,7 @@ class MiHoYoController (
     @Action("原神签到")
     suspend fun sign(miHoYoEntity: MiHoYoEntity): String {
         val result = MiHoYoLogic.sign(miHoYoEntity)
-        return if (result.isSuccess) "原神签到成功"
+        return if (result.success()) "原神签到成功"
         else "原神签到失败，${result.message}"
     }
 

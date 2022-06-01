@@ -2,8 +2,8 @@ package me.kuku.yuq.logic
 
 import com.alibaba.fastjson.JSONObject
 import kotlinx.coroutines.delay
+import me.kuku.pojo.CommonResult
 import me.kuku.yuq.entity.OppoShopEntity
-import me.kuku.pojo.Result
 import me.kuku.pojo.UA
 import me.kuku.utils.DateTimeFormatterUtils
 import me.kuku.utils.OkHttpUtils
@@ -17,9 +17,9 @@ object OppoShopLogic {
                 UA.OPPO))
     }
 
-    fun sign(oppoShopEntity: OppoShopEntity): Result<Void> {
+    fun sign(oppoShopEntity: OppoShopEntity): CommonResult<Void> {
         val jsonObject = taskCenter(oppoShopEntity)
-        if (jsonObject.getInteger("code") != 200) return Result.failure(jsonObject.getString("errorMessage"))
+        if (jsonObject.getInteger("code") != 200) return CommonResult.failure(jsonObject.getString("errorMessage"))
         val dataJsonObject = jsonObject.getJSONObject("data")
         return if (dataJsonObject.getJSONObject("userReportInfoForm").getInteger("status") == 0) {
             val jsonArray = dataJsonObject.getJSONObject("userReportInfoForm").getJSONArray("gifts")
@@ -43,13 +43,13 @@ object OppoShopLogic {
                 }
                 val resultJsonObject = OkHttpUtils.postJson("https://store.oppo.com/cn/oapi/credits/web/report/immediately", params,
                     OkUtils.headers(oppoShopEntity.cookie, "https://store.oppo.com/cn/app/taskCenter/index", UA.OPPO))
-                if (resultJsonObject.getInteger("code") == 200) Result.success("签到成功", null)
-                else Result.failure("签到失败，${resultJsonObject.getString("errorMessage")}")
-            } else Result.failure("签到失败，请重试")
-        } else Result.success("今日已签到！", null)
+                if (resultJsonObject.getInteger("code") == 200) CommonResult.success(message = "签到成功")
+                else CommonResult.failure("签到失败，${resultJsonObject.getString("errorMessage")}")
+            } else CommonResult.failure("签到失败，请重试")
+        } else CommonResult.success(message = "今日已签到！")
     }
 
-    suspend fun viewGoods(oppoShopEntity: OppoShopEntity): Result<Void> {
+    suspend fun viewGoods(oppoShopEntity: OppoShopEntity): CommonResult<Void> {
         val jsonObject = taskCenter(oppoShopEntity)
         val jsonArray = jsonObject.getJSONObject("data").getJSONArray("everydayList")
         var qd: JSONObject? = null
@@ -74,14 +74,14 @@ object OppoShopLogic {
                             OkUtils.headers(oppoShopEntity.cookie, "", UA.OPPO)).close()
                         delay(3000)
                     }
-                } else return Result.failure("每日浏览商品失败，获取商品列表失败")
+                } else return CommonResult.failure("每日浏览商品失败，获取商品列表失败")
             } else if (status == 2) {
-                return Result.success("每日浏览商品已完成", null)
+                return CommonResult.success(message = "每日浏览商品已完成")
             }
             val b = cashingCredits(oppoShopEntity, qd.getString("marking"), qd.getString("type"), qd.getString("credits"))
-            if (b) Result.success("每日浏览商品成功", null)
-            else Result.failure("每日浏览商品失败！")
-        } else Result.failure("浏览商品失败，请重试！")
+            if (b) CommonResult.success(message = "每日浏览商品成功")
+            else CommonResult.failure("每日浏览商品失败！")
+        } else CommonResult.failure("浏览商品失败，请重试！")
     }
 
     private fun cashingCredits(oppoShopEntity: OppoShopEntity, infoMarking: String, infoType: String, infoCredits: String): Boolean {
@@ -92,7 +92,7 @@ object OppoShopLogic {
         return response.code == 200
     }
 
-    fun shareGoods(oppoShopEntity: OppoShopEntity): Result<Void> {
+    fun shareGoods(oppoShopEntity: OppoShopEntity): CommonResult<Void> {
         val jsonObject = taskCenter(oppoShopEntity)
         val jsonArray = jsonObject.getJSONObject("data").getJSONArray("everydayList")
         var qd: JSONObject? = null
@@ -113,20 +113,20 @@ object OppoShopLogic {
                         OkUtils.cookie(oppoShopEntity.cookie)).close()
                     readCount++
                 }
-            } else if (status == 2) return Result.success("每日分享商品已完成", null)
+            } else if (status == 2) return CommonResult.success(message = "每日分享商品已完成")
             val b = cashingCredits(oppoShopEntity, qd.getString("marking"), qd.getString("type"), qd.getString("credits"))
-            if (b) Result.success("每日分享商品成功", null)
-            else Result.failure("每日分享商品失败！")
-            Result.success()
-        }else Result.failure("分享商品失败，请重试！")
+            if (b) CommonResult.success(message = "每日分享商品成功")
+            else CommonResult.failure<Unit>("每日分享商品失败！")
+            CommonResult.success()
+        }else CommonResult.failure("分享商品失败，请重试！")
     }
 
-    fun earlyBedRegistration(oppoShopEntity: OppoShopEntity): Result<Void> {
+    fun earlyBedRegistration(oppoShopEntity: OppoShopEntity): CommonResult<Void> {
         val jsonObject = OkHttpUtils.getJson("https://store.oppo.com/cn/oapi/credits/web/clockin/applyOrClockIn",
             OkUtils.headers(oppoShopEntity.cookie, "https://store.oppo.com/cn/app/cardingActivities?us=gerenzhongxin&um=hudongleyuan&uc=zaoshuidaka",
                 UA.OPPO))
-        return if (jsonObject.getInteger("code") == 200) Result.success("报名或打卡成功", null)
-        else Result.failure("报名或打卡失败，${jsonObject.getString("errorMessage")}")
+        return if (jsonObject.getInteger("code") == 200) CommonResult.success(message = "报名或打卡成功")
+        else CommonResult.failure("报名或打卡失败，${jsonObject.getString("errorMessage")}")
     }
 
 

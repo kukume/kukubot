@@ -43,7 +43,7 @@ class OppoShopJob(
         for (oppoShopEntity in list) {
             kotlin.runCatching {
                 val result = OppoShopLogic.earlyBedRegistration(oppoShopEntity)
-                if (result.isFailure) {
+                if (result.failure()) {
                     YuqUtils.sendMessage(oppoShopEntity.qqEntity!!, "您的oppo早睡打卡打卡失败，请手动打卡")
                 }
             }

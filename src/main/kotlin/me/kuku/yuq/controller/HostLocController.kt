@@ -29,8 +29,8 @@ class HostLocController (
         context.source.sendMessage(mif.at(qqEntity.qq).plus("请发送密码").toMessage())
         val password = session.waitNextMessage().firstString()
         val res = HostLocLogic.login(account, password)
-        return if (res.isSuccess) {
-            val cookie = res.data
+        return if (res.success()) {
+            val cookie = res.data()
             val hostLocEntity = hostLocService.findByQqEntity(qqEntity) ?: HostLocEntity().also {
                 it.qqEntity = qqEntity
             }

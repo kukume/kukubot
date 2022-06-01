@@ -73,7 +73,7 @@ class BaiduController (
     @Action("百度贴吧签到")
     suspend fun tieBaSign(baiduEntity: BaiduEntity): String {
         val result = baiduLogic.tieBaSign(baiduEntity)
-        return if (result.isSuccess) "百度贴吧签到成功"
+        return if (result.success()) "百度贴吧签到成功"
         else "百度贴吧签到失败，${result.message}"
     }
 
@@ -87,14 +87,14 @@ class BaiduController (
     @Action("游帮帮看广告")
     suspend fun watchAd(baiduEntity: BaiduEntity): String {
         val result = baiduLogic.ybbWatchAd(baiduEntity)
-        return if (result.isSuccess) "游帮帮观看广告成功"
+        return if (result.success()) "游帮帮观看广告成功"
         else "游帮帮观看广告失败，${result.message}"
     }
 
     @Action("游帮帮签到")
     suspend fun ybbSign(baiduEntity: BaiduEntity): String {
         val result = baiduLogic.ybbSign(baiduEntity)
-        return if (result.isSuccess) "游帮帮签到成功"
+        return if (result.success()) "游帮帮签到成功"
         else "游帮帮签到失败，${result.message}"
     }
 

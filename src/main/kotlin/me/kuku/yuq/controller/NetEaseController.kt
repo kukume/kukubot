@@ -26,7 +26,7 @@ class NetEaseController (
 
     @Action("网易登录")
     suspend fun login(qqEntity: QqEntity, qq: Long, session: ContextSession, context: BotActionContext): String? {
-        context.source.sendMessage(mif.at(qq).plus("请选择扫码登陆or密码登陆or手动绑定，1为扫码，2为密码，3为手动绑定").toMessage())
+        context.source.sendMessage(mif.at(qq).plus("请选择扫码登陆or密码登陆or手动绑定，1为扫码，2为手动绑定").toMessage())
         val ss = session.waitNextMessage().firstString()
         if (ss.toInt() == 1) {
             val key = NetEaseLogic.qrcode()
@@ -40,7 +40,7 @@ class NetEaseController (
                 val result = NetEaseLogic.checkQrcode(key)
                 when (result.code) {
                     200 -> {
-                        val netEaseEntity = result.data
+                        val netEaseEntity = result.data()
                         val newEntity = netEaseService.findByQqEntity(qqEntity) ?: NetEaseEntity().also {
                             it.qqEntity = qqEntity
                         }
@@ -63,22 +63,6 @@ class NetEaseController (
                 }
             }
             return null
-        } else if (ss.toInt() == 2) {
-            context.source.sendMessage(mif.at(qq).plus("请发送手机号").toMessage())
-            val phone = session.waitNextMessage().firstString()
-            context.source.sendMessage(mif.at(qq).plus("请发送密码").toMessage())
-            val password = session.waitNextMessage().firstString()
-            val result = NetEaseLogic.login(phone, password)
-            return if (result.isSuccess) {
-                val netEaseEntity = result.data
-                val newEntity = netEaseService.findByQqEntity(qqEntity) ?: NetEaseEntity().also {
-                    it.qqEntity = qqEntity
-                }
-                newEntity.csrf = netEaseEntity.csrf
-                newEntity.musicU = netEaseEntity.musicU
-                netEaseService.save(newEntity)
-                "绑定网易云音乐成功"
-            } else result.message
         } else {
             context.source.sendMessage(mif.at(qq).plus("请发送网易云音乐的cookie").toMessage())
             val cookie = session.waitNextMessage().firstString()
@@ -107,21 +91,21 @@ class NetEaseController (
     @Action("网易签到")
     suspend fun sign(netEaseEntity: NetEaseEntity): String {
         val result = NetEaseLogic.sign(netEaseEntity)
-        return if (result.isSuccess) "网易云音乐签到成功"
+        return if (result.success()) "网易云音乐签到成功"
         else "网易云音乐签到失败，${result.message}"
     }
 
     @Action("网易听歌")
     suspend fun listenMusic(netEaseEntity: NetEaseEntity): String {
         val result = NetEaseLogic.listenMusic(netEaseEntity)
-        return if (result.isSuccess) "网易云音乐听歌成功"
+        return if (result.success()) "网易云音乐听歌成功"
         else "网易云音乐听歌失败，${result.message}"
     }
 
     @Action("网易音乐人签到")
     suspend fun musicianSign(netEaseEntity: NetEaseEntity): String {
         val res = NetEaseLogic.musicianSign(netEaseEntity)
-        return if (res.isSuccess) "网易云音乐人签到成功"
+        return if (res.success()) "网易云音乐人签到成功"
         else "网易云音乐人签到失败，${res.message}"
     }
 
@@ -142,21 +126,21 @@ class NetEaseController (
     @Action("网易发布动态")
     suspend fun dy(netEaseEntity: NetEaseEntity): String {
         val result = NetEaseLogic.publish(netEaseEntity)
-        return if (result.isSuccess) "网易云音乐发布动态成功"
+        return if (result.success()) "网易云音乐发布动态成功"
         else "网易云音乐发布动态失败，${result.message}"
     }
 
     @Action("网易发布mlog")
     suspend fun pub(netEaseEntity: NetEaseEntity): String {
         val result = NetEaseLogic.publishMLog(netEaseEntity)
-        return if (result.isSuccess) "网易云音乐发布mlog成功"
+        return if (result.success()) "网易云音乐发布mlog成功"
         else "网易云音乐发布mlog失败，${result.message}"
     }
 
     @Action("网易主创说")
     suspend fun commentMyMusic(netEaseEntity: NetEaseEntity): String {
         val result = NetEaseLogic.myMusicComment(netEaseEntity)
-        return if (result.isSuccess) "网易云音乐发布主创说成功"
+        return if (result.success()) "网易云音乐发布主创说成功"
         else "网易云音乐发布主创说失败，${result.message}"
     }
 }

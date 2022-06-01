@@ -37,12 +37,12 @@ class BiliBilliJob (
         val list = biliBiliService.findAll().filter { it.config.live == Status.ON }
         for (biliBiliEntity in list) {
             val result = BiliBiliLogic.followed(biliBiliEntity)
-            if (result.isFailure) continue
+            if (result.failure()) continue
             val qqEntity = biliBiliEntity.qqEntity!!
             val qq = qqEntity.qq
             if (!liveMap.containsKey(qq)) liveMap[qq] = mutableMapOf()
             val map = liveMap[qq]!!
-            for (up in result.data) {
+            for (up in result.data()) {
                 val id = up.id.toLong()
                 val name = up.name
                 val live = BiliBiliLogic.live(id.toString())

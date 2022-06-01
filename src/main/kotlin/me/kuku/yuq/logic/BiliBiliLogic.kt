@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
 import me.kuku.yuq.entity.BiliBiliEntity
-import me.kuku.pojo.Result
+import me.kuku.pojo.CommonResult
 import me.kuku.pojo.ResultStatus
 import me.kuku.pojo.UA
 import me.kuku.utils.*
@@ -13,12 +13,12 @@ import okio.ByteString
 
 object BiliBiliLogic {
 
-    suspend fun getIdByName(username: String): Result<List<BiliBiliPojo>> {
+    suspend fun getIdByName(username: String): CommonResult<List<BiliBiliPojo>> {
         val enUsername = username.toUrlEncode()
         val jsonObject = OkHttpKtUtils.getJsonp("https://api.bilibili.com/x/web-interface/search/type?context=&search_type=bili_user&page=1&order=&keyword=$enUsername&category_id=&user_type=&order_sort=&changing=mid&__refresh__=true&_extra=&highlight=1&single_column=0&jsonp=jsonp&callback=__jp2",
             OkUtils.referer("https://search.bilibili.com/topic?keyword=$enUsername"))
         val dataJsonObject = jsonObject.getJSONObject("data")
-        return if (dataJsonObject.getInteger("numResults") != 0) {
+        return if (dataJsonObject.getInteger("numCommonResults") != 0) {
             val jsonArray = dataJsonObject.getJSONArray("result")
             val list = mutableListOf<BiliBiliPojo>()
             for (obj in jsonArray) {
@@ -28,8 +28,8 @@ object BiliBiliLogic {
                     name = singleJsonObject.getString("uname"))
                 )
             }
-            Result.success(list)
-        } else Result.failure("not result")
+            CommonResult.success(list)
+        } else CommonResult.failure("not result")
     }
 
     private fun convert(jsonObject: JSONObject): BiliBiliPojo {
@@ -163,12 +163,12 @@ object BiliBiliLogic {
         return ss
     }
 
-    suspend fun getDynamicById(id: String, offsetId: String = "0"): Result<List<BiliBiliPojo>> {
+    suspend fun getDynamicById(id: String, offsetId: String = "0"): CommonResult<List<BiliBiliPojo>> {
         val jsonObject = OkHttpKtUtils.getJson("https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/space_history?visitor_uid=0&host_uid=$id&offset_dynamic_id=$offsetId&need_top=1",
             OkUtils.referer("https://space.bilibili.com/$id/dynamic"))
         // next_offset  下一页开头
         val dataJsonObject = jsonObject.getJSONObject("data")
-        val jsonArray = dataJsonObject.getJSONArray("cards") ?: return Result.failure(ResultStatus.DYNAMIC_NOT_FOUNT)
+        val jsonArray = dataJsonObject.getJSONArray("cards") ?: return CommonResult.failure(ResultStatus.DYNAMIC_NOT_FOUNT)
         val list = mutableListOf<BiliBiliPojo>()
         for (obj in jsonArray) {
             val singleJsonObject = obj as JSONObject
@@ -176,7 +176,7 @@ object BiliBiliLogic {
             if (extraJsonObject != null && 1 == extraJsonObject.getInteger("is_space_top")) continue
             list.add(convert(singleJsonObject))
         }
-        return Result.success(dataJsonObject.getString("next_offset"), list)
+        return CommonResult.success(message = dataJsonObject.getString("next_offset"), data = list)
     }
 
     suspend fun loginByQr1(): String {
@@ -184,18 +184,18 @@ object BiliBiliLogic {
         return jsonObject.getJSONObject("data").getString("url")
     }
 
-    suspend fun loginByQr2(url: String): Result<BiliBiliEntity> {
+    suspend fun loginByQr2(url: String): CommonResult<BiliBiliEntity> {
         val oauthKey = MyUtils.regex("(?<=oauthKey\\=).*", url)
-            ?: return Result.failure("链接格式不正确", null)
+            ?: return CommonResult.failure("链接格式不正确", null)
         val map = mutableMapOf("oauthKey" to oauthKey, "gourl" to "https://www.bilibili.com")
         val jsonObject = OkHttpKtUtils.postJson("https://passport.bilibili.com/qrcode/getLoginInfo", map)
         val status = jsonObject.getBoolean("status")
         return if (!status) {
             when (jsonObject.getInteger("data")) {
-                -2 -> Result.failure("您的二维码已过期！！", null)
-                -4 -> Result.failure(ResultStatus.QRCODE_NOT_SCANNED)
-                -5 -> Result.failure(ResultStatus.QRCODE_IS_SCANNED)
-                else -> Result.failure(jsonObject.getString("message"), null)
+                -2 -> CommonResult.failure("您的二维码已过期！！", null)
+                -4 -> CommonResult.failure(ResultStatus.QRCODE_NOT_SCANNED)
+                -5 -> CommonResult.failure(ResultStatus.QRCODE_IS_SCANNED)
+                else -> CommonResult.failure(jsonObject.getString("message"), null)
             }
         } else {
             val successUrl = jsonObject.getJSONObject("data").getString("url")
@@ -208,20 +208,20 @@ object BiliBiliLogic {
             biliBiliEntity.cookie = cookie
             biliBiliEntity.userid = userid
             biliBiliEntity.token = token
-            Result.success(biliBiliEntity)
+            CommonResult.success(biliBiliEntity)
         }
     }
 
-    suspend fun friendDynamic(biliBiliEntity: BiliBiliEntity): Result<List<BiliBiliPojo>> {
+    suspend fun friendDynamic(biliBiliEntity: BiliBiliEntity): CommonResult<List<BiliBiliPojo>> {
         val jsonObject = OkHttpKtUtils.getJson("https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/dynamic_new?type_list=268435455",
             OkUtils.cookie(biliBiliEntity.cookie))
-        return if (jsonObject.getInteger("code") != 0)  Result.failure(ResultStatus.COOKIE_EXPIRED)
+        return if (jsonObject.getInteger("code") != 0)  CommonResult.failure(ResultStatus.COOKIE_EXPIRED)
         else {
             val list = mutableListOf<BiliBiliPojo>()
             jsonObject.getJSONObject("data").getJSONArray("cards").forEach{
                 list.add(convert(it as JSONObject))
             }
-            Result.success(list)
+            CommonResult.success(list)
         }
     }
 
@@ -233,56 +233,56 @@ object BiliBiliLogic {
         return BiliBiliLive(dataJsonObject.getString("title"), id, dataJsonObject.getString("url"), status == 1)
     }
 
-    suspend fun liveSign(biliBiliEntity: BiliBiliEntity): Result<Void> {
+    suspend fun liveSign(biliBiliEntity: BiliBiliEntity): CommonResult<Void> {
         val jsonObject = OkHttpKtUtils.getJson("https://api.live.bilibili.com/xlive/web-ucenter/v1/sign/DoSign",
             OkUtils.cookie(biliBiliEntity.cookie))
-        return if (jsonObject.getInteger("code") == 0) Result.success()
-        else Result.failure(jsonObject.getString("message"))
+        return if (jsonObject.getInteger("code") == 0) CommonResult.success()
+        else CommonResult.failure(jsonObject.getString("message"))
     }
 
-    suspend fun like(biliBiliEntity: BiliBiliEntity, id: String, isLike: Boolean): Result<Void> {
+    suspend fun like(biliBiliEntity: BiliBiliEntity, id: String, isLike: Boolean): CommonResult<Void> {
         val map = mapOf("uid" to biliBiliEntity.userid, "dynamic_id" to id,
             "up" to if (isLike) "1" else "2", "csrf_token" to biliBiliEntity.token)
         val jsonObject = OkHttpKtUtils.postJson("https://api.vc.bilibili.com/dynamic_like/v1/dynamic_like/thumb", map,
             OkUtils.cookie(biliBiliEntity.cookie))
-        return if (jsonObject.getInteger("code") == 0) Result.success()
-        else Result.failure("赞动态失败，${jsonObject.getString("message")}")
+        return if (jsonObject.getInteger("code") == 0) CommonResult.success()
+        else CommonResult.failure("赞动态失败，${jsonObject.getString("message")}")
     }
 
-    suspend fun comment(biliBiliEntity: BiliBiliEntity, rid: String, type: String, content: String): Result<Void> {
+    suspend fun comment(biliBiliEntity: BiliBiliEntity, rid: String, type: String, content: String): CommonResult<Void> {
         val map = mapOf("oid" to rid, "type" to type, "message" to content, "plat" to "1",
             "jsoup" to "jsoup", "csrf_token" to biliBiliEntity.token)
         val jsonObject = OkHttpKtUtils.postJson("https://api.bilibili.com/x/v2/reply/add", map, OkUtils.cookie(biliBiliEntity.cookie))
-        return if (jsonObject.getInteger("code") == 0) Result.success()
-        else Result.failure("评论动态失败，${jsonObject.getString("message")}")
+        return if (jsonObject.getInteger("code") == 0) CommonResult.success()
+        else CommonResult.failure("评论动态失败，${jsonObject.getString("message")}")
     }
 
-    suspend fun forward(biliBiliEntity: BiliBiliEntity, id: String, content: String): Result<Void> {
+    suspend fun forward(biliBiliEntity: BiliBiliEntity, id: String, content: String): CommonResult<Void> {
         val map = mapOf("uid" to biliBiliEntity.userid, "dynamic_id" to id,
             "content" to content, "extension" to "{\"emoji_type\":1}", "at_uids" to "", "ctrl" to "[]",
             "csrf_token" to biliBiliEntity.token)
         val jsonObject = OkHttpKtUtils.postJson("https://api.vc.bilibili.com/dynamic_repost/v1/dynamic_repost/repost", map,
             OkUtils.cookie(biliBiliEntity.cookie))
-        return if (jsonObject.getInteger("code") == 0) Result.success()
-        else Result.failure("转发动态失败，${jsonObject.getString("message")}")
+        return if (jsonObject.getInteger("code") == 0) CommonResult.success()
+        else CommonResult.failure("转发动态失败，${jsonObject.getString("message")}")
     }
 
-    suspend fun tossCoin(biliBiliEntity: BiliBiliEntity, rid: String, count: Int = 1): Result<Void> {
+    suspend fun tossCoin(biliBiliEntity: BiliBiliEntity, rid: String, count: Int = 1): CommonResult<Void> {
         val map = mapOf("aid" to rid, "multiply" to count.toString(), "select_like" to "1",
             "cross_domain" to "true", "csrf" to biliBiliEntity.token)
         val jsonObject = OkHttpKtUtils.postJson("https://api.bilibili.com/x/web-interface/coin/add", map,
             OkUtils.headers(biliBiliEntity.cookie, "https://www.bilibili.com/video/"))
-        return if (jsonObject.getInteger("code") == 0) Result.success()
-        else Result.failure("对该动态（视频）投硬币失败，${jsonObject.getString("message")}")
+        return if (jsonObject.getInteger("code") == 0) CommonResult.success()
+        else CommonResult.failure("对该动态（视频）投硬币失败，${jsonObject.getString("message")}")
     }
 
-    suspend fun favorites(biliBiliEntity: BiliBiliEntity, rid: String, name: String): Result<Void> {
+    suspend fun favorites(biliBiliEntity: BiliBiliEntity, rid: String, name: String): CommonResult<Void> {
         val userid = biliBiliEntity.userid
         val cookie = biliBiliEntity.cookie
         val token = biliBiliEntity.token
         val firstJsonObject = OkHttpKtUtils.getJson("https://api.bilibili.com/x/v3/fav/folder/created/list-all?type=2&rid=$rid&up_mid=$userid",
             OkUtils.cookie(cookie))
-        if (firstJsonObject.getInteger("code") != 0) return Result.failure("收藏失败，请重新绑定哔哩哔哩")
+        if (firstJsonObject.getInteger("code") != 0) return CommonResult.failure("收藏失败，请重新绑定哔哩哔哩")
         val jsonArray = firstJsonObject.getJSONObject("data").getJSONArray("list")
         var favoriteId: String? = null
         for (obj in jsonArray) {
@@ -295,29 +295,29 @@ object BiliBiliLogic {
             val map = mapOf("title" to name, "privacy" to "0", "jsonp" to "jsonp", "csrf" to token)
             val jsonObject = OkHttpKtUtils.postJson("https://api.bilibili.com/x/v3/fav/folder/add", map,
                 OkUtils.cookie(cookie))
-            if (jsonObject.getInteger("code") != 0) return Result.failure("您并没有该收藏夹，而且创建该收藏夹失败，请重试！！")
+            if (jsonObject.getInteger("code") != 0) return CommonResult.failure("您并没有该收藏夹，而且创建该收藏夹失败，请重试！！")
             favoriteId = jsonObject.getJSONObject("data").getString("id")
         }
         val map = mapOf("rid" to rid, "type" to "2", "add_media_ids" to favoriteId!!,
             "del_media_ids" to "", "jsonp" to "jsonp", "csrf" to token)
         val jsonObject = OkHttpKtUtils.postJson("https://api.bilibili.com/x/v3/fav/resource/deal", map,
             OkUtils.cookie(cookie))
-        return if (jsonObject.getInteger("code").equals(0)) Result.success()
-        else Result.failure("收藏视频失败，" + jsonObject.getString("message"))
+        return if (jsonObject.getInteger("code").equals(0)) CommonResult.success()
+        else CommonResult.failure("收藏视频失败，" + jsonObject.getString("message"))
     }
 
-    private suspend fun uploadImage(biliBiliEntity: BiliBiliEntity, byteString: ByteString): Result<JSONObject> {
+    private suspend fun uploadImage(biliBiliEntity: BiliBiliEntity, byteString: ByteString): CommonResult<JSONObject> {
         val body = MultipartBody.Builder().setType(MultipartBody.FORM)
             .addFormDataPart("file_up", "123.jpg", OkUtils.stream(byteString))
             .addFormDataPart("biz", "draw")
             .addFormDataPart("category", "daily").build()
         val jsonObject = OkHttpKtUtils.postJson("https://api.vc.bilibili.com/api/v1/drawImage/upload", body,
             OkUtils.cookie(biliBiliEntity.cookie))
-        return if (jsonObject.getInteger("code") == 0) Result.success(jsonObject.getJSONObject("data"))
-        else Result.failure("图片上传失败，" + jsonObject.getString("message"), null)
+        return if (jsonObject.getInteger("code") == 0) CommonResult.success(jsonObject.getJSONObject("data"))
+        else CommonResult.failure("图片上传失败，" + jsonObject.getString("message"), null)
     }
 
-    suspend fun publishDynamic(biliBiliEntity: BiliBiliEntity, content: String, images: List<String>): Result<Void> {
+    suspend fun publishDynamic(biliBiliEntity: BiliBiliEntity, content: String, images: List<String>): CommonResult<Void> {
         val jsonArray = JSONArray()
         images.forEach{
             jsonArray.add(uploadImage(biliBiliEntity, OkHttpKtUtils.getByteString(it)))
@@ -328,8 +328,8 @@ object BiliBiliLogic {
             "at_uids" to "", "at_control" to "", "csrf_token" to biliBiliEntity.token)
         val jsonObject = OkHttpKtUtils.postJson("https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/create_draw", map,
             OkUtils.cookie(biliBiliEntity.cookie))
-        return if (jsonObject.getInteger("code") == 0) Result.success()
-        else Result.failure("发布动态失败，" + jsonObject.getString("message"))
+        return if (jsonObject.getInteger("code") == 0) CommonResult.success()
+        else CommonResult.failure("发布动态失败，" + jsonObject.getString("message"))
     }
 
     suspend fun ranking(): List<BiliBiliRanking> {
@@ -351,21 +351,21 @@ object BiliBiliLogic {
         return list
     }
 
-    suspend fun report(biliBiliEntity: BiliBiliEntity, aid: String, cid: String, proGRes: Int): Result<Void> {
+    suspend fun report(biliBiliEntity: BiliBiliEntity, aid: String, cid: String, proGRes: Int): CommonResult<Void> {
         val map = mapOf("aid" to aid, "cid" to cid, "progres" to proGRes.toString(),
             "csrf" to biliBiliEntity.token)
         val jsonObject = OkHttpKtUtils.postJson("http://api.bilibili.com/x/v2/history/report", map,
             OkUtils.cookie(biliBiliEntity.cookie))
-        return if (jsonObject.getInteger("code") == 0) Result.success()
-        else Result.failure(jsonObject.getString("message"))
+        return if (jsonObject.getInteger("code") == 0) CommonResult.success()
+        else CommonResult.failure(jsonObject.getString("message"))
     }
 
-    suspend fun share(biliBiliEntity: BiliBiliEntity, aid: String): Result<Void> {
+    suspend fun share(biliBiliEntity: BiliBiliEntity, aid: String): CommonResult<Void> {
         val map = mapOf("aid" to aid, "csrf" to biliBiliEntity.token)
         val jsonObject = OkHttpKtUtils.postJson("https://api.bilibili.com/x/web-interface/share/add", map,
             OkUtils.cookie(biliBiliEntity.cookie))
-        return if (jsonObject.getInteger("code") == 0) Result.success()
-        else Result.failure(jsonObject.getString("message"))
+        return if (jsonObject.getInteger("code") == 0) CommonResult.success()
+        else CommonResult.failure(jsonObject.getString("message"))
     }
 
     suspend fun getReplay(biliBiliEntity: BiliBiliEntity, oid: String, page: Int): List<BiliBiliReplay> {
@@ -384,7 +384,7 @@ object BiliBiliLogic {
         }else listOf()
     }
 
-    suspend fun reportComment(biliBiliEntity: BiliBiliEntity, oid: String, rpId: String, reason: Int): Result<Void> {
+    suspend fun reportComment(biliBiliEntity: BiliBiliEntity, oid: String, rpId: String, reason: Int): CommonResult<Void> {
         // 违法违规 9   色情  2    低俗 10    赌博诈骗  12
         // 人身攻击  7   侵犯隐私 15
         // 垃圾广告 1   引战 4    剧透   5    刷屏   3      抢楼 16    内容不相关   8     青少年不良信息  17
@@ -393,8 +393,8 @@ object BiliBiliLogic {
             "content" to "", "ordering" to "heat", "jsonp" to "jsonp", "csrf" to biliBiliEntity.token)
         val jsonObject = OkHttpKtUtils.postJson("https://api.bilibili.com/x/v2/reply/report", map,
             OkUtils.headers(biliBiliEntity.cookie, "https://www.bilibili.com/"))
-        return if (jsonObject.getInteger("code") == 0) Result.success("举报评论成功！！", null)
-        else Result.failure("举报评论失败！！")
+        return if (jsonObject.getInteger("code") == 0) CommonResult.success(message = "举报评论成功！！")
+        else CommonResult.failure("举报评论失败！！")
     }
 
     suspend fun getOidByBvId(bvId: String): String {
@@ -405,7 +405,7 @@ object BiliBiliLogic {
         return jsonObject.getString("aid")
     }
 
-    suspend fun followed(biliBiliEntity: BiliBiliEntity): Result<List<BiliBiliFollowed>> {
+    suspend fun followed(biliBiliEntity: BiliBiliEntity): CommonResult<List<BiliBiliFollowed>> {
         val list = mutableListOf<BiliBiliFollowed>()
         var i = 1
         while (true) {
@@ -417,9 +417,9 @@ object BiliBiliLogic {
                     val it = any as JSONObject
                     list.add(BiliBiliFollowed(it.getString("mid"), it.getString("uname")))
                 }
-            } else return Result.failure(jsonObject.getString("message"))
+            } else return CommonResult.failure(jsonObject.getString("message"))
         }
-        return Result.success(list)
+        return CommonResult.success(list)
     }
 
     private suspend fun onceFollowed(biliBiliEntity: BiliBiliEntity, i: Int): JSONObject {

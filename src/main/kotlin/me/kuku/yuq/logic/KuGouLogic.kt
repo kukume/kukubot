@@ -2,9 +2,9 @@
 
 package me.kuku.yuq.logic
 
+import me.kuku.pojo.CommonResult
 import me.kuku.yuq.entity.KuGouEntity
 import me.kuku.pojo.UA
-import me.kuku.pojo.Result
 import me.kuku.utils.*
 import org.springframework.stereotype.Service
 import java.util.*
@@ -82,7 +82,7 @@ class KuGouLogic {
             qrcode, newMid)
     }
 
-    suspend fun checkQrcode(kuGouQrcode: KuGouQrcode): Result<KuGouEntity> {
+    suspend fun checkQrcode(kuGouQrcode: KuGouQrcode): CommonResult<KuGouEntity> {
         val map = mutableMapOf("appid" to "1014", "clientver" to "8131",
             "clienttime" to clientTime().toString(), "qrcode" to kuGouQrcode.qrcode, "dfid" to "-",
             "mid" to kuGouQrcode.mid, "plat" to "4", "uuid" to kuGouQrcode.mid)
@@ -91,8 +91,8 @@ class KuGouLogic {
         )
         val dataStatus = jsonObject.getJSONObject("data").getInteger("status")
         return when (dataStatus) {
-            1, 2 -> Result.failure(0, "二维码未被扫描或已被扫描")
-            0 -> Result.failure("二维码已失效！")
+            1, 2 -> CommonResult.failure(code = 0, message = "二维码未被扫描或已被扫描")
+            0 -> CommonResult.failure("二维码已失效！")
             4 -> {
                 val token = jsonObject.getJSONObject("data").getString("token")
                 val userid = jsonObject.getJSONObject("data").getLong("userid")
@@ -105,13 +105,13 @@ class KuGouLogic {
                 kuGouEntity.userid = userid
                 kuGouEntity.mid = kuGouQrcode.mid
                 kuGouEntity.kuGoo = kuGoo!!
-                Result.success(kuGouEntity)
+                CommonResult.success(kuGouEntity)
             }
-            else -> Result.failure("未知的错误代码：$dataStatus")
+            else -> CommonResult.failure("未知的错误代码：$dataStatus")
         }
     }
 
-    suspend fun sendMobileCode(phone: String, mid: String): Result<Void> {
+    suspend fun sendMobileCode(phone: String, mid: String): CommonResult<Void> {
         val time = System.currentTimeMillis()
         val map = mutableMapOf(
             // 1058
@@ -127,9 +127,8 @@ class KuGouLogic {
             "https://api.kukuqaq.com/exec/kuGou",
             mutableMapOf("phone" to phone, "time" to time.toString())
         )
-        val preDataJsonObject = preJsonObject.getJSONObject("data")
-        val params = preDataJsonObject.getString("params")
-        val pk = preDataJsonObject.getString("pk")
+        val params = preJsonObject.getString("params")
+        val pk = preJsonObject.getString("pk")
         val mobile = phone.substring(0, 2) + "********" + phone.substring(phone.length - 1)
         val other = "{\"plat\":4,\"clienttime_ms\":$time,\"businessid\":5,\"pk\":\"$pk\",\"params\":\"$params\",\"mobile\":\"$mobile\"}"
         val jsonObject = OkHttpKtUtils.postJson(
@@ -138,11 +137,11 @@ class KuGouLogic {
             mutableMapOf("x-router" to "loginservice.kugou.com", "referer" to "https://m3ws.kugou.com/",
                 "user-agent" to UA.PC.value)
         )
-        return if (jsonObject.getInteger("error_code") == 0) Result.success()
-        else Result.failure(jsonObject.getString("data"))
+        return if (jsonObject.getInteger("error_code") == 0) CommonResult.success()
+        else CommonResult.failure(jsonObject.getString("data"))
     }
 
-    suspend fun verifyCode(phone: String, code: String, mid: String): Result<KuGouEntity> {
+    suspend fun verifyCode(phone: String, code: String, mid: String): CommonResult<KuGouEntity> {
         val time = clientTime()
         val map = mutableMapOf(
             "appid" to "3116",
@@ -166,17 +165,17 @@ class KuGouLogic {
             val kuGoo = jsonObject.getJSONObject("data").getString("value")
             val token = OkUtils.cookie(cookie, "t")
             val userid = OkUtils.cookie(cookie, "KugooID")!!
-            Result.success(KuGouEntity().also {
+            CommonResult.success(KuGouEntity().also {
                 it.token = token!!
                 it.userid = userid.toLong()
                 it.kuGoo = kuGoo
                 it.mid = mid
             })
         }
-        else Result.failure(jsonObject.getString("data"))
+        else CommonResult.failure(jsonObject.getString("data"))
     }
 
-    suspend fun login(username: String, password: String, mid: String?): Result<KuGouEntity> {
+    suspend fun login(username: String, password: String, mid: String?): CommonResult<KuGouEntity> {
         val newMid = mid ?: mid()
         val md5Pwd = MD5Utils.toMD5(password)
         val params = "appid=1058&username=$username&pwd=$md5Pwd&code=&ticket=&clienttime=${clientTime()}&expire_day=60&autologin=false&redirect_uri=&state=&callback=loginModule.loginCallback&login_ver=1&mobile=&mobile_code=&plat=4&dfid=-&mid=$newMid&kguser_jv=180925"
@@ -187,26 +186,26 @@ class KuGouLogic {
         return when (jsonObject.getInteger("errorCode")){
             30791 -> {
                 // 验证码
-                Result.failure("需要验证验证码，请使用短信验证码登陆")
+                CommonResult.failure("需要验证验证码，请使用短信验证码登陆")
             }
             null -> {
                 val cookie = OkUtils.cookie(response)
                 val kuGoo = OkUtils.cookie(cookie, "KuGoo")
                 val token = jsonObject.getString("token")
                 val userid = jsonObject.getLong("userid")
-                Result.success(KuGouEntity().also {
+                CommonResult.success(KuGouEntity().also {
                     it.token = token
                     it.userid = userid
                     it.kuGoo = kuGoo!!
                     it.mid = newMid
                 })
             }
-            30768 -> Result.failure("需要短信验证码！请直接使用短信验证码登录！<酷狗验证码 phone>")
-            else -> Result.failure(jsonObject.getString("errorMsg"))
+            30768 -> CommonResult.failure("需要短信验证码！请直接使用短信验证码登录！<酷狗验证码 phone>")
+            else -> CommonResult.failure(jsonObject.getString("errorMsg"))
         }
     }
 
-    suspend fun musicianSign(kuGouEntity: KuGouEntity): Result<Void> {
+    suspend fun musicianSign(kuGouEntity: KuGouEntity): CommonResult<Void> {
         // 1014
         // 1058
         val kuGoo = kuGouEntity.kuGoo
@@ -218,11 +217,11 @@ class KuGouLogic {
             "mid" to time, "uuid" to time)
         val jsonObject =
             OkHttpKtUtils.postJson("https://h5activity.kugou.com/v1/musician/do_signed?${signature2(map)}", mapOf())
-        return if (jsonObject.getInteger("errcode") == 0) Result.success("酷狗音乐人签到成功！", null)
-        else Result.failure("酷狗音乐人签到失败！" + jsonObject.getString("errmsg"))
+        return if (jsonObject.getInteger("errcode") == 0) CommonResult.success(message = "酷狗音乐人签到成功！")
+        else CommonResult.failure("酷狗音乐人签到失败！" + jsonObject.getString("errmsg"))
     }
 
-    suspend fun listenMusic(kuGouEntity: KuGouEntity): Result<Void> {
+    suspend fun listenMusic(kuGouEntity: KuGouEntity): CommonResult<Void> {
 //        val aId = MyUtils.regex("a_id=", "&", kuGouEntity.kuGoo)!!
         val map = mutableMapOf("userid" to kuGouEntity.userid.toString(), "token" to kuGouEntity.token,
             "appid" to "3116", "clientver" to "10547", "clienttime" to (System.currentTimeMillis() / 1000).toString(),
@@ -231,8 +230,8 @@ class KuGouLogic {
         val jsonObject = OkHttpKtUtils.postJson("https://gateway.kugou.com/v2/report/listen_song?${signature3(map, other)}",
             OkUtils.text(other), mapOf("x-router" to "youth.kugou.com", "User-Agent" to "Android12-1070-10536-130-0-ReportPlaySongToServerProtocol-wifi"))
         val code = jsonObject.getInteger("error_code")
-        return if (code == 0 || code == 130012) Result.success()
-        else Result.failure(jsonObject.getString("error_msg"))
+        return if (code == 0 || code == 130012) CommonResult.success()
+        else CommonResult.failure(jsonObject.getString("error_msg"))
     }
 
 }

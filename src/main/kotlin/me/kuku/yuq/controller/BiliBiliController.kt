@@ -32,7 +32,7 @@ class BiliBiliController (
             when (result.code) {
                 0 -> continue
                 200 -> {
-                    val newEntity = result.data
+                    val newEntity = result.data()
                     val biliBiliEntity = biliBiliService.findByQqEntity(qqEntity) ?: BiliBiliEntity().also {
                         it.qqEntity = qqEntity
                     }

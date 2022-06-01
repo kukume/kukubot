@@ -1,7 +1,7 @@
 package me.kuku.yuq.logic
 
 import kotlinx.coroutines.delay
-import me.kuku.pojo.Result
+import me.kuku.pojo.CommonResult
 import me.kuku.pojo.UA
 import me.kuku.utils.*
 import org.jsoup.Jsoup
@@ -9,7 +9,7 @@ import java.io.IOException
 
 object HostLocLogic {
 
-    suspend fun login(username: String, password: String): Result<String> {
+    suspend fun login(username: String, password: String): CommonResult<String> {
         val map = mapOf(
             "fastloginfield" to "username", "username" to username, "cookietime" to "2592000",
             "password" to password, "quickforward" to "yes", "handlekey" to "ls"
@@ -18,8 +18,8 @@ object HostLocLogic {
             map, OkUtils.headers("", "https://hostloc.com/forum.php", UA.PC))
         val str = OkUtils.str(response)
         return if (str.contains("https://hostloc.com/forum.php"))
-            Result.success(OkUtils.cookie(response))
-        else Result.failure("账号或密码错误或其他原因登录失败！")
+            CommonResult.success(OkUtils.cookie(response))
+        else CommonResult.failure("账号或密码错误或其他原因登录失败！")
     }
 
     suspend fun isLogin(cookie: String): Boolean {

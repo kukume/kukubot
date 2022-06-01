@@ -1,28 +1,28 @@
 package me.kuku.yuq.logic
 
+import me.kuku.pojo.CommonResult
 import me.kuku.yuq.entity.StepEntity
-import me.kuku.pojo.Result
 import me.kuku.utils.*
 
 object LeXinStepLogic {
 
-    suspend fun login(phone: String, password: String): Result<StepEntity> {
+    suspend fun login(phone: String, password: String): CommonResult<StepEntity> {
         val newPassword = if (password.length == 32) password else MD5Utils.toMD5(password)
         val response = OkHttpKtUtils.post("https://sports.lifesense.com/sessions_service/login?screenHeight=2267&screenWidth=1080&systemType=2&version=4.5",
             OkUtils.json("{\"password\":\"$newPassword\",\"clientId\":\"${MyUtils.randomNum(32)}\",\"appType\":6,\"loginName\":\"$phone\",\"roleType\":0}"))
         val jsonObject = OkUtils.json(response)
         return if (jsonObject.getInteger("code") == 200) {
             val cookie = OkUtils.cookie(response)
-            Result.success(StepEntity().also {
+            CommonResult.success(StepEntity().also {
                 it.leXinCookie = cookie
                 it.leXinUserid = jsonObject.getJSONObject("data").getString("userId")
                 it.leXinAccessToken = jsonObject.getJSONObject("data").getString("accessToken")
             })
-        } else Result.failure(jsonObject.getString("msg"))
+        } else CommonResult.failure(jsonObject.getString("msg"))
     }
 
-    suspend fun modifyStepCount(stepEntity: StepEntity, step: Int): Result<Void> {
-        if (stepEntity.leXinCookie.isEmpty()) return Result.failure("未绑定乐心运动，操作失败")
+    suspend fun modifyStepCount(stepEntity: StepEntity, step: Int): CommonResult<Void> {
+        if (stepEntity.leXinCookie.isEmpty()) return CommonResult.failure("未绑定乐心运动，操作失败")
         val dateTimePattern = "yyyy-MM-dd hh:mm:ss"
         val datePattern = "yyyy-MM-dd"
         val time = System.currentTimeMillis()
@@ -31,8 +31,8 @@ object LeXinStepLogic {
             OkUtils.json("{\"list\":[{\"active\":1,\"calories\":${step / 4},\"created\":\"${DateTimeFormatterUtils.format(time, dateTimePattern)}\",\"dataSource\":2,\"dayMeasurementTime\":\"${DateTimeFormatterUtils.format(time, datePattern)}\",\"deviceId\":\"M_NULL\",\"distance\":${step / 3},\"id\":\"${MyUtils.randomLetter(32)}\",\"isUpload\":0,\"measurementTime\":\"${DateTimeFormatterUtils.format(time, dateTimePattern)}\",\"priority\":0,\"step\":$step,\"type\":2,\"updated\":$time,\"userId\":\"${stepEntity.leXinUserid}\",\"DataSource\":2,\"exerciseTime\":0}]}"),
             OkUtils.cookie(stepEntity.leXinCookie))
         return if (jsonObject.getInteger("code") == 200)
-            Result.success()
-        else Result.failure(jsonObject.getString("msg"))
+            CommonResult.success()
+        else CommonResult.failure(jsonObject.getString("msg"))
     }
 
 }
@@ -41,40 +41,40 @@ object XiaomiStepLogic {
 
     private const val ua = "Dalvik/2.1.0 (Linux; U; Android 10; V1914A Build/QP1A.190711.020)"
 
-    suspend fun login(phone: String, password: String): Result<StepEntity> {
+    suspend fun login(phone: String, password: String): CommonResult<StepEntity> {
         val map = mutableMapOf("phone_number" to "+86$phone", "password" to password,
             "state" to "REDIRECTION", "client_id" to "HuaMi", "country_code" to "CN", "token" to "access",
             "region" to "cn-northwest-1", "redirect_uri" to "https://s3-us-west-2.amazonaws.com/hm-registration/successsignin.html")
         val response = OkHttpKtUtils.post("https://api-user.huami.com/registrations/%2B86$phone/tokens", map, OkUtils.ua(ua)).apply { close() }
-        val locationUrl = response.header("location") ?: return Result.failure("登录失败")
-        val access = MyUtils.regex("access=", "&", locationUrl) ?: return Result.failure("账号或者密码错误")
+        val locationUrl = response.header("location") ?: return CommonResult.failure("登录失败")
+        val access = MyUtils.regex("access=", "&", locationUrl) ?: return CommonResult.failure("账号或者密码错误")
         val ssMap = mapOf("app_name" to "com.xiaomi.hm.health", "country_code" to "CN", "code" to access,
             "device_id" to "37:83:85:5a:e8:93", "device_model" to "android_phone", "app_version" to "4.5.0",
             "grant_type" to "access_token", "allow_registration" to "false", "dn" to "account.huami.com,api-user.huami.com,api-watch.huami.com,api-analytics.huami.com,app-analytics.huami.com,api-mifit.huami.com",
             "third_name" to "huami_phone", "source" to "com.xiaomi.hm.health:4.5.0:50340")
         val jsonObject = OkHttpKtUtils.postJson("https://account.huami.com/v2/client/login", ssMap, OkUtils.ua(ua))
         val token = jsonObject.getJSONObject("token_info").getString("login_token")
-        return Result.success(StepEntity().also {
+        return CommonResult.success(StepEntity().also {
             it.miLoginToken = token
         })
     }
 
-    private suspend fun getInfo(token: String): Result<MiInfo> {
+    private suspend fun getInfo(token: String): CommonResult<MiInfo> {
         val jsonObject = OkHttpKtUtils.getJson("https://account-cn.huami.com/v1/client/app_tokens?app_name=com.xiaomi.hm.health&dn=api-user.huami.com%2Capi-mifit.huami.com%2Capp-analytics.huami.com&login_token=$token",
             OkUtils.ua(ua))
         return if ("ok" == jsonObject.getString("result")) {
             val infoJsonObject = jsonObject.getJSONObject("token_info")
-            Result.success(MiInfo(infoJsonObject.getString("app_token"), infoJsonObject.getString("user_id")))
-        } else Result.failure("登录已失效，请重新登录！！")
+            CommonResult.success(MiInfo(infoJsonObject.getString("app_token"), infoJsonObject.getString("user_id")))
+        } else CommonResult.failure("登录已失效，请重新登录！！")
     }
 
-    suspend fun modifyStepCount(stepEntity: StepEntity, step: Int): Result<Void> {
+    suspend fun modifyStepCount(stepEntity: StepEntity, step: Int): CommonResult<Void> {
         val token = stepEntity.miLoginToken
-        if (token.isEmpty()) return Result.failure("未绑定小米运动，操作失败")
+        if (token.isEmpty()) return CommonResult.failure("未绑定小米运动，操作失败")
         val infoResult = getInfo(token)
-        if (infoResult.isFailure) return Result.failure("步数修改失败，登录已失效")
+        if (infoResult.failure()) return CommonResult.failure("步数修改失败，登录已失效")
         val tenDateStr = System.currentTimeMillis().toString().substring(0, 10)
-        val miInfo = infoResult.data
+        val miInfo = infoResult.data()
         val paramsMap = mapOf("userid" to miInfo.userId, "last_sync_data_time" to tenDateStr,
             "device_type" to "0", "last_deviceid" to "DA932FFFFE8816E7",
             "data_json" to """
@@ -85,9 +85,9 @@ object XiaomiStepLogic {
             paramsMap, mapOf("apptoken" to miInfo.appToken, "user-agent" to ua)
         )
         return when (jsonObject.getInteger("code")) {
-            1 -> Result.success()
-            0 -> Result.failure("步数修改失败，登录已失效")
-            else -> Result.failure("步数修改失败，未知错误")
+            1 -> CommonResult.success()
+            0 -> CommonResult.failure("步数修改失败，登录已失效")
+            else -> CommonResult.failure("步数修改失败，未知错误")
         }
     }
 

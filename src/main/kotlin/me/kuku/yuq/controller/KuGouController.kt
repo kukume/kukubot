@@ -32,12 +32,12 @@ class KuGouController (
         }
         val mid = kuGouEntity.mid
         val result = kuGouLogic.sendMobileCode(phone.toString(), mid)
-        return if (result.isSuccess) {
+        return if (result.success()) {
             context.source.sendMessage("请发送短信验证码")
             val code = session.waitNextMessage(1000 * 60 * 2).firstString()
             val verifyResult = kuGouLogic.verifyCode(phone.toString(), code, mid)
-            if (verifyResult.isSuccess) {
-                val newKuGouEntity = verifyResult.data
+            if (verifyResult.success()) {
+                val newKuGouEntity = verifyResult.data()
                 kuGouEntity.kuGoo = newKuGouEntity.kuGoo
                 kuGouEntity.token = newKuGouEntity.token
                 kuGouEntity.userid = newKuGouEntity.userid
@@ -56,13 +56,13 @@ class KuGouController (
     @Action("酷狗音乐人签到")
     suspend fun kuGouMusicianSign(kuGouEntity: KuGouEntity): String {
         val ss = kuGouLogic.musicianSign(kuGouEntity)
-        return if (ss.isSuccess) "酷狗音乐人签到成功" else "酷狗音乐人签到失败，${ss.message}"
+        return if (ss.success()) "酷狗音乐人签到成功" else "酷狗音乐人签到失败，${ss.message}"
     }
 
     @Action("酷狗听歌")
     suspend fun kuGouListenMusic(kuGouEntity: KuGouEntity): String {
         val ss = kuGouLogic.listenMusic(kuGouEntity)
-        return if (ss.isSuccess) "酷狗听歌成功" else "酷狗听歌失败，${ss.message}"
+        return if (ss.success()) "酷狗听歌成功" else "酷狗听歌失败，${ss.message}"
     }
 
     @Action("酷狗自动签到 {status}")

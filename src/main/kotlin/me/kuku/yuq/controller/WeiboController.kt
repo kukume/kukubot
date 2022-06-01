@@ -30,8 +30,8 @@ class WeiboController (
         while (true) {
             delay(3000)
             val result = WeiboLogic.loginByQr2(weiboQrcode)
-            if (result.isSuccess) {
-                val newWeiboEntity = result.data
+            if (result.success()) {
+                val newWeiboEntity = result.data()
                 val weiboEntity = weiboService.findByQqEntity(qqEntity) ?: WeiboEntity().also {
                     it.qqEntity = qqEntity
                 }
@@ -56,7 +56,7 @@ class WeiboController (
     @Action("微博超话签到")
     suspend fun superSign(weiboEntity: WeiboEntity): String {
         val result = WeiboLogic.superTalkSign(weiboEntity)
-        return if (result.isSuccess) "微博超话签到成功"
+        return if (result.success()) "微博超话签到成功"
         else "微博超话签到失败，${result.message}"
     }
 

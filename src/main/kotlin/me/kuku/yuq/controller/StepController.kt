@@ -31,8 +31,8 @@ class StepController (
         context.source.sendMessage(mif.at(qqEntity.qq).plus("请发送密码").toMessage())
         val password = session.waitNextMessage().firstString()
         val result = LeXinStepLogic.login(phone, password)
-        return if (result.isSuccess) {
-            val newStepEntity = result.data
+        return if (result.success()) {
+            val newStepEntity = result.data()
             val stepEntity = stepService.findByQqEntity(qqEntity) ?: StepEntity().also {
                 it.qqEntity = qqEntity
             }
@@ -51,8 +51,8 @@ class StepController (
         context.source.sendMessage(mif.at(qqEntity.qq).plus("请发送密码").toMessage())
         val password = session.waitNextMessage().firstString()
         val result = XiaomiStepLogic.login(phone, password)
-        return if (result.isSuccess) {
-            val newEntity = result.data
+        return if (result.success()) {
+            val newEntity = result.data()
             val stepEntity = stepService.findByQqEntity(qqEntity) ?: StepEntity().also {
                 it.qqEntity = qqEntity
             }
@@ -72,7 +72,7 @@ class StepController (
         context.source.sendMessage(mif.at(qq).plus("请发送需要修改的步数").toMessage())
         val s = session.waitNextMessage().firstString().toIntOrNull() ?: return "发送的步数有误"
         val result = LeXinStepLogic.modifyStepCount(stepEntity, s)
-        return if (result.isSuccess) "修改步数成功"
+        return if (result.success()) "修改步数成功"
         else "修改步数失败，${result.message}"
     }
 
@@ -81,7 +81,7 @@ class StepController (
         context.source.sendMessage(mif.at(qq).plus("请发送需要修改的步数").toMessage())
         val s = session.waitNextMessage().firstString().toIntOrNull() ?: return "发送的步数有误"
         val result = XiaomiStepLogic.modifyStepCount(stepEntity, s)
-        return if (result.isSuccess) "修改步数成功"
+        return if (result.success()) "修改步数成功"
         else "修改步数失败，${result.message}"
     }
 

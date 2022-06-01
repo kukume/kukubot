@@ -1,7 +1,7 @@
 package me.kuku.yuq.logic
 
 import com.alibaba.fastjson.JSONObject
-import me.kuku.pojo.BaseResult
+import me.kuku.pojo.CommonResult
 import me.kuku.pojo.UA
 import me.kuku.utils.*
 import me.kuku.yuq.entity.HuYaEntity
@@ -20,25 +20,25 @@ class HuYaLogic {
         return HuYaQrcode("https://udblgn.huya.com/qrLgn/getQrImg?k=$qrId&appId=5002", qrId, OkUtils.cookie(response), requestId)
     }
 
-    suspend fun checkQrcode(huYaQrcode: HuYaQrcode): BaseResult<HuYaEntity> {
+    suspend fun checkQrcode(huYaQrcode: HuYaQrcode): CommonResult<HuYaEntity> {
         val response = OkHttpKtUtils.post("https://udblgn.huya.com/qrLgn/tryQrLogin", OkUtils.json("""
             {"uri":"70003","version":"2.4","context":"WB-b11031a6ccf245169759e35fc6adc5d9-C9D11B3412B00001BAEA164B1FD4176D-","requestId":"${huYaQrcode.requestId}","appId":"5002","data":{"qrId":"${huYaQrcode.id}","remember":"1","domainList":"","behavior":"%7B%22a%22%3A%22m%22%2C%22w%22%3A520%2C%22h%22%3A340%2C%22b%22%3A%5B%5D%7D","page":"https%3A%2F%2Fwww.huya.com%2F"}}
         """.trimIndent()), OkUtils.cookie(huYaQrcode.cookie))
         val jsonObject = OkUtils.json(response)
         return when (val stage = jsonObject.getJSONObject("data").getInteger("stage")) {
-            0, 1 -> BaseResult.failure("等待扫码", null, 0)
+            0, 1 -> CommonResult.failure("等待扫码", null, 0)
             2 -> {
                 val cookie = OkUtils.cookie(response)
-                BaseResult.success(HuYaEntity().also {
+                CommonResult.success(HuYaEntity().also {
                     it.cookie = cookie
                 })
             }
-            5 -> BaseResult.failure("二维码已失效")
-            else -> BaseResult.failure("错误代码为$stage")
+            5 -> CommonResult.failure("二维码已失效")
+            else -> CommonResult.failure("错误代码为$stage")
         }
     }
 
-    fun live(huYaEntity: HuYaEntity): BaseResult<List<HuYaLive>> {
+    fun live(huYaEntity: HuYaEntity): CommonResult<List<HuYaLive>> {
         var i = 0
         val resultList = mutableListOf<HuYaLive>()
         while (true) {
@@ -53,9 +53,9 @@ class HuYaLogic {
                         ss.getInteger("iIsLive") == 1, ss.getString("sNick"), ss.getString("sVideoCaptureUrl"), "https://www.huya.com/${ss.getLong("iRoomId")}")
                     resultList.add(huYaLive)
                 }
-            } else return BaseResult.failure<List<HuYaLive>>("查询失败，可能cookie已失效").also { response.close() }
+            } else return CommonResult.failure<List<HuYaLive>>("查询失败，可能cookie已失效").also { response.close() }
         }
-        return BaseResult.success(resultList)
+        return CommonResult.success(resultList)
     }
 
 }

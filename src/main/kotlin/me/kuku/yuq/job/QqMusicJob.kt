@@ -55,8 +55,8 @@ class QqMusicJob(
         val list = qqMusicService.findAll().filter { it.config.password.isNotEmpty() }
         for (qqMusicEntity in list) {
             val loginResult = qqMusicLogic.loginByPassword(qqMusicEntity.qqEntity!!.qq, qqMusicEntity.config.password)
-            if (loginResult.isSuccess) {
-                val newEntity = loginResult.data
+            if (loginResult.success()) {
+                val newEntity = loginResult.data()
                 qqMusicEntity.cookie = newEntity.cookie
                 qqMusicService.save(qqMusicEntity)
             }

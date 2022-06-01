@@ -1,7 +1,7 @@
 package me.kuku.yuq.logic
 
 import com.alibaba.fastjson.JSONObject
-import me.kuku.pojo.BaseResult
+import me.kuku.pojo.CommonResult
 import me.kuku.pojo.UA
 import me.kuku.utils.*
 import me.kuku.yuq.entity.DouYuEntity
@@ -23,11 +23,11 @@ class DouYuLogic {
     }
 
 
-    suspend fun checkQrcode(douYuQqQrcode: DouYuQqQrcode): BaseResult<DouYuEntity> {
+    suspend fun checkQrcode(douYuQqQrcode: DouYuQqQrcode): CommonResult<DouYuEntity> {
         val ss = QqQrCodeLoginUtils.authorize(qqApp, douYuQqQrcode.qqLoginQrcode.sig, douYuQqQrcode.state, "https://www.douyu.com/member/oauth/signin/qq")
-        return if (ss.isFailure) BaseResult.failure(code = ss.code,  message = ss.message)
+        return if (ss.failure()) CommonResult.failure(code = ss.code,  message = ss.message)
         else {
-            val url = ss.data
+            val url = ss.data()
             val headers = OkUtils.headers(douYuQqQrcode.cookie, "https://graph.qq.com/", UA.PC)
             val firstResponse = OkHttpKtUtils.get(url, headers).apply { close() }
             val firstUrl = firstResponse.header("location")!!
@@ -35,13 +35,13 @@ class DouYuLogic {
             val secondUrl = secondResponse.header("location")!!
             val thirdResponse = OkHttpKtUtils.get("https:$secondUrl", headers).apply { close() }
             val cookie = OkUtils.cookie(thirdResponse)
-            BaseResult.success(DouYuEntity().also {
+            CommonResult.success(DouYuEntity().also {
                 it.cookie = cookie
             })
         }
     }
 
-    suspend fun room(douYuEntity: DouYuEntity): BaseResult<List<DouYuRoom>> {
+    suspend fun room(douYuEntity: DouYuEntity): CommonResult<List<DouYuRoom>> {
         var i = 1
         val resultList = mutableListOf<DouYuRoom>()
         while (true) {
@@ -55,9 +55,9 @@ class DouYuLogic {
                         singleJsonObject.getString("online"), singleJsonObject.getLong("room_id"))
                     resultList.add(douYuRoom)
                 }
-            } else return BaseResult.failure(jsonObject.getString("msg"))
+            } else return CommonResult.failure(jsonObject.getString("msg"))
         }
-        return BaseResult.success(resultList)
+        return CommonResult.success(resultList)
     }
 
 }

@@ -47,7 +47,7 @@ class QqMusicController(
                     val result = qqMusicLogic.checkQrcode(qrcode)
                     return when (result.code) {
                         200 -> {
-                            val newEntity = result.data
+                            val newEntity = result.data()
                             qqMusicEntity.cookie = newEntity.cookie
                             qqMusicService.save(qqMusicEntity)
                             "绑定qq音乐成功"
@@ -69,10 +69,10 @@ class QqMusicController(
                     qqVc.smsCode = code
                     qqMusicLogic.loginByPassword(qq, password, qqVc)
                 }
-                if (result.isFailure) {
+                if (result.failure()) {
                     "登录失败，${result.message}"
                 } else {
-                    qqMusicEntity.cookie = result.data.cookie
+                    qqMusicEntity.cookie = result.data().cookie
                     qqMusicEntity.config.password = password
                     qqMusicService.save(qqMusicEntity)
                     "绑定qq音乐成功"
@@ -135,7 +135,7 @@ class QqMusicController(
     @Action("qq音乐分享")
     suspend fun qqMusicShare(qqMusicEntity: QqMusicEntity): String{
         val result = qqMusicLogic.shareMusic(qqMusicEntity)
-        return if (result.isSuccess) "应该是分享成功了吧！"
+        return if (result.success()) "应该是分享成功了吧！"
         else result.message
     }
 

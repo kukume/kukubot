@@ -41,7 +41,7 @@ class OppoShopController(
     @Action("oppo商城签到")
     suspend fun sign(oppoShopEntity: OppoShopEntity): String {
         val result = OppoShopLogic.sign(oppoShopEntity)
-        if (result.isFailure) return "签到失败，" + result.message
+        if (result.failure()) return "签到失败，" + result.message
         OppoShopLogic.shareGoods(oppoShopEntity)
         OppoShopLogic.viewGoods(oppoShopEntity)
         return "oppo商城签到成功"

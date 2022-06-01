@@ -3,8 +3,8 @@ package me.kuku.yuq.logic
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
+import me.kuku.pojo.CommonResult
 import me.kuku.yuq.entity.WeiboEntity
-import me.kuku.pojo.Result
 import me.kuku.pojo.ResultStatus
 import me.kuku.pojo.UA
 import me.kuku.utils.OkHttpKtUtils
@@ -14,35 +14,7 @@ import org.jsoup.Jsoup
 
 object WeiboLogic {
 
-    suspend fun hotSearch(): List<HotSearch> {
-        val jsonObject = OkHttpKtUtils.postJsonp("https://passport.weibo.com/visitor/genvisitor",
-            mapOf("cb" to "gen_callback", "fp" to """{"os":"1","browser":"Chrome97,0,4692,99","fonts":"undefined","screenInfo":"1536*864*24","plugins":"Portable Document Format::internal-pdf-viewer::PDF Viewer|Portable Document Format::internal-pdf-viewer::Chrome PDF Viewer|Portable Document Format::internal-pdf-viewer::Chromium PDF Viewer|Portable Document Format::internal-pdf-viewer::Microsoft Edge PDF Viewer|Portable Document Format::internal-pdf-viewer::WebKit built-in PDF"}""")
-        )
-        val tid = jsonObject.getJSONObject("data").getString("tid")
-        val response =
-            OkHttpKtUtils.get("https://passport.weibo.com/visitor/visitor?a=incarnate&t=${tid.toUrlEncode()}&w=2&c=095&gc=&cb=cross_domain&from=weibo&_rand=${Math.random()}")
-                .apply { close() }
-        val cookie = OkUtils.cookie(response)
-        val str = OkHttpKtUtils.getStr("https://s.weibo.com/top/summary", OkUtils.cookie(cookie))
-        val doc = Jsoup.parse(str)
-        val elements = doc.getElementById("pl_top_realtimehot")?.getElementsByTag("tbody")?.first()
-            ?.getElementsByTag("tr") ?: return emptyList()
-        val list = mutableListOf<HotSearch>()
-        for (ele in elements) {
-            val hotSearch = HotSearch()
-            ele.getElementsByClass("td-01").first()?.text()?.toIntOrNull()
-                ?.let { hotSearch.count = it }
-            val a = ele.select(".td-02 a").first()
-            a?.attr("href")?.let { hotSearch.url = "https://s.weibo.com${it}" }
-            a?.text()?.let { hotSearch.content = it }
-            ele.select(".td-02 span").first()?.text()?.toLongOrNull()?.let { hotSearch.heat = it }
-            ele.select(".td-03").first()?.text()?.let { hotSearch.tag = it }
-            list.add(hotSearch)
-        }
-        return list
-    }
-
-    suspend fun getIdByName(name: String, page: Int = 1): Result<List<WeiboPojo>> {
+    suspend fun getIdByName(name: String, page: Int = 1): CommonResult<List<WeiboPojo>> {
         val newName = name.toUrlEncode()
         val response = OkHttpKtUtils.get("https://m.weibo.cn/api/container/getIndex?containerid=100103type%3D3%26q%3D$newName%26t%3D0&page_type=searchall&page=$page",
             OkUtils.referer("https://m.weibo.cn/search?containerid=100103type%3D1%26q%3D$newName"))
@@ -58,7 +30,7 @@ object WeiboLogic {
                     break
                 }
             }
-            if (jsonArray == null) return Result.failure("没有找到该用户")
+            if (jsonArray == null) return CommonResult.failure("没有找到该用户")
             val list = mutableListOf<WeiboPojo>()
             for (obj in jsonArray) {
                 val newJsonObject = obj as JSONObject
@@ -79,9 +51,9 @@ object WeiboLogic {
                     }
                 }
             }
-            if (list.isEmpty()) Result.failure("未找到该用户")
-            else Result.success(list)
-        } else Result.failure("查询失败，请稍后再试！")
+            if (list.isEmpty()) CommonResult.failure("未找到该用户")
+            else CommonResult.success(list)
+        } else CommonResult.failure("查询失败，请稍后再试！")
     }
 
     private fun convert(jsonObject: JSONObject): WeiboPojo {
@@ -145,7 +117,7 @@ object WeiboLogic {
         return sb.toString()
     }
 
-    suspend fun getWeiboById(id: String): Result<List<WeiboPojo>> {
+    suspend fun getWeiboById(id: String): CommonResult<List<WeiboPojo>> {
         val response = OkHttpKtUtils.get("https://m.weibo.cn/api/container/getIndex?type=uid&uid=$id&containerid=107603$id")
         return if (response.code == 200) {
             val jsonObject = OkUtils.json(response)
@@ -157,8 +129,8 @@ object WeiboLogic {
                 if (1 == blogJsonObject.getInteger("isTop")) continue
                 list.add(convert(blogJsonObject))
             }
-            Result.success(list)
-        } else Result.failure("查询失败，请稍后重试！")
+            CommonResult.success(list)
+        } else CommonResult.failure("查询失败，请稍后重试！")
     }
 
     private suspend fun mobileCookie(pcCookie: String): String {
@@ -174,7 +146,7 @@ object WeiboLogic {
         return WeiboQrcode(dataJsonObject.getString("qrid"), dataJsonObject.getString("image"))
     }
 
-    suspend fun loginByQr2(weiboQrcode: WeiboQrcode): Result<WeiboEntity> {
+    suspend fun loginByQr2(weiboQrcode: WeiboQrcode): CommonResult<WeiboEntity> {
         val jsonObject = OkHttpKtUtils.getJsonp("https://login.sina.com.cn/sso/qrcode/check?entry=weibo&qrid=${weiboQrcode.id}&callback=STK_16010457545443",
             OkUtils.referer("https://weibo.com/"))
         return when (jsonObject.getInteger("retcode")) {
@@ -189,37 +161,37 @@ object WeiboLogic {
                 val finallyResponse = OkHttpKtUtils.get(url).apply { close() }
                 val pcCookie = OkUtils.cookie(finallyResponse)
                 val mobileCookie = mobileCookie(cookie)
-                Result.success(WeiboEntity().also {
+                CommonResult.success(WeiboEntity().also {
                     it.pcCookie = cookie
                     it.mobileCookie = mobileCookie
                 })
             }
-            50114001 -> Result.failure(201, "未扫码")
-            50114003 -> Result.failure("您的微博登录二维码已失效")
-            50114002 -> Result.failure(202, "已扫码")
-            else -> Result.failure(jsonObject.getString("msg"), null)
+            50114001 -> CommonResult.failure(code = 201, message = "未扫码")
+            50114003 -> CommonResult.failure("您的微博登录二维码已失效")
+            50114002 -> CommonResult.failure(code = 202, message = "已扫码")
+            else -> CommonResult.failure(jsonObject.getString("msg"), null)
         }
     }
 
-    suspend fun friendWeibo(weiboEntity: WeiboEntity): Result<List<WeiboPojo>> {
+    suspend fun friendWeibo(weiboEntity: WeiboEntity): CommonResult<List<WeiboPojo>> {
         val str = OkHttpKtUtils.getStr("https://m.weibo.cn/feed/friends?",
             OkUtils.cookie(weiboEntity.mobileCookie))
         return if ("" != str) {
             val jsonArray = kotlin.runCatching {
                 JSON.parseObject(str).getJSONObject("data").getJSONArray("statuses")
             }.onFailure {
-                return Result.failure("查询微博失败，请稍后再试！！", null)
+                return CommonResult.failure("查询微博失败，请稍后再试！！", null)
             }.getOrNull()!!
             val list = mutableListOf<WeiboPojo>()
             for (any in jsonArray) {
                 val jsonObject = any as JSONObject
                 list.add(convert(jsonObject))
             }
-            Result.success(list)
-        } else Result.failure("您的cookie已失效，请重新绑定微博")
+            CommonResult.success(list)
+        } else CommonResult.failure("您的cookie已失效，请重新绑定微博")
     }
 
-    suspend fun myWeibo(weiboEntity: WeiboEntity): Result<List<WeiboPojo>> {
+    suspend fun myWeibo(weiboEntity: WeiboEntity): CommonResult<List<WeiboPojo>> {
         val jsonObject = OkHttpKtUtils.getJson("https://m.weibo.cn/profile/info",
             OkUtils.cookie(weiboEntity.mobileCookie))
         return if (jsonObject.getInteger("ok") == 1) {
@@ -229,8 +201,8 @@ object WeiboLogic {
                 val singleJsonObject = any as JSONObject
                 list.add(convert(singleJsonObject))
             }
-            Result.success(list)
-        } else Result.failure("您的cookie已失效，请重新绑定微博")
+            CommonResult.success(list)
+        } else CommonResult.failure("您的cookie已失效，请重新绑定微博")
     }
 
     private suspend fun getToken(weiboEntity: WeiboEntity): WeiboToken {
@@ -243,12 +215,12 @@ object WeiboLogic {
         } else throw WeiboCookieExpiredException("cookie已失效")
     }
 
-    suspend fun superTalkSign(weiboEntity: WeiboEntity): Result<Void> {
+    suspend fun superTalkSign(weiboEntity: WeiboEntity): CommonResult<Void> {
         val weiboToken = getToken(weiboEntity)
         val response = OkHttpKtUtils.get("https://m.weibo.cn/api/container/getIndex?containerid=100803_-_followsuper&luicode=10000011&lfid=231093_-_chaohua",
             mapOf("cookie" to weiboToken.cookie, "x-xsrf-token" to weiboToken.token)
         )
-        if (response.code != 200) return Result.failure(ResultStatus.COOKIE_EXPIRED)
+        if (response.code != 200) return CommonResult.failure(ResultStatus.COOKIE_EXPIRED)
         val cookie = OkUtils.cookie(response)
         val jsonObject = OkUtils.json(response)
         return if (jsonObject.getInteger("ok") == 1) {
@@ -271,8 +243,8 @@ object WeiboLogic {
                     }
                 }
             }
-            Result.success()
-        } else Result.failure("获取关注超话列表失败")
+            CommonResult.success()
+        } else CommonResult.failure("获取关注超话列表失败")
     }
 
 }

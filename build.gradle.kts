@@ -28,7 +28,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-cache")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("com.squareup.okhttp3:okhttp:4.9.3")
-    implementation("me.kuku:utils-fastjson:0.0.5")
+    implementation("me.kuku:utils-fastjson:0.0.6")
 //    implementation("me.kuku:ktor-spring-boot-starter:0.0.8")
     implementation("com.IceCreamQAQ.YuQ:YuQ-ArtQQ:0.1.0.0-DEV18")
 //    implementation("com.IceCreamQAQ:Yu-Core:0.2.0.0-DEV23")

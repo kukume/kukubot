@@ -25,6 +25,10 @@ class BaiduJob (
                 delay(1000 * 15)
                 baiduLogic.ybbWatchAd(baiduEntity)
             }
+            for (i in 0 until 4) {
+                delay(1000 * 30)
+                baiduLogic.ybbWatchAd(baiduEntity, "v3")
+            }
             baiduLogic.ybbSign(baiduEntity)
         }
     }

@@ -2,10 +2,12 @@ package me.kuku.yuq.controller
 
 import com.IceCreamQAQ.Yu.annotation.Action
 import com.IceCreamQAQ.Yu.annotation.Before
+import com.IceCreamQAQ.Yu.annotation.Synonym
 import com.icecreamqaq.yuq.annotation.GroupController
 import com.icecreamqaq.yuq.annotation.PrivateController
 import com.icecreamqaq.yuq.controller.BotActionContext
 import com.icecreamqaq.yuq.controller.ContextSession
+import com.icecreamqaq.yuq.message.Message
 import com.icecreamqaq.yuq.message.Message.Companion.firstString
 import com.icecreamqaq.yuq.mif
 import kotlinx.coroutines.withTimeoutOrNull
@@ -85,8 +87,9 @@ class BaiduController (
     }
 
     @Action("游帮帮看广告")
-    suspend fun watchAd(baiduEntity: BaiduEntity): String {
-        val result = baiduLogic.ybbWatchAd(baiduEntity)
+    @Synonym(["游帮帮看广告v3"])
+    suspend fun watchAd(baiduEntity: BaiduEntity, message: Message): String {
+        val result = baiduLogic.ybbWatchAd(baiduEntity, if (message.toPath()[0].contains("v3")) "v3" else "v2")
         return if (result.success()) "游帮帮观看广告成功"
         else "游帮帮观看广告失败，${result.message}"
     }

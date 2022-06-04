@@ -54,13 +54,13 @@ class BaiduLogic (
         return map
     }
 
-    suspend fun ybbWatchAd(baiduEntity: BaiduEntity): CommonResult<Void> {
-        val preJsonObject = OkHttpKtUtils.getJson("https://api-gt.baidu.com/v1/server/task?version=v2", ybbDefaultHeader().also {
+    suspend fun ybbWatchAd(baiduEntity: BaiduEntity, version: String = "v2"): CommonResult<Void> {
+        val preJsonObject = OkHttpKtUtils.getJson("https://api-gt.baidu.com/v1/server/task?version=$version", ybbDefaultHeader().also {
             it["cookie"] = baiduEntity.cookie
         })
         if (!preJsonObject.getBoolean("success")) return CommonResult.failure(preJsonObject.getJSONObject("errors").getString("message_cn"))
         val preResult = preJsonObject.getJSONArray("result")
-        val ll = preResult.map { it as JSONObject }.filter { it.getString("name") == "看视频送时长" }
+        val ll = preResult.map { it as JSONObject }.filter { it.getString("name") in listOf("看视频送时长", "看视频送积分") }
         if (ll.isEmpty()) return CommonResult.failure("没有这个任务")
         val sign = ll[0].getString("sign")
         val time = System.currentTimeMillis()
@@ -68,10 +68,10 @@ class BaiduLogic (
         val jsonObject = JSONObject()
         jsonObject["end_time"] = tenTime
         jsonObject["start_time"] = tenTime
-        jsonObject["task"] = 1
+        jsonObject["task"] = ll[0].getInteger("id")
         jsonObject["sign"] = sign
         val resultJsonObject = OkHttpKtUtils.postJson(
-            "https://api-gt.baidu.com/v1/server/task",
+            "https://api-gt.baidu.com/v1/server/task${if (version.contains("v3")) "?version=v3" else ""}",
             OkUtils.json(jsonObject), ybbDefaultHeader().also {
                 it["cookie"] = baiduEntity.cookie
             }

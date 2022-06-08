@@ -260,7 +260,7 @@ class ManagerController (
     }
 
     @Action("禁言 {qqNo}")
-    fun shutUp(qq: Member, qqNo: Long, @PathVar(2) timeStr: String?): String {
+    fun shutUp(qqNo: Member, @PathVar(2) timeStr: String?): String {
         val time = if (timeStr == null) 0
         else {
             val newTime = timeStr.trim()
@@ -274,7 +274,7 @@ class ManagerController (
                 else -> return "禁言时间格式不正确"
             }
         }
-        qq.ban(time)
+        qqNo.ban(time)
         return "禁言成功"
     }
 

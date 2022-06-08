@@ -263,6 +263,40 @@ class ToolAllController(
         }
         return message
     }
+
+    @Action("jetbrains激活服务器")
+    suspend fun activeServer(context: BotActionContext, qq: Long): String {
+        val str = OkHttpKtUtils.getStr("https://api.kukuqaq.com/jetbrains/server")
+        val jsonObject = JSON.parseArray(str).map { it as JSONObject }.filter { it.getInteger("port") != 443 }.random()
+        context.source.sendMessage(jsonObject.getString("ipAndPortUrl"))
+        return "在JetBrains IDE中激活方式选择激活服务器，填入上述地址即可（如为破解版可能会激活失败，卸载重装即可）"
+    }
+
+    @Action("jetbrains激活码")
+    suspend fun activeCode(context: BotActionContext, qq: Long, session: ContextSession): String {
+        val html = OkHttpKtUtils.getStr("https://api.kukuqaq.com/jetbrains")
+        context.source.sendMessage(mif.at(qq).plus("""
+            请发送您需要的激活码：
+            1、IntelliJ IDEA 2、WebStorm 3、PyCharm
+        """.trimIndent()))
+        val ss = session.waitNextMessage().firstString().toIntOrNull() ?: return "您发送的不为数字"
+        val elements = Jsoup.parse(html).select(".code")
+        val num = when (ss) {
+            1 -> 0
+            2 -> 2
+            3 -> 4
+            else -> 0
+        }
+        val code = elements[num].text()
+        val jsonObject = OkHttpKtUtils.postJson("https://api.kukuqaq.com/paste",
+            mapOf("poster" to "kuku", "syntax" to "text", "content" to code))
+        val url = jsonObject.getString("url")
+        kotlin.runCatching {
+            context.source.sendMessage(code)
+        }
+        context.source.sendMessage(mif.at(qq).plus("如若激活码消息被屏蔽，可前往${url}查看"))
+        return "在JetBrains IDE中激活方式选择离线激活码，填入上述代码即可（如为破解版可能会激活失败，卸载重装即可）"
+    }
 }
 
 object QqGroupLogic {

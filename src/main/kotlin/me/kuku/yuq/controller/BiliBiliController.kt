@@ -25,7 +25,7 @@ class BiliBiliController (
     @Action("哔哩哔哩登录")
     suspend fun login(qqEntity: QqEntity, context: BotActionContext) {
         val qr = BiliBiliLogic.loginByQr1()
-        context.source.sendMessage(mif.at(qqEntity.qq).plus(mif.imageByUrl("https://api.pwmqr.com/qrcode/create/?url=${qr.toUrlEncode()}")).plus("请使用哔哩哔哩APP扫码登录").toMessage())
+        context.source.sendMessage(mif.at(qqEntity.qq).plus(mif.imageByUrl("https://api.kukuqaq.com/qrcode?text=${qr.toUrlEncode()}")).plus("请使用哔哩哔哩APP扫码登录").toMessage())
         while (true) {
             delay(3000)
             val result = BiliBiliLogic.loginByQr2(qr)

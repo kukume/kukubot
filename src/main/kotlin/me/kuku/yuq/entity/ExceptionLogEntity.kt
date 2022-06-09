@@ -2,7 +2,6 @@ package me.kuku.yuq.entity
 
 import com.alibaba.fastjson.annotation.JSONField
 import me.kuku.utils.OkHttpKtUtils
-import me.kuku.utils.OkHttpUtils
 import me.kuku.yuq.utils.SpringUtils
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -56,11 +55,13 @@ class ExceptionLogService (
 }
 
 suspend fun Throwable.save(url: String? = null) {
-    val exceptionLogService = SpringUtils.getBean<ExceptionLogService>()
-    exceptionLogService.save(ExceptionLogEntity().also {
-        it.stackTrace = this.stackTraceToString()
-        it.url = url ?: this.toUrl()
-    })
+    kotlin.runCatching {
+        val exceptionLogService = SpringUtils.getBean<ExceptionLogService>()
+        exceptionLogService.save(ExceptionLogEntity().also {
+            it.stackTrace = this.stackTraceToString()
+            it.url = url ?: this.toUrl()
+        })
+    }
 }
 suspend fun Throwable.toUrl(): String {
     return kotlin.runCatching {

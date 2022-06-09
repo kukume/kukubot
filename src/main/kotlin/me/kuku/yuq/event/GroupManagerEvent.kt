@@ -154,11 +154,11 @@ class GroupManagerEvent (
             groupEntity.config.blackList.add(member.id)
             groupService.save(groupEntity)
             group.sendMessage("""
-                ${member.nameCardOrName()}离开了我们，他（她）已被加入到黑名单
+                ${member.nameCardOrName()}（${member.id}）离开了我们，他（她）已被加入到黑名单
             """.trimIndent())
         } else {
             group.sendMessage("""
-                ${member.nameCardOrName()}离开了我们
+                ${member.nameCardOrName()}（${member.id}）离开了我们
             """.trimIndent())
         }
         val messageEntityList = messageService.findByGroupAndQqOrderByIdDesc(groupNum, member.id)

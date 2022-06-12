@@ -27,8 +27,8 @@ class NetEaseController (
     @Action("网易登录")
     suspend fun login(qqEntity: QqEntity, qq: Long, session: ContextSession, context: BotActionContext): String? {
         context.source.sendMessage(mif.at(qq).plus("请选择扫码登陆or密码登陆or手动绑定，1为扫码，2为手动绑定").toMessage())
-        val ss = session.waitNextMessage().firstString()
-        if (ss.toInt() == 1) {
+        val ss = session.waitNextMessage().firstString().toIntOrNull() ?: return "你发送的不为数字"
+        if (ss == 1) {
             val key = NetEaseLogic.qrcode()
             val url = "http://music.163.com/login?codekey=$key"
             val newUrl =
@@ -63,7 +63,7 @@ class NetEaseController (
                 }
             }
             return null
-        } else {
+        } else if (ss == 2) {
             context.source.sendMessage(mif.at(qq).plus("请发送网易云音乐的cookie").toMessage())
             val cookie = session.waitNextMessage().firstString()
             val musicU = MyUtils.regex("MUSIC_U=", ";", cookie)
@@ -78,7 +78,7 @@ class NetEaseController (
                 netEaseService.save(newEntity)
                 "绑定网易云音乐成功"
             }
-        }
+        } else return "您发送的数字不正确"
     }
 
 

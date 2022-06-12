@@ -147,8 +147,7 @@ class ToolAllController(
             机器人帮助（命令）如下：
             http://kkb.im
         """.trimIndent()
-        YuqUtils.sendMessage(qqEntity, str)
-        group?.sendMessage(mif.at(qqEntity.qq).plus("机器人帮助已私信给您！"))
+        group?.sendMessage(mif.at(qqEntity.qq).plus(str))
     }
 
     @Action("百科 {text}")

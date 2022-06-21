@@ -46,6 +46,7 @@ class ManagerController (
             "r18" -> config.loLiConR18 = status.toStatus()
             "进群验证" -> config.entryVerification = status.toStatus()
             "群管权限" -> config.adminCanExecute = status.toStatus()
+            "整点报时" -> config.timekeeping = status.toStatus()
             else -> return null
         }
         before(qq, groupEntity)

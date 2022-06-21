@@ -3,6 +3,7 @@ package me.kuku.yuq.job
 import com.IceCreamQAQ.Yu.annotation.Cron
 import com.IceCreamQAQ.Yu.annotation.JobCenter
 import kotlinx.coroutines.delay
+import me.kuku.yuq.entity.AutoSignLogService
 import me.kuku.yuq.entity.BaiduService
 import me.kuku.yuq.entity.Status
 import me.kuku.yuq.logic.BaiduLogic
@@ -12,7 +13,8 @@ import org.springframework.stereotype.Component
 @Component
 class BaiduJob (
     private val baiduService: BaiduService,
-    private val baiduLogic: BaiduLogic
+    private val baiduLogic: BaiduLogic,
+    private val autoSignLogService: AutoSignLogService
 ) {
 
 

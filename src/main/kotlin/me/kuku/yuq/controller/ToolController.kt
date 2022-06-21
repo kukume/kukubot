@@ -142,12 +142,12 @@ class ToolAllController(
     @Action("菜单")
     @Synonym(["帮助", "功能"])
     @Transactional
-    suspend fun menu(qqEntity: QqEntity, group: Group?) {
+    suspend fun menu(qqEntity: QqEntity): Any {
         val str = """
             机器人帮助（命令）如下：
             http://kkb.im
         """.trimIndent()
-        group?.sendMessage(mif.at(qqEntity.qq).plus(str))
+        return mif.at(qqEntity.qq).plus(str)
     }
 
     @Action("百科 {text}")
@@ -295,6 +295,13 @@ class ToolAllController(
         }
         context.source.sendMessage(mif.at(qq).plus("如若激活码消息被屏蔽，可前往${url}查看"))
         return "在JetBrains IDE中激活方式选择离线激活码，填入上述代码即可（如为破解版可能会激活失败，卸载重装即可）"
+    }
+
+    @Action("几点了")
+    suspend fun nowTime(): Any {
+        val response = OkHttpKtUtils.get("https://api.kukuqaq.com/time").also { it.close() }
+        val url = response.header("location") ?: return "获取图片失败"
+        return mif.imageByUrl("https://api.kukuqaq.com$url")
     }
 }
 

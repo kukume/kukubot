@@ -58,28 +58,39 @@ class BeforeController (
         }
     }
 
-    @Catch(error = WaitNextMessageTimeoutException::class)
+    @Catch(error = WaitNextMessageTimeoutException::class, weight = -1)
     @Global
     fun waitError(exception: WaitNextMessageTimeoutException, qq: Long) {
         throw mif.at(qq).plus("等待您的消息超时，上下文已结束").toThrowable()
     }
 
-    @Catch(error = VerificationFailureException::class)
+    @Catch(error = VerificationFailureException::class, weight = -1)
     @Global
     fun ss(exception: VerificationFailureException, qq: Long) {
         throw mif.at(qq).plus(exception.message).toThrowable()
     }
 
+    @Catch(error = NumberFormatException::class, weight = -1)
+    @Global
+    fun numberError(qq: Long) {
+        throw mif.at(qq).plus("您发送的不为数字").toThrowable()
+    }
+
+    @Catch(error = IllegalStateException::class, weight = -1)
+    @Global
+    fun kotlinSimpleError(exception: IllegalStateException, qq: Long) {
+        throw mif.at(qq).plus(exception.message ?: "程序出错了").toThrowable()
+    }
+
     @Catch(error = Exception::class)
     @Global
     fun ss(exception: Exception, message: Message, context: BotActionContext, qq: Long, group: Long?) {
-        if (exception is WaitNextMessageTimeoutException || exception is VerificationFailureException) return
         val exceptionStackTrace = exception.stackTraceToString()
         val url = runBlocking {
             exception.toUrl()
         }
         val source = context.source
-        source.sendMessage(mif.at(qq).plus("程序出现异常了，异常信息为：$url"))
+        source.sendMessage(mif.at(qq).plus("程序出现异常了，异常信息为：${exception.message}\n链接：$url"))
         JobManager.now {
             exception.save(url)
         }

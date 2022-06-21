@@ -79,6 +79,7 @@ class StatusController (
             r18：${config.loLiConR18.str()}
             进群验证：${config.entryVerification.str()}
             群管权限：${config.adminCanExecute.str()}
+            整点报时：${config.timekeeping.str()}
         """.trimIndent()
     }
 

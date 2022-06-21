@@ -240,7 +240,7 @@ object NetEaseLogic {
         )
         return if (jsonObject.getInteger("code") == 200) {
             val list = mutableListOf<Play>()
-            jsonObject.getJSONArray("CommonResult").map { it as JSONObject }.forEach {
+            jsonObject.getJSONArray("Result").map { it as JSONObject }.forEach {
                 list.add(Play(it.getString("name"), it.getLong("id"), it.getLong("playCount")))
             }
             CommonResult.success(list)

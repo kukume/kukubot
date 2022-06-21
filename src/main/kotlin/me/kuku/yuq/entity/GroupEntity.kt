@@ -80,6 +80,7 @@ class GroupConfig{
     var loLiConR18: Status = Status.OFF
     var entryVerification: Status = Status.OFF
     var adminCanExecute: Status = Status.OFF
+    var timekeeping: Status = Status.OFF
     var interceptList: MutableSet<String> = mutableSetOf()
     var adminList: MutableSet<Long> = mutableSetOf()
     var prohibitedWords: MutableSet<String> = mutableSetOf()

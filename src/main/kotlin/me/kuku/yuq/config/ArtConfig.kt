@@ -6,9 +6,11 @@ import com.IceCreamQAQ.Yu.DefaultApp
 import com.IceCreamQAQ.Yu.di.ClassContext
 import com.IceCreamQAQ.Yu.di.YuContext
 import com.IceCreamQAQ.Yu.hook.*
+import com.fasterxml.jackson.module.kotlin.contains
 import com.icecreamqaq.yuq.artqq.HookCaptchaUtils
 import kotlinx.coroutines.runBlocking
 import me.kuku.utils.OkHttpUtils
+import me.kuku.utils.getString
 import me.kuku.yuq.utils.SpringUtils
 import org.artqq.util.CommonResult
 import org.slf4j.LoggerFactory
@@ -132,9 +134,9 @@ class HookCaptchaUtils : HookRunnable {
             var ticket: String? = null
             for (i in 0..3) {
                 log.info("正在尝试第${i + 1}次自动过验证码~~~")
-                val jsonObject = OkHttpUtils.postJson("https://api.kukuqaq.com/captcha", mapOf("url" to url))
-                if (!jsonObject.containsKey("code")) {
-                    ticket = jsonObject.getString("ticket")
+                val jsonNode = OkHttpUtils.postJson("https://api.kukuqaq.com/captcha", mapOf("url" to url))
+                if (!jsonNode.contains("code")) {
+                    ticket = jsonNode.getString("ticket")
                     log.info("自动过验证码成功")
                     break
                 }

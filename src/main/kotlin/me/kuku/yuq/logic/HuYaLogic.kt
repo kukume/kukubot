@@ -16,7 +16,7 @@ class HuYaLogic {
             {"uri":"70001","version":"2.4","context":"WB-b11031a6ccf245169759e35fc6adc5d9-C9D11B3412B00001BAEA164B1FD4176D-","requestId":"$requestId","appId":"5002","data":{"behavior":"%7B%22a%22%3A%22m%22%2C%22w%22%3A520%2C%22h%22%3A340%2C%22b%22%3A%5B%5D%7D","type":"","domainList":"","page":"https%3A%2F%2Fwww.huya.com%2F"}}
         """.trimIndent()))
         val jsonObject = OkUtils.json(response)
-        val qrId = jsonObject.getJSONObject("data").getString("qrId")
+        val qrId = jsonObject["data"].getString("qrId")
         return HuYaQrcode("https://udblgn.huya.com/qrLgn/getQrImg?k=$qrId&appId=5002", qrId, OkUtils.cookie(response), requestId)
     }
 
@@ -25,7 +25,7 @@ class HuYaLogic {
             {"uri":"70003","version":"2.4","context":"WB-b11031a6ccf245169759e35fc6adc5d9-C9D11B3412B00001BAEA164B1FD4176D-","requestId":"${huYaQrcode.requestId}","appId":"5002","data":{"qrId":"${huYaQrcode.id}","remember":"1","domainList":"","behavior":"%7B%22a%22%3A%22m%22%2C%22w%22%3A520%2C%22h%22%3A340%2C%22b%22%3A%5B%5D%7D","page":"https%3A%2F%2Fwww.huya.com%2F"}}
         """.trimIndent()), OkUtils.cookie(huYaQrcode.cookie))
         val jsonObject = OkUtils.json(response)
-        return when (val stage = jsonObject.getJSONObject("data").getInteger("stage")) {
+        return when (val stage = jsonObject["data"].getInteger("stage")) {
             0, 1 -> CommonResult.failure("等待扫码", null, 0)
             2 -> {
                 val cookie = OkUtils.cookie(response)
@@ -46,8 +46,8 @@ class HuYaLogic {
                 OkUtils.headers(huYaEntity.cookie, "", UA.PC))
             if (response.code == 200) {
                 val jsonObject = OkUtils.json(response)
-                val list = jsonObject.getJSONArray("vItems").map { it as JSONObject }
-                if (list.isEmpty()) break
+                val list = jsonObject["vItems"]
+                if (list.isEmpty) break
                 for (ss in list) {
                     val huYaLive = HuYaLive(ss.getLong("iRoomId"), ss.getString("sLiveDesc"), ss.getString("sGameName"),
                         ss.getInteger("iIsLive") == 1, ss.getString("sNick"), ss.getString("sVideoCaptureUrl"), "https://www.huya.com/${ss.getLong("iRoomId")}")

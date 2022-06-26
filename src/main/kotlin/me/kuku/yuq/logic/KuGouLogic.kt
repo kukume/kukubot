@@ -77,7 +77,7 @@ class KuGouLogic {
             "uuid" to newMid, "mid" to newMid, "type" to "1"
         )
         val jsonObject = OkHttpKtUtils.getJson("https://login-user.kugou.com/v1/qrcode?${signature(map)}")
-        val qrcode = jsonObject.getJSONObject("data").getString("qrcode")
+        val qrcode = jsonObject["data"].getString("qrcode")
         return KuGouQrcode("https://h5.kugou.com/apps/loginQRCode/html/index.html?qrcode=$qrcode&appid=1014",
             qrcode, newMid)
     }
@@ -89,13 +89,13 @@ class KuGouLogic {
         val jsonObject = OkHttpKtUtils.getJson(
             "https://login-user.kugou.com/v1/get_userinfo_qrcode?${signature(map)}"
         )
-        val dataStatus = jsonObject.getJSONObject("data").getInteger("status")
+        val dataStatus = jsonObject["data"].getInteger("status")
         return when (dataStatus) {
             1, 2 -> CommonResult.failure(code = 0, message = "二维码未被扫描或已被扫描")
             0 -> CommonResult.failure("二维码已失效！")
             4 -> {
-                val token = jsonObject.getJSONObject("data").getString("token")
-                val userid = jsonObject.getJSONObject("data").getLong("userid")
+                val token = jsonObject["data"].getString("token")
+                val userid = jsonObject["data"].getLong("userid")
                 val response =
                     OkHttpKtUtils.get("https://login-user.kugou.com/v1/autologin?a_id=1014&userid=$userid&t=$token&ct=${clientTime()}&callback=qrcodeLoginCallback&domain=kugou.com&uuid=${kuGouQrcode.mid}&mid=$${kuGouQrcode.mid}&plat=4&dfid=-&kguser_jv=180925")
                 val cookie = OkUtils.cookie(response)
@@ -162,7 +162,7 @@ class KuGouLogic {
         val jsonObject = OkUtils.json(response)
         return if (jsonObject.getInteger("error_code") == 0) {
             val cookie = OkUtils.cookie(response)
-            val kuGoo = jsonObject.getJSONObject("data").getString("value")
+            val kuGoo = jsonObject["data"].getString("value")
             val token = OkUtils.cookie(cookie, "t")
             val userid = OkUtils.cookie(cookie, "KugooID")!!
             CommonResult.success(KuGouEntity().also {
@@ -183,7 +183,7 @@ class KuGouLogic {
         val response =
             OkHttpKtUtils.get("https://login-user.kugou.com/v1/login/?$params", headers)
         val jsonObject = OkUtils.jsonp(response)
-        return when (jsonObject.getInteger("errorCode")){
+        return when (jsonObject["errorCode"]?.asInt()){
             30791 -> {
                 // 验证码
                 CommonResult.failure("需要验证验证码，请使用短信验证码登陆")

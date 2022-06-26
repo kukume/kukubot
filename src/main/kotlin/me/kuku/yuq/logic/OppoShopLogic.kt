@@ -1,17 +1,15 @@
 package me.kuku.yuq.logic
 
-import com.alibaba.fastjson.JSONObject
+import com.fasterxml.jackson.databind.JsonNode
 import kotlinx.coroutines.delay
 import me.kuku.pojo.CommonResult
 import me.kuku.yuq.entity.OppoShopEntity
 import me.kuku.pojo.UA
-import me.kuku.utils.DateTimeFormatterUtils
-import me.kuku.utils.OkHttpUtils
-import me.kuku.utils.OkUtils
+import me.kuku.utils.*
 
 object OppoShopLogic {
 
-    private fun taskCenter(oppoShopEntity: OppoShopEntity): JSONObject {
+    private fun taskCenter(oppoShopEntity: OppoShopEntity): JsonNode {
         return OkHttpUtils.getJson("https://store.oppo.com/cn/oapi/credits/web/credits/show",
             OkUtils.headers(oppoShopEntity.cookie, "https://store.oppo.com/cn/app/taskCenter/index",
                 UA.OPPO))
@@ -20,15 +18,14 @@ object OppoShopLogic {
     fun sign(oppoShopEntity: OppoShopEntity): CommonResult<Void> {
         val jsonObject = taskCenter(oppoShopEntity)
         if (jsonObject.getInteger("code") != 200) return CommonResult.failure(jsonObject.getString("errorMessage"))
-        val dataJsonObject = jsonObject.getJSONObject("data")
-        return if (dataJsonObject.getJSONObject("userReportInfoForm").getInteger("status") == 0) {
-            val jsonArray = dataJsonObject.getJSONObject("userReportInfoForm").getJSONArray("gifts")
+        val dataJsonObject = jsonObject["data"]
+        return if (dataJsonObject["userReportInfoForm"].getInteger("status") == 0) {
+            val jsonArray = dataJsonObject["userReportInfoForm"]["gifts"]
             val now = DateTimeFormatterUtils.formatNow("yyyy-MM-dd")
-            var qd: JSONObject? = null
+            var qd: JsonNode? = null
             for (obj in jsonArray) {
-                val it = obj as JSONObject
-                if (it.getString("date") == now) {
-                    qd = it
+                if (obj.getString("date") == now) {
+                    qd = obj
                     break
                 }
             }
@@ -51,12 +48,11 @@ object OppoShopLogic {
 
     suspend fun viewGoods(oppoShopEntity: OppoShopEntity): CommonResult<Void> {
         val jsonObject = taskCenter(oppoShopEntity)
-        val jsonArray = jsonObject.getJSONObject("data").getJSONArray("everydayList")
-        var qd: JSONObject? = null
+        val jsonArray = jsonObject["data"]["everydayList"]
+        var qd: JsonNode? = null
         for (obj in jsonArray) {
-            val it = obj as JSONObject
-            if (it.getString("name") == "浏览商品") {
-                qd = it
+            if (obj.getString("name") == "浏览商品") {
+                qd = obj
                 break
             }
         }
@@ -65,10 +61,9 @@ object OppoShopLogic {
             if (status == 0) {
                 val shopJsonObject = OkHttpUtils.getJson("https://msec.opposhop.cn/goods/v1/SeckillRound/goods/115?pageSize=12&currentPage=1",
                     OkUtils.cookie(oppoShopEntity.cookie))
-                if (shopJsonObject.getJSONObject("meta").getInteger("code") == 200) {
-                    for (o in shopJsonObject.getJSONArray("detail")) {
-                        val it = o as JSONObject
-                        val skuId = it.getString("skuid")
+                if (shopJsonObject["meta"].getInteger("code") == 200) {
+                    for (o in shopJsonObject["detail"]) {
+                        val skuId = o.getString("skuid")
                         OkHttpUtils.get(
                             "https://msec.opposhop.cn/goods/v1/info/sku?skuId=$skuId",
                             OkUtils.headers(oppoShopEntity.cookie, "", UA.OPPO)).close()
@@ -94,12 +89,11 @@ object OppoShopLogic {
 
     fun shareGoods(oppoShopEntity: OppoShopEntity): CommonResult<Void> {
         val jsonObject = taskCenter(oppoShopEntity)
-        val jsonArray = jsonObject.getJSONObject("data").getJSONArray("everydayList")
-        var qd: JSONObject? = null
+        val jsonArray = jsonObject["data"]["everydayList"]
+        var qd: JsonNode? = null
         for (o in jsonArray) {
-            val it = o as JSONObject
-            if (it.getString("name") == "分享商品到微信") {
-                qd = it
+            if (o.getString("name") == "分享商品到微信") {
+                qd = o
                 break
             }
         }

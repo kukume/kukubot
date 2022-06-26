@@ -153,11 +153,6 @@ class ToolAllController(
     @Action("百科 {text}")
     suspend fun baiKe(text: String) = toolLogic.baiKe(text)
 
-    @Action("oracle {email}")
-    suspend fun oracle(email: String) =
-        if (OkHttpKtUtils.getJson("https://api.kukuqaq.com/oracle/promotion?email=$email").getJSONArray("items")?.isNotEmpty() == true) "有资格了"
-        else "你木的资格"
-
     @Action("dcloud上传")
     suspend fun dCloudUpload(session: ContextSession, context: BotActionContext, qq: Long): Message {
         context.source.sendMessage(mif.at(qq).plus("请发送需要上传的图片"))
@@ -169,7 +164,7 @@ class ToolAllController(
                 val jsonObject = OkHttpKtUtils.postJson("https://api.kukuqaq.com/upload", MultipartBody.Builder().setType(MultipartBody.FORM)
                     .addFormDataPart("type", "3")
                     .addFormDataPart("file", messageItem.id, OkUtils.streamBody(OkHttpKtUtils.getBytes(tempUrl))).build())
-                url = if (jsonObject.getInteger("code") == 200) jsonObject.getJSONObject("data").getString("url")
+                url = if (jsonObject.getInteger("code") == 200) jsonObject["data"]["url"].asText()
                 else jsonObject.getString("message")
                 break
             }
@@ -224,7 +219,7 @@ class ToolAllController(
     @Action("色图")
     suspend fun color(groupEntity: GroupEntity?) =
         if (groupEntity?.config?.loLiConR18 == Status.ON)
-            mif.imageByUrl(OkHttpKtUtils.getJson("https://api.lolicon.app/setu/v2?r18=1").getJSONArray("data").getJSONObject(0).getJSONObject("urls").getString("original").replace("i.pixiv.cat", "i.pixiv.re"))
+            mif.imageByUrl(OkHttpKtUtils.getJson("https://api.lolicon.app/setu/v2?r18=1")["data"][0]["urls"]["original"].asText().replace("i.pixiv.cat", "i.pixiv.re"))
         else mif.imageByUrl(OkHttpKtUtils.get("https://api.kukuqaq.com/lolicon/random?preview=1").also { it.close() }.header("location")!!)
 
     @Action("测吉凶")

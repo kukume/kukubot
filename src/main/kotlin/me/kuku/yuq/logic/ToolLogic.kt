@@ -2,11 +2,8 @@
 
 package me.kuku.yuq.logic
 
-import com.alibaba.fastjson.JSONObject
 import me.kuku.pojo.CommonResult
-import me.kuku.utils.OkHttpKtUtils
-import me.kuku.utils.OkUtils
-import me.kuku.utils.toUrlEncode
+import me.kuku.utils.*
 import me.kuku.yuq.config.SauceNaoConfig
 import me.kuku.yuq.config.VerificationFailureException
 import me.kuku.yuq.utils.YuqUtils
@@ -57,19 +54,23 @@ class ToolLogic(
 
     suspend fun saucenao(url: String): List<SaucenaoResult> {
         val urlJsonObject = OkHttpKtUtils.getJson("https://saucenao.com/search.php?output_type=2&numres=16&url=${url.toUrlEncode()}&api_key=${sauceNao.key}")
-        if (urlJsonObject.getJSONObject("header").getInteger("status") != 0) throw VerificationFailureException(urlJsonObject.getJSONObject("header").getString("message"))
-        val jsonList = urlJsonObject.getJSONArray("results").map { it as JSONObject }
+        if (urlJsonObject.get("header").getInteger("status") != 0) throw VerificationFailureException(urlJsonObject.get("header").getString("message"))
+        val jsonList = urlJsonObject.get("results")
         val list = mutableListOf<SaucenaoResult>()
         for (jsonObject in jsonList) {
-            val header = jsonObject.getJSONObject("header")
-            val data = jsonObject.getJSONObject("data")
+            val header = jsonObject.get("header")
+            val data = jsonObject.get("data")
             val similarity = header.getString("similarity")
             val thumbnail = header.getString("thumbnail")
             val indexName = header.getString("index_name")
-            val extUrls = data.getJSONArray("ext_urls")?.map { it.toString() }?.toList() ?: listOf()
-            val author = data.getString("creator_name") ?: data.getString("member_name") ?: data.getString("author_name") ?: ""
-            val title = data.getString("title") ?: data.getString("jp_name") ?: ""
-            val authorUrl = data.getString("author_url") ?: ""
+            val extUrls = data.get("ext_urls")?.let {
+                val letList = mutableListOf<String>()
+                it.forEach { k -> letList.add(k.asText()) }
+                letList
+            } ?: listOf()
+            val author = data.get("creator_name")?.asText() ?: data.get("member_name")?.asText() ?: data.get("author_name")?.asText() ?: ""
+            val title = data.get("title")?.asText() ?: data.get("jp_name")?.asText() ?: ""
+            val authorUrl = data.get("author_url")?.asText() ?: ""
             list.add(SaucenaoResult(similarity, thumbnail, indexName, extUrls, title, author, authorUrl).also {
                 it.daId = data.getLong("da_id")
                 it.pixivId = data.getLong("pixiv_id")

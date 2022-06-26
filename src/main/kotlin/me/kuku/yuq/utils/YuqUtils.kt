@@ -7,6 +7,7 @@ import com.icecreamqaq.yuq.yuq
 import me.kuku.utils.OkHttpUtils
 import me.kuku.pojo.QqLoginPojo
 import me.kuku.utils.OkHttpKtUtils
+import me.kuku.utils.getString
 import me.kuku.yuq.entity.GroupEntity
 import me.kuku.yuq.entity.QqEntity
 
@@ -38,8 +39,8 @@ object YuqUtils {
     fun shortUrl(url: String): String {
         val newUrl = if (url.startsWith("http")) url else "http://$url"
         val jsonObject = OkHttpUtils.postJson("https://tool.jpa.cc/api/short_url/generate", mapOf("type" to "is_gd", "url" to newUrl))
-        return if (jsonObject.getString("status") == "ok")
-            jsonObject.getJSONObject("data").getString("short_url")
+        return if (jsonObject.get("status")?.asText() == "ok")
+            jsonObject.get("data").getString("short_url")
         else jsonObject.getString("message")
     }
 

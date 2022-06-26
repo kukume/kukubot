@@ -15,8 +15,8 @@ object LeXinStepLogic {
             val cookie = OkUtils.cookie(response)
             CommonResult.success(StepEntity().also {
                 it.leXinCookie = cookie
-                it.leXinUserid = jsonObject.getJSONObject("data").getString("userId")
-                it.leXinAccessToken = jsonObject.getJSONObject("data").getString("accessToken")
+                it.leXinUserid = jsonObject.get("data").getString("userId")
+                it.leXinAccessToken = jsonObject.get("data").getString("accessToken")
             })
         } else CommonResult.failure(jsonObject.getString("msg"))
     }
@@ -53,7 +53,7 @@ object XiaomiStepLogic {
             "grant_type" to "access_token", "allow_registration" to "false", "dn" to "account.huami.com,api-user.huami.com,api-watch.huami.com,api-analytics.huami.com,app-analytics.huami.com,api-mifit.huami.com",
             "third_name" to "huami_phone", "source" to "com.xiaomi.hm.health:4.5.0:50340")
         val jsonObject = OkHttpKtUtils.postJson("https://account.huami.com/v2/client/login", ssMap, OkUtils.ua(ua))
-        val token = jsonObject.getJSONObject("token_info").getString("login_token")
+        val token = jsonObject.get("token_info").getString("login_token")
         return CommonResult.success(StepEntity().also {
             it.miLoginToken = token
         })
@@ -63,7 +63,7 @@ object XiaomiStepLogic {
         val jsonObject = OkHttpKtUtils.getJson("https://account-cn.huami.com/v1/client/app_tokens?app_name=com.xiaomi.hm.health&dn=api-user.huami.com%2Capi-mifit.huami.com%2Capp-analytics.huami.com&login_token=$token",
             OkUtils.ua(ua))
         return if ("ok" == jsonObject.getString("result")) {
-            val infoJsonObject = jsonObject.getJSONObject("token_info")
+            val infoJsonObject = jsonObject.get("token_info")
             CommonResult.success(MiInfo(infoJsonObject.getString("app_token"), infoJsonObject.getString("user_id")))
         } else CommonResult.failure("登录已失效，请重新登录！！")
     }

@@ -1,6 +1,6 @@
 ## KuKuBot
 
-YuQ-Art + Spring-Data-Jpa
+YuQ-Art + Spring-Data-Jpa + Ktor
 
 YuQ是路由框架、Web框架中最简单好用的，也是饼最多的（别画了别画了，冰箱都装不下了）
 

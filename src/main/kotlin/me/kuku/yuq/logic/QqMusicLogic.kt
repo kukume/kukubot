@@ -79,7 +79,7 @@ class QqMusicLogic {
             OkUtils.json("{\"comm\":{\"g_tk\":5381,\"uin\":${qqMusicEntity.qqEntity?.qq},\"format\":\"json\",\"inCharset\":\"utf-8\",\"outCharset\":\"utf-8\",\"notice\":0,\"platform\":\"h5\",\"needNewCode\":1,\"ct\":23,\"cv\":0,\"uid\":\"4380989133\"},\"req_0\":{\"module\":\"music.actCenter.ActCenterSignNewSvr\",\"method\":\"DoSignIn\",\"param\":{\"ActID\":\"PR-Config20200828-31525466015\"}}}"),
             OkUtils.cookie(qqMusicEntity.cookie)
         )
-        return when (jsonObject.getJSONObject("req_0").getInteger("code")) {
+        return when (jsonObject["req_0"].getInteger("code")) {
             0 -> CommonResult.success(message = "qq音乐签到成功！")
             200002 -> CommonResult.success(message = "qq音乐今日已签到")
             1000 -> CommonResult.failure("qq音乐签到失败，cookie已失效，请重新登录！")
@@ -92,7 +92,7 @@ class QqMusicLogic {
         val jsonObject = OkHttpKtUtils.postJson("https://u.y.qq.com/cgi-bin/musicu.fcg?_webcgikey=reportUserTask&_=${System.currentTimeMillis()}",
             OkUtils.json("{\"req_0\":{\"module\":\"music.sociality.KolTask\",\"method\":\"reportUserTask\",\"param\":{\"type\":0,\"count\":1,\"op\":0}},\"comm\":{\"g_tk\":${QqUtils.getGTK(qqMusicKey)},\"uin\":${qqMusicEntity.qqEntity?.qq},\"format\":\"json\",\"platform\":\"yqq\"}}"),
             OkUtils.headers(qqMusicEntity.cookie, "https://y.qq.com", UA.PC))
-        return if (jsonObject.getInteger("code") == 0 && jsonObject.getJSONObject("req_0").getInteger("code") == 0)
+        return if (jsonObject.getInteger("code") == 0 && jsonObject["req_0"].getInteger("code") == 0)
             CommonResult.success(message = "qq音乐人签到成功！")
         else CommonResult.failure("qq音乐人签到失败！")
     }
@@ -102,12 +102,12 @@ class QqMusicLogic {
         val preJsonObject = OkHttpKtUtils.postJson("https://u.y.qq.com/cgi-bin/musicu.fcg?_webcgikey=pre_submit_moment&_=${System.currentTimeMillis()}",
             OkUtils.json("{\"req_0\":{\"method\":\"pre_submit_moment\",\"param\":{\"cmd\":0,\"moment\":{\"type\":0,\"v_media\":[],\"v_pic\":[],\"v_tag\":[],\"v_track\":[],\"community\":{},\"v_topic\":[],\"content\":\"$content\"}},\"module\":\"music.magzine.MomentWrite\"},\"comm\":{\"g_tk\":${QqUtils.getGTK(qqMusicKey)},\"uin\":${qqMusicEntity.qqEntity?.qq},\"format\":\"json\",\"platform\":\"yqq\",\"ct\":24,\"cv\":0}}"),
             OkUtils.headers(qqMusicEntity.cookie, "https://y.qq.com", UA.PC))
-        return if (preJsonObject.getInteger("code") == 0 && preJsonObject.getJSONObject("req_0").getInteger("code") == 0){
-            val id = preJsonObject.getJSONObject("req_0").getJSONObject("data").getString("encrypt_moid")
+        return if (preJsonObject.getInteger("code") == 0 && preJsonObject["req_0"].getInteger("code") == 0){
+            val id = preJsonObject["req_0"]["data"].getString("encrypt_moid")
             val jsonObject = OkHttpKtUtils.postJson("https://u.y.qq.com/cgi-bin/musicu.fcg?_webcgikey=submit_moment&_=${System.currentTimeMillis()}",
                 OkUtils.json("{\"req_0\":{\"method\":\"submit_moment\",\"param\":{\"cmd\":0,\"moment\":{\"type\":0,\"v_media\":[],\"v_pic\":[],\"v_tag\":[],\"v_track\":[],\"community\":{},\"v_topic\":[],\"content\":\"$content\",\"encrypt_moid\":\"$id\"}},\"module\":\"music.magzine.MomentWrite\"},\"comm\":{\"g_tk\":${QqUtils.getGTK(qqMusicKey)},\"uin\":${qqMusicEntity.qqEntity?.qq},\"format\":\"json\",\"platform\":\"yqq\"}}"),
                 OkUtils.headers(qqMusicEntity.cookie, "https://y.qq.com", UA.PC))
-            if (jsonObject.getInteger("code") == 0 && jsonObject.getJSONObject("req_0").getInteger("code") == 0)
+            if (jsonObject.getInteger("code") == 0 && jsonObject["req_0"].getInteger("code") == 0)
                 CommonResult.success(message = "qq音乐发送动态成功！")
             else CommonResult.failure("qq音乐发送动态失败！")
         }else CommonResult.failure("qq音乐发送动态失败！可能cookie已失效！")
@@ -121,11 +121,11 @@ class QqMusicLogic {
             OkUtils.json(params),
             OkUtils.headers(qqMusicEntity.cookie, "https://y.qq.com", UA.PC))
         return if (jsonObject.getInteger("code") == 0)
-            when (jsonObject.getJSONObject("req_1").getInteger("code")){
-                0 -> CommonResult.success("qq音乐评论成功", jsonObject.getJSONObject("req_1").getJSONObject("data").getString("AddedCmId"))
+            when (jsonObject["req_1"].getInteger("code")){
+                0 -> CommonResult.success("qq音乐评论成功", jsonObject["req_1"]["data"].getString("AddedCmId"))
                 10009 -> {
                     val url =
-                        jsonObject.getJSONObject("req_1").getJSONObject("data").getString("VerifyUrl")
+                        jsonObject["req_1"]["data"].getString("VerifyUrl")
                     val res = identifyCaptcha(qqMusicEntity, url)
                     if (res.failure())
                         CommonResult.failure("需要验证验证码，请打开该链接进行验证并重新发送该指令：$url")
@@ -133,9 +133,9 @@ class QqMusicLogic {
                         comment(qqMusicEntity, id, content)
                     }
                 }
-                else -> CommonResult.failure("qq音乐随机歌曲评论失败！${jsonObject.getJSONObject("req_1")?.getJSONObject("data")?.getString("Msg") ?: "可能cookie已失效！"}")
+                else -> CommonResult.failure("qq音乐随机歌曲评论失败！${jsonObject["req_1"]?.get("data")?.getString("Msg") ?: "可能cookie已失效！"}")
             }
-        else CommonResult.failure("qq音乐评论失败，" + jsonObject.getJSONObject("req_1").getString("errmsg"))
+        else CommonResult.failure("qq音乐评论失败，" + jsonObject.get("req_1").getString("errmsg"))
     }
 
     suspend fun replyComment(qqMusicEntity: QqMusicEntity, content: String): CommonResult<Void> {
@@ -158,11 +158,11 @@ class QqMusicLogic {
             OkUtils.json("{\"comm\":{\"cv\":4747474,\"ct\":24,\"format\":\"json\",\"inCharset\":\"utf-8\",\"outCharset\":\"utf-8\",\"notice\":0,\"platform\":\"yqq.json\",\"needNewCode\":1,\"uin\":$qq,\"g_tk_new_20200303\":$gtk,\"g_tk\":$gtk},\"req_1\":{\"module\":\"music.globalComment.CommentWriteServer\",\"method\":\"AddComment\",\"param\":{\"BizType\":1,\"BizId\":\"$songId\",\"Content\":\"$content\",\"RepliedCmId\":\"$cmId\"}}}"),
             OkUtils.headers(qqMusicEntity.cookie, "https://y.qq.com", UA.PC))
         return if (resultJsonObject.getInteger("code") == 0) {
-            when (resultJsonObject.getJSONObject("req_1").getInteger("code")) {
+            when (resultJsonObject.get("req_1").getInteger("code")) {
                 0 -> CommonResult.success(message = "qq音乐随机歌曲评论成功！")
                 10009 -> {
                     val url =
-                        resultJsonObject.getJSONObject("req_1").getJSONObject("data").getString("VerifyUrl")
+                        resultJsonObject.get("req_1").get("data").getString("VerifyUrl")
                     val res = identifyCaptcha(qqMusicEntity, url)
                     if (res.failure())
                         CommonResult.failure("需要验证验证码，请打开该链接进行验证并重新发送该指令：$url")
@@ -170,7 +170,7 @@ class QqMusicLogic {
                         replyComment(qqMusicEntity, songId, cmId, content)
                     }
                 }
-                else -> CommonResult.failure("qq音乐随机歌曲评论失败！${resultJsonObject.getJSONObject("req_1")?.getJSONObject("data")?.getString("Msg") ?: "可能cookie已失效！"}")
+                else -> CommonResult.failure("qq音乐随机歌曲评论失败！${resultJsonObject.get("req_1")?.get("data")?.get("Msg")?.asText() ?: "可能cookie已失效！"}")
             }
         }
         else CommonResult.failure("qq音乐随机歌曲评论失败！")
@@ -189,11 +189,12 @@ class QqMusicLogic {
         val commentsJsonObject = OkHttpUtils.postJson("https://u.y.qq.com/cgi-bin/musicu.fcg?_=${System.currentTimeMillis()}",
             OkUtils.json(params),
             OkUtils.headers(qqMusicEntity.cookie, "https://y.qq.com", UA.PC))
-        return if (commentsJsonObject.getInteger("code") == 0 && commentsJsonObject.getJSONObject("req_3").getInteger("code") == 0){
-            val commentJsonObject =
-                commentsJsonObject.getJSONObject("req_3").getJSONObject("data").getJSONObject("CommentList2")
-                    .getJSONArray("Comments").random() as JSONObject
-            val cmId = commentJsonObject.getString("CmId")
+        return if (commentsJsonObject.getInteger("code") == 0 && commentsJsonObject.get("req_3").getInteger("code") == 0){
+            val commentJsonNode =
+                commentsJsonObject.get("req_3").get("data").get("CommentList2")
+                    .get("Comments")
+            val single = commentJsonNode.get(MyUtils.randomInt(0, commentJsonNode.size()))
+            val cmId = single.getString("CmId")
             replyComment(qqMusicEntity, songId, cmId, content)
         }else CommonResult.failure("qq音乐随机歌曲评论失败！获取评论列表失败！")
     }
@@ -202,16 +203,16 @@ class QqMusicLogic {
         val params = "{\"req_0\":{\"module\":\"music.sociality.KolUserRight\",\"method\":\"getOrderId\",\"param\":{\"userRedeemType\":3,\"greenVipNum\":1,\"greenVipType\":0,\"creditType\":0}},\"comm\":{\"g_tk\":${QqUtils.getGTK(qqMusicEntity.qqMusicKey)},\"uin\":${qqMusicEntity.qqEntity?.qq},\"format\":\"json\",\"platform\":\"h5\",\"ct\":23,\"cv\":0}}"
         val jsonObject = OkHttpKtUtils.postJson("https://u.y.qq.com/cgi-bin/musicu.fcg?_=" + System.currentTimeMillis(),
             OkUtils.json(params), OkUtils.headers(qqMusicEntity.cookie, "https://y.qq.com", UA.PC))
-        val innerJsonObject = jsonObject.getJSONObject("req_0")
+        val innerJsonObject = jsonObject["req_0"]
         return if (jsonObject.getInteger("code") == 0 && innerJsonObject.getInteger("code") == 0) {
-            val orderId = innerJsonObject.getJSONObject("data").getString("orderId")
+            val orderId = innerJsonObject.get("data").getString("orderId")
             val getParams = "{\"req_0\":{\"module\":\"music.sociality.KolUserRight\",\"method\":\"redeemGreenVip\",\"param\":{\"num\":1,\"greenVipType\":0,\"creditType\":0,\"orderId\":\"$orderId\"}},\"comm\":{\"g_tk\":${QqUtils.getGTK(qqMusicEntity.qqMusicKey)},\"uin\":${qqMusicEntity.qqEntity?.qq},\"format\":\"json\",\"platform\":\"h5\",\"ct\":23,\"cv\":0}}"
             val getJsonObject = OkHttpKtUtils.postJson("https://u.y.qq.com/cgi-bin/musicu.fcg?_=" + System.currentTimeMillis(),
                 OkUtils.json(getParams), OkUtils.headers(qqMusicEntity.cookie, "https://y.qq.com", UA.PC))
-            if (getJsonObject.getInteger("code") == 0 && getJsonObject.getJSONObject("req_0").getInteger("code") == 0)
+            if (getJsonObject.getInteger("code") == 0 && getJsonObject["req_0"].getInteger("code") == 0)
                 CommonResult.success(message = "兑换绿钻一个月成功！")
-            else CommonResult.failure("兑换绿钻失败：${getJsonObject.getJSONObject("req_0")?.getJSONObject("data")?.getString("retMsg") ?: "可能cookie已失效"}")
-        }else CommonResult.failure("兑换绿钻失败：${jsonObject.getJSONObject("req_0")?.getJSONObject("data")?.getString("retMsg") ?: "可能cookie已失效"}")
+            else CommonResult.failure("兑换绿钻失败：${getJsonObject["req_0"]?.get("data")?.get("retMsg")?.asText() ?: "可能cookie已失效"}")
+        }else CommonResult.failure("兑换绿钻失败：${jsonObject["req_0"]?.get("data")?.get("retMsg")?.asText() ?: "可能cookie已失效"}")
     }
 
     private suspend fun identifyCaptcha(qqMusicEntity: QqMusicEntity, url: String): CommonResult<Any>{
@@ -224,20 +225,20 @@ class QqMusicLogic {
             OkUtils.headers(qqMusicEntity.cookie, "https://y.qq.com", UA.QQ)
         )
         if (preJsonObject.getInteger("code") != 0) return CommonResult.failure(preJsonObject.getString("message"))
-        val preDataJsonObject = preJsonObject.getJSONObject("data")
+        val preDataJsonObject = preJsonObject.get("data")
         val strCode = preDataJsonObject.getString("strCode")
         val strPic = preDataJsonObject.getString("strPic")
         val position = preDataJsonObject.getString("position")
         val identifyJsonObject = OkHttpKtUtils.postJson("https://api.kukuqaq.com/qqMusicCaptchaByTt", mapOf("image" to strPic))
         if (identifyJsonObject.getInteger("code") != 200) return CommonResult.failure(identifyJsonObject.getString("message"))
-        val width = identifyJsonObject.getJSONObject("data").getInteger("data") + 26
+        val width = identifyJsonObject.get("data").getInteger("data") + 26
         val height = MyUtils.regex(",", "]", position)!!.trim()
         val a = "[$width,%20$height]]"
         val resJsonObject = OkHttpKtUtils.getJsonp("https://safety.music.qq.com/cgi/fcgi-bin/fcg_music_validate?iSubCmd=71&iAppid=$appId&msgid=$msgId&strCode=$strCode&strSig=$a&strTk={%22device%22:{%22screenWidth%22:400,%22screenHeight%22:700,%22devicePixelRatio%22:1},%22captcha%22:{%22isFullScreen%22:true}}&clientid=10&g_tk=$gtk&g_tk_new_20200303=$gtk&uin=$qq&format=jsonp&inCharset=utf-8&outCharset=utf-8&notice=0&platform=h5&needNewCode=1&callback=MusicJsonCallback",
             OkUtils.headers(qqMusicEntity.cookie, "https://y.qq.com", UA.QQ))
-        val b = resJsonObject.getInteger("code") == 0 && resJsonObject.getJSONObject("data").getInteger("iRet") == 0
+        val b = resJsonObject.getInteger("code") == 0 && resJsonObject.get("data").getInteger("iRet") == 0
         return if (b) CommonResult.success(message = "识别成功！")
-        else CommonResult.failure(resJsonObject.getJSONObject("data").getString("strErrMsg"))
+        else CommonResult.failure(resJsonObject.get("data").getString("strErrMsg"))
     }
 
     suspend fun daySign(qqMusicEntity: QqMusicEntity): CommonResult<Void> {
@@ -246,10 +247,10 @@ class QqMusicLogic {
             OkUtils.json(data), OkUtils.headers(qqMusicEntity.cookie, "https://i.y.qq.com/n2/m/client/day_sign/index.html",
                 UA.QQ))
         return if (jsonObject.getInteger("code") == 0) {
-            val innerJsonObject = jsonObject.getJSONObject("req_0")
+            val innerJsonObject = jsonObject["req_0"]
             when (innerJsonObject.getInteger("code")){
                 0 -> {
-                    val ss = innerJsonObject.getJSONObject("data").getInteger("code")
+                    val ss = innerJsonObject.get("data").getInteger("code")
                     if (ss == 0)
                         CommonResult.success(message = "qq音乐日签成功！")
                     else CommonResult.success(message = "qq音乐今日已日签！")

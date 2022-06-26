@@ -1,6 +1,5 @@
 package me.kuku.yuq.logic
 
-import com.alibaba.fastjson.JSONObject
 import me.kuku.pojo.CommonResult
 import me.kuku.pojo.UA
 import me.kuku.utils.*
@@ -48,7 +47,7 @@ class DouYuLogic {
             val jsonObject = OkHttpKtUtils.getJson("https://www.douyu.com/wgapi/livenc/liveweb/follow/list?sort=0&cid1=0&page=${i++}",
                 OkUtils.headers(douYuEntity.cookie, "", UA.PC))
             if (jsonObject.getInteger("error") == 0) {
-                val list = jsonObject.getJSONObject("data").getJSONArray("list")?.map { it as JSONObject } ?: break
+                val list = jsonObject["data"]["list"] ?: break
                 for (singleJsonObject in list) {
                     val douYuRoom = DouYuRoom(singleJsonObject.getString("room_name"), singleJsonObject.getString("nickname"),
                         "https://www.douyu.com${singleJsonObject.getString("url")}", singleJsonObject.getString("game_name"), singleJsonObject.getInteger("show_status") == 1,

@@ -2,6 +2,7 @@ package me.kuku.yuq.entity
 
 import com.alibaba.fastjson.annotation.JSONField
 import me.kuku.utils.OkHttpKtUtils
+import me.kuku.utils.getString
 import me.kuku.yuq.utils.SpringUtils
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -65,9 +66,9 @@ suspend fun Throwable.save(url: String? = null) {
 }
 suspend fun Throwable.toUrl(): String {
     return kotlin.runCatching {
-        val jsonObject = OkHttpKtUtils.postJson("https://api.kukuqaq.com/paste",
+        val jsonNode = OkHttpKtUtils.postJson("https://api.kukuqaq.com/paste",
             mapOf("poster" to "kuku", "syntax" to "java", "content" to this.stackTraceToString())
         )
-        jsonObject.getString("url")
+        jsonNode.getString("url")
     }.getOrDefault("Ubuntu paste url 生成失败")
 }

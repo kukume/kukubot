@@ -1,15 +1,14 @@
 package me.kuku.yuq.logic
 
-import com.alibaba.fastjson.JSON
-import com.alibaba.fastjson.JSONArray
-import com.alibaba.fastjson.JSONObject
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.module.kotlin.contains
 import me.kuku.pojo.CommonResult
 import me.kuku.yuq.entity.WeiboEntity
 import me.kuku.pojo.ResultStatus
 import me.kuku.pojo.UA
-import me.kuku.utils.OkHttpKtUtils
-import me.kuku.utils.OkUtils
-import me.kuku.utils.toUrlEncode
+import me.kuku.utils.*
 import org.jsoup.Jsoup
 
 object WeiboLogic {
@@ -20,11 +19,10 @@ object WeiboLogic {
             OkUtils.referer("https://m.weibo.cn/search?containerid=100103type%3D1%26q%3D$newName"))
         return if (response.code == 200) {
             val jsonObject = OkUtils.json(response)
-            val cardsJsonArray = jsonObject.getJSONObject("data").getJSONArray("cards")
-            var jsonArray: JSONArray? = null
+            val cardsJsonArray = jsonObject.get("data").get("cards")
+            var jsonArray: JsonNode? = null
             for (obj in cardsJsonArray) {
-                val singleJsonObject = obj as JSONObject
-                val cardGroupJsonArray = singleJsonObject.getJSONArray("card_group")
+                val cardGroupJsonArray = obj.get("card_group")
                 if (cardGroupJsonArray != null) {
                     jsonArray = cardGroupJsonArray
                     break
@@ -33,20 +31,18 @@ object WeiboLogic {
             if (jsonArray == null) return CommonResult.failure("没有找到该用户")
             val list = mutableListOf<WeiboPojo>()
             for (obj in jsonArray) {
-                val newJsonObject = obj as JSONObject
-                if (newJsonObject.containsKey("user") || newJsonObject.containsKey("users")) {
-                    val userJsonObject = newJsonObject.getJSONObject("user")
+                if (obj.has("user") || obj.has("users")) {
+                    val userJsonObject = obj.get("user")
                     if (userJsonObject != null) {
-                        val username = userJsonObject.getString("name") ?:
-                            userJsonObject.getString("screen_name")
+                        val username = userJsonObject.get("name")?.asText() ?:
+                            userJsonObject.get("screen_name").asText()
                         list.add(WeiboPojo(name = username, userid = userJsonObject.getString("id")))
                     } else {
-                        val usersJsonArray = newJsonObject.getJSONArray("users")
+                        val usersJsonArray = obj.get("users")
                         for (any in usersJsonArray) {
-                            val singleJsonObject = any as JSONObject
-                            val username = singleJsonObject.getString("name")
-                                ?: singleJsonObject.getString("screen_name")
-                            list.add(WeiboPojo(name = username, userid = singleJsonObject.getString("id")))
+                            val username = any.get("name")?.asText()
+                                ?: any.getString("screen_name")
+                            list.add(WeiboPojo(name = username, userid = any.getString("id")))
                         }
                     }
                 }
@@ -56,9 +52,9 @@ object WeiboLogic {
         } else CommonResult.failure("查询失败，请稍后再试！")
     }
 
-    private fun convert(jsonObject: JSONObject): WeiboPojo {
+    private fun convert(jsonObject: JsonNode): WeiboPojo {
         val weiboPojo = WeiboPojo()
-        val userJsonObject = jsonObject.getJSONObject("user")
+        val userJsonObject = jsonObject.get("user")
         weiboPojo.id = jsonObject.getLong("id")
         weiboPojo.name = userJsonObject.getString("screen_name")
         weiboPojo.created = jsonObject.getString("created_at")
@@ -69,27 +65,25 @@ object WeiboLogic {
         if (picNum != 0) {
             val list = weiboPojo.imageUrl
             val pics = jsonObject["pics"]
-            if (pics is JSONArray) {
-                pics.map { it as JSONObject }.map { it.getJSONObject("large").getString("url")}.forEach {
-                    it?.let { list.add(it) }
+            if (pics is ArrayNode) {
+                pics.map { it.get("large").get("url")}.forEach {
+                    it?.let { list.add(it.asText()) }
                 }
-            } else if (pics is JSONObject) {
-                jsonObject.forEach { _, u ->
-                    val ss = u as? JSONObject
-                    ss?.getJSONObject("large")?.getString("url")?.let {
+            } else if (pics is ObjectNode) {
+                jsonObject.forEach { node ->
+                    node.get("large")?.get("url")?.asText()?.let {
                         list.add(it)
                     }
                 }
             }
         }
-        if (jsonObject.containsKey("retweeted_status")) {
-            val forwardJsonObject = jsonObject.getJSONObject("retweeted_status")
+        if (jsonObject.contains("retweeted_status")) {
+            val forwardJsonObject = jsonObject.get("retweeted_status")
             weiboPojo.isForward = true
             weiboPojo.forwardId = forwardJsonObject.getString("id")
             weiboPojo.forwardTime = forwardJsonObject.getString("created_at")
-            val forwardUserJsonObject = forwardJsonObject.getJSONObject("user")
-            val name = if (forwardUserJsonObject == null)  "原微博删除"
-            else forwardUserJsonObject.getString("screen_name")
+            val forwardUserJsonObject = forwardJsonObject.get("user")
+            val name = forwardUserJsonObject?.getString("screen_name") ?: "原微博删除"
             weiboPojo.forwardName = name
             weiboPojo.forwardText = Jsoup.parse(forwardJsonObject.getString("text")).text()
             weiboPojo.forwardBid = forwardJsonObject.getString("bid")
@@ -121,12 +115,11 @@ object WeiboLogic {
         val response = OkHttpKtUtils.get("https://m.weibo.cn/api/container/getIndex?type=uid&uid=$id&containerid=107603$id")
         return if (response.code == 200) {
             val jsonObject = OkUtils.json(response)
-            val cardJsonArray = jsonObject.getJSONObject("data").getJSONArray("cards")
+            val cardJsonArray = jsonObject.get("data").get("cards")
             val list = mutableListOf<WeiboPojo>()
             for (any in cardJsonArray) {
-                val singleJsonObject = any as JSONObject
-                val blogJsonObject = singleJsonObject.getJSONObject("mblog") ?: continue
-                if (1 == blogJsonObject.getInteger("isTop")) continue
+                val blogJsonObject = any.get("mblog") ?: continue
+                if (1 == any.get("isTop")?.asInt()) continue
                 list.add(convert(blogJsonObject))
             }
             CommonResult.success(list)
@@ -142,7 +135,7 @@ object WeiboLogic {
     suspend fun loginByQr1(): WeiboQrcode {
         val jsonObject = OkHttpKtUtils.getJsonp("https://login.sina.com.cn/sso/qrcode/image?entry=weibo&size=180&callback=STK_16010457545441",
             OkUtils.referer("https://weibo.com/"))
-        val dataJsonObject = jsonObject.getJSONObject("data")
+        val dataJsonObject = jsonObject.get("data")
         return WeiboQrcode(dataJsonObject.getString("qrid"), dataJsonObject.getString("image"))
     }
 
@@ -151,12 +144,12 @@ object WeiboLogic {
             OkUtils.referer("https://weibo.com/"))
         return when (jsonObject.getInteger("retcode")) {
             20000000 -> {
-                val dataJsonObject = jsonObject.getJSONObject("data")
+                val dataJsonObject = jsonObject.get("data")
                 val alt = dataJsonObject.getString("alt")
                 val response = OkHttpKtUtils.get("https://login.sina.com.cn/sso/login.php?entry=weibo&returntype=TEXT&crossdomain=1&cdult=3&domain=weibo.com&alt=$alt&savestate=30&callback=STK_160104719639113")
                 val cookie = OkUtils.cookie(response)
                 val resultJsonObject = OkUtils.jsonp(response)
-                val jsonArray = resultJsonObject.getJSONArray("crossDomainUrlList")
+                val jsonArray = resultJsonObject.get("crossDomainUrlList")
                 val url = jsonArray.getString(2)
                 val finallyResponse = OkHttpKtUtils.get(url).apply { close() }
                 val pcCookie = OkUtils.cookie(finallyResponse)
@@ -178,14 +171,13 @@ object WeiboLogic {
             OkUtils.cookie(weiboEntity.mobileCookie))
         return if ("" != str) {
             val jsonArray = kotlin.runCatching {
-                JSON.parseObject(str).getJSONObject("data").getJSONArray("statuses")
+                Jackson.parse(str).get("data").get("statuses")
             }.onFailure {
                 return CommonResult.failure("查询微博失败，请稍后再试！！", null)
             }.getOrNull()!!
             val list = mutableListOf<WeiboPojo>()
             for (any in jsonArray) {
-                val jsonObject = any as JSONObject
-                list.add(convert(jsonObject))
+                list.add(convert(any))
             }
             CommonResult.success(list)
         } else CommonResult.failure("您的cookie已失效，请重新绑定微博")
@@ -195,11 +187,10 @@ object WeiboLogic {
         val jsonObject = OkHttpKtUtils.getJson("https://m.weibo.cn/profile/info",
             OkUtils.cookie(weiboEntity.mobileCookie))
         return if (jsonObject.getInteger("ok") == 1) {
-            val jsonArray = jsonObject.getJSONObject("data").getJSONArray("statuses")
+            val jsonArray = jsonObject.get("data").get("statuses")
             val list = mutableListOf<WeiboPojo>()
             for (any in jsonArray) {
-                val singleJsonObject = any as JSONObject
-                list.add(convert(singleJsonObject))
+                list.add(convert(any))
             }
             CommonResult.success(list)
         } else CommonResult.failure("您的cookie已失效，请重新绑定微博")
@@ -208,7 +199,7 @@ object WeiboLogic {
     private suspend fun getToken(weiboEntity: WeiboEntity): WeiboToken {
         val response = OkHttpKtUtils.get("https://m.weibo.cn/api/config",
             OkUtils.cookie(weiboEntity.mobileCookie))
-        val jsonObject = OkUtils.json(response).getJSONObject("data")
+        val jsonObject = OkUtils.json(response).get("data")
         return if (jsonObject.getBoolean("login")) {
             val cookie = OkUtils.cookie(response)
             WeiboToken(jsonObject.getString("st"), cookie + weiboEntity.mobileCookie)
@@ -224,16 +215,14 @@ object WeiboLogic {
         val cookie = OkUtils.cookie(response)
         val jsonObject = OkUtils.json(response)
         return if (jsonObject.getInteger("ok") == 1) {
-            val cardsJsonArray = jsonObject.getJSONObject("data").getJSONArray("cards").getJSONObject(0).getJSONArray("card_group")
+            val cardsJsonArray = jsonObject.get("data").get("cards").get(0).get("card_group")
             for (any in cardsJsonArray) {
-                val singleJsonObject = any as JSONObject
-                if (singleJsonObject.containsKey("buttons")) {
-                    val buttonJsonArray = singleJsonObject.getJSONArray("buttons")
+                if (any.contains("buttons")) {
+                    val buttonJsonArray = any.get("buttons")
                     for (bu in buttonJsonArray) {
-                        val buttonJsonObject = bu as JSONObject
-                        if (buttonJsonObject.getString("name") == "签到") {
-                            val scheme = "https://m.weibo.cn${buttonJsonObject.getString("scheme")}"
-                            val signJsonObject = OkHttpKtUtils.postJson(scheme,
+                        if (bu.getString("name") == "签到") {
+                            val scheme = "https://m.weibo.cn${bu.getString("scheme")}"
+                            OkHttpKtUtils.postJson(scheme,
                                 mapOf("st" to weiboToken.token, "_spr" to "screen:393x851"),
                                 mapOf("x-xsrf-token" to weiboToken.token, "cookie" to weiboToken.cookie + cookie,
                                     "referer" to "https://m.weibo.cn/p/tabbar?containerid=100803_-_followsuper&luicode=10000011&lfid=231093_-_chaohua&page_type=tabbar",

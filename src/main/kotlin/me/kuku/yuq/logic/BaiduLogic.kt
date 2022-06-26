@@ -58,9 +58,9 @@ class BaiduLogic (
         val preJsonObject = OkHttpKtUtils.getJson("https://api-gt.baidu.com/v1/server/task?version=$version", ybbDefaultHeader().also {
             it["cookie"] = baiduEntity.cookie
         })
-        if (!preJsonObject.getBoolean("success")) return CommonResult.failure(preJsonObject.getJSONObject("errors").getString("message_cn"))
-        val preResult = preJsonObject.getJSONArray("result")
-        val ll = preResult.map { it as JSONObject }.filter { it.getString("name") in listOf("看视频送时长", "看视频送积分") }
+        if (!preJsonObject.getBoolean("success")) return CommonResult.failure(preJsonObject["errors"]["message_cn"].asText())
+        val preResult = preJsonObject["result"]
+        val ll = preResult.filter { it.getString("name") in listOf("看视频送时长", "看视频送积分") }
         if (ll.isEmpty()) return CommonResult.failure("没有这个任务")
         val sign = ll[0].getString("sign")
         val time = System.currentTimeMillis()
@@ -77,7 +77,7 @@ class BaiduLogic (
             }
         )
         return if (resultJsonObject.getBoolean("success")) CommonResult.success(message = "观看广告成功！", data = null)
-        else CommonResult.failure(resultJsonObject.getJSONObject("errors").getString("message_cn"))
+        else CommonResult.failure(resultJsonObject["errors"]["message_cn"].asText())
     }
 
     suspend fun ybbSign(baiduEntity: BaiduEntity): CommonResult<Void> {
@@ -88,7 +88,7 @@ class BaiduLogic (
         val jsonObject = OkHttpKtUtils.postJson("https://ybb.baidu.com/api/v1/server/scores",
             OkUtils.json("""{"type": "daily"}"""), map)
         return if (jsonObject.getBoolean("success")) CommonResult.success()
-        else CommonResult.failure(jsonObject.getJSONObject("errors").getString("message_cn"))
+        else CommonResult.failure(jsonObject["errors"]["message_cn"].asText())
     }
 
     private suspend fun getSToken(baiduEntity: BaiduEntity, url: String): String {

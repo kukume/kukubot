@@ -13,6 +13,8 @@ spring:
   cache:
     ehcache:
       config: classpath:ehcache.xml
+  ktor:
+    port: 5460
 
 yuq:
   art:

@@ -23,10 +23,10 @@ class MessageEntity: BaseEntity() {
     var messageId: Int = 0
     @OneToOne
     @JoinColumn(name = "qq_id")
-    var qqEntity: QqEntity = QqEntity()
+    var qqEntity: QqEntity? = null
     @OneToOne
     @JoinColumn(name = "group_id")
-    var groupEntity: GroupEntity = GroupEntity()
+    var groupEntity: GroupEntity? = null
     @Lob
     @Column(columnDefinition = "text")
     var content: String = ""

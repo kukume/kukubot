@@ -13,10 +13,6 @@ import org.springframework.stereotype.Component
 @Component
 class MessageSendController {
 
-    init {
-        println("ss")
-    }
-
     fun Routing.messageSend() {
 
         get("send") {

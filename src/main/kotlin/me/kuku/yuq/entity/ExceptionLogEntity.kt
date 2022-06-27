@@ -1,6 +1,7 @@
 package me.kuku.yuq.entity
 
 import com.alibaba.fastjson.annotation.JSONField
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import me.kuku.utils.OkHttpKtUtils
 import me.kuku.utils.getString
 import me.kuku.yuq.utils.SpringUtils
@@ -20,6 +21,7 @@ import javax.persistence.*
     NamedSubgraph(name = "messageEntity", attributeNodes = [NamedAttributeNode("qqEntity"), NamedAttributeNode("groupEntity")]),
     NamedSubgraph(name = "privateMessageEntity", attributeNodes = [NamedAttributeNode("qqEntity")]),
 ])
+@JsonIgnoreProperties("stackTrace")
 class ExceptionLogEntity: BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

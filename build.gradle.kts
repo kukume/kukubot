@@ -29,7 +29,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
     implementation("me.kuku:utils-jackson:0.0.6")
-    implementation("me.kuku:ktor-spring-boot-starter:0.0.9")
+    implementation("me.kuku:ktor-spring-boot-starter:0.0.10")
     implementation("com.IceCreamQAQ.YuQ:YuQ-ArtQQ:0.1.0.0-DEV18")
 //    implementation("com.IceCreamQAQ:Yu-Core:0.2.0.0-DEV23")
 //    implementation("com.IceCreamQAQ:YuQ:0.1.0.0-DEV31")

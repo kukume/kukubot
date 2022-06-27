@@ -15,24 +15,25 @@ class ToolLogic(
     private val sauceNao: SauceNaoConfig
 ) {
 
-    private suspend fun baiKeByUrl(url: String): CommonResult<String> {
-        var response = OkHttpKtUtils.get(url)
-        while (response.code == 302) {
-            response.close()
-            val location = response.header("location")!!
-            if (location.startsWith("//baike.baidu.com/search/none")) return CommonResult.failure("")
-            val resultUrl = if (location.startsWith("//")) "https:$location"
-            else "https://baike.baidu.com$location"
-            response = OkHttpKtUtils.get(resultUrl)
-        }
-        val html = OkUtils.str(response)
-        val doc = Jsoup.parse(html)
-        val result = doc.select(".lemma-summary .para").first()?.text()
-            ?: return CommonResult.failure(code = 210, message = "", data = "https://baike.baidu.com" + doc.select("li[class=list-dot list-dot-paddingleft]").first()?.getElementsByTag("a")?.first()?.attr("href"))
-        return CommonResult.success(result)
-    }
-
     suspend fun baiKe(text: String): String {
+
+        suspend fun baiKeByUrl(url: String): CommonResult<String> {
+            var response = OkHttpKtUtils.get(url)
+            while (response.code == 302) {
+                response.close()
+                val location = response.header("location")!!
+                if (location.startsWith("//baike.baidu.com/search/none")) return CommonResult.failure("")
+                val resultUrl = if (location.startsWith("//")) "https:$location"
+                else "https://baike.baidu.com$location"
+                response = OkHttpKtUtils.get(resultUrl)
+            }
+            val html = OkUtils.str(response)
+            val doc = Jsoup.parse(html)
+            val result = doc.select(".lemma-summary .para").first()?.text()
+                ?: return CommonResult.failure(code = 210, message = "", data = "https://baike.baidu.com" + doc.select("li[class=list-dot list-dot-paddingleft]").first()?.getElementsByTag("a")?.first()?.attr("href"))
+            return CommonResult.success(result)
+        }
+
         val encodeText = text.toUrlEncode()
         val url = "https://baike.baidu.com/search/word?word=$encodeText"
         val result = baiKeByUrl(url)

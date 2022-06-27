@@ -116,7 +116,7 @@ class ToolController (
         val list = messageService.findByGroupAndLocalDateTimeAfter(group.id, LocalDate.now().atStartOfDay())
         val map = mutableMapOf<Long, Int>()
         for (messageEntity in list) {
-            val qq = messageEntity.qqEntity.qq
+            val qq = messageEntity.qqEntity?.qq ?: continue
             val i = map[qq] ?: 0
             map[qq] = i + 1
         }

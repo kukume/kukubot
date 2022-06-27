@@ -1,5 +1,6 @@
 package me.kuku.yuq.entity
 
+import com.fasterxml.jackson.annotation.JsonFormat
 import com.vladmihalcea.hibernate.type.json.JsonType
 import org.hibernate.annotations.TypeDef
 import org.springframework.data.annotation.CreatedDate
@@ -17,8 +18,10 @@ import javax.persistence.MappedSuperclass
 open class BaseEntity {
     @CreatedDate
     @Column(nullable = false, updatable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     open var createDate: LocalDateTime = LocalDateTime.now()
     @LastModifiedDate
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     open var lastModifiedDate: LocalDateTime = LocalDateTime.now()
     @Enumerated
     open var status: Status = Status.ON

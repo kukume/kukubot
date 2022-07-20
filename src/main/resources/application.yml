@@ -14,7 +14,7 @@ spring:
     ehcache:
       config: classpath:ehcache.xml
   ktor:
-    port: 5460
+    port: 8080
 
 yuq:
   art:

@@ -230,8 +230,8 @@ object BiliBiliLogic {
         val jsonObject = OkHttpKtUtils.getJsonp("https://api.bilibili.com/x/space/acc/info?mid=$id&jsonp=jsonp",
             OkUtils.referer("https://space.bilibili.com/$id/"))
         val dataJsonObject = jsonObject["data"]?.get("live_room") ?: return BiliBiliLive(status = false)
-        val status = dataJsonObject.getInteger("liveStatus")
-        return BiliBiliLive(dataJsonObject.getString("title"), id, dataJsonObject.getString("url"), status == 1)
+        val status = dataJsonObject.get("liveStatus")?.asInt()
+        return BiliBiliLive(dataJsonObject.get("title")?.asText() ?: "", id, dataJsonObject.get("url")?.asText() ?: "", status == 1)
     }
 
     suspend fun liveSign(biliBiliEntity: BiliBiliEntity): CommonResult<Void> {

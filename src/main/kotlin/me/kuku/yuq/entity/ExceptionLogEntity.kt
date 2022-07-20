@@ -66,11 +66,13 @@ suspend fun Throwable.save(url: String? = null) {
         })
     }
 }
-suspend fun Throwable.toUrl(): String {
+suspend fun String.toUrl(): String {
     return kotlin.runCatching {
         val jsonNode = OkHttpKtUtils.postJson("https://api.kukuqaq.com/paste",
-            mapOf("poster" to "kuku", "syntax" to "java", "content" to this.stackTraceToString())
+            mapOf("poster" to "kuku", "syntax" to "java", "content" to this)
         )
         jsonNode.getString("url")
     }.getOrDefault("Ubuntu paste url 生成失败")
 }
+
+suspend fun Throwable.toUrl() = this.stackTraceToString().toUrl()

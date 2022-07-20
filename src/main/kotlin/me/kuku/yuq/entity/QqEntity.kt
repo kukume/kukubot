@@ -81,6 +81,9 @@ interface QqRepository: JpaRepository<QqEntity, Int> {
 
     @EntityGraph(value = "queryAll", type = EntityGraph.EntityGraphType.FETCH)
     fun findByQqOrderById(qq: Long): QqEntity?
+
+    @EntityGraph(attributePaths = ["groups"])
+    override fun findAll(): MutableList<QqEntity>
 }
 
 @Service
@@ -99,4 +102,5 @@ class QqService (
 }
 
 class QqConfig {
+    var yaoHuoPush: Status = Status.OFF
 }

@@ -21,6 +21,7 @@ import me.kuku.pojo.QqLoginPojo
 import me.kuku.utils.*
 import me.kuku.yuq.entity.*
 import me.kuku.yuq.logic.ToolLogic
+import me.kuku.yuq.logic.YgoLogic
 import me.kuku.yuq.utils.YuqUtils
 import okhttp3.MultipartBody
 import org.jsoup.Jsoup
@@ -136,7 +137,8 @@ class ToolController (
 @PrivateController
 @Component
 class ToolAllController(
-    private val toolLogic: ToolLogic
+    private val toolLogic: ToolLogic,
+    private val ygoLogic: YgoLogic
 ) {
 
     @Action("菜单")
@@ -224,13 +226,12 @@ class ToolAllController(
 
     @Action("测吉凶")
     fun qqGodLock(qq: Long): String {
-        val doc = Jsoup.connect("http://qq.link114.cn/$qq").get()
-        val ele = doc.getElementById("main")?.getElementsByClass("listpage_content")?.first()
-        val elements = ele?.getElementsByTag("dl") ?: return "没查询到信息"
+        val str = OkHttpUtils.postStr("https://www.buyiju.com/cqq/", mapOf("sjhao" to qq.toString()))
+        val element = Jsoup.parse(str).getElementsByClass("content").firstOrNull() ?: return "查询失败"
         val sb = StringBuilder()
-        for (element in elements) {
-            sb.append(element.getElementsByTag("dt").first()?.text())
-                .appendLine(element.getElementsByTag("dd").text())
+        for (ele in element.getElementsByTag("p")) {
+            if (ele.getElementsByTag("a").isEmpty())
+                sb.appendLine(ele.text())
         }
         return sb.removeSuffix("\n").toString()
     }
@@ -297,6 +298,36 @@ class ToolAllController(
         val response = OkHttpKtUtils.get("https://api.kukuqaq.com/time").also { it.close() }
         val url = response.header("location") ?: return "获取图片失败"
         return mif.imageByUrl("https://api.kukuqaq.com$url")
+    }
+
+    @Action("游戏王 {text}")
+    suspend fun ygo(text: String, context: BotActionContext, qq: Long, session: ContextSession): Any? {
+        val list = ygoLogic.search(text)
+        val sb = StringBuilder()
+        var i = 1
+        for (card in list) {
+            sb.appendLine("${i++}、${card.chineseName}")
+        }
+        val send = "查询到以下卡片，请输入卡片序号\n${sb.removeSuffix("\n")}"
+        kotlin.runCatching {
+            context.source.sendMessage(mif.at(qq).plus(send))
+        }.onFailure {
+            context.source.sendMessage(mif.at(qq).plus("查询到以下卡片，请输入卡片序号\n").plus(UbuntuPasteUtils.url(send)))
+        }
+        val ii = session.waitNextMessage().firstString().toIntOrNull() ?: return "您输入的不为数字"
+        if (ii > list.size) return "您输入的数字不符合规范"
+        val card = list[ii - 1]
+        val res = StringBuilder().append("中文名：").appendLine(card.chineseName)
+            .append("英文名：").appendLine(card.englishName)
+            .append("日文名：").appendLine(card.japaneseName)
+            .appendLine("效果：").append(card.effect)
+        context.source.sendMessage(mif.imageByUrl(card.imageUrl))
+        kotlin.runCatching {
+            context.source.sendMessage(mif.at(qq).plus(res.toString()))
+        }.onFailure {
+            context.source.sendMessage(mif.at(qq).plus(UbuntuPasteUtils.url("详情：$res")))
+        }
+        return null
     }
 }
 

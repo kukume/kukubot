@@ -18,7 +18,7 @@ class HostLocJob (
 
     private var locId = 0
 
-    @Cron("1s")
+    @Cron("2m")
     suspend fun locPush() {
         val list = HostLocLogic.post()
         if (list.isEmpty()) return

@@ -5,6 +5,7 @@ import org.springframework.context.ApplicationContextAware
 import org.springframework.stereotype.Component
 
 @Component
+@org.springframework.context.annotation.Lazy(false)
 class SpringUtils: ApplicationContextAware {
 
     companion object {

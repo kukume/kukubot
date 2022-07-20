@@ -185,7 +185,7 @@ class ToolAllController(
 
     @Action("icp {domain}")
     suspend fun icp(domain: String): String {
-        val str = OkHttpKtUtils.getStr("https://api.kukuqaq.com/icp?keyword=${domain.toUrlEncode()}&m")
+        val str = OkHttpKtUtils.getStr("https://api.kukuqaq.com/icp?keyword=${domain.toUrlEncode()}")
         val any = JSON.parse(str)
         return if (any is JSONArray) {
             if (any.isEmpty()) "该域名未查到备案信息"
@@ -267,32 +267,6 @@ class ToolAllController(
         return "在JetBrains IDE中激活方式选择激活服务器，填入上述地址即可（如为破解版可能会激活失败，卸载重装即可）"
     }
 
-    @Action("jetbrains激活码")
-    suspend fun activeCode(context: BotActionContext, qq: Long, session: ContextSession): String {
-        val html = OkHttpKtUtils.getStr("https://api.kukuqaq.com/jetbrains")
-        context.source.sendMessage(mif.at(qq).plus("""
-            请发送您需要的激活码：
-            1、IntelliJ IDEA 2、WebStorm 3、PyCharm
-        """.trimIndent()))
-        val ss = session.waitNextMessage().firstString().toIntOrNull() ?: return "您发送的不为数字"
-        val elements = Jsoup.parse(html).select(".code")
-        val num = when (ss) {
-            1 -> 0
-            2 -> 2
-            3 -> 4
-            else -> 0
-        }
-        val code = elements[num].text()
-        val jsonObject = OkHttpKtUtils.postJson("https://api.kukuqaq.com/paste",
-            mapOf("poster" to "kuku", "syntax" to "text", "content" to code))
-        val url = jsonObject.getString("url")
-        kotlin.runCatching {
-            context.source.sendMessage(code)
-        }
-        context.source.sendMessage(mif.at(qq).plus("如若激活码消息被屏蔽，可前往${url}查看"))
-        return "在JetBrains IDE中激活方式选择离线激活码，填入上述代码即可（如为破解版可能会激活失败，卸载重装即可）"
-    }
-
     @Action("几点了")
     suspend fun nowTime(): Any {
         val response = OkHttpKtUtils.get("https://api.kukuqaq.com/time").also { it.close() }
@@ -308,14 +282,14 @@ class ToolAllController(
         for (card in list) {
             sb.appendLine("${i++}、${card.chineseName}")
         }
-        val send = "查询到以下卡片，请输入卡片序号\n${sb.removeSuffix("\n")}"
+        val send = "查询到以下卡片，请发送卡片序号\n${sb.removeSuffix("\n")}"
         kotlin.runCatching {
             context.source.sendMessage(mif.at(qq).plus(send))
         }.onFailure {
-            context.source.sendMessage(mif.at(qq).plus("查询到以下卡片，请输入卡片序号\n").plus(UbuntuPasteUtils.url(send)))
+            context.source.sendMessage(mif.at(qq).plus("查询到以下卡片，请发送卡片序号\n").plus(UbuntuPasteUtils.url(send)))
         }
-        val ii = session.waitNextMessage().firstString().toIntOrNull() ?: return "您输入的不为数字"
-        if (ii > list.size) return "您输入的数字不符合规范"
+        val ii = session.waitNextMessage().firstString().toIntOrNull() ?: return "您发送的不为数字"
+        if (ii > list.size) return "您发送的数字不符合规范"
         val card = list[ii - 1]
         val res = StringBuilder().append("中文名：").appendLine(card.chineseName)
             .append("英文名：").appendLine(card.englishName)

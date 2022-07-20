@@ -23,20 +23,14 @@ class MiHoYoController (
 
     @Action("米哈游登录")
     suspend fun login(session: ContextSession, qqEntity: QqEntity, context: BotActionContext): String {
-        context.source.sendMessage("请发送手机号")
-        val phone = session.waitNextMessage().firstString()
-        context.source.sendMessage("请发送密码")
-        val password = session.waitNextMessage().firstString()
-        val result = MiHoYoLogic.login(phone, password)
-        return if (result.success()) {
-            val miHoYoEntity = result.data()
-            val newEntity = miHoYoService.findByQqEntity(qqEntity) ?: MiHoYoEntity().also {
-                it.qqEntity = qqEntity
-            }
-            newEntity.cookie = miHoYoEntity.cookie
-            miHoYoService.save(newEntity)
-            "绑定米哈游账号成功"
-        } else result.message
+        context.source.sendMessage("请发送米哈游的cookie")
+        val cookie = session.waitNextMessage().firstString()
+        val newEntity = miHoYoService.findByQqEntity(qqEntity) ?: MiHoYoEntity().also {
+            it.qqEntity = qqEntity
+        }
+        newEntity.cookie = cookie
+        miHoYoService.save(newEntity)
+        return "绑定米哈游账号成功"
     }
 
     @Before(except = ["login"])

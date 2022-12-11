@@ -1,0 +1,6 @@
+.gradle/
+.idea/
+.fleet/
+cache/
+device.json
+build/

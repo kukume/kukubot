@@ -26,11 +26,46 @@ inline fun <reified T: Any> GroupMessageEvent.firstArg(): T {
 }
 
 inline fun <reified T: Any> GroupMessageEvent.secondArg(): T {
-    val singleMessage = message.split().getOrNull(3) ?: error("Sorry, this feature requires 1 additional input.")
+    val singleMessage = message.split().getOrNull(3) ?: error("Sorry, this feature requires 2 additional input.")
     return singleMessage as T
 }
 
 inline fun <reified T: Any> GroupMessageEvent.thirdArg(): T {
-    val singleMessage = message.split().getOrNull(3) ?: error("Sorry, this feature requires 1 additional input.")
+    val singleMessage = message.split().getOrNull(4) ?: error("Sorry, this feature requires 3 additional input.")
+    return singleMessage as T
+}
+
+inline fun <reified T: Any> GroupMessageEvent.fourthArg(): T {
+    val singleMessage = message.split().getOrNull(5) ?: error("Sorry, this feature requires 4 additional input.")
+    return singleMessage as T
+}
+
+inline fun <reified T: Any> GroupMessageEvent.fifthArg(): T {
+    val singleMessage = message.split().getOrNull(6) ?: error("Sorry, this feature requires 5 additional input.")
+    return singleMessage as T
+}
+
+inline fun <reified T: Any> GroupMessageEvent.sixthArg(): T {
+    val singleMessage = message.split().getOrNull(7) ?: error("Sorry, this feature requires 6 additional input.")
+    return singleMessage as T
+}
+
+inline fun <reified T: Any> GroupMessageEvent.seventhArg(): T {
+    val singleMessage = message.split().getOrNull(8) ?: error("Sorry, this feature requires 7 additional input.")
+    return singleMessage as T
+}
+
+inline fun <reified T: Any> GroupMessageEvent.eighthArg(): T {
+    val singleMessage = message.split().getOrNull(9) ?: error("Sorry, this feature requires 8 additional input.")
+    return singleMessage as T
+}
+
+inline fun <reified T: Any> GroupMessageEvent.ninthArg(): T {
+    val singleMessage = message.split().getOrNull(10) ?: error("Sorry, this feature requires 9 additional input.")
+    return singleMessage as T
+}
+
+inline fun <reified T: Any> GroupMessageEvent.tenthArg(): T {
+    val singleMessage = message.split().getOrNull(11) ?: error("Sorry, this feature requires 10 additional input.")
     return singleMessage as T
 }

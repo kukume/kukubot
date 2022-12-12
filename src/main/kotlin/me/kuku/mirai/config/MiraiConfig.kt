@@ -38,12 +38,9 @@ class MiraiBean(
 
         val bot = BotFactory.newBot(miraiConfig.qq, miraiConfig.password) {
             fileBasedDeviceInfo()
-            protocol = BotConfiguration.MiraiProtocol.ANDROID_PHONE
+            protocol = miraiConfig.protocol
         }
         val eventChannel = bot.eventChannel
-        eventChannel.exceptionHandler {
-            println(1)
-        }
         val names = applicationContext.beanDefinitionNames
         val clazzList = mutableListOf<Class<*>>()
         for (name in names) {
@@ -133,4 +130,5 @@ class MiraiBean(
 class MiraiConfig {
     var qq: Long = 0
     var password: String = ""
+    var protocol: BotConfiguration.MiraiProtocol = BotConfiguration.MiraiProtocol.ANDROID_PHONE
 }

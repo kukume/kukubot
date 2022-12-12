@@ -2,3 +2,4 @@ kuku:
   mirai:
     qq:
     password:
+    protocol: android_phone

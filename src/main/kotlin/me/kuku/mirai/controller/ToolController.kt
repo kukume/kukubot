@@ -5,6 +5,7 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import me.kuku.mirai.utils.firstArg
 import me.kuku.utils.client
+import me.kuku.utils.setFormDataContent
 import me.kuku.utils.toUrlEncode
 import net.mamoe.mirai.event.GroupMessageSubscribersBuilder
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
@@ -17,9 +18,22 @@ import java.io.InputStream
 class ToolController {
 
     suspend fun GroupMessageSubscribersBuilder.tool() {
-        startsWith("chat") {
-            val jsonNode = client.get("https://api.kukuqaq.com/chat?text=${it.trim().toUrlEncode()}").body<JsonNode>()
+        startsWith("chat ") {
+            val jsonNode = client.post("https://api.jpa.cc/chat"){
+                setFormDataContent {
+                    append("text", it.trim().toUrlEncode())
+                }
+            }.body<JsonNode>()
             subject.sendMessage(message.quote() + jsonNode["choices"][0]["text"].asText().trimStart())
+        }
+        startsWith("chatgpt") {
+            val jsonNode = client.post("https://api.jpa.cc/chat/gpt"){
+                setFormDataContent {
+                    append("text", it.trim().toUrlEncode())
+                    append("key", sender.id.toString())
+                }
+            }.body<JsonNode>()
+            subject.sendMessage(message.quote() + jsonNode["data"].asText())
         }
 
         "色图" reply {

@@ -22,7 +22,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
     implementation("org.springframework.boot:spring-boot-starter-mail")
-    implementation("me.kuku:utils:2.2.1.1")
+    implementation("me.kuku:utils:2.2.1.2")
     implementation("net.mamoe:mirai-core:2.13.2")
     kapt("org.springframework.boot:spring-boot-configuration-processor")
     testImplementation(kotlin("test"))

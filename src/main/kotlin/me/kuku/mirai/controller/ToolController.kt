@@ -4,9 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import me.kuku.mirai.utils.firstArg
-import me.kuku.utils.client
-import me.kuku.utils.setFormDataContent
-import me.kuku.utils.toUrlEncode
+import me.kuku.utils.*
 import net.mamoe.mirai.event.GroupMessageSubscribersBuilder
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
 import net.mamoe.mirai.message.data.PlainText
@@ -17,23 +15,26 @@ import java.io.InputStream
 @Component
 class ToolController {
 
+    private val chatCache = mutableMapOf<Long, String>()
+
     suspend fun GroupMessageSubscribersBuilder.tool() {
-        startsWith("chat ") {
-            val jsonNode = client.post("https://api.jpa.cc/chat"){
-                setFormDataContent {
-                    append("text", it.trim().toUrlEncode())
-                }
-            }.body<JsonNode>()
-            subject.sendMessage(message.quote() + jsonNode["choices"][0]["text"].asText().trimStart())
+        startsWith("chat\n") {
+            val qq = sender.id
+            var msg = if (chatCache.containsKey(qq)) {
+                val mm = chatCache[qq]
+                "$mm\nHuman: $it\nAI:"
+            } else "Human: $it\nAI:"
+            msg = msg.replace("\n", "\\n").replace("\"", "”")
+            val jsonNode = OkHttpKtUtils.postJson("https://api.jpa.cc/chat", mapOf("text" to msg))
+            val result = jsonNode["choices"][0]["text"].asText()
+            subject.sendMessage(message.quote() + result.trim())
+            val newMsg = "$msg$result"
+            chatCache[qq] = newMsg
         }
-        startsWith("chatgpt") {
-            val jsonNode = client.post("https://api.jpa.cc/chat/gpt"){
-                setFormDataContent {
-                    append("text", it.trim().toUrlEncode())
-                    append("key", sender.id.toString())
-                }
-            }.body<JsonNode>()
-            subject.sendMessage(message.quote() + jsonNode["data"].asText())
+
+        "chat clear" {
+            chatCache.remove(sender.id)
+            subject.sendMessage(message.quote() + "清除成功")
         }
 
         "色图" reply {

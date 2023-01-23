@@ -1,4 +1,4 @@
-package me.kuku.mirai.controller
+package me.kuku.mirai.subscribe
 
 import com.fasterxml.jackson.databind.JsonNode
 import io.ktor.client.call.*
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component
 import java.io.InputStream
 
 @Component
-class ToolController {
+class ToolSubscribe {
 
     suspend fun GroupMessageSubscribersBuilder.tool() {
         startsWith("chat ") {
@@ -25,15 +25,6 @@ class ToolController {
                 }
             }.body<JsonNode>()
             subject.sendMessage(message.quote() + jsonNode["choices"][0]["text"].asText().trimStart())
-        }
-        startsWith("chatgpt") {
-            val jsonNode = client.post("https://api.jpa.cc/chat/gpt"){
-                setFormDataContent {
-                    append("text", it.trim().toUrlEncode())
-                    append("key", sender.id.toString())
-                }
-            }.body<JsonNode>()
-            subject.sendMessage(message.quote() + jsonNode["data"].asText())
         }
 
         "色图" reply {
@@ -49,28 +40,6 @@ class ToolController {
             val jsonNode = client.get("https://api.kukuqaq.com/oracle/promotion?email=$email").body<JsonNode>()
             val msg = if (jsonNode["items"].size() != 0) "有资格啦" else "没有资格哦"
             subject.sendMessage(message.quote() + msg)
-        }
-
-        "oracle event" {
-            val jsonNode = client.get("https://api.kukuqaq.com/oracle/event").body<JsonNode>()
-            val sb = StringBuilder("###################\n")
-            for (node in jsonNode) {
-                sb.appendLine("title:${node["title"].asText()}")
-                sb.appendLine("people:${node["people"].asText()}")
-                sb.appendLine("url:${node["url"].asText()}")
-                sb.appendLine("id:${node["id"].asText()}")
-                sb.appendLine("time:${node["time"].asText()}")
-                sb.appendLine("###################")
-            }
-            subject.sendMessage(sb.toString())
-        }
-
-        Regex("oracle event register \\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)* [0-9]*\$").matching {
-            val arr = it.split(" ")
-            val email = arr[3]
-            val id = arr[4].toInt()
-            client.get("https://api.kukuqaq.com/oracle/event/register?id=$id&email=$email").body<JsonNode>()
-            subject.sendMessage(message.quote() + "直播注册成功（以收到邮件为准）")
         }
 
     }

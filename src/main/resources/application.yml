@@ -1,3 +1,13 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost/qq
+      auto-index-creation: true
+  task:
+    scheduling:
+      pool:
+        size: 10
+
 kuku:
   mirai:
     qq:

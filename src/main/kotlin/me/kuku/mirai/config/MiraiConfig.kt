@@ -1,6 +1,7 @@
 package me.kuku.mirai.config
 
 import kotlinx.coroutines.runBlocking
+import me.kuku.mirai.utils.MiraiSubscribe
 import me.kuku.utils.JobManager
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.BotFactory
@@ -112,6 +113,16 @@ class MiraiBean(
                                 }
                             }
                         }
+                    }
+                }
+                if (kClass?.jvmName == "me.kuku.mirai.utils.MiraiSubscribe") {
+                    val eventClass = type.arguments[0].type?.classifier as? KClass<*> ?: continue
+                    @Suppress("UNCHECKED_CAST")
+                    val subscribe = MiraiSubscribe::class.java.getDeclaredConstructor().newInstance() as MiraiSubscribe<MessageEvent>
+                    runBlocking { function.callSuspend(applicationContext.getBean(clazz), subscribe) }
+                    @Suppress("UNCHECKED_CAST")
+                    eventChannel.subscribeAlways(eventClass as KClass<out MessageEvent>) {
+                        subscribe.invoke(this)
                     }
                 }
             }

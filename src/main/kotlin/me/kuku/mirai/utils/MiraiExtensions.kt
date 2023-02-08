@@ -72,3 +72,5 @@ inline fun <reified T: Any> MessageEvent.tenthArg(): T {
 }
 
 fun MessageEvent.at() = At(sender.id)
+
+fun MessageEvent.atNewLine() = At(sender.id) + "\n"

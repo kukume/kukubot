@@ -1,11 +1,16 @@
 package me.kuku.mirai.utils
 
 import kotlinx.coroutines.*
+import me.kuku.mirai.config.superclasses
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.At
 import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
+import kotlin.reflect.KClass
+
+private val globalBefore: MutableMap<KClass<out MessageEvent>, MutableList<suspend MessageEvent.() -> Unit>> = mutableMapOf()
+private val superClassCache: MutableMap<KClass<*>, Set<KClass<*>>> = mutableMapOf()
 
 class MiraiSubscribe<R: MessageEvent> {
 
@@ -14,7 +19,6 @@ class MiraiSubscribe<R: MessageEvent> {
     private val before: MutableList<suspend R.() -> Unit> = mutableListOf()
     private val after: MutableList<suspend R.() -> Unit> = mutableListOf()
     private val filters: MutableList<Filter<R>> = mutableListOf()
-
     class Filter<R>(val filter: R.() -> Boolean, var block: suspend R.() -> Any? = {})
 
     private fun Filter<R>.push(exec: suspend R.() -> Any?) = filters.add(this.also { it.block = exec })
@@ -53,6 +57,11 @@ class MiraiSubscribe<R: MessageEvent> {
     inline fun <reified T: Any> thirdAttr(): T {
         val cacheMap = threadLocal.get()
         return cacheMap.values.toList()[2] as T
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun globalBefore(kClass: KClass<R>, block: suspend R.() -> Unit) {
+        globalBefore[kClass] = globalBefore.getOrDefault(kClass, mutableListOf()).also { it.add(block as suspend MessageEvent.() -> Unit) }
     }
 
     fun before(block: suspend R.() -> Unit) = before.add(block)
@@ -110,6 +119,17 @@ class MiraiSubscribe<R: MessageEvent> {
         filterBuild { this.message.contentToString() == this@atReply }.push { executeAtReply(this, block) }
     }
 
+    private suspend fun execute(r: R, block: suspend R.() -> Any?): Any? {
+        for (function in before) {
+            function.invoke(r)
+        }
+        val result =  block(r)
+        for (function in after) {
+            function.invoke(r)
+        }
+        return result
+    }
+
     private suspend fun executeReply(r: R, block: suspend R.() -> Any?) {
         when(val message = block(r)) {
             is Message -> r.subject.sendMessage(message)
@@ -138,9 +158,18 @@ class MiraiSubscribe<R: MessageEvent> {
     }
 
     suspend fun invoke(r: R) {
+        val clazz = r::class
         withContext(Dispatchers.Default + threadLocal.asContextElement(mutableMapOf())) {
             for (filter in filters) {
                 if (filter.filter.invoke(r)) {
+                    for (entry in globalBefore.entries) {
+                        val superClassSet = superClassCache[clazz] ?: superclasses(clazz).also { superClassCache[clazz] = it }
+                        if (superClassSet.contains(entry.key)) {
+                            for (func in entry.value) {
+                                func.invoke(r)
+                            }
+                        }
+                    }
                     for (function in before) {
                         function.invoke(r)
                     }
@@ -157,3 +186,4 @@ class MiraiSubscribe<R: MessageEvent> {
 }
 
 typealias GroupMessageSubscribe = MiraiSubscribe<GroupMessageEvent>
+typealias MessageSubscribe = MiraiSubscribe<MessageEvent>

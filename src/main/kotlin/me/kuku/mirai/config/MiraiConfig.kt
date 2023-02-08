@@ -22,18 +22,6 @@ class MiraiBean(
     private val applicationContext: ApplicationContext
 ) {
 
-    private fun superclasses(kClass: KClass<*>?, set: MutableSet<KClass<*>> = mutableSetOf()): Set<KClass<*>> {
-        val superclasses = kClass?.superclasses ?: return set
-        set.addAll(superclasses)
-        for (superclass in superclasses) {
-            val suSuper = superclass.superclasses
-            if (suSuper.isNotEmpty()) {
-                suSuper.forEach { superclasses(it, set) }
-            }
-        }
-        return set
-    }
-
     @Bean
     fun mirai(): Bot {
 
@@ -142,4 +130,16 @@ class MiraiConfig {
     var qq: Long = 0
     var password: String = ""
     var protocol: BotConfiguration.MiraiProtocol = BotConfiguration.MiraiProtocol.ANDROID_PHONE
+}
+
+fun superclasses(kClass: KClass<*>?, set: MutableSet<KClass<*>> = mutableSetOf()): Set<KClass<*>> {
+    val superclasses = kClass?.superclasses ?: return set
+    set.addAll(superclasses)
+    for (superclass in superclasses) {
+        val suSuper = superclass.superclasses
+        if (suSuper.isNotEmpty()) {
+            suSuper.forEach { superclasses(it, set) }
+        }
+    }
+    return set
 }

@@ -1,7 +1,9 @@
 package me.kuku.mirai.config
 
 import kotlinx.coroutines.runBlocking
+import me.kuku.mirai.utils.MiraiExceptionHandler
 import me.kuku.mirai.utils.MiraiSubscribe
+import me.kuku.mirai.utils.exceptionHandler
 import me.kuku.utils.JobManager
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.BotFactory
@@ -23,6 +25,7 @@ class MiraiBean(
 ) {
 
     @Bean
+    @Suppress("UNCHECKED_CAST")
     fun mirai(): Bot {
 
         val bot = BotFactory.newBot(miraiConfig.qq, miraiConfig.password) {
@@ -37,6 +40,7 @@ class MiraiBean(
                 clazzList.add(it)
             }
         }
+        val handler = MiraiExceptionHandler()
         for (clazz in clazzList) {
             val functions = kotlin.runCatching {
                 clazz.kotlin.declaredMemberExtensionFunctions
@@ -45,9 +49,15 @@ class MiraiBean(
                 val type = function.extensionReceiverParameter?.type
                 val kClass = type?.classifier as? KClass<*>
                 if (superclasses(kClass).contains(Event::class)) {
-                    @Suppress("UNCHECKED_CAST")
                     eventChannel.subscribeAlways(kClass as KClass<out Event>) {
-                        function.callSuspend(applicationContext.getBean(clazz), this)
+                        handler.exceptionHandler {
+                            function.callSuspend(applicationContext.getBean(clazz), this)
+                        }
+                    }
+                }
+                if (kClass?.jvmName == "me.kuku.mirai.utils.MiraiExceptionHandler") {
+                    runBlocking {
+                        function.callSuspend(applicationContext.getBean(clazz), handler)
                     }
                 }
                 if (kClass?.jvmName == "net.mamoe.mirai.event.MessageSubscribersBuilder") {
@@ -105,12 +115,12 @@ class MiraiBean(
                 }
                 if (kClass?.jvmName == "me.kuku.mirai.utils.MiraiSubscribe") {
                     val eventClass = type.arguments[0].type?.classifier as? KClass<*> ?: continue
-                    @Suppress("UNCHECKED_CAST")
                     val subscribe = MiraiSubscribe::class.java.getDeclaredConstructor().newInstance() as MiraiSubscribe<MessageEvent>
                     runBlocking { function.callSuspend(applicationContext.getBean(clazz), subscribe) }
-                    @Suppress("UNCHECKED_CAST")
                     eventChannel.subscribeAlways(eventClass as KClass<out MessageEvent>) {
-                        subscribe.invoke(this)
+                        handler.exceptionHandler {
+                            subscribe.invoke(this)
+                        }
                     }
                 }
             }
@@ -130,9 +140,11 @@ class MiraiConfig {
     var qq: Long = 0
     var password: String = ""
     var protocol: BotConfiguration.MiraiProtocol = BotConfiguration.MiraiProtocol.ANDROID_PHONE
+    var master: Long = 0
 }
 
 fun superclasses(kClass: KClass<*>?, set: MutableSet<KClass<*>> = mutableSetOf()): Set<KClass<*>> {
+    kClass?.let { set.add(it) }
     val superclasses = kClass?.superclasses ?: return set
     set.addAll(superclasses)
     for (superclass in superclasses) {

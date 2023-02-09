@@ -73,6 +73,10 @@ class AliDriverSubscribe(
             aliDriverService.save(aliDriverEntity)
             "更新阿里云盘状态成功"
         }
+        "阿里云盘删除" atReply {
+            aliDriverService.delete(firstAttr())
+            "删除阿里云盘成功"
+        }
     }
 
 

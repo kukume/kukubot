@@ -2,7 +2,9 @@ package me.kuku.mirai.utils
 
 import kotlinx.coroutines.*
 import me.kuku.mirai.config.superclasses
+import net.mamoe.mirai.event.events.FriendMessageEvent
 import net.mamoe.mirai.event.events.GroupMessageEvent
+import net.mamoe.mirai.event.events.GroupTempMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.At
 import net.mamoe.mirai.message.data.Message
@@ -187,3 +189,5 @@ class MiraiSubscribe<R: MessageEvent> {
 
 typealias GroupMessageSubscribe = MiraiSubscribe<GroupMessageEvent>
 typealias MessageSubscribe = MiraiSubscribe<MessageEvent>
+typealias PrivateMessageSubscribe = MiraiSubscribe<FriendMessageEvent>
+typealias GroupTempMessageSubscribe = MiraiSubscribe<GroupTempMessageEvent>

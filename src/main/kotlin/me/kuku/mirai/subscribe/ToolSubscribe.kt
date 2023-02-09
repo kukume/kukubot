@@ -5,6 +5,7 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
+import me.kuku.mirai.logic.ToolLogic
 import me.kuku.mirai.logic.YgoLogic
 import me.kuku.mirai.utils.*
 import me.kuku.utils.*
@@ -80,6 +81,10 @@ class ToolSubscribe {
             client.get(url).body<InputStream>().toExternalResource().use {
                 subject.uploadImage(it)
             }
+        }
+
+        regex("百科 \\S*\$") atReply {
+            ToolLogic.baiKe(firstArg<PlainText>().content)
         }
     }
 

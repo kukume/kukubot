@@ -9,8 +9,7 @@ import me.kuku.mirai.logic.ToolLogic
 import me.kuku.mirai.logic.YgoLogic
 import me.kuku.mirai.utils.*
 import me.kuku.utils.*
-import net.mamoe.mirai.message.data.PlainText
-import net.mamoe.mirai.message.data.content
+import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.nextMessage
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import org.springframework.stereotype.Component
@@ -19,6 +18,8 @@ import java.util.Objects
 
 @Component
 class ToolSubscribe {
+
+    private val chatCache = mutableMapOf<Long, String>()
 
     suspend fun GroupMessageSubscribe.tool() {
 
@@ -85,6 +86,39 @@ class ToolSubscribe {
 
         regex("百科 \\S*\$") atReply {
             ToolLogic.baiKe(firstArg<PlainText>().content)
+        }
+
+        regex("chat .*") quoteReply  {
+            val text = message.contentToString().substring(5)
+            if (text == "clear") return@quoteReply null
+            val qq = sender.id
+            var msg = if (chatCache.containsKey(qq)) {
+                val mm = chatCache[qq]
+                "$mm\nHuman: $text\nAI:"
+            } else "Human: $text\nAI:"
+            msg = msg.replace("\n", "\\n").replace("\"", "”")
+            val jsonNode = client.post("https://api.kukuqaq.com/chat") {
+                setFormDataContent {
+                    append("text", msg)
+                }
+            }.body<JsonNode>()
+            if (jsonNode.has("error")) {
+                val message = jsonNode["error"]["message"].asText()
+                if (message.contains("This model's maximum context length is 4097 tokens")) {
+                    chatCache.remove(qq)
+                }
+                message
+            } else {
+                val result = jsonNode["choices"][0]["text"].asText()
+                val newMsg = "$msg$result"
+                chatCache[qq] = newMsg
+                result.trim()
+            }
+        }
+
+        "chat clear" atReply {
+            chatCache.remove(sender.id)
+            "清除缓存成功"
         }
     }
 

@@ -1,4 +1,6 @@
 spring:
+  ktor:
+    port: 5461
   data:
     mongodb:
       uri: mongodb://localhost/qq

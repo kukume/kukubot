@@ -36,12 +36,3 @@ class AliDriverService(
 
     suspend fun delete(aliDriverEntity: AliDriverEntity) = aliDriverRepository.delete(aliDriverEntity)
 }
-
-enum class Status {
-    ON, OFF
-}
-
-fun String.toStatus(): Status {
-    return if (this == "开") Status.ON
-    else Status.OFF
-}

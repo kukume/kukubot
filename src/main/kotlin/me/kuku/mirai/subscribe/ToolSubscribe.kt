@@ -19,7 +19,7 @@ import java.util.Objects
 @Component
 class ToolSubscribe {
 
-    private val chatCache = mutableMapOf<Long, String>()
+    private val chatCache = mutableMapOf<Long, MutableList<OpenaiText>>()
 
     suspend fun GroupMessageSubscribe.tool() {
 
@@ -92,15 +92,14 @@ class ToolSubscribe {
             val text = message.contentToString().substring(5)
             if (text == "clear") return@quoteReply null
             val qq = sender.id
-            var msg = if (chatCache.containsKey(qq)) {
-                val mm = chatCache[qq]
-                "$mm\nHuman: $text\nAI:"
-            } else "Human: $text\nAI:"
-            msg = msg.replace("\n", "\\n").replace("\"", "”")
+            val msg = if (chatCache.containsKey(qq)) {
+                val mm = chatCache[qq]!!
+                val openaiText = OpenaiText("user", text)
+                mm.add(openaiText)
+                mm
+            } else mutableListOf(OpenaiText("user", text))
             val jsonNode = client.post("https://api.kukuqaq.com/chat") {
-                setFormDataContent {
-                    append("text", msg)
-                }
+                setJsonBody(Jackson.toJsonString(msg))
             }.body<JsonNode>()
             if (jsonNode.has("error")) {
                 val message = jsonNode["error"]["message"].asText()
@@ -109,9 +108,9 @@ class ToolSubscribe {
                 }
                 message
             } else {
-                val result = jsonNode["choices"][0]["text"].asText()
-                val newMsg = "$msg$result"
-                chatCache[qq] = newMsg
+                val result = jsonNode["choices"][0]["message"]["content"].asText().replaceFirst("\n\n", "")
+                msg.add(OpenaiText("assistant", result))
+                chatCache[qq] = msg
                 result.trim()
             }
         }
@@ -123,3 +122,5 @@ class ToolSubscribe {
     }
 
 }
+
+data class OpenaiText(val role: String,val content: String)

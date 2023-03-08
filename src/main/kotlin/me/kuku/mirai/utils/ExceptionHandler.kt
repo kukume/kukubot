@@ -36,12 +36,12 @@ suspend fun MiraiExceptionHandler.exceptionHandler(block: suspend () -> Unit) {
         val nowThrowableClass = it::class
         val context = EventExceptionContext(this@Event, it)
         val exceptions = this.exceptions
+        val superClassSet = superClassCache[nowEventClass] ?: superclasses(nowEventClass).also { set -> superClassCache[nowEventClass] = set }
+        val throwableClassSet = superClassCache[nowThrowableClass] ?: superclasses(nowThrowableClass).also { set -> superClassCache[nowThrowableClass] = set }
         for (entry in exceptions) {
             val key = entry.key
             val eventClass = key.eventClass
             val throwableClass = key.throwableClass
-            val superClassSet = superClassCache[nowEventClass] ?: superclasses(nowEventClass).also { set -> superClassCache[nowEventClass] = set }
-            val throwableClassSet = superClassCache[nowThrowableClass] ?: superclasses(nowThrowableClass).also { set -> superClassCache[nowThrowableClass] = set }
             if (throwableClassSet.contains(throwableClass) && superClassSet.contains(eventClass)) {
                 for (func in entry.value) {
                     func.invoke(context)

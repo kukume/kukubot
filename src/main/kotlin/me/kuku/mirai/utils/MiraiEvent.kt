@@ -1,3 +1,5 @@
+@file:Suppress("MemberVisibilityCanBePrivate")
+
 package me.kuku.mirai.utils
 
 import kotlinx.coroutines.*
@@ -7,8 +9,10 @@ import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.GroupTempMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.At
+import net.mamoe.mirai.message.data.AtAll
 import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
+import net.mamoe.mirai.message.data.firstIsInstanceOrNull
 import kotlin.reflect.KClass
 
 private val globalBefore: MutableMap<KClass<out MessageEvent>, MutableList<suspend MessageEvent.() -> Unit>> = mutableMapOf()
@@ -20,10 +24,24 @@ class MiraiSubscribe<R: MessageEvent> {
 
     private val before: MutableList<suspend R.() -> Unit> = mutableListOf()
     private val after: MutableList<suspend R.() -> Unit> = mutableListOf()
-    private val filters: MutableList<Filter<R>> = mutableListOf()
-    class Filter<R>(val filter: R.() -> Boolean, var block: suspend R.() -> Any? = {})
+    private val filters: MutableList<FilterAndInvoke<R>> = mutableListOf()
 
-    private fun Filter<R>.push(exec: suspend R.() -> Any?) = filters.add(this.also { it.block = exec })
+    class FilterAndInvoke<R>(val filter: Filter<R>, val exec: suspend R.() -> Any?)
+    class Filter<R>(val filter: R.() -> Boolean) {
+
+        operator fun plus(f: Filter<R>) = Filter<R> { filter() && f.filter.invoke(this) }
+
+        infix fun and(f: Filter<R>) = Filter<R> { filter() && f.filter.invoke(this) }
+
+        infix fun or(f: Filter<R>) = Filter<R> { filter() || f.filter.invoke(this) }
+
+        infix fun xor(f: Filter<R>) = Filter<R> { filter() xor f.filter.invoke(this) }
+
+        fun not() = Filter<R> { !filter() }
+
+    }
+
+    private fun Filter<R>.push(exec: suspend R.() -> Any?) = filters.add(FilterAndInvoke(this, exec))
     private fun filterBuild(filter: R.() -> Boolean) = Filter(filter)
 
     fun set(key: String, value: Any) {
@@ -68,46 +86,28 @@ class MiraiSubscribe<R: MessageEvent> {
 
     fun before(block: suspend R.() -> Unit) = before.add(block)
     fun after(block: suspend R.() -> Unit) = after.add(block)
-    fun startsWith(text: String): Filter<R> {
-        return filterBuild {
-            this.message.contentToString().startsWith(text)
-        }
-    }
-    fun endsWith(text: String): Filter<R> {
-        return filterBuild {
-            this.message.contentToString().endsWith(text)
-        }
-    }
+    fun startsWith(text: String) = filterBuild { this.message.contentToString().startsWith(text) }
+    fun endsWith(text: String) = filterBuild { this.message.contentToString().endsWith(text) }
 
-    fun regex(text: String): Filter<R> {
-        return filterBuild {
-            Regex(text).matches(this.message.contentToString())
-        }
-    }
+    fun regex(text: String) = filterBuild { Regex(text).matches(this.message.contentToString()) }
 
-    fun contains(text: String): Filter<R> {
-        return filterBuild {
-            this.message.contentToString().contains(text)
-        }
-    }
+    fun case(text: String) = filterBuild { this.message.contentToString() == text }
 
-    suspend infix fun Filter<R>.reply(block: suspend R.() -> Any?) {
-        push {
-            executeReply(this, block)
-        }
-    }
+    fun contains(text: String) = filterBuild { this.message.contentToString().contains(text) }
 
-    suspend infix fun Filter<R>.quoteReply(block: suspend R.() -> Any?) {
-        push {
-            executeQuoteReply(this, block)
-        }
-    }
+    fun filter(block: R.() -> Boolean) = filterBuild { block() }
 
-    suspend infix fun Filter<R>.atReply(block: suspend R.() -> Any?) {
-        push {
-            executeAtReply(this, block)
-        }
-    }
+    fun atBot() = filterBuild { this.message.firstIsInstanceOrNull<At>()?.target == bot.id }
+
+    fun atAll() = filterBuild { message.firstIsInstanceOrNull<AtAll>() != null }
+
+    suspend infix fun Filter<R>.reply(block: suspend R.() -> Any?) = push { executeReply(this, block) }
+
+    suspend infix fun Filter<R>.quoteReply(block: suspend R.() -> Any?) = push { executeQuoteReply(this, block) }
+
+    suspend infix fun Filter<R>.atReply(block: suspend R.() -> Any?) = push { executeAtReply(this, block) }
+
+    suspend infix fun Filter<R>.atNewLineReply(block: suspend R.() -> Any?) = push { executeAtNewLineReply(this, block) }
 
     suspend infix fun String.reply(block: suspend R.() -> Any?) {
         filterBuild { this.message.contentToString() == this@reply }.push { executeReply(this, block) }
@@ -119,6 +119,10 @@ class MiraiSubscribe<R: MessageEvent> {
 
     suspend infix fun String.atReply(block: suspend R.() -> Any?) {
         filterBuild { this.message.contentToString() == this@atReply }.push { executeAtReply(this, block) }
+    }
+
+    suspend infix fun String.atNewLineReply(block: suspend R.() -> Any?) {
+        filterBuild { this.message.contentToString() == this@atNewLineReply }.push { executeAtNewLineReply(this, block) }
     }
 
     private suspend fun execute(r: R, block: suspend R.() -> Any?): Any? {
@@ -159,11 +163,20 @@ class MiraiSubscribe<R: MessageEvent> {
         }
     }
 
+    private suspend fun executeAtNewLineReply(r: R, block: suspend R.() -> Any?) {
+        when(val message = block(r)) {
+            is Message -> r.subject.sendMessage(At(r.sender) + "\n" + message)
+            null,
+            is Unit -> Unit
+            else -> r.subject.sendMessage(At(r.sender) + "\n" + message.toString())
+        }
+    }
+
     suspend fun invoke(r: R) {
         val clazz = r::class
         withContext(Dispatchers.Default + threadLocal.asContextElement(mutableMapOf())) {
             for (filter in filters) {
-                if (filter.filter.invoke(r)) {
+                if (filter.filter.filter.invoke(r)) {
                     for (entry in globalBefore.entries) {
                         val superClassSet = superClassCache[clazz] ?: superclasses(clazz).also { superClassCache[clazz] = it }
                         if (superClassSet.contains(entry.key)) {
@@ -175,7 +188,7 @@ class MiraiSubscribe<R: MessageEvent> {
                     for (function in before) {
                         function.invoke(r)
                     }
-                    filter.block.invoke(r)
+                    filter.exec.invoke(r)
                     for (function in after) {
                         function.invoke(r)
                     }

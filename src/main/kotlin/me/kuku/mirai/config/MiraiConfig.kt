@@ -12,7 +12,9 @@ import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.utils.BotConfiguration
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.ApplicationContext
+import org.springframework.context.ApplicationListener
 import org.springframework.context.annotation.Bean
+import org.springframework.context.event.ContextRefreshedEvent
 import org.springframework.stereotype.Component
 import kotlin.reflect.KClass
 import kotlin.reflect.full.*
@@ -22,16 +24,11 @@ import kotlin.reflect.jvm.jvmName
 class MiraiBean(
     private val miraiConfig: MiraiConfig,
     private val applicationContext: ApplicationContext
-) {
+): ApplicationListener<ContextRefreshedEvent> {
 
-    @Bean
     @Suppress("UNCHECKED_CAST")
-    fun mirai(): Bot {
-
-        val bot = BotFactory.newBot(miraiConfig.qq, miraiConfig.password) {
-            fileBasedDeviceInfo()
-            protocol = miraiConfig.protocol
-        }
+    override fun onApplicationEvent(event: ContextRefreshedEvent) {
+        val bot = applicationContext.getBean(Bot::class.java)
         val eventChannel = bot.eventChannel
         val names = applicationContext.beanDefinitionNames
         val clazzList = mutableListOf<Class<*>>()
@@ -127,6 +124,15 @@ class MiraiBean(
         }
         runBlocking {
             bot.login()
+        }
+    }
+
+    @Bean
+    fun mirai(): Bot {
+        FixProtocolVersion.update()
+        val bot = BotFactory.newBot(miraiConfig.qq, miraiConfig.password) {
+            fileBasedDeviceInfo()
+            protocol = miraiConfig.protocol
         }
         return bot
     }

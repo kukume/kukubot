@@ -6,7 +6,6 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import me.kuku.pojo.CommonResult
-import me.kuku.pojo.ResultStatus
 import me.kuku.pojo.UA
 import me.kuku.mirai.entity.BiliBiliEntity
 import me.kuku.mirai.utils.ffmpeg
@@ -190,7 +189,7 @@ object BiliBiliLogic {
             OkUtils.referer("https://space.bilibili.com/$id/dynamic"))
         // next_offset  下一页开头
         val dataJsonNode = jsonNode["data"]
-        val jsonArray = dataJsonNode["cards"] ?: return CommonResult.failure(ResultStatus.DYNAMIC_NOT_FOUNT)
+        val jsonArray = dataJsonNode["cards"] ?: return CommonResult.failure("动态未找到")
         val list = mutableListOf<BiliBiliPojo>()
         for (obj in jsonArray) {
             val extraJsonNode = obj["extra"]
@@ -214,8 +213,8 @@ object BiliBiliLogic {
         return if (!status) {
             when (jsonNode.getInteger("data")) {
                 -2 -> CommonResult.failure("您的二维码已过期！！", null)
-                -4 -> CommonResult.failure(ResultStatus.QRCODE_NOT_SCANNED)
-                -5 -> CommonResult.failure(ResultStatus.QRCODE_IS_SCANNED)
+                -4 -> CommonResult.failure("二维码未扫描", code = 0)
+                -5 -> CommonResult.failure("二维码已扫描", code = 0)
                 else -> CommonResult.failure(jsonNode.getString("message"), null)
             }
         } else {
@@ -236,7 +235,7 @@ object BiliBiliLogic {
     suspend fun friendDynamic(biliBiliEntity: BiliBiliEntity): CommonResult<List<BiliBiliPojo>> {
         val jsonNode = OkHttpKtUtils.getJson("https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/dynamic_new?type_list=268435455",
             OkUtils.cookie(biliBiliEntity.cookie))
-        return if (jsonNode.getInteger("code") != 0)  CommonResult.failure(ResultStatus.COOKIE_EXPIRED)
+        return if (jsonNode.getInteger("code") != 0)  CommonResult.failure("cookie已失效")
         else {
             val list = mutableListOf<BiliBiliPojo>()
             jsonNode["data"]["cards"].forEach{

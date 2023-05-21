@@ -1,5 +1,6 @@
 package me.kuku.mirai.entity
 
+import kotlinx.coroutines.flow.toList
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
@@ -30,6 +31,8 @@ class GroupService(
     suspend fun findByGroup(group: Long) = groupRepository.findByGroup(group)
 
     suspend fun save(groupEntity: GroupEntity) = groupRepository.save(groupEntity)
+
+    suspend fun findAll() = groupRepository.findAll().toList()
 
 }
 

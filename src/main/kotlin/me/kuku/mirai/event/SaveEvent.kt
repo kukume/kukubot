@@ -1,4 +1,4 @@
-package me.kuku.mirai.subscribe
+package me.kuku.mirai.event
 
 import me.kuku.mirai.entity.MessageEntity
 import me.kuku.mirai.entity.MessageService

@@ -129,7 +129,7 @@ class MiraiBean(
 
     @Bean
     fun mirai(): Bot {
-        FixProtocolVersion.update()
+//        FixProtocolVersion.update()
         val bot = BotFactory.newBot(miraiConfig.qq, miraiConfig.password) {
             fileBasedDeviceInfo()
             protocol = miraiConfig.protocol

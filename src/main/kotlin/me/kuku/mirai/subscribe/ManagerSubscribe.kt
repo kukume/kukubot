@@ -1,5 +1,6 @@
 package me.kuku.mirai.subscribe
 
+import kotlinx.coroutines.flow.toList
 import me.kuku.mirai.config.MiraiConfig
 import me.kuku.mirai.entity.GroupEntity
 import me.kuku.mirai.entity.GroupService
@@ -17,6 +18,7 @@ class ManagerSubscribe(
 
     suspend fun GroupMessageSubscribe.manager() {
         before {
+            val absoluteFile = group.files.root.files().toList()[0]
             val groupEntity = groupService.findByGroup(group.id) ?: GroupEntity().also {
                 it.group = group.id
             }

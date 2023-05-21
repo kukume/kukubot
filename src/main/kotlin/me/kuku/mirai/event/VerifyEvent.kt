@@ -1,4 +1,4 @@
-package me.kuku.mirai.subscribe
+package me.kuku.mirai.event
 
 import net.mamoe.mirai.event.events.NewFriendRequestEvent
 import org.springframework.stereotype.Component

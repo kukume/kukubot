@@ -57,7 +57,7 @@ class ManagerSubscribe(
             groupService.save(groupEntity)
             "添加问答成功"
         }
-        regex("消息转发 [0-9]*") atReply {
+        regex("消息转发 [-]?[0-9]+[ ]?[0-9]*") atReply {
             val chatId = firstArg<PlainText>().content.toLong()
             val messageThreadId = try {
                 secondArg<PlainText>().content.toInt()

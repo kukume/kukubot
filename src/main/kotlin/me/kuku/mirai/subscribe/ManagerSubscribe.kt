@@ -1,12 +1,14 @@
 package me.kuku.mirai.subscribe
 
-import kotlinx.coroutines.flow.toList
 import me.kuku.mirai.config.MiraiConfig
 import me.kuku.mirai.entity.GroupEntity
 import me.kuku.mirai.entity.GroupService
 import me.kuku.mirai.entity.Qa
 import me.kuku.mirai.utils.GroupMessageSubscribe
 import me.kuku.mirai.utils.at
+import me.kuku.mirai.utils.firstArg
+import me.kuku.mirai.utils.secondArg
+import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.message.nextMessage
 import org.springframework.stereotype.Component
 
@@ -23,7 +25,7 @@ class ManagerSubscribe(
             }
             groupService.save(groupEntity)
             val qq = sender.id
-//            if (qq != miraiConfig.master) error("权限不足")
+            if (qq != miraiConfig.master) error("权限不足")
             set(groupEntity)
         }
         "问" atReply {
@@ -55,7 +57,19 @@ class ManagerSubscribe(
             groupService.save(groupEntity)
             "添加问答成功"
         }
-
+        regex("消息转发 [0-9]*") atReply {
+            val chatId = firstArg<PlainText>().content.toLong()
+            val messageThreadId = try {
+                secondArg<PlainText>().content.toInt()
+            } catch (e: Exception) {
+                null
+            }
+            val groupEntity = firstAttr<GroupEntity>()
+            groupEntity.forward.chatId = chatId
+            groupEntity.forward.messageThreadId = messageThreadId
+            groupService.save(groupEntity)
+            "添加消息转发成功"
+        }
 
     }
 

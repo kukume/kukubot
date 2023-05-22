@@ -7,6 +7,7 @@ import me.kuku.mirai.utils.exceptionHandler
 import me.kuku.utils.JobManager
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.BotFactory
+import net.mamoe.mirai.auth.BotAuthorization
 import net.mamoe.mirai.event.*
 import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.utils.BotConfiguration
@@ -130,7 +131,9 @@ class MiraiBean(
     @Bean
     fun mirai(): Bot {
         FixProtocolVersion.update()
-        val bot = BotFactory.newBot(miraiConfig.qq, miraiConfig.password) {
+        val auth = if (miraiConfig.password.isEmpty()) BotAuthorization.byQRCode()
+        else BotAuthorization.Companion.byPassword(miraiConfig.password)
+        val bot = BotFactory.newBot(miraiConfig.qq, auth) {
             fileBasedDeviceInfo()
             protocol = miraiConfig.protocol
         }

@@ -14,6 +14,12 @@ class GroupEntity {
     @Indexed(unique = true)
     var group: Long = 0
     var qa: MutableList<Qa> = mutableListOf()
+    var forward: Forward = Forward()
+
+    class Forward {
+        var chatId: Long = 0
+        var messageThreadId: Int? = null
+    }
 }
 
 @Suppress("SpringDataRepositoryMethodReturnTypeInspection")

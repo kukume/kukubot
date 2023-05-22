@@ -18,7 +18,6 @@ class ManagerSubscribe(
 
     suspend fun GroupMessageSubscribe.manager() {
         before {
-            val absoluteFile = group.files.root.files().toList()[0]
             val groupEntity = groupService.findByGroup(group.id) ?: GroupEntity().also {
                 it.group = group.id
             }

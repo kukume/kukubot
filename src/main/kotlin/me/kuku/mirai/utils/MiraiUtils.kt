@@ -4,7 +4,7 @@ import net.mamoe.mirai.Bot
 
 object MiraiUtils {
 
-    fun auth(): MiraiAuth {
+    fun auth(domain: String): MiraiAuth {
         val bot = SpringUtils.getBean<Bot>()
         val botClazz = bot::class.java
         val clientMethod = botClazz.getDeclaredMethod("getClient").also { it.isAccessible = true }
@@ -17,10 +17,9 @@ object MiraiUtils {
         val sKey = key(sKeyAny)
         val miraiAuth = MiraiAuth()
         miraiAuth.sKey = sKey
-        val map = sigInfoClazz.getDeclaredMethod("getPsKeyMap").also { it.isAccessible = true }.invoke(wLoginSigInfo) as Map<String, Any>
-        for ((k, v) in map) {
-            miraiAuth.psKey[k] = key(v)
-        }
+        val psKey =
+            sigInfoClazz.getDeclaredMethod("getPsKey", String::class.java).also { it.isAccessible = true }.invoke(wLoginSigInfo, domain).toString()
+        miraiAuth.psKey = psKey
         miraiAuth.qq = bot.id
         return miraiAuth
     }
@@ -28,7 +27,7 @@ object MiraiUtils {
     private fun key(any: Any): String {
         val clazz = any::class.java
         val bytes = clazz.getDeclaredMethod("getData").also { it.isAccessible = true }.invoke(any) as ByteArray
-        return String(bytes)
+        return bytes.decodeToString()
     }
 
 }
@@ -36,6 +35,6 @@ object MiraiUtils {
 class MiraiAuth {
     var sKey: String = ""
     var qq: Long = 0
-    var psKey: MutableMap<String, String> = mutableMapOf()
+    var psKey: String = ""
 
 }

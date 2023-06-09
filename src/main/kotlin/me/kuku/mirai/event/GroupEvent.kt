@@ -4,6 +4,7 @@ import io.ktor.client.request.*
 import me.kuku.mirai.entity.GroupService
 import me.kuku.utils.client
 import me.kuku.utils.setJsonBody
+import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.message.data.FileMessage
 import net.mamoe.mirai.message.data.Image
@@ -35,7 +36,7 @@ class GroupEvent(
                     群号：${group.id}
                     群名：${group.name}
                     扣扣：${sender.id}
-                    名片：${sender.nameCard}
+                    名片：${sender.nameCardOrNick}
                     内容：
                     $text
                 """.trimIndent()

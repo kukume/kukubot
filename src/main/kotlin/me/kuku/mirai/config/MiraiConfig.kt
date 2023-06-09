@@ -130,7 +130,7 @@ class MiraiBean(
 
     @Bean
     fun mirai(): Bot {
-        FixProtocolVersion.update()
+//        FixProtocolVersion.update()
         val auth = if (miraiConfig.password.isEmpty()) BotAuthorization.byQRCode()
         else BotAuthorization.Companion.byPassword(miraiConfig.password)
         val bot = BotFactory.newBot(miraiConfig.qq, auth) {

@@ -22,7 +22,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
     implementation("me.kuku:utils:2.3.0.0")
     implementation("me.kuku:ktor-spring-boot-starter:2.3.0.0")
-    implementation("net.mamoe:mirai-core:2.15.0-dev-93")
+    implementation("net.mamoe:mirai-core:2.15.0-dev-98")
     implementation("org.jsoup:jsoup:1.15.3")
     kapt("org.springframework.boot:spring-boot-configuration-processor")
     testImplementation(kotlin("test"))

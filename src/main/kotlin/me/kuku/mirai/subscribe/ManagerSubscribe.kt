@@ -1,9 +1,7 @@
 package me.kuku.mirai.subscribe
 
 import me.kuku.mirai.config.MiraiConfig
-import me.kuku.mirai.entity.GroupEntity
-import me.kuku.mirai.entity.GroupService
-import me.kuku.mirai.entity.Qa
+import me.kuku.mirai.entity.*
 import me.kuku.mirai.utils.GroupMessageSubscribe
 import me.kuku.mirai.utils.at
 import me.kuku.mirai.utils.firstArg
@@ -15,7 +13,8 @@ import org.springframework.stereotype.Component
 @Component
 class ManagerSubscribe(
     private val groupService: GroupService,
-    private val miraiConfig: MiraiConfig
+    private val miraiConfig: MiraiConfig,
+    private val essenceService: EssenceService
 ) {
 
     suspend fun GroupMessageSubscribe.manager() {
@@ -70,7 +69,20 @@ class ManagerSubscribe(
             groupService.save(groupEntity)
             "添加消息转发成功"
         }
-
+        regex("精华消息转发 [-]?[0-9]+[ ]?[0-9]*") atReply {
+            val chatId = firstArg<PlainText>().content.toLong()
+            val messageThreadId = try {
+                secondArg<PlainText>().content.toInt()
+            } catch (e: Exception) {
+                null
+            }
+            val essenceEntity = EssenceEntity()
+            essenceEntity.chatId = chatId
+            essenceEntity.messageThreadId = messageThreadId
+            essenceEntity.group = group.id
+            essenceService.save(essenceEntity)
+            "添加消息转发成功"
+        }
     }
 
 }

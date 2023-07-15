@@ -16,3 +16,4 @@ kuku:
     password:
     protocol: android_phone
     master: 734669014
+    signUrl: http://localhost:8080

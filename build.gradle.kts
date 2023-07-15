@@ -1,9 +1,10 @@
 plugins {
-    val kotlinVersion = "1.8.20"
+    val kotlinVersion = "1.9.0"
     kotlin("jvm") version kotlinVersion
     kotlin("plugin.spring") version kotlinVersion
+    kotlin("plugin.serialization") version kotlinVersion
     id("org.jetbrains.kotlin.kapt") version kotlinVersion
-    id("org.springframework.boot") version "3.0.5"
+    id("org.springframework.boot") version "3.1.1"
     id("io.spring.dependency-management") version "1.1.0"
 }
 
@@ -20,9 +21,11 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
-    implementation("me.kuku:utils:2.3.0.0")
-    implementation("me.kuku:ktor-spring-boot-starter:2.3.0.0")
-    implementation("net.mamoe:mirai-core:2.15.0-dev-98")
+    implementation("me.kuku:utils:2.3.2.0")
+    implementation("me.kuku:ktor-spring-boot-starter:2.3.2.0")
+    implementation("net.mamoe:mirai-core:2.15.0")
+    implementation("net.mamoe:mirai-core-utils:2.15.0")
+    implementation("org.asynchttpclient:async-http-client:2.12.3")
     implementation("org.jsoup:jsoup:1.15.3")
     kapt("org.springframework.boot:spring-boot-configuration-processor")
     testImplementation(kotlin("test"))

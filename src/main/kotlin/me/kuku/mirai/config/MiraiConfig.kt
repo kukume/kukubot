@@ -130,9 +130,26 @@ class MiraiBean(
 
     @Bean
     fun mirai(): Bot {
-//        FixProtocolVersion.update()
+        FixProtocolVersion.update()
+        FixProtocolVersion.sync(miraiConfig.protocol)
+        FixProtocolVersion.load(miraiConfig.protocol)
+        KFCFactory.install("""
+            {
+                "8.9.63": {
+                    "base_url": "${miraiConfig.signUrl}",
+                    "type": "fuqiuluo/unidbg-fetch-qsign",
+                    "key": "114514"
+                },
+                "8.9.68": {
+                    "base_url": "${miraiConfig.signUrl}",
+                    "type": "kiliokuara/magic-signer-guide",
+                    "serverIdentityKey": "vivo50",
+                    "authorizationKey": "kfc"
+                }
+            }
+        """.trimIndent())
         val auth = if (miraiConfig.password.isEmpty()) BotAuthorization.byQRCode()
-        else BotAuthorization.Companion.byPassword(miraiConfig.password)
+        else BotAuthorization.byPassword(miraiConfig.password)
         val bot = BotFactory.newBot(miraiConfig.qq, auth) {
             fileBasedDeviceInfo()
             protocol = miraiConfig.protocol
@@ -150,6 +167,7 @@ class MiraiConfig {
     var password: String = ""
     var protocol: BotConfiguration.MiraiProtocol = BotConfiguration.MiraiProtocol.ANDROID_PHONE
     var master: Long = 0
+    var signUrl: String = ""
 }
 
 fun superclasses(kClass: KClass<*>?, set: MutableSet<KClass<*>> = mutableSetOf()): Set<KClass<*>> {

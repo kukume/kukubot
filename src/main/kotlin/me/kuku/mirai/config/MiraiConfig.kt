@@ -131,7 +131,6 @@ class MiraiBean(
     @Bean
     fun mirai(): Bot {
         FixProtocolVersion.update()
-        FixProtocolVersion.sync(miraiConfig.protocol)
         FixProtocolVersion.load(miraiConfig.protocol)
         KFCFactory.install("""
             {
@@ -145,6 +144,10 @@ class MiraiBean(
                     "type": "kiliokuara/magic-signer-guide",
                     "serverIdentityKey": "vivo50",
                     "authorizationKey": "kfc"
+                },
+                "8.8.88": {
+                    "base_url": "${miraiConfig.signUrl}",
+                    "type": "TLV544Provider"
                 }
             }
         """.trimIndent())

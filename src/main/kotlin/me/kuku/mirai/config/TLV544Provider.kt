@@ -1,10 +1,7 @@
 package me.kuku.mirai.config
 
-import kotlinx.coroutines.*
-import kotlinx.serialization.json.*
 import net.mamoe.mirai.*
 import net.mamoe.mirai.internal.spi.*
-import net.mamoe.mirai.internal.utils.*
 import net.mamoe.mirai.utils.*
 import java.io.File
 import java.util.*
@@ -20,14 +17,16 @@ public class TLV544Provider : EncryptService {
         internal val logger: MiraiLogger = MiraiLogger.Factory.create(TLV544Provider::class)
 
         @JvmStatic
+        internal val LIBRARY_PATH_PROPERTY: String = "xyz.cssxsh.mirai.tool.t544"
+
+        @JvmStatic
         internal external fun sign(payload: ByteArray): ByteArray
 
         @JvmStatic
         private val load = java.util.concurrent.atomic.AtomicBoolean(false)
 
         @JvmStatic
-        internal fun native() {
-            if (load.get() || load.compareAndSet(false, true).not()) return
+        private fun library(): String {
             val os = when (val name = System.getProperty("os.name")) {
                 "Mac OS X" -> "macos"
                 "Linux" -> if (System.getenv("TERMUX_VERSION") != null) "android" else "linux"
@@ -43,8 +42,14 @@ public class TLV544Provider : EncryptService {
                 "aarch64" -> "arm64"
                 else -> throw RuntimeException("Unknown arch $name")
             }
-            val filename = System.mapLibraryName("t544-enc-${os}-${arch}")
-            val file = File(System.getProperty("xyz.cssxsh.mirai.tool.t544", filename))
+            return System.mapLibraryName("t544-enc-${os}-${arch}")
+        }
+
+        @JvmStatic
+        internal fun native() {
+            if (load.get().not()) return
+            val filename = library()
+            val file = File(System.getProperty(LIBRARY_PATH_PROPERTY, filename))
             if (file.isFile.not()) {
                 this::class.java.getResource(filename)?.let { resource ->
                     file.writeBytes(resource.readBytes())
@@ -64,7 +69,9 @@ public class TLV544Provider : EncryptService {
                 }
             }
             logger.info("load: ${file.toPath().toUri()}")
-            System.load(file.absolutePath)
+            if (load.compareAndSet(false, true)) {
+                System.load(file.absolutePath)
+            }
         }
 
         @JvmStatic
@@ -115,5 +122,10 @@ public class TLV544Provider : EncryptService {
         payload: ByteArray
     ): EncryptService.SignResult? {
         return null
+    }
+
+    override fun toString(): String {
+        val library = File(System.getProperty(LIBRARY_PATH_PROPERTY, library()))
+        return "TLV544Provider(library=${library.toPath().toUri()})"
     }
 }

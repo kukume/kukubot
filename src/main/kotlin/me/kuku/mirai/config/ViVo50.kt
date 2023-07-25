@@ -8,7 +8,6 @@ import net.mamoe.mirai.internal.spi.*
 import net.mamoe.mirai.internal.utils.*
 import net.mamoe.mirai.utils.*
 import org.asynchttpclient.*
-import org.asynchttpclient.netty.ws.*
 import org.asynchttpclient.ws.*
 import java.security.*
 import java.security.spec.*
@@ -63,7 +62,7 @@ public class ViVo50(
 
     private val sessions = ConcurrentHashMap<Long, Session>()
 
-    private var white: List<String> = emptyList()
+    private val white = ConcurrentHashMap.newKeySet<String>()
 
     private fun <T> ListenableFuture<Response>.getBody(deserializer: DeserializationStrategy<T>): T {
         val response = get()
@@ -78,21 +77,31 @@ public class ViVo50(
         val device = context.extraArgs[EncryptServiceContext.KEY_DEVICE_INFO]
         val qimei36 = context.extraArgs[EncryptServiceContext.KEY_QIMEI36]
         val protocol = context.extraArgs[EncryptServiceContext.KEY_BOT_PROTOCOL]
+        val cache = context.extraArgs[EncryptServiceContext.KEY_BOT_CACHING_DIR]
         val channel = context.extraArgs[EncryptServiceContext.KEY_CHANNEL_PROXY]
 
         logger.info("Bot(${context.id}) initialize by $server")
 
-        if (sessions.containsKey(context.id).not()) {
+        val cmd = java.io.File(cache, "cmd.txt")
+
+        sessions.computeIfAbsent(context.id) {
             val token = handshake(uin = context.id)
             val session = Session(token = token, bot = context.id, channel = channel)
             session.websocket()
-            sessions[context.id] = session
             coroutineContext.job.invokeOnCompletion {
                 sessions.remove(context.id, session)
                 session.close()
             }
-        }
-        with(context.session()) {
+            try {
+                if (cmd.exists()) {
+                    white.addAll(cmd.readText().split("\n"))
+                }
+            } catch (cause: Throwable) {
+                logger.warning("Session(bot=${context.id}) cmd_white_list cache read fail", cause)
+                cmd.delete()
+            }
+            session
+        }.apply {
             sendCommand(type = "rpc.initialize", deserializer = JsonElement.serializer()) {
                 putJsonObject("extArgs") {
                     put("KEY_QIMEI36", qimei36)
@@ -135,8 +144,14 @@ public class ViVo50(
                 }
             }
             sendCommand(type = "rpc.get_cmd_white_list", deserializer = ListSerializer(String.serializer())).also {
-                white = checkNotNull(it)
+                val list = checkNotNull(it) { "get_cmd_white_list is null" }
+                white.clear()
+                white.addAll(list)
             }
+        }
+
+        launch(CoroutineName("Session(bot=${context.id})")) {
+            cmd.writeText(white.joinToString("\n"))
         }
 
         logger.info("Bot(${context.id}) initialize complete")
@@ -229,6 +244,10 @@ public class ViVo50(
             extra = response.extra.hexToBytes(),
             token = response.token.hexToBytes(),
         )
+    }
+
+    override fun toString(): String {
+        return "ViVo50(server=${server}, sessions=${sessions.keys})"
     }
 
     private inner class Session(val bot: Long, val token: String, val channel: EncryptService.ChannelProxy) :
@@ -406,7 +425,7 @@ public class ViVo50(
             val json = try {
                 future.get(timeout, TimeUnit.MILLISECONDS)
             } catch (cause: TimeoutException) {
-                logger.warning("Session(bot=${bot}) $type timeout", cause)
+                logger.warning("Session(bot=${bot}) $type timeout ${timeout}ms", cause)
                 return null
             }
 

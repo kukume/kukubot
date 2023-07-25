@@ -28,7 +28,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         DefaultAsyncHttpClientConfig.Builder()
             .setKeepAlive(true)
             .setUserAgent("curl/7.61.0")
-            .setRequestTimeout(30_000)
+            .setRequestTimeout(90_000)
             .setConnectTimeout(30_000)
             .setReadTimeout(180_000)
     )
@@ -37,7 +37,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
 
     private val channel: EncryptService.ChannelProxy get() = channel0 ?: throw IllegalStateException("need initialize")
 
-    private val token = java.util.concurrent.atomic.AtomicBoolean(false)
+    private val token = java.util.concurrent.atomic.AtomicLong(0)
 
     override fun initialize(context: EncryptServiceContext) {
         val device = context.extraArgs[EncryptServiceContext.KEY_DEVICE_INFO]
@@ -48,13 +48,25 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
 
         channel0 = channel
 
-        @OptIn(MiraiInternalApi::class)
-        register(
-            uin = context.id,
-            androidId = device.androidId.decodeToString(),
-            guid = device.guid.toUHexString(),
-            qimei36 = qimei36
-        )
+        if (token.get() == 0L) {
+            val uin = context.id
+            @OptIn(MiraiInternalApi::class)
+            register(
+                uin = uin,
+                androidId = device.androidId.decodeToString(),
+                guid = device.guid.toUHexString(),
+                qimei36 = qimei36
+            )
+            coroutineContext.job.invokeOnCompletion {
+                try {
+                    destroy(uin = uin)
+                } catch (cause : Throwable) {
+                    logger.warning("Bot(${uin}) destroy", cause)
+                } finally {
+                    token.compareAndSet(uin, 0)
+                }
+            }
+        }
 
         logger.info("Bot(${context.id}) initialize complete")
     }
@@ -71,6 +83,17 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         check(body.code == 0) { body.message }
 
         logger.info("Bot(${uin}) register, ${body.message}")
+    }
+
+    private fun destroy(uin: Long) {
+        val response = client.prepareGet("${server}/destroy")
+            .addQueryParam("uin", uin.toString())
+            .addQueryParam("key", key)
+            .execute().get()
+        if (response.statusCode == 404) return
+        val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
+
+        logger.info("Bot(${uin}) destroy, ${body.message}")
     }
 
     override fun encryptTlv(context: EncryptServiceContext, tlvType: Int, payload: ByteArray): ByteArray? {
@@ -103,19 +126,21 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         payload: ByteArray
     ): EncryptService.SignResult? {
         if (commandName == "StatSvc.register") {
-            if (!token.get() && token.compareAndSet(false, true)) {
+            if (token.compareAndSet(0, context.id)) {
                 launch(CoroutineName("RequestToken")) {
+                    val uin = token.get()
                     while (isActive) {
                         val interval = System.getProperty(REQUEST_TOKEN_INTERVAL, "2400000").toLong()
-                        if (interval == 0L) break
+                        if (interval <= 0L) break
+                        if (interval < 600_000) logger.warning("$REQUEST_TOKEN_INTERVAL=${interval} < 600_000 (ms)")
                         delay(interval)
                         val request = try {
-                            requestToken(uin = context.id)
+                            requestToken(uin = uin)
                         } catch (cause: Throwable) {
                             logger.error(cause)
                             continue
                         }
-                        callback(uin = context.id, request = request)
+                        callback(uin = uin, request = request)
                     }
                 }
             }
@@ -130,7 +155,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         return EncryptService.SignResult(
             sign = data.sign.hexToBytes(),
             token = data.token.hexToBytes(),
-            extra = data.extra.hexToBytes(),
+            extra = data.extra.hexToBytes()
         )
     }
 
@@ -192,6 +217,10 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
                 submit(uin = uin, cmd = result.cmd, callbackId = callback.id, buffer = result.data)
             }
         }
+    }
+
+    override fun toString(): String {
+        return "UnidbgFetchQsign(server=${server}, uin=${token})"
     }
 
     public companion object {

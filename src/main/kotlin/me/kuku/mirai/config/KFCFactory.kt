@@ -8,6 +8,7 @@ import net.mamoe.mirai.internal.spi.*
 import net.mamoe.mirai.internal.utils.*
 import net.mamoe.mirai.utils.*
 import java.io.File
+import java.io.IOException
 import java.net.ConnectException
 import java.net.URL
 
@@ -16,7 +17,7 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
     public companion object {
 
         @JvmStatic
-        internal val logger: MiraiLogger = MiraiLogger.Factory.create(TLV544Provider::class)
+        internal val logger: MiraiLogger = MiraiLogger.Factory.create(KFCFactory::class)
 
         @JvmStatic
         public fun install(config: String? = null) {
@@ -29,27 +30,59 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
         }
 
         @JvmStatic
+        public fun info(): Map<String, String> {
+            val config = File(System.getProperty(CONFIG_PATH_PROPERTY, "KFCFactory.json"))
+            val serializer = MapSerializer(String.serializer(), ServerConfig.serializer())
+            val servers = Json.decodeFromString(serializer, config.readText())
+
+            return servers.mapValues { (version, server) ->
+                "v${version} by ${server.type} from ${server.base}"
+            }
+        }
+
+        @JvmStatic
         public val CONFIG_PATH_PROPERTY: String = "xyz.cssxsh.mirai.tool.KFCFactory.config"
 
         @JvmStatic
         public var DEFAULT_CONFIG: String = """
             {
-                "8.9.63": {
-                    "base_url": "http://192.168.1.237:8080",
+                "0.0.0": {
+                    "base_url": "http://127.0.0.1:8080",
                     "type": "fuqiuluo/unidbg-fetch-qsign",
                     "key": "114514"
                 },
-                "8.9.68": {
-                    "base_url": "http://192.168.1.237:8080",
+                "0.1.0": {
+                    "base_url": "http://127.0.0.1:8888",
                     "type": "kiliokuara/magic-signer-guide",
-                    "serverIdentityKey": "vivo50",
-                    "authorizationKey": "kfc"
+                    "server_identity_key": "vivo50",
+                    "authorization_key": "kfc"
+                },
+                "8.8.88": {
+                    "base_url": "http://127.0.0.1:80",
+                    "type": "TLV544Provider"
                 }
             }
         """.trimIndent()
+
+        @JvmStatic
+        internal val created: MutableSet<Long> = java.util.concurrent.ConcurrentHashMap.newKeySet()
+    }
+
+    init {
+        with(config) {
+            if (exists().not()) {
+                writeText(DEFAULT_CONFIG)
+            }
+        }
     }
 
     override fun createForBot(context: EncryptServiceContext, serviceSubScope: CoroutineScope): EncryptService {
+        if (created.add(context.id).not()) {
+            throw UnsupportedOperationException("repeated create EncryptService")
+        }
+        serviceSubScope.coroutineContext.job.invokeOnCompletion {
+            created.remove(context.id)
+        }
         try {
             org.asynchttpclient.Dsl.config()
         } catch (cause: NoClassDefFoundError) {
@@ -61,11 +94,18 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                 val version = MiraiProtocolInternal[protocol].ver
                 val server = run {
                     val serializer = MapSerializer(String.serializer(), ServerConfig.serializer())
-                    val servers = Json.decodeFromString(serializer, KFCFactory.DEFAULT_CONFIG)
+                    val servers = try {
+                        Json.decodeFromString(serializer, DEFAULT_CONFIG)
+                    } catch (cause: SerializationException) {
+                        throw RuntimeException("配置文件格式错误", cause)
+                    } catch (cause: IOException) {
+                        throw RuntimeException("配置文件读取错误", cause)
+                    }
                     servers[version]
-                        ?: throw NoSuchElementException("没有找到对应 $version 的服务配置")
+                        ?: throw NoSuchElementException("没有找到对应 ${protocol}(${version}) 的服务配置")
                 }
 
+                logger.info("${protocol}(${version}) server type: ${server.type}, ${config.toPath().toUri()}")
                 when (val type = server.type.ifEmpty { throw IllegalArgumentException("need server type") }) {
                     "fuqiuluo/unidbg-fetch-qsign", "fuqiuluo", "unidbg-fetch-qsign" -> {
                         try {
@@ -78,10 +118,12 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                                     logger.warning("请更新 unidbg-fetch-qsign")
                                 }
                                 version !in about -> {
-                                    logger.error("unidbg-fetch-qsign by ${server.base} 与 ${protocol}(${version}) 似乎不匹配")
+                                    throw IllegalStateException("unidbg-fetch-qsign by ${server.base} 与 ${protocol}(${version}) 似乎不匹配")
                                 }
                             }
                         } catch (cause: ConnectException) {
+                            throw RuntimeException("请检查 unidbg-fetch-qsign by ${server.base} 的可用性", cause)
+                        } catch (cause: java.io.FileNotFoundException) {
                             throw RuntimeException("请检查 unidbg-fetch-qsign by ${server.base} 的可用性", cause)
                         }
                         UnidbgFetchQsign(
@@ -99,11 +141,13 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                                     logger.warning("请更新 magic-signer-guide 的 docker 镜像")
                                 }
                                 version !in about -> {
-                                    logger.error("magic-signer-guide by ${server.base} 与 ${protocol}(${version}) 似乎不匹配")
+                                    throw IllegalStateException("magic-signer-guide by ${server.base} 与 ${protocol}(${version}) 似乎不匹配")
                                 }
                             }
                         } catch (cause: ConnectException) {
                             throw RuntimeException("请检查 magic-signer-guide by ${server.base} 的可用性", cause)
+                        } catch (cause: java.io.FileNotFoundException) {
+                            throw RuntimeException("请检查 unidbg-fetch-qsign by ${server.base} 的可用性", cause)
                         }
                         ViVo50(
                             server = server.base,
@@ -117,7 +161,10 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                 }
             }
             BotConfiguration.MiraiProtocol.ANDROID_WATCH -> throw UnsupportedOperationException(protocol.name)
-            BotConfiguration.MiraiProtocol.IPAD, BotConfiguration.MiraiProtocol.MACOS -> TLV544Provider()
+            BotConfiguration.MiraiProtocol.IPAD, BotConfiguration.MiraiProtocol.MACOS -> {
+                logger.error("$protocol 尚不支持签名服务，大概率登录失败")
+                TLV544Provider()
+            }
         }
     }
 
